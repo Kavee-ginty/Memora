@@ -11,6 +11,16 @@ pytest
 uvicorn memora.main:app --reload
 ```
 
+Create or update the local database and apply foundational seeds:
+
+Set `MEMORA_DATABASE_URL` in the process environment first; Alembic has no committed
+credential fallback.
+
+```powershell
+alembic upgrade head
+python -m memora.db.seed
+```
+
 Runtime and development dependencies are locked with hashes. After an intentional change to `pyproject.toml`, regenerate both files with Python 3.12:
 
 ```powershell

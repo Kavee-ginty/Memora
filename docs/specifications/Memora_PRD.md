@@ -35,6 +35,7 @@ The MVP is student-first. It includes personal learning updates, temporary docum
 | Engagement | Daily Missions and one continuous seabed with one reef per subject |
 | Competition | Personal progress only; no public rankings in the MVP |
 | Question trust | Verified human-authored questions take priority over grounded AI-generated questions |
+| Launch curriculum | NIE G.C.E. Advanced Level Physics syllabus implemented from 2017, English medium |
 
 ![Figure 1  The MVP student learning loop](assets/Memora_PRD_Figure_1.png)
 
@@ -275,7 +276,7 @@ A capability enters the MVP only when it is required to complete, trust, measure
 
 ### 9.1 Curriculum boundary
 
-Every shared concept and verified question must map to the selected official Sri Lankan GCE Advanced Level Physics curriculum version. The exact syllabus edition, language medium and examination-year applicability remain launch configuration decisions and must be recorded before content production begins.
+Every shared concept and verified question must map to the National Institute of Education G.C.E. Advanced Level Physics syllabus implemented from 2017. The MVP launches in English medium. Sinhala and Tamil content require separately versioned terminology and academic review before use.
 
 ### 9.2 Knowledge representation
 
@@ -385,8 +386,6 @@ The app should tolerate brief connection loss, preserve unsent student input saf
 
 | **Decision** | **Why it must be resolved** | **Recommended next action** |
 | --- | --- | --- |
-| Official syllabus edition | Controls every concept and question mapping | Select the exact curriculum version before building the content graph |
-| Initial language medium | Controls terminology, OCR evaluation and question authoring | Choose English, Sinhala or Tamil for the pilot; add separate translation review later |
 | Pilot cohort | Controls onboarding, consent, support and measurement | Recruit a bounded group with a defined study stage and consent process |
 | Minimum verified coverage | Determines where AI fallback is acceptable | Set required coverage by curriculum unit before pilot launch |
 | Target retention level | Controls review frequency and workload | Choose an initial default and test it against the 3 to 7 minute mission target |

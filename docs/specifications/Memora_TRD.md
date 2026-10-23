@@ -18,7 +18,7 @@ Primary readers: engineering, AI, security, data, quality assurance and operatio
 
 Memora will be delivered as a Flutter mobile application backed by a FastAPI modular monolith, a durable asynchronous worker and PostgreSQL with pgvector. PostgreSQL is the transactional source of truth. The subject knowledge graph is stored as typed relational nodes and edges so normal transactions, learner state and graph relationships share one secure boundary. pgvector supports semantic matching and grounded retrieval. A separate graph database is not required for the MVP and may be introduced only after measured query or scale limits justify it.
 
-The product is intelligent because several techniques cooperate under explicit authority boundaries. A versioned FSRS-style memory model estimates concept retrievability. Expert-reviewed rules apply workload, prerequisite, uncertainty and safety policy. Graph reasoning supplies dependencies and misconception context. LangGraph agents use OpenRouter models for extraction, bounded grading and grounded fallback content. AI output is evidence, never unrestricted authority: deterministic services validate writes, compute schedules, enforce permissions and record every consequence.
+The product is intelligent because several techniques cooperate under explicit authority boundaries. A versioned FSRS-style memory model estimates concept retrievability. Expert-reviewed rules apply workload, prerequisite, uncertainty and safety policy. Graph reasoning supplies dependencies and misconception context. LangGraph agents use approved OpenRouter models for extraction, bounded grading and grounded fallback content; semantic embeddings run in the private self-hosted service. AI output is evidence, never unrestricted authority: deterministic services validate writes, compute schedules, enforce permissions and record every consequence.
 
 Uploaded PDFs, photos, images and diagrams are temporary processing inputs. They are encrypted, isolated and deleted after a validated knowledge commit or a bounded failure or verification period. The retained record is structured knowledge, confidence, provenance references, processing evidence and learner memory state—not the original file.
 
@@ -33,7 +33,7 @@ Uploaded PDFs, photos, images and diagrams are temporary processing inputs. They
 | Semantic retrieval | pgvector in PostgreSQL | Keeps embeddings beside authorized records and avoids another database |
 | Knowledge graph | Typed node and edge tables with recursive SQL | Satisfies MVP graph queries while preserving one source of truth |
 | AI orchestration | LangGraph with LangChain adapters and LangSmith observability | Bounded workflows, tool control, evaluation and traceability |
-| Model access | OpenRouter through a server-side gateway | Provider flexibility without exposing credentials or model choice to clients |
+| Model access | OpenRouter gateway for generative tasks; private self-hosted embedding service | Provider flexibility without exposing private notes to retaining embedding endpoints |
 | Deployment | Managed containers, managed PostgreSQL, object storage and durable queue | Security and recovery without Kubernetes in the MVP |
 | Graphify | Development-time repository map and change-impact aid | Improves code navigation; it is not the student knowledge graph runtime |
 
@@ -359,6 +359,13 @@ LangChain provides model adapters, structured-output parsing, document utilities
 - The gateway records provider and model version, applies circuit breakers and can disable a route without an app release.
 - Sensitive tasks use providers approved by privacy review. Provider retention or training settings must meet the recorded policy.
 - Fallback changes availability, not authority: all model outputs pass the same validators.
+
+### 10.5 Private embedding service
+
+- The worker calls the self-hosted NVIDIA Nemotron 3.5 Embed 1B service over a private authenticated network path.
+- Student text is bounded to the minimum fragment required for embedding and is not logged by the caller or service.
+- The service does not persist request bodies or vectors; PostgreSQL stores authorized vectors and their model key.
+- Public or free hosted embedding endpoints are not fallback routes for private material.
 ## 11 Learning ingestion and deletion
 
 ![Figure 3  Temporary upload lifecycle](assets/Memora_TRD_Figure_3.png)
@@ -627,12 +634,12 @@ Ponytail guides implementation toward the smallest complete change. Graphify is 
 | Uploads | Temporary object storage | Permanent source archive | Explicit product and privacy revision |
 | Orchestration | LangGraph for bounded AI workflows | Free-form autonomous agent | No planned trigger; prohibited for high-impact authority |
 | Deployment | Managed containers | Kubernetes | Operational scale and team capacity justify it |
+| Semantic embeddings | Self-hosted NVIDIA Nemotron 3.5 Embed 1B, 2048 dimensions | OpenRouter free endpoint or larger model | Approved evaluation shows a material retrieval, availability or cost benefit without weakening private-note handling |
 
 ## 22 Open technical decisions
 
 | **Decision** | **Owner** | **Required before** | **Recommended action** |
 | --- | --- | --- | --- |
-| Official syllabus edition and language | Product and academic | Ontology and content authoring | Record exact identifiers and terminology source |
 | Identity provider | Security and engineering | Authentication implementation | Compare OIDC providers against age, recovery, region and cost needs |
 | Cloud region and final provider | Security and operations | Production infrastructure | Complete data-location, latency and service review |
 | Model allowlist | AI and privacy | Production agent evaluation | Approve each task, provider, retention setting and fallback |
