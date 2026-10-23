@@ -1,3 +1,25 @@
 # Database migrations
 
-`T04` owns the Alembic migration environment and the schema defined in `docs/specifications/Memora_Backend_Schema_and_Data_Model.md`. Do not add application tables before T04 is Ready.
+T04 owns the Alembic environment and the MVP schema defined in the backend data-model specification.
+
+From `backend/`:
+
+```powershell
+alembic upgrade head
+python -m memora.db.seed
+alembic current
+```
+
+The initial migration enables `pgcrypto` and `vector`, creates the complete empty-database schema, applies constraints, indexes, RLS and immutable-row triggers, and inserts only approved foundational seed data. The seed command is idempotent and is the extension point for later task-owned reviewed content.
+
+The access-hardening migration removes blanket service-role grants. Student API access is owner-scoped for private rows and read-only for approved shared academic content. Indirect private records such as grading results and deletion proofs inherit ownership through their required parent relationships. Worker access excludes identity rows and shared academic writes.
+
+Product values that remain open are intentionally not guessed in T04. T09 owns upload limits, T11 owns initial memory and policy versions, T13 owns the mission item cap, T15 owns reward definitions and XP thresholds, and T17 owns the reminder cap. Each task must add its approved value through a reviewed forward migration when the corresponding contract is finalized.
+
+## Recovery
+
+The production recovery path is roll-forward: correct the migration in a new reviewed revision and run `alembic upgrade head`. Do not downgrade a database containing user data. The initial downgrade drops the complete `public` schema and exists only for empty/local migration testing where data loss is explicitly acceptable.
+
+After restoring a backup, keep API traffic disabled until retention/deletion reconciliation and rebuildable projections have run. Those operational reconcilers belong to their later feature tasks.
+
+No vector ANN index is created yet. The specification requires representative recall and latency measurements before choosing HNSW or IVFFlat; exact scans are correct for the initial empty/pilot-sized schema.
