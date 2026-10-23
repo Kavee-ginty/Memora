@@ -33,11 +33,11 @@ If two sources appear inconsistent, stop implementation and resolve the conflict
 
 | ID | Task | Status | Owner | Days | Dependencies | Branch | Primary area |
 | --- | --- | --- | --- | ---: | --- | --- | --- |
-| T01 | Architecture baseline and repository scaffold | **Review** | Codex | 2 | None | `task/T01-repo-baseline` | Repository-wide |
-| T02 | CI and development environments | Blocked | - | 3 | T01 | `task/T02-ci-environments` | CI and infrastructure |
-| T03 | Flutter design system and app shell | Blocked | - | 5 | T01 | `task/T03-flutter-design-system` | Mobile shared UI |
-| T04 | PostgreSQL migrations and seed framework | Blocked | - | 6 | T01 | `task/T04-database-schema` | Backend database |
-| T05 | OpenAPI models and generated client pipeline | Blocked | - | 4 | T01 | `task/T05-openapi-pipeline` | API contracts |
+| T01 | Architecture baseline and repository scaffold | **Done** | Codex | 2 | None | `task/T01-repo-baseline` | Repository-wide |
+| T02 | CI and development environments | **Ready** | - | 3 | T01 | `task/T02-ci-environments` | CI and infrastructure |
+| T03 | Flutter design system and app shell | **Ready** | - | 5 | T01 | `task/T03-flutter-design-system` | Mobile shared UI |
+| T04 | PostgreSQL migrations and seed framework | **Ready** | - | 6 | T01 | `task/T04-database-schema` | Backend database |
+| T05 | OpenAPI models and generated client pipeline | **Ready** | - | 4 | T01 | `task/T05-openapi-pipeline` | API contracts |
 | T06 | Identity and session backend | Blocked | - | 4 | T02, T04, T05 | `task/T06-identity-session` | Backend API |
 | T07 | Auth bootstrap mobile and guarded routes | Blocked | - | 5 | T03, T05, T06 | `task/T07-mobile-auth-routes` | Mobile navigation |
 | T08 | Curriculum and knowledge graph seed | Blocked | - | 5 | T04 | `task/T08-curriculum-graph` | Data and knowledge |
@@ -143,5 +143,5 @@ Every task pull request must contain:
 
 ## 6 Current next action
 
-Review the prepared T01 baseline, commit it on `task/T01-repo-baseline`, and merge it into `main`. After that merge, mark T01 Done and move T02, T03, T04 and T05 to Ready so developers can claim them in parallel.
+T01 is merged and Done. T02, T03, T04 and T05 are Ready for developers to claim in parallel. Prefer T04 first when staffing is limited because it has zero float on the current critical path.
 
