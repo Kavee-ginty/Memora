@@ -1,13 +1,12 @@
+import textwrap
 from math import atan2, cos, sin
 from pathlib import Path
-import textwrap
 
 from PIL import Image, ImageDraw, ImageFont
 
-
 ROOT = Path(__file__).resolve().parents[2]
 OUTPUT = ROOT / "docs" / "project-management" / "Memora_Development_Network_Diagram.png"
-WIDTH, HEIGHT = 4800, 2600
+WIDTH, HEIGHT = 4800, 3400
 
 TASKS = {
     "T01": ("Repo baseline", 2, []),
@@ -35,8 +34,16 @@ TASKS = {
     "T23": ("Security and observability", 5, ["T02", "T09", "T13", "T17", "T20"]),
     "T24": ("Physics pilot content", 6, ["T08", "T12"]),
     "T25": ("API and auth tests", 5, ["T09", "T13", "T15", "T17", "T20"]),
-    "T26": ("End-to-end integration", 6, ["T10", "T14", "T16", "T18", "T19", "T21", "T22", "T25"]),
-    "T27": ("Accessibility and visual QA", 5, ["T10", "T14", "T16", "T18", "T19", "T21"]),
+    "T26": (
+        "End-to-end integration",
+        6,
+        ["T10", "T14", "T16", "T18", "T19", "T21", "T22", "T25"],
+    ),
+    "T27": (
+        "Accessibility and visual QA",
+        5,
+        ["T10", "T14", "T16", "T18", "T19", "T21"],
+    ),
     "T28": ("Load security failure tests", 5, ["T23", "T26"]),
     "T29": ("Staging and UAT", 4, ["T24", "T26", "T27", "T28"]),
     "T30": ("Pilot fixes and RC", 5, ["T29"]),
@@ -44,41 +51,61 @@ TASKS = {
 }
 
 POSITIONS = {
-    "T01": (190, 1320),
-    "T02": (600, 280), "T03": (600, 690), "T04": (600, 1190), "T05": (600, 1740),
-    "T06": (1030, 500), "T08": (1030, 1320),
-    "T17": (1470, 160), "T07": (1470, 430), "T20": (1470, 760), "T09": (1470, 1060),
-    "T11": (1470, 1370), "T12": (1470, 1680),
-    "T18": (1930, 160), "T10": (1930, 430), "T19": (1930, 700), "T21": (1930, 970),
-    "T13": (1930, 1350), "T24": (1930, 1980),
-    "T14": (2390, 600), "T15": (2390, 1160), "T22": (2390, 1500), "T23": (2390, 1900),
-    "T16": (2830, 920), "T25": (2830, 1360),
-    "T27": (3260, 630), "T26": (3260, 1160),
-    "T28": (3630, 1160), "T29": (3970, 1160), "T30": (4280, 1160), "T31": (4590, 1160),
+    "T01": (190, 1650),
+    "T02": (600, 500),
+    "T03": (600, 1100),
+    "T04": (600, 1750),
+    "T05": (600, 2400),
+    "T06": (1030, 950),
+    "T08": (1030, 2100),
+    "T17": (1470, 400),
+    "T20": (1470, 850),
+    "T09": (1470, 1300),
+    "T07": (1470, 1750),
+    "T11": (1470, 2200),
+    "T12": (1470, 2650),
+    "T18": (1930, 400),
+    "T19": (1930, 850),
+    "T21": (1930, 1300),
+    "T10": (1930, 1750),
+    "T13": (1930, 2200),
+    "T24": (1930, 2650),
+    "T14": (2390, 650),
+    "T15": (2390, 1300),
+    "T22": (2390, 1950),
+    "T23": (2390, 2600),
+    "T16": (2830, 1100),
+    "T25": (2830, 2100),
+    "T27": (3260, 1000),
+    "T26": (3260, 2050),
+    "T28": (3630, 2050),
+    "T29": (3970, 2050),
+    "T30": (4280, 2050),
+    "T31": (4590, 2050),
 }
 
-CRITICAL = {"T01", "T04", "T08", "T11", "T12", "T13", "T15", "T16", "T25", "T26", "T28", "T29", "T30", "T31"}
+CRITICAL = {
+    "T01",
+    "T04",
+    "T08",
+    "T11",
+    "T12",
+    "T13",
+    "T15",
+    "T16",
+    "T25",
+    "T26",
+    "T28",
+    "T29",
+    "T30",
+    "T31",
+}
 
 
 def font(size, bold=False):
     name = "arialbd.ttf" if bold else "arial.ttf"
     path = Path("C:/Windows/Fonts") / name
     return ImageFont.truetype(str(path), size)
-
-
-def cubic_points(start, end, steps=30):
-    x1, y1 = start
-    x2, y2 = end
-    bend = max(80, (x2 - x1) * 0.48)
-    c1, c2 = (x1 + bend, y1), (x2 - bend, y2)
-    points = []
-    for i in range(steps + 1):
-        t = i / steps
-        u = 1 - t
-        x = u**3 * x1 + 3 * u**2 * t * c1[0] + 3 * u * t**2 * c2[0] + t**3 * x2
-        y = u**3 * y1 + 3 * u**2 * t * c1[1] + 3 * u * t**2 * c2[1] + t**3 * y2
-        points.append((x, y))
-    return points
 
 
 def draw_arrow(draw, source, target, critical):
@@ -88,13 +115,12 @@ def draw_arrow(draw, source, target, critical):
     angle = atan2(ty - sy, tx - sx)
     start = (sx + radius * cos(angle), sy + radius * sin(angle))
     end = (tx - radius * cos(angle), ty - radius * sin(angle))
-    points = cubic_points(start, end)
-    color = "#C62828" if critical else "#7890A4"
-    width = 9 if critical else 4
-    draw.line(points, fill=color, width=width, joint="curve")
-    x, y = points[-1]
-    a = atan2(points[-1][1] - points[-3][1], points[-1][0] - points[-3][0])
-    size = 23 if critical else 16
+    color = "#C62828" if critical else "#A9BBC8"
+    width = 8 if critical else 3
+    draw.line((start, end), fill=color, width=width)
+    x, y = end
+    a = angle
+    size = 22 if critical else 13
     wing = 0.55
     arrow = [
         (x, y),
@@ -108,8 +134,18 @@ def build():
     image = Image.new("RGB", (WIDTH, HEIGHT), "#FAFCFE")
     draw = ImageDraw.Draw(image)
 
-    draw.text((170, 65), "Memora Development Project Network", font=font(76, True), fill="#13293D")
-    draw.text((175, 155), "PERT / CPM precedence network  |  59 focused workdays  |  four zero-float paths", font=font(31), fill="#52697A")
+    draw.text(
+        (170, 65),
+        "Memora Development Project Network",
+        font=font(76, True),
+        fill="#13293D",
+    )
+    draw.text(
+        (175, 155),
+        "PERT / CPM precedence network  |  59 focused workdays  |  four zero-float paths",
+        font=font(31),
+        fill="#52697A",
+    )
 
     phases = [
         (120, 900, "FOUNDATION"),
@@ -119,9 +155,20 @@ def build():
         (3750, 4740, "RELEASE"),
     ]
     for left, right, title in phases:
-        draw.rounded_rectangle((left, 225, right, 2360), radius=28, fill="#FFFFFF", outline="#D8E2EA", width=3)
+        draw.rounded_rectangle(
+            (left, 225, right, 3150),
+            radius=28,
+            fill="#FFFFFF",
+            outline="#D8E2EA",
+            width=3,
+        )
         box = draw.textbbox((0, 0), title, font=font(24, True))
-        draw.text(((left + right - (box[2] - box[0])) / 2, 244), title, font=font(24, True), fill="#6A7F90")
+        draw.text(
+            ((left + right - (box[2] - box[0])) / 2, 244),
+            title,
+            font=font(24, True),
+            fill="#6A7F90",
+        )
 
     dependencies = [(dep, task) for task, (_, _, deps) in TASKS.items() for dep in deps]
     for source, target in dependencies:
@@ -138,26 +185,58 @@ def build():
         outline = "#C62828" if critical else "#2878A5"
         if task == "T31":
             fill, outline = "#E9F7EF", "#238636"
-        draw.ellipse((x - 58, y - 58, x + 58, y + 58), fill=fill, outline=outline, width=8 if critical else 5)
-        id_box = draw.textbbox((0, 0), task, font=font(30, True))
-        draw.text((x - (id_box[2] - id_box[0]) / 2, y - 20), task, font=font(30, True), fill="#172B3A")
+        draw.ellipse(
+            (x - 58, y - 58, x + 58, y + 58),
+            fill=fill,
+            outline=outline,
+            width=8 if critical else 5,
+        )
+        id_box = draw.textbbox((0, 0), task, font=font(38, True))
+        draw.text(
+            (x - (id_box[2] - id_box[0]) / 2, y - 25),
+            task,
+            font=font(38, True),
+            fill="#172B3A",
+        )
 
         lines = textwrap.wrap(label, width=22)
         label_y = y + 72
         for line in lines[:2]:
-            box = draw.textbbox((0, 0), line, font=font(24, True))
-            draw.text((x - (box[2] - box[0]) / 2, label_y), line, font=font(24, True), fill="#172B3A")
-            label_y += 30
+            box = draw.textbbox((0, 0), line, font=font(30, True))
+            draw.text(
+                (x - (box[2] - box[0]) / 2, label_y),
+                line,
+                font=font(30, True),
+                fill="#172B3A",
+            )
+            label_y += 38
         duration = f"{days}d"
-        box = draw.textbbox((0, 0), duration, font=font(22))
-        draw.text((x - (box[2] - box[0]) / 2, label_y + 3), duration, font=font(22), fill="#607587")
+        box = draw.textbbox((0, 0), duration, font=font(26))
+        draw.text(
+            (x - (box[2] - box[0]) / 2, label_y + 3),
+            duration,
+            font=font(26),
+            fill="#607587",
+        )
 
-    draw.rounded_rectangle((170, 2410, 1110, 2530), radius=24, fill="#FFFFFF", outline="#D8E2EA", width=3)
-    draw.line((215, 2458, 320, 2458), fill="#C62828", width=10)
-    draw.text((345, 2432), "Critical dependency and zero-float task", font=font(25), fill="#243B4A")
-    draw.line((1190, 2458, 1295, 2458), fill="#7890A4", width=5)
-    draw.text((1320, 2432), "Non-critical path", font=font(25), fill="#243B4A")
-    draw.text((3150, 2432), "Task duration is shown below each node", font=font(25), fill="#52697A")
+    draw.rounded_rectangle(
+        (170, 3210, 1110, 3330), radius=24, fill="#FFFFFF", outline="#D8E2EA", width=3
+    )
+    draw.line((215, 3258, 320, 3258), fill="#C62828", width=10)
+    draw.text(
+        (345, 3232),
+        "Critical dependency and zero-float task",
+        font=font(25),
+        fill="#243B4A",
+    )
+    draw.line((1190, 3258, 1295, 3258), fill="#A9BBC8", width=4)
+    draw.text((1320, 3232), "Non-critical path", font=font(25), fill="#243B4A")
+    draw.text(
+        (3150, 3232),
+        "Task duration is shown below each node",
+        font=font(25),
+        fill="#52697A",
+    )
 
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     image.save(OUTPUT, optimize=True)
