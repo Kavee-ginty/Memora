@@ -231,4 +231,3 @@ You understand these tasks if you can answer:
 - T01: TRD sections 3, 5, and 18; repository workflow documents.
 - T04: Backend Schema sections 3–18 and 21; TRD sections 7 and 14–16.
 - Supporting product rules: PRD sections 4, 5, and 11; API sections 2, 4, 7, and 19; App Flow principles and mobile state ownership.
-
