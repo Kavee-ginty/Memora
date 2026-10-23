@@ -12,7 +12,9 @@ alembic current
 
 The initial migration enables `pgcrypto` and `vector`, creates the complete empty-database schema, applies constraints, indexes, RLS and immutable-row triggers, and inserts only approved foundational seed data. The seed command is idempotent and is the extension point for later task-owned reviewed content.
 
-The access-hardening migration removes blanket service-role grants. Student API access is owner-scoped for private rows and read-only for approved shared academic content. Indirect private records such as grading results and deletion proofs inherit ownership through their required parent relationships. Worker access excludes identity rows and shared academic writes.
+The access-hardening migrations remove blanket service-role grants. Student API access is owner-scoped for private rows and read-only for approved shared academic content. Indirect private records such as grading results and deletion proofs inherit ownership through their required parent relationships. The worker can access only operational outbox, job and service-idempotency rows; later worker features must add narrowly scoped policies or security-definer functions.
+
+Session bootstrap resolves an internal user ID through a security-definer function that accepts only the validated OIDC issuer and subject. Grading evidence remains immutable while an authoritative result may be demoted before its replacement is appended in the same transaction. The outbox enforces publication-status and timestamp agreement on both insert and update.
 
 Product values that remain open are intentionally not guessed in T04. T09 owns upload limits, T11 owns initial memory and policy versions, T13 owns the mission item cap, T15 owns reward definitions and XP thresholds, and T17 owns the reminder cap. Each task must add its approved value through a reviewed forward migration when the corresponding contract is finalized.
 

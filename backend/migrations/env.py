@@ -8,8 +8,10 @@ config = context.config
 if config.config_file_name:
     fileConfig(config.config_file_name)
 
-if database_url := os.getenv("MEMORA_DATABASE_URL"):
-    config.set_main_option("sqlalchemy.url", database_url.replace("%", "%%"))
+database_url = os.getenv("MEMORA_DATABASE_URL")
+if not database_url:
+    raise RuntimeError("MEMORA_DATABASE_URL is required to run database migrations")
+config.set_main_option("sqlalchemy.url", database_url.replace("%", "%%"))
 
 
 def run_migrations_offline() -> None:

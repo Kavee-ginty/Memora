@@ -183,6 +183,12 @@ def alembic_config(database_url: str) -> Config:
     return config
 
 
+def test_alembic_requires_database_url(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("MEMORA_DATABASE_URL", raising=False)
+    with pytest.raises(RuntimeError, match="MEMORA_DATABASE_URL is required"):
+        command.current(Config(BACKEND_ROOT / "alembic.ini"))
+
+
 def test_initial_migration_declares_every_contract_table() -> None:
     declared = {
         line.split()[2] for line in MIGRATION_SQL.splitlines() if line.startswith("CREATE TABLE ")
@@ -250,6 +256,22 @@ def test_rls_and_append_only_guards_against_postgres() -> None:
             {"u1": user_one, "u2": user_two},
         )
         connection.execute(text("SET LOCAL ROLE memora_api"))
+        assert (
+            str(
+                connection.scalar(
+                    text("SELECT memora_resolve_user_id(:issuer, :subject)"),
+                    {"issuer": "test", "subject": "one"},
+                )
+            )
+            == user_one
+        )
+        assert (
+            connection.scalar(
+                text("SELECT memora_resolve_user_id(:issuer, :subject)"),
+                {"issuer": "test", "subject": "missing"},
+            )
+            is None
+        )
         connection.execute(
             text("SELECT set_config('memora.user_id', :user_id, true)"), {"user_id": user_one}
         )
@@ -361,6 +383,26 @@ def test_role_grants_rls_coverage_and_status_checks_against_postgres() -> None:
         assert not connection.scalar(
             text("SELECT has_table_privilege('memora_worker', 'users', 'SELECT')")
         )
+        assert not connection.scalar(
+            text("SELECT has_table_privilege('memora_worker', 'learning_updates', 'SELECT')")
+        )
+        assert not connection.scalar(
+            text("SELECT has_table_privilege('memora_worker', 'learning_updates', 'UPDATE')")
+        )
+        assert connection.scalar(
+            text(
+                "SELECT has_function_privilege("
+                "'memora_api', 'memora_resolve_user_id(text,text)', 'EXECUTE'"
+                ")"
+            )
+        )
+        assert not connection.scalar(
+            text(
+                "SELECT has_function_privilege("
+                "'memora_worker', 'memora_resolve_user_id(text,text)', 'EXECUTE'"
+                ")"
+            )
+        )
 
         protected_tables = set(
             connection.execute(
@@ -390,6 +432,13 @@ def test_role_grants_rls_coverage_and_status_checks_against_postgres() -> None:
         connection.execute(text("SET LOCAL ROLE memora_api"))
         assert connection.scalar(text("SELECT count(*) FROM subjects WHERE status='draft'")) == 0
         assert connection.scalar(text("SELECT count(*) FROM subjects WHERE status='approved'")) == 1
+
+    with pytest.raises(DBAPIError), engine.begin() as connection:
+        connection.execute(text("SET LOCAL ROLE memora_worker"))
+        connection.execute(
+            text("SELECT set_config('memora.user_id', gen_random_uuid()::text, true)")
+        )
+        connection.execute(text("SELECT count(*) FROM learning_updates"))
     engine.dispose()
 
 
@@ -404,6 +453,34 @@ def test_worker_can_publish_outbox_and_use_service_idempotency() -> None:
     event_id = str(uuid4())
     event_key = str(uuid4())
     service_key = str(uuid4())
+
+    with pytest.raises(DBAPIError), engine.begin() as connection:
+        connection.execute(
+            text(
+                "INSERT INTO outbox_events("
+                "domain_event_key, aggregate_type, aggregate_id, event_type, "
+                "event_version, payload, correlation_id, publication_status"
+                ") VALUES ("
+                ":event_key, 'mission', gen_random_uuid(), 'completed', "
+                "1, '{\"schema_version\":\"1\"}', gen_random_uuid(), 'published'"
+                ")"
+            ),
+            {"event_key": str(uuid4())},
+        )
+
+    with pytest.raises(DBAPIError), engine.begin() as connection:
+        connection.execute(
+            text(
+                "INSERT INTO outbox_events("
+                "domain_event_key, aggregate_type, aggregate_id, event_type, "
+                "event_version, payload, correlation_id, publication_status, published_at"
+                ") VALUES ("
+                ":event_key, 'mission', gen_random_uuid(), 'completed', "
+                "1, '{\"schema_version\":\"1\"}', gen_random_uuid(), 'pending', now()"
+                ")"
+            ),
+            {"event_key": str(uuid4())},
+        )
 
     with engine.begin() as connection:
         connection.execute(
@@ -457,5 +534,143 @@ def test_worker_can_publish_outbox_and_use_service_idempotency() -> None:
     with pytest.raises(DBAPIError), engine.begin() as connection:
         connection.execute(text("SET LOCAL ROLE memora_worker"))
         connection.execute(text("DELETE FROM outbox_events WHERE id=:id"), {"id": event_id})
+
+    engine.dispose()
+
+
+def test_grading_authority_can_move_without_rewriting_evidence() -> None:
+    database_url = os.getenv("MEMORA_TEST_DATABASE_URL")
+    if not database_url:
+        pytest.skip("MEMORA_TEST_DATABASE_URL is not configured")
+
+    os.environ["MEMORA_DATABASE_URL"] = database_url
+    command.upgrade(alembic_config(database_url), "head")
+    engine = create_engine(database_url)
+
+    with engine.begin() as connection:
+        fixture = (
+            connection.execute(
+                text(
+                    """
+                WITH new_user AS (
+                  INSERT INTO users(
+                    oidc_issuer, oidc_subject, status, default_timezone, locale
+                  ) VALUES ('test', gen_random_uuid()::text, 'active', 'Asia/Colombo', 'en')
+                  RETURNING id
+                ), new_concept AS (
+                  INSERT INTO concepts(subject_id, stable_code, status)
+                  VALUES (
+                    '10000000-0000-0000-0000-000000000001', gen_random_uuid()::text, 'draft'
+                  ) RETURNING id
+                ), new_question AS (
+                  INSERT INTO questions(
+                    subject_id, question_code, source_class, status
+                  ) VALUES (
+                    '10000000-0000-0000-0000-000000000001', gen_random_uuid()::text,
+                    'expert_verified', 'draft'
+                  ) RETURNING id
+                ), new_question_version AS (
+                  INSERT INTO question_versions(
+                    question_id, version_no, question_type, prompt, explanation,
+                    content_payload, trust_label, curriculum_version_id, validation_status
+                  ) SELECT id, 1, 'mcq', 'Synthetic?', 'Synthetic.',
+                    '{"schema_version":"1"}', 'verified',
+                    '20000000-0000-0000-0000-000000000001', 'draft'
+                  FROM new_question RETURNING id
+                ), new_rubric AS (
+                  INSERT INTO question_rubrics(
+                    question_version_id, rubric_type, rubric_version, rubric_payload,
+                    max_score, evidence_ceiling, status
+                  ) SELECT id, 'exact', 1, '{"schema_version":"1"}', 1, 1, 'draft'
+                  FROM new_question_version RETURNING id
+                ), new_mission AS (
+                  INSERT INTO missions(
+                    user_id, subject_id, mission_date, mission_timezone, status,
+                    engine_version, candidate_snapshot_hash, estimated_minutes,
+                    planned_item_count, expires_at
+                  ) SELECT id, '10000000-0000-0000-0000-000000000001', CURRENT_DATE,
+                    'Asia/Colombo', 'started', 'test', gen_random_uuid()::text, 1, 1,
+                    now() + interval '1 day'
+                  FROM new_user RETURNING id, user_id
+                ), new_item AS (
+                  INSERT INTO mission_items(
+                    mission_id, user_id, position, mission_type, question_version_id,
+                    primary_concept_id, selection_reason_codes, priority_snapshot, status
+                  ) SELECT m.id, m.user_id, 0, 'protect', q.id, c.id, ARRAY['test'],
+                    '{"schema_version":"1"}', 'answered'
+                  FROM new_mission m, new_question_version q, new_concept c
+                  RETURNING id, user_id
+                ), new_attempt AS (
+                  INSERT INTO attempts(
+                    user_id, mission_item_id, attempt_no, client_operation_id,
+                    answer_payload, submitted_at, app_version
+                  ) SELECT user_id, id, 1, gen_random_uuid(), '{"schema_version":"1"}',
+                    now(), 'test'
+                  FROM new_item RETURNING id
+                )
+                SELECT a.id AS attempt_id, r.id AS rubric_id
+                FROM new_attempt a, new_rubric r
+                """
+                )
+            )
+            .mappings()
+            .one()
+        )
+        first_result_id = connection.scalar(
+            text(
+                """
+                INSERT INTO grading_results(
+                  attempt_id, result_version, grader_type, score, classification,
+                  confidence, rubric_id, grader_version, evidence_payload,
+                  is_authoritative, graded_at
+                ) VALUES (
+                  :attempt_id, 1, 'exact', 1, 'correct', 1, :rubric_id, 'test',
+                  '{"schema_version":"1"}', true, now()
+                ) RETURNING id
+                """
+            ),
+            fixture,
+        )
+        connection.execute(
+            text("UPDATE grading_results SET is_authoritative=false WHERE id=:result_id"),
+            {"result_id": first_result_id},
+        )
+        second_result_id = connection.scalar(
+            text(
+                """
+                INSERT INTO grading_results(
+                  attempt_id, result_version, grader_type, score, classification,
+                  confidence, rubric_id, grader_version, evidence_payload,
+                  is_authoritative, graded_at
+                ) VALUES (
+                  :attempt_id, 2, 'human_review', 0.5, 'partial', 1, :rubric_id, 'test',
+                  '{"schema_version":"1"}', true, now()
+                ) RETURNING id
+                """
+            ),
+            fixture,
+        )
+        assert (
+            connection.scalar(
+                text(
+                    "SELECT count(*) FROM grading_results "
+                    "WHERE attempt_id=:attempt_id AND is_authoritative"
+                ),
+                fixture,
+            )
+            == 1
+        )
+
+    with pytest.raises(DBAPIError), engine.begin() as connection:
+        connection.execute(
+            text("UPDATE grading_results SET score=0 WHERE id=:result_id"),
+            {"result_id": second_result_id},
+        )
+
+    with pytest.raises(DBAPIError), engine.begin() as connection:
+        connection.execute(
+            text("DELETE FROM grading_results WHERE id=:result_id"),
+            {"result_id": first_result_id},
+        )
 
     engine.dispose()

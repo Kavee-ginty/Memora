@@ -166,7 +166,7 @@ This policy lets the worker manage service-owned idempotency rows, not a student
 
 Mobile networks retry requests. `idempotency_records` stores a stable operation key so repeating the same mutation converges on one result. `outbox_events` records domain events in the same database transaction as business changes so a worker can publish them reliably later.
 
-The event evidence is immutable, but the worker may change delivery fields such as `publication_status` and `published_at`. The third migration added a trigger that permits those narrow state transitions while rejecting payload changes and deletes.
+The event evidence is immutable, but the worker may change delivery fields such as `publication_status` and `published_at`. The third migration added a trigger that permits those narrow state transitions while rejecting payload changes and deletes. The fourth migration adds an insert-time consistency constraint, removes broad worker access, and adds narrow identity and grading transitions.
 
 This is the important distinction:
 
@@ -175,7 +175,7 @@ This is the important distinction:
 
 ### 5. Seed data
 
-The seed command inserts the approved Physics subject and curriculum identity. `ON CONFLICT DO NOTHING` makes the operation idempotent, so running it twice does not create duplicates.
+The seed command inserts the approved Physics subject and curriculum identity. It resolves the subject by stable code before inserting the dependent curriculum, so a restored database may keep its existing subject UUID. `ON CONFLICT DO NOTHING` makes repeated runs converge without duplicates.
 
 ```sql
 INSERT INTO subjects(id, code, name, status)
@@ -189,7 +189,7 @@ Read: `backend/src/memora/db/seed.py`.
 
 ### 6. Database integration tests
 
-The migration tests verify more than table creation. They exercise upgrade/downgrade/upgrade, repeatable seeds, cross-user isolation, invalid statuses, append-only evidence, role grants, graph-cycle rejection, worker transitions, and service-owned idempotency.
+The migration tests verify more than table creation. They exercise upgrade/downgrade/upgrade, repeatable seeds, identity bootstrap, cross-user and worker isolation, grading replacement, invalid statuses, append-only evidence, outbox invariants, role grants, graph-cycle rejection, worker transitions, and service-owned idempotency.
 
 ```python
 connection.execute(text("SET LOCAL ROLE memora_api"))

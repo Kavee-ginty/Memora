@@ -14,6 +14,7 @@ SUBJECT_SEED_SQL = text(
     ON CONFLICT (code) DO NOTHING
     """
 )
+SUBJECT_ID_SQL = text("SELECT id FROM subjects WHERE code = 'physics'")
 CURRICULUM_SEED_SQL = text(
     """
     INSERT INTO curriculum_versions(
@@ -31,6 +32,9 @@ def seed_database(database_url: str | None = None) -> None:
     with engine.begin() as connection:
         values = {"subject_id": PHYSICS_SUBJECT_ID, "curriculum_id": PHYSICS_CURRICULUM_ID}
         connection.execute(SUBJECT_SEED_SQL, values)
+        values["subject_id"] = connection.scalar(SUBJECT_ID_SQL)
+        if values["subject_id"] is None:
+            raise RuntimeError("Physics subject seed could not be resolved")
         connection.execute(CURRICULUM_SEED_SQL, values)
     engine.dispose()
 
