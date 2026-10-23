@@ -1,0 +1,52 @@
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Local agent and temporary work
+.codex/
+.codex_tmp_library/
+.tmp/
+.tmp_*/
+tmp/
+rendered/
+rendered_*/
+library_ui_review/
+ui_review_flat/
+plan_assets/
+/Memora_Product_and_Technical_Plan.docx
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+.venv/
+dist/
+build/
+*.egg-info/
+
+# Flutter and Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+mobile/build/
+mobile/android/.gradle/
+mobile/ios/Pods/
+
+# IDE and OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Generated contracts are produced by T05
+contracts/openapi/generated/
+contracts/dart/generated/
