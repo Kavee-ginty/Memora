@@ -40,7 +40,7 @@ If two sources appear inconsistent, stop implementation and resolve the conflict
 | T05 | OpenAPI models and generated client pipeline | **Ready** | - | 4 | T01 | `task/T05-openapi-pipeline` | API contracts |
 | T06 | Identity and session backend | Blocked | - | 4 | T02, T04, T05 | `task/T06-identity-session` | Backend API |
 | T07 | Auth bootstrap mobile and guarded routes | Blocked | - | 5 | T03, T05, T06 | `task/T07-mobile-auth-routes` | Mobile navigation |
-| T08 | Curriculum and knowledge graph seed | **Ready** | - | 5 | T04 | `task/T08-curriculum-graph` | Data and knowledge |
+| T08 | Curriculum and knowledge graph seed | Blocked | - | 5 | T04, T05 | `task/T08-curriculum-graph` | Data and knowledge |
 | T09 | Learning ingestion backend | Blocked | - | 7 | T05, T06, T08 | `task/T09-ingestion-backend` | API and worker |
 | T10 | Learning ingestion mobile | Blocked | - | 6 | T07, T09 | `task/T10-ingestion-mobile` | Mobile feature |
 | T11 | Memory engine v1 | Blocked | - | 7 | T08 | `task/T11-memory-engine` | Learning engine |
@@ -143,5 +143,5 @@ Every task pull request must contain:
 
 ## 6 Current next action
 
-T01 and T04 are merged and Done. T02, T03, T05 and T08 are Ready for developers to claim in parallel. Prefer T08 first when staffing is limited because it has zero float on the current critical path.
+T01 and T04 are merged and Done. T02, T03 and T05 are Ready for developers to claim in parallel. Prefer T05 first when staffing is limited because T08 remains Blocked until T05 is Done and then continues the zero-float critical path.
 
