@@ -191,31 +191,31 @@ def build():
             outline=outline,
             width=8 if critical else 5,
         )
-        id_box = draw.textbbox((0, 0), task, font=font(30, True))
+        id_box = draw.textbbox((0, 0), task, font=font(38, True))
         draw.text(
-            (x - (id_box[2] - id_box[0]) / 2, y - 20),
+            (x - (id_box[2] - id_box[0]) / 2, y - 25),
             task,
-            font=font(30, True),
+            font=font(38, True),
             fill="#172B3A",
         )
 
         lines = textwrap.wrap(label, width=22)
         label_y = y + 72
         for line in lines[:2]:
-            box = draw.textbbox((0, 0), line, font=font(24, True))
+            box = draw.textbbox((0, 0), line, font=font(30, True))
             draw.text(
                 (x - (box[2] - box[0]) / 2, label_y),
                 line,
-                font=font(24, True),
+                font=font(30, True),
                 fill="#172B3A",
             )
-            label_y += 30
+            label_y += 38
         duration = f"{days}d"
-        box = draw.textbbox((0, 0), duration, font=font(22))
+        box = draw.textbbox((0, 0), duration, font=font(26))
         draw.text(
             (x - (box[2] - box[0]) / 2, label_y + 3),
             duration,
-            font=font(22),
+            font=font(26),
             fill="#607587",
         )
 
