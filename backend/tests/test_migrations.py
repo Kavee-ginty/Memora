@@ -391,3 +391,71 @@ def test_role_grants_rls_coverage_and_status_checks_against_postgres() -> None:
         assert connection.scalar(text("SELECT count(*) FROM subjects WHERE status='draft'")) == 0
         assert connection.scalar(text("SELECT count(*) FROM subjects WHERE status='approved'")) == 1
     engine.dispose()
+
+
+def test_worker_can_publish_outbox_and_use_service_idempotency() -> None:
+    database_url = os.getenv("MEMORA_TEST_DATABASE_URL")
+    if not database_url:
+        pytest.skip("MEMORA_TEST_DATABASE_URL is not configured")
+
+    os.environ["MEMORA_DATABASE_URL"] = database_url
+    command.upgrade(alembic_config(database_url), "head")
+    engine = create_engine(database_url)
+    event_id = str(uuid4())
+    event_key = str(uuid4())
+    service_key = str(uuid4())
+
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                "INSERT INTO outbox_events("
+                "id, domain_event_key, aggregate_type, aggregate_id, event_type, "
+                "event_version, payload, correlation_id, publication_status"
+                ") VALUES ("
+                ":id, :event_key, 'mission', gen_random_uuid(), 'completed', "
+                "1, '{\"schema_version\":\"1\"}', gen_random_uuid(), 'pending'"
+                ")"
+            ),
+            {"id": event_id, "event_key": event_key},
+        )
+        connection.execute(text("SET LOCAL ROLE memora_worker"))
+        connection.execute(
+            text(
+                "UPDATE outbox_events SET publication_status='published', published_at=now() "
+                "WHERE id=:id"
+            ),
+            {"id": event_id},
+        )
+        connection.execute(
+            text(
+                "INSERT INTO idempotency_records("
+                "scope, operation, idempotency_key, request_hash, status, expires_at"
+                ") VALUES ("
+                "'worker', 'publish', :key, 'hash', 'processing', now() + interval '1 day'"
+                ")"
+            ),
+            {"key": service_key},
+        )
+        assert (
+            connection.scalar(
+                text(
+                    "SELECT count(*) FROM idempotency_records "
+                    "WHERE user_id IS NULL AND idempotency_key=:key"
+                ),
+                {"key": service_key},
+            )
+            == 1
+        )
+
+    with pytest.raises(DBAPIError), engine.begin() as connection:
+        connection.execute(text("SET LOCAL ROLE memora_worker"))
+        connection.execute(
+            text("UPDATE outbox_events SET payload=CAST(:payload AS jsonb) WHERE id=:id"),
+            {"id": event_id, "payload": '{"changed":true}'},
+        )
+
+    with pytest.raises(DBAPIError), engine.begin() as connection:
+        connection.execute(text("SET LOCAL ROLE memora_worker"))
+        connection.execute(text("DELETE FROM outbox_events WHERE id=:id"), {"id": event_id})
+
+    engine.dispose()
