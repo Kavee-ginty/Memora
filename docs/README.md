@@ -30,6 +30,8 @@ docs/
 |   |-- Memora_Development_Network_Plan.md
 |   |-- Memora_Development_Task_Table.md
 |   `-- Memora_Development_Network_Diagram.png
+|-- learning/
+|   `-- T01_T04_Study_Note.md
 `-- archive/
     `-- Superseded combined plan and preserved legacy folders
 ```
@@ -46,3 +48,5 @@ docs/
 8. `references/ui-ux-audit/*.png` is supporting analysis, not the implementation authority.
 
 Coding agents must read the UI/UX Markdown and open the matching PNG from `screens/` before implementing a screen. When the PNG conflicts with the Markdown, follow the Markdown and document the deviation.
+
+Developer-oriented learning notes are under `learning/`. They summarize implemented work but do not override the canonical specifications.
