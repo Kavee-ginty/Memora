@@ -1,0 +1,4 @@
+# Convenience dependency entry point for local development.
+# Application and documentation dependencies remain pinned in their owning lock files.
+-r backend/requirements-dev.lock
+-r tools/requirements.lock

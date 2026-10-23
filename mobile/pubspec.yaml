@@ -1,0 +1,23 @@
+name: memora_mobile
+description: Memora student mobile application
+publish_to: none
+version: 0.1.0+1
+
+environment:
+  sdk: ">=3.13.0 <4.0.0"
+  flutter: ">=3.47.5"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  dio: ">=5.7.0 <6.0.0"
+  flutter_riverpod: ">=2.6.0 <3.0.0"
+  go_router: ">=14.6.0 <15.0.0"
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ">=5.0.0 <7.0.0"
+
+flutter:
+  uses-material-design: true
