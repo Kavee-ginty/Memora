@@ -26,6 +26,13 @@ abstract final class MemoraColors {
   static const Color controlRest = Color(0xFF86BBE7);
   static const Color controlSelected = Color(0xFFD4F2FF);
 
+  // Quiz Option tokens (matching docs/screens/quiz.png and UI mockups)
+  static const Color quizOptionRest = Color(0xFF86BBE7);
+  static const Color quizOptionCorrect = Color(0xFF1FE46B);
+  static const Color quizOptionWeakMemory = Color(0xFFED8F91);
+  static const Color quizOptionMint = Color(0xFF74EFA3);
+  static const Color timerBadge = Color(0xFF00C7FF);
+
   // Feedback tokens
   static const Color feedbackPositive = Color(0xFF137A4B);
   static const Color feedbackAttention = Color(0xFF9A5B00);

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../design_system/design_system.dart';
 
@@ -57,7 +58,7 @@ class LearningPathScreen extends StatelessWidget {
             badgeText: 'YOU ARE HERE',
             buttonLabel: 'Start Quiz',
             mascotAsset: 'assets/mascot/teaching.png',
-            onStart: onStartMission ?? () {},
+            onStart: onStartMission ?? () => context.push('/quiz'),
           ),
 
           // 6. Node 8 (Locked node on right side)

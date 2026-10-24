@@ -490,54 +490,91 @@ class _ComponentCatalogScreenState extends State<ComponentCatalogScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        const MemoraQuizProgressBar(
-          totalQuestions: 8,
-          currentQuestionIndex: 2,
-          memoriesProtectedCount: 2,
+        const Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: <Widget>[
+            Expanded(
+              child: MemoraQuizProgressBar(
+                totalQuestions: 8,
+                currentQuestionIndex: 2,
+                memoriesProtectedCount: 2,
+              ),
+            ),
+            SizedBox(width: MemoraSpacing.space16),
+            MemoraTimerBadge(),
+          ],
         ),
         const SizedBox(height: MemoraSpacing.space16),
-        MemoraQuizOption(
-          indexLabel: 'A',
-          text: 'F = G(m1 * m2) / r^2',
-          state: _selectedQuizOption == 0
-              ? MemoraQuizOptionState.selected
-              : MemoraQuizOptionState.defaultState,
-          onTap: () {
-            setState(() {
-              _selectedQuizOption = 0;
-            });
-          },
+        Text(
+          'Which word means the opposite of "ancient"?',
+          style: MemoraTypography.cardTitle.copyWith(fontSize: 18),
         ),
-        const SizedBox(height: MemoraSpacing.space8),
-        MemoraQuizOption(
-          indexLabel: 'B',
-          text: 'F = m * a (Newton\'s 2nd Law)',
-          state: _selectedQuizOption == 1
-              ? MemoraQuizOptionState.selected
-              : MemoraQuizOptionState.defaultState,
-          onTap: () {
-            setState(() {
-              _selectedQuizOption = 1;
-            });
-          },
+        const SizedBox(height: MemoraSpacing.space16),
+        MemoraQuizGrid(
+          options: <Widget>[
+            MemoraQuizOption(
+              text: 'Historic',
+              state: _selectedQuizOption == 0
+                  ? MemoraQuizOptionState.selected
+                  : MemoraQuizOptionState.defaultState,
+              onTap: () {
+                setState(() {
+                  _selectedQuizOption = 0;
+                });
+              },
+            ),
+            MemoraQuizOption(
+              text: 'Modern',
+              state: _selectedQuizOption == 1
+                  ? MemoraQuizOptionState.correct
+                  : MemoraQuizOptionState.defaultState,
+              onTap: () {
+                setState(() {
+                  _selectedQuizOption = 1;
+                });
+              },
+            ),
+            MemoraQuizOption(
+              text: 'Timeless',
+              state: _selectedQuizOption == 2
+                  ? MemoraQuizOptionState.selected
+                  : MemoraQuizOptionState.defaultState,
+              onTap: () {
+                setState(() {
+                  _selectedQuizOption = 2;
+                });
+              },
+            ),
+            MemoraQuizOption(
+              text: 'Traditional',
+              state: _selectedQuizOption == 3
+                  ? MemoraQuizOptionState.weakMemory
+                  : MemoraQuizOptionState.defaultState,
+              onTap: () {
+                setState(() {
+                  _selectedQuizOption = 3;
+                });
+              },
+            ),
+          ],
         ),
-        const SizedBox(height: MemoraSpacing.space8),
-        const MemoraQuizOption(
-          indexLabel: 'C',
-          text: 'E = m * c^2 (Verified Correct)',
-          state: MemoraQuizOptionState.correct,
-        ),
-        const SizedBox(height: MemoraSpacing.space8),
-        const MemoraQuizOption(
-          indexLabel: 'D',
-          text: 'P = V / I (Weak Memory State)',
-          state: MemoraQuizOptionState.weakMemory,
+        const SizedBox(height: MemoraSpacing.space16),
+        MemoraQuizActionButton(
+          label: _selectedQuizOption == 1
+              ? 'Next →'
+              : (_selectedQuizOption == 3 ? 'Next →' : 'Check Answer'),
+          variant: _selectedQuizOption == 1
+              ? MemoraQuizActionVariant.nextCorrect
+              : (_selectedQuizOption == 3
+                    ? MemoraQuizActionVariant.nextWeakMemory
+                    : MemoraQuizActionVariant.checkAnswer),
+          onPressed: () {},
         ),
         const SizedBox(height: MemoraSpacing.space16),
         MemoraFeedbackPanel(
           type: MemoraFeedbackType.recalled,
           headline: 'Memory protected',
-          body: 'Great job! Newton\'s second law connects resultant force directly to mass and acceleration.',
+          body: 'Great job! "Modern" is the antonym of "ancient" in everyday English.',
           primaryActionLabel: 'Next memory',
           onPrimaryAction: () {},
           secondaryActionLabel: 'Explain',
@@ -547,7 +584,7 @@ class _ComponentCatalogScreenState extends State<ComponentCatalogScreen> {
         MemoraFeedbackPanel(
           type: MemoraFeedbackType.weakMemory,
           headline: 'Weak memory found',
-          body: 'Electrical power is P = V * I. Let\'s reinforce this concept with a quick repair.',
+          body: '"Traditional" relates to customs passed down over time, rather than opposite of ancient.',
           primaryActionLabel: 'Try a repair question',
           onPrimaryAction: () {},
           secondaryActionLabel: 'Explain answer',
@@ -555,9 +592,9 @@ class _ComponentCatalogScreenState extends State<ComponentCatalogScreen> {
         ),
         const SizedBox(height: MemoraSpacing.space16),
         const MemoraConceptExplanationCard(
-          conceptTitle: 'Newton\'s Gravitational Law',
-          explanation: 'Every particle attracts every other particle with a force proportional to product of their masses and inversely proportional to square of distance.',
-          sourceExcerpt: 'Physics GCE A/L Unit 3: Mechanics, Page 42',
+          conceptTitle: 'Antonyms & Etymology',
+          explanation: 'Ancient refers to times long past. Modern refers to the present or recent times.',
+          sourceExcerpt: 'English Vocabulary Mastery, Chapter 4: Antonyms',
         ),
       ],
     );

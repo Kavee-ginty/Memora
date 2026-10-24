@@ -18,12 +18,60 @@ void main() {
             indexLabel: 'A',
             text: 'Newton\'s Law',
             state: MemoraQuizOptionState.defaultState,
+            showIndexBadge: true,
           ),
         ),
       );
 
       expect(find.text('A'), findsOneWidget);
       expect(find.text('Newton\'s Law'), findsOneWidget);
+    });
+
+    testWidgets(
+      'renders clean 2x2 colored quiz buttons without badge by default',
+      (WidgetTester tester) async {
+        await tester.pumpWidget(
+          buildApp(
+            const MemoraQuizGrid(
+              options: <Widget>[
+                MemoraQuizOption(text: 'Historic'),
+                MemoraQuizOption(
+                  text: 'Modern',
+                  state: MemoraQuizOptionState.correct,
+                ),
+                MemoraQuizOption(text: 'Timeless'),
+                MemoraQuizOption(
+                  text: 'Traditional',
+                  state: MemoraQuizOptionState.weakMemory,
+                ),
+              ],
+            ),
+          ),
+        );
+
+        expect(find.text('Historic'), findsOneWidget);
+        expect(find.text('Modern'), findsOneWidget);
+        expect(find.text('Timeless'), findsOneWidget);
+        expect(find.text('Traditional'), findsOneWidget);
+      },
+    );
+
+    testWidgets('renders MemoraTimerBadge and MemoraQuizActionButton', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(
+        buildApp(
+          Column(
+            children: <Widget>[
+              const MemoraTimerBadge(timeFormatted: '04:32'),
+              MemoraQuizActionButton(label: 'Check Answer', onPressed: () {}),
+            ],
+          ),
+        ),
+      );
+
+      expect(find.text('04:32'), findsOneWidget);
+      expect(find.text('Check Answer'), findsOneWidget);
     });
 
     testWidgets('triggers onTap callback when selected', (

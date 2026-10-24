@@ -18,77 +18,65 @@ enum MemoraQuizOptionState {
 
 /// A responsive, accessible answer choice card for quiz questions.
 ///
-/// Complies with UIX-005 (meaning never conveyed by color alone) and UIX-025 (response controls).
+/// Designed to exactly match the 2x2 solid colored pill buttons in Memora quiz screens
+/// (docs/screens/quiz.png and UI mockups).
+/// Complies with UIX-005 (meaning never conveyed by color alone via semantics)
+/// and UIX-030 (minimum 48x48 px touch target).
 class MemoraQuizOption extends StatelessWidget {
   const MemoraQuizOption({
     super.key,
-    required this.indexLabel,
     required this.text,
+    this.indexLabel,
     this.state = MemoraQuizOptionState.defaultState,
     this.onTap,
     this.isMultiSelect = false,
+    this.showIndexBadge = false,
   });
 
-  final String indexLabel;
   final String text;
+  final String? indexLabel;
   final MemoraQuizOptionState state;
   final VoidCallback? onTap;
   final bool isMultiSelect;
+  final bool showIndexBadge;
 
   @override
   Widget build(BuildContext context) {
     Color backgroundColor;
     Color borderColor;
     Color textColor = MemoraColors.textPrimary;
-    Widget? trailingIcon;
 
     switch (state) {
       case MemoraQuizOptionState.defaultState:
-        backgroundColor = MemoraColors.surfaceCanvas;
-        borderColor = MemoraColors.borderDefault;
+        backgroundColor = MemoraColors.quizOptionRest; // #86BBE7
+        borderColor = const Color(0xFF7CB1E8);
         break;
       case MemoraQuizOptionState.selected:
-        backgroundColor = MemoraColors.controlSelected;
-        borderColor = MemoraColors.focus;
-        trailingIcon = Icon(
-          isMultiSelect ? Icons.check_box : Icons.radio_button_checked,
-          color: MemoraColors.focus,
-          size: 20,
-        );
-        break;
       case MemoraQuizOptionState.correct:
-        backgroundColor = MemoraColors.surfaceMint;
-        borderColor = MemoraColors.feedbackPositive;
-        trailingIcon = const Icon(
-          Icons.check_circle,
-          color: MemoraColors.feedbackPositive,
-          size: 20,
-        );
+        backgroundColor = MemoraColors.quizOptionCorrect; // #1FE46B
+        borderColor = const Color(0xFF15C858);
         break;
       case MemoraQuizOptionState.weakMemory:
-        backgroundColor = const Color(0xFFFFF9F2);
-        borderColor = MemoraColors.feedbackAttention;
-        trailingIcon = const Icon(
-          Icons.error_outline,
-          color: MemoraColors.feedbackAttention,
-          size: 20,
-        );
+        backgroundColor = MemoraColors.quizOptionWeakMemory; // #ED8F91
+        borderColor = const Color(0xFFD67375);
         break;
       case MemoraQuizOptionState.disabled:
-        backgroundColor = MemoraColors.surfaceSoft;
-        borderColor = MemoraColors.borderDefault.withValues(alpha: 0.5);
+        backgroundColor = MemoraColors.quizOptionRest.withValues(alpha: 0.45);
+        borderColor = Colors.transparent;
         textColor = MemoraColors.textMuted;
         break;
     }
 
+    final String labelPrefix = indexLabel != null
+        ? 'Option $indexLabel, '
+        : 'Option ';
     final String stateLabel = switch (state) {
-      MemoraQuizOptionState.defaultState => 'Option $indexLabel, $text',
-      MemoraQuizOptionState.selected => 'Option $indexLabel, $text, selected',
+      MemoraQuizOptionState.defaultState => '$labelPrefix$text',
+      MemoraQuizOptionState.selected => '$labelPrefix$text, selected',
       MemoraQuizOptionState.correct =>
-        'Option $indexLabel, $text, correct, memory protected',
-      MemoraQuizOptionState.weakMemory =>
-        'Option $indexLabel, $text, weak memory',
-      MemoraQuizOptionState.disabled => 'Option $indexLabel, $text, disabled',
+        '$labelPrefix$text, correct, memory protected',
+      MemoraQuizOptionState.weakMemory => '$labelPrefix$text, weak memory',
+      MemoraQuizOptionState.disabled => '$labelPrefix$text, disabled',
     };
 
     return Semantics(
@@ -98,85 +86,220 @@ class MemoraQuizOption extends StatelessWidget {
       label: stateLabel,
       child: Material(
         color: backgroundColor,
-        borderRadius: MemoraRadii.control,
+        borderRadius: BorderRadius.circular(18.0),
         elevation: 0,
         child: InkWell(
           onTap: state == MemoraQuizOptionState.disabled ? null : onTap,
-          borderRadius: MemoraRadii.control,
+          borderRadius: BorderRadius.circular(18.0),
           child: Container(
-            constraints: const BoxConstraints(minHeight: 52),
+            constraints: const BoxConstraints(minHeight: 56),
             padding: const EdgeInsets.symmetric(
               horizontal: MemoraSpacing.space16,
               vertical: MemoraSpacing.space12,
             ),
             decoration: BoxDecoration(
-              borderRadius: MemoraRadii.control,
-              border: Border.all(
-                color: borderColor,
-                width:
-                    state == MemoraQuizOptionState.selected ||
-                        state == MemoraQuizOptionState.correct ||
-                        state == MemoraQuizOptionState.weakMemory
-                    ? 2.0
-                    : 1.0,
-              ),
+              borderRadius: BorderRadius.circular(18.0),
+              border: Border.all(color: borderColor, width: 1.0),
               boxShadow: state == MemoraQuizOptionState.selected
                   ? MemoraElevations.cardShadows
                   : null,
             ),
+            alignment: Alignment.center,
             child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
-                // Index Indicator badge (A, B, C, D)
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: state == MemoraQuizOptionState.selected
-                        ? MemoraColors.brandPrimary
-                        : (state == MemoraQuizOptionState.correct
-                              ? MemoraColors.feedbackPositive
-                              : MemoraColors.surfaceSoft),
-                    borderRadius: BorderRadius.circular(8.0),
-                    border: Border.all(
-                      color:
-                          state == MemoraQuizOptionState.selected ||
-                              state == MemoraQuizOptionState.correct
-                          ? Colors.transparent
-                          : MemoraColors.borderDefault,
+                if (showIndexBadge && indexLabel != null) ...<Widget>[
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.35),
+                      borderRadius: BorderRadius.circular(6.0),
+                    ),
+                    child: Text(
+                      indexLabel!,
+                      style: MemoraTypography.metadata.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: textColor,
+                      ),
                     ),
                   ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    indexLabel,
-                    style: MemoraTypography.metadata.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color:
-                          state == MemoraQuizOptionState.selected ||
-                              state == MemoraQuizOptionState.correct
-                          ? Colors.white
-                          : MemoraColors.textPrimary,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: MemoraSpacing.space12),
-                // Text prompt
-                Expanded(
+                  const SizedBox(width: MemoraSpacing.space8),
+                ],
+                Flexible(
                   child: Text(
                     text,
-                    style: MemoraTypography.body.copyWith(
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: MemoraTypography.bodyStrong.copyWith(
                       color: textColor,
-                      fontWeight: state == MemoraQuizOptionState.selected
-                          ? FontWeight.w600
-                          : FontWeight.w400,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
-                if (trailingIcon != null) ...<Widget>[
-                  const SizedBox(width: MemoraSpacing.space8),
-                  trailingIcon,
-                ],
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A 2x2 grid container for quiz answer choice buttons.
+///
+/// Ensures uniform height and width across 2 columns and 2 rows, matching
+/// the layout in docs/screens/quiz.png.
+class MemoraQuizGrid extends StatelessWidget {
+  const MemoraQuizGrid({
+    super.key,
+    required this.options,
+    this.spacing = MemoraSpacing.space12,
+  });
+
+  final List<Widget> options;
+  final double spacing;
+
+  @override
+  Widget build(BuildContext context) {
+    if (options.length == 4) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              Expanded(child: options[0]),
+              SizedBox(width: spacing),
+              Expanded(child: options[1]),
+            ],
+          ),
+          SizedBox(height: spacing),
+          Row(
+            children: <Widget>[
+              Expanded(child: options[2]),
+              SizedBox(width: spacing),
+              Expanded(child: options[3]),
+            ],
+          ),
+        ],
+      );
+    }
+
+    // Dynamic grid fallback if less or more than 4 options
+    return Wrap(
+      spacing: spacing,
+      runSpacing: spacing,
+      children: options
+          .map((Widget opt) => SizedBox(width: 140, child: opt))
+          .toList(),
+    );
+  }
+}
+
+/// Rounded countdown timer badge displayed at the top right of the quiz card.
+///
+/// Matches the cyan timer in docs/screens/quiz.png (#00C7FF).
+class MemoraTimerBadge extends StatelessWidget {
+  const MemoraTimerBadge({
+    super.key,
+    this.timeFormatted = '04:32',
+    this.label = 'Time remaining',
+  });
+
+  final String timeFormatted;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: MemoraSpacing.space12,
+        vertical: MemoraSpacing.space8,
+      ),
+      decoration: BoxDecoration(
+        color: MemoraColors.timerBadge,
+        borderRadius: BorderRadius.circular(16.0),
+        boxShadow: MemoraElevations.cardShadows,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: <Widget>[
+          Text(
+            timeFormatted,
+            style: MemoraTypography.cardTitle.copyWith(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: MemoraColors.textPrimary,
+              height: 1.1,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: MemoraTypography.metadata.copyWith(
+              fontSize: 9,
+              color: MemoraColors.textPrimary,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Primary action button at the bottom of the quiz card.
+///
+/// Supports Check Answer (cyan), Next Correct (mint green), and Next Weak Memory (salmon coral).
+enum MemoraQuizActionVariant { checkAnswer, nextCorrect, nextWeakMemory }
+
+class MemoraQuizActionButton extends StatelessWidget {
+  const MemoraQuizActionButton({
+    super.key,
+    required this.label,
+    required this.onPressed,
+    this.variant = MemoraQuizActionVariant.checkAnswer,
+  });
+
+  final String label;
+  final VoidCallback? onPressed;
+  final MemoraQuizActionVariant variant;
+
+  @override
+  Widget build(BuildContext context) {
+    final Color bgColor = switch (variant) {
+      MemoraQuizActionVariant.checkAnswer => MemoraColors.timerBadge, // #00C7FF
+      MemoraQuizActionVariant.nextCorrect =>
+        MemoraColors.quizOptionMint, // #74EFA3
+      MemoraQuizActionVariant.nextWeakMemory =>
+        MemoraColors.quizOptionWeakMemory, // #ED8F91
+    };
+
+    return SizedBox(
+      width: double.infinity,
+      height: 52,
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: bgColor,
+          foregroundColor: MemoraColors.textPrimary,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18.0),
+          ),
+        ),
+        onPressed: onPressed,
+        child: Text(
+          label,
+          style: MemoraTypography.button.copyWith(
+            color: MemoraColors.textPrimary,
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
           ),
         ),
       ),
