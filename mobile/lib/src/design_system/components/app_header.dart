@@ -145,23 +145,32 @@ class MemoraHeader extends StatelessWidget implements PreferredSizeWidget {
               label: 'Profile',
               child: InkWell(
                 onTap: onProfilePressed,
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(
+                  MemoraSpacing.minTouchTarget / 2,
+                ),
                 child: Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: MemoraColors.brandBlue,
-                      width: 2.0,
-                    ),
-                    color: MemoraColors.surfaceCanvas,
+                  constraints: const BoxConstraints(
+                    minWidth: MemoraSpacing.minTouchTarget,
+                    minHeight: MemoraSpacing.minTouchTarget,
                   ),
-                  child: const Center(
-                    child: Icon(
-                      Icons.person,
-                      size: 20,
-                      color: MemoraColors.brandBlue,
+                  alignment: Alignment.center,
+                  child: Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: MemoraColors.brandBlue,
+                        width: 2.0,
+                      ),
+                      color: MemoraColors.surfaceCanvas,
+                    ),
+                    child: const Center(
+                      child: Icon(
+                        Icons.person,
+                        size: 20,
+                        color: MemoraColors.brandBlue,
+                      ),
                     ),
                   ),
                 ),

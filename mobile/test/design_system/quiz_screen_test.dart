@@ -11,10 +11,11 @@ void main() {
       MaterialApp(theme: MemoraTheme.light(), home: const QuizScreen()),
     );
 
-    // 1. Verify Header Elements
+    // 1. Verify Header Elements & Bottom Nav Omission (UIX-008)
     expect(find.text('Memora'), findsOneWidget);
-    expect(find.text('Menu'), findsOneWidget);
+    expect(find.bySemanticsLabel('Exit quiz session'), findsOneWidget);
     expect(find.text('7 days'), findsOneWidget);
+    expect(find.byType(MemoraBottomNavigationBar), findsNothing);
 
     // 2. Verify Timer Badge & Question
     expect(find.text('04:32'), findsOneWidget);
@@ -47,5 +48,11 @@ void main() {
     expect(find.text('Next →'), findsOneWidget);
     expect(find.text('Explain'), findsOneWidget);
     expect(find.text('Memory protected!'), findsOneWidget);
+
+    // Verify Explain opens Concept Explanation Card
+    await tester.ensureVisible(find.text('Explain'));
+    await tester.tap(find.text('Explain'));
+    await tester.pumpAndSettle();
+    expect(find.byType(MemoraConceptExplanationCard), findsOneWidget);
   });
 }

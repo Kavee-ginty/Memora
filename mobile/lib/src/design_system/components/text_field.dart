@@ -28,7 +28,10 @@ class MemoraTextField extends StatefulWidget {
     this.onSubmitted,
     this.validator,
     this.focusNode,
-  });
+  }) : assert(
+         initialValue == null || controller == null,
+         'Cannot provide both a controller and an initialValue.',
+       );
 
   final String label;
   final String? hintText;

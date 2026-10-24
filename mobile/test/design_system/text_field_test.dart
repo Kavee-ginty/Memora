@@ -92,5 +92,18 @@ void main() {
       final TextFormField formField = tester.widget<TextFormField>(fieldFinder);
       expect(formField.enabled, isFalse);
     });
+
+    test('asserts when both controller and initialValue are provided', () {
+      final TextEditingController controller = TextEditingController();
+      expect(
+        () => MemoraTextField(
+          label: 'Invalid Field',
+          controller: controller,
+          initialValue: 'Test',
+        ),
+        throwsAssertionError,
+      );
+      controller.dispose();
+    });
   });
 }

@@ -68,8 +68,14 @@ class MemoraBanner extends StatelessWidget {
                     TextButton(
                       onPressed: onAction,
                       style: TextButton.styleFrom(
-                        padding: EdgeInsets.zero,
-                        minimumSize: const Size(48, 36),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: MemoraSpacing.space12,
+                          vertical: MemoraSpacing.space8,
+                        ),
+                        minimumSize: const Size(
+                          MemoraSpacing.minTouchTarget,
+                          MemoraSpacing.minTouchTarget,
+                        ),
                         foregroundColor: _iconColor,
                         textStyle: MemoraTypography.button.copyWith(
                           fontSize: 14,

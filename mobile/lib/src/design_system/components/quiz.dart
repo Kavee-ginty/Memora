@@ -52,6 +52,9 @@ class MemoraQuizOption extends StatelessWidget {
         borderColor = const Color(0xFF7CB1E8);
         break;
       case MemoraQuizOptionState.selected:
+        backgroundColor = const Color(0xFFD4EBFB); // Distinct selected tint
+        borderColor = MemoraColors.focus; // Cyan focus border
+        break;
       case MemoraQuizOptionState.correct:
         backgroundColor = MemoraColors.quizOptionCorrect; // #1FE46B
         borderColor = const Color(0xFF15C858);
@@ -99,7 +102,10 @@ class MemoraQuizOption extends StatelessWidget {
             ),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(18.0),
-              border: Border.all(color: borderColor, width: 1.0),
+              border: Border.all(
+                color: borderColor,
+                width: state == MemoraQuizOptionState.selected ? 2.0 : 1.0,
+              ),
               boxShadow: state == MemoraQuizOptionState.selected
                   ? MemoraElevations.cardShadows
                   : null,
@@ -133,8 +139,7 @@ class MemoraQuizOption extends StatelessWidget {
                   child: Text(
                     text,
                     textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                    softWrap: true,
                     style: MemoraTypography.bodyStrong.copyWith(
                       color: textColor,
                       fontSize: 16,
@@ -207,12 +212,26 @@ class MemoraQuizGrid extends StatelessWidget {
 class MemoraTimerBadge extends StatelessWidget {
   const MemoraTimerBadge({
     super.key,
-    this.timeFormatted = '04:32',
+    this.timeFormatted,
+    this.remainingSeconds,
     this.label = 'Time remaining',
   });
 
-  final String timeFormatted;
+  final String? timeFormatted;
+  final int? remainingSeconds;
   final String label;
+
+  String get _displayTime {
+    if (timeFormatted != null) {
+      return timeFormatted!;
+    }
+    if (remainingSeconds != null) {
+      final int m = remainingSeconds! ~/ 60;
+      final int s = remainingSeconds! % 60;
+      return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+    }
+    return '04:32';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -231,7 +250,7 @@ class MemoraTimerBadge extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget>[
           Text(
-            timeFormatted,
+            _displayTime,
             style: MemoraTypography.cardTitle.copyWith(
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -256,8 +275,13 @@ class MemoraTimerBadge extends StatelessWidget {
 
 /// Primary action button at the bottom of the quiz card.
 ///
-/// Supports Check Answer (cyan), Next Correct (mint green), and Next Weak Memory (salmon coral).
-enum MemoraQuizActionVariant { checkAnswer, nextCorrect, nextWeakMemory }
+/// Preserves canonical brand primary styling (#00C7FF) for retrieval progression actions.
+enum MemoraQuizActionVariant {
+  checkAnswer,
+  nextPrimary,
+  nextCorrect,
+  nextWeakMemory,
+}
 
 class MemoraQuizActionButton extends StatelessWidget {
   const MemoraQuizActionButton({
@@ -274,21 +298,29 @@ class MemoraQuizActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Color bgColor = switch (variant) {
-      MemoraQuizActionVariant.checkAnswer => MemoraColors.timerBadge, // #00C7FF
+      MemoraQuizActionVariant.checkAnswer ||
+      MemoraQuizActionVariant.nextPrimary =>
+        MemoraColors.timerBadge, // #00C7FF (Canonical brand action)
       MemoraQuizActionVariant.nextCorrect =>
         MemoraColors.quizOptionMint, // #74EFA3
       MemoraQuizActionVariant.nextWeakMemory =>
         MemoraColors.quizOptionWeakMemory, // #ED8F91
     };
 
-    return SizedBox(
-      width: double.infinity,
-      height: 52,
+    return ConstrainedBox(
+      constraints: const BoxConstraints(
+        minHeight: MemoraSpacing.minTouchTarget,
+        minWidth: double.infinity,
+      ),
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           backgroundColor: bgColor,
           foregroundColor: MemoraColors.textPrimary,
           elevation: 0,
+          padding: const EdgeInsets.symmetric(
+            horizontal: MemoraSpacing.space16,
+            vertical: MemoraSpacing.space12,
+          ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18.0),
           ),
@@ -296,6 +328,8 @@ class MemoraQuizActionButton extends StatelessWidget {
         onPressed: onPressed,
         child: Text(
           label,
+          textAlign: TextAlign.center,
+          softWrap: true,
           style: MemoraTypography.button.copyWith(
             color: MemoraColors.textPrimary,
             fontSize: 16,

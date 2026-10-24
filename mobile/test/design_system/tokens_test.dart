@@ -152,8 +152,9 @@ void main() {
       expect(MemoraRadii.sheetValue, 24.0);
     });
 
-    test('Typography uses Exo font family across all styles', () {
+    test('Typography styles match UI/UX Specification Section 4.3', () {
       expect(MemoraTypography.fontExo, 'Exo');
+      expect(MemoraTypography.fontInter, 'Inter');
       expect(MemoraTypography.display.fontFamily, 'Exo');
       expect(MemoraTypography.pageTitle.fontFamily, 'Exo');
       expect(MemoraTypography.sectionTitle.fontFamily, 'Exo');
@@ -161,14 +162,17 @@ void main() {
       expect(MemoraTypography.cardTitle.fontFamily, 'Exo');
       expect(MemoraTypography.button.fontFamily, 'Exo');
       expect(MemoraTypography.navigation.fontFamily, 'Exo');
-      expect(MemoraTypography.body.fontFamily, 'Exo');
-      expect(MemoraTypography.bodyStrong.fontFamily, 'Exo');
-      expect(MemoraTypography.metadata.fontFamily, 'Exo');
+
+      // Body and metadata use Inter per Section 4.3
+      expect(MemoraTypography.body.fontFamily, 'Inter');
+      expect(MemoraTypography.bodyStrong.fontFamily, 'Inter');
+      expect(MemoraTypography.metadata.fontFamily, 'Inter');
 
       final ThemeData theme = MemoraTheme.light();
-      expect(theme.textTheme.bodyMedium?.fontFamily, 'Exo');
-      expect(theme.textTheme.bodyLarge?.fontFamily, 'Exo');
+      expect(theme.textTheme.bodyMedium?.fontFamily, 'Inter');
+      expect(theme.textTheme.bodyLarge?.fontFamily, 'Inter');
       expect(theme.textTheme.headlineLarge?.fontFamily, 'Exo');
+      expect(theme.textTheme.labelLarge?.fontFamily, 'Exo');
     });
   });
 }

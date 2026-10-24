@@ -1,18 +1,17 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../design_system/design_system.dart';
 
-/// Interactive Quiz Screen matching the exact visual mockup in docs/screens/quiz.png
-/// and user-provided screenshots.
+/// Interactive Quiz Screen matching docs/screens/quiz.png and UI/UX Specification.
 ///
-/// Features:
-/// - Top header with Mora teacher mascot and 7-day streak
-/// - Timer badge (04:32 Time remaining)
-/// - 2x2 grid of solid colored answer buttons (#86BBE7 default, #1FE46B correct, #ED8F91 weak memory)
-/// - Skip/Explain text links
-/// - Full-width action button (Check Answer -> Next)
-/// - Memora bottom navigation bar
+/// Complies with:
+/// - UIX-008: Root bottom navigation is strictly hidden during active quizzes.
+/// - UIX-030: Minimum 48x48 px touch targets across all interactive controls.
+/// - UIX-001 & UIX-005: Canonical primary CTA styling preserved post-feedback.
+/// - UIX-004: Supportive, non-punitive weak memory repair pathway with source explanation.
 class QuizScreen extends StatefulWidget {
   const QuizScreen({super.key});
 
@@ -23,7 +22,35 @@ class QuizScreen extends StatefulWidget {
 class _QuizScreenState extends State<QuizScreen> {
   int? _selectedIndex;
   bool _hasChecked = false;
-  int _navIndex = 1; // Learning tab active
+  bool _showExplanation = false;
+
+  // Active countdown timer (starts at 04:32 = 272 seconds)
+  int _remainingSeconds = 272;
+  Timer? _countdownTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _startTimer();
+  }
+
+  void _startTimer() {
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (Timer timer) {
+      if (_remainingSeconds > 0) {
+        setState(() {
+          _remainingSeconds--;
+        });
+      } else {
+        timer.cancel();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _countdownTimer?.cancel();
+    super.dispose();
+  }
 
   void _onOptionTap(int index) {
     if (_hasChecked) return;
@@ -43,6 +70,20 @@ class _QuizScreenState extends State<QuizScreen> {
     setState(() {
       _selectedIndex = null;
       _hasChecked = false;
+      _showExplanation = false;
+    });
+  }
+
+  void _onRetry() {
+    setState(() {
+      _selectedIndex = null;
+      _hasChecked = false;
+    });
+  }
+
+  void _toggleExplanation() {
+    setState(() {
+      _showExplanation = !_showExplanation;
     });
   }
 
@@ -52,18 +93,7 @@ class _QuizScreenState extends State<QuizScreen> {
 
     return Scaffold(
       backgroundColor: MemoraColors.surfaceOcean, // #DDEEFF
-      bottomNavigationBar: MemoraBottomNavigationBar(
-        currentIndex: _navIndex,
-        onTap: (int index) {
-          if (index == 0) {
-            context.go('/');
-          } else {
-            setState(() {
-              _navIndex = index;
-            });
-          }
-        },
-      ),
+      // Root bottom navigation is intentionally omitted during active missions (UIX-008)
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(
@@ -73,8 +103,8 @@ class _QuizScreenState extends State<QuizScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              // Top Bar: Memora logo, Menu, Mora teacher mascot, 7 days streak
-              _buildTopHeader(),
+              // Top Bar: Memora logo, Menu affordance, Mora teacher mascot, 7 days streak
+              _buildTopHeader(context),
 
               const SizedBox(height: MemoraSpacing.space8),
 
@@ -107,11 +137,11 @@ class _QuizScreenState extends State<QuizScreen> {
 
                     const SizedBox(height: MemoraSpacing.space16),
 
-                    // Timer Badge Row (Right-aligned)
-                    const Align(
+                    // Timer Badge Row (Right-aligned with active countdown)
+                    Align(
                       alignment: Alignment.centerRight,
                       child: MemoraTimerBadge(
-                        timeFormatted: '04:32',
+                        remainingSeconds: _remainingSeconds,
                         label: 'Time remaining',
                       ),
                     ),
@@ -160,25 +190,23 @@ class _QuizScreenState extends State<QuizScreen> {
 
                     const SizedBox(height: MemoraSpacing.space16),
 
-                    // Skip or Explain text link
+                    // Skip or Explain text link with 48px touch target
                     Center(
                       child: TextButton(
-                        onPressed: () {
-                          if (_hasChecked) {
-                            // Show explain
-                          } else {
-                            _onNext();
-                          }
-                        },
+                        onPressed: _hasChecked ? _toggleExplanation : _onNext,
                         style: TextButton.styleFrom(
-                          foregroundColor: const Color(0xFF8FA3B5),
+                          minimumSize: const Size(
+                            MemoraSpacing.minTouchTarget,
+                            MemoraSpacing.minTouchTarget,
+                          ),
+                          foregroundColor: const Color(0xFF566B7D),
                         ),
                         child: Text(
-                          _hasChecked ? 'Explain' : 'skip',
+                          _hasChecked ? 'Explain answer' : 'skip',
                           style: MemoraTypography.body.copyWith(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            color: const Color(0xFF8FA3B5),
+                            color: const Color(0xFF566B7D),
                           ),
                         ),
                       ),
@@ -186,45 +214,52 @@ class _QuizScreenState extends State<QuizScreen> {
 
                     const SizedBox(height: MemoraSpacing.space8),
 
-                    // Primary Action Button (Check Answer -> Next)
-                    if (!_hasChecked)
-                      MemoraQuizActionButton(
-                        label: 'Check Answer',
-                        variant: MemoraQuizActionVariant.checkAnswer,
-                        onPressed: _selectedIndex != null
-                            ? _onCheckAnswer
-                            : null,
-                      )
-                    else
-                      MemoraQuizActionButton(
-                        label: 'Next →',
-                        variant: isCorrect
-                            ? MemoraQuizActionVariant.nextCorrect
-                            : MemoraQuizActionVariant.nextWeakMemory,
-                        onPressed: _onNext,
-                      ),
+                    // Primary Action Button (Canonical cyan action preserved per UIX-001)
+                    MemoraQuizActionButton(
+                      label: _hasChecked ? 'Next →' : 'Check Answer',
+                      variant: MemoraQuizActionVariant.nextPrimary,
+                      onPressed: _hasChecked
+                          ? _onNext
+                          : (_selectedIndex != null ? _onCheckAnswer : null),
+                    ),
                   ],
                 ),
               ),
 
+              // Feedback Panel (shown after checking answer)
               if (_hasChecked) ...<Widget>[
                 const SizedBox(height: MemoraSpacing.space16),
                 if (isCorrect)
-                  const MemoraFeedbackPanel(
+                  MemoraFeedbackPanel(
                     type: MemoraFeedbackType.recalled,
                     headline: 'Memory protected!',
                     body: '"Modern" refers to the present and is the direct antonym of "ancient".',
-                    primaryActionLabel: 'Continue',
-                    onPrimaryAction: _noop,
+                    primaryActionLabel: 'Next memory',
+                    onPrimaryAction: _onNext,
+                    secondaryActionLabel: 'Explain',
+                    onSecondaryAction: _toggleExplanation,
                   )
                 else
-                  const MemoraFeedbackPanel(
+                  MemoraFeedbackPanel(
                     type: MemoraFeedbackType.weakMemory,
                     headline: 'Weak memory found',
                     body: 'The opposite of "ancient" is "modern". Let\'s reinforce this concept!',
-                    primaryActionLabel: 'Review Explanation',
-                    onPrimaryAction: _noop,
+                    primaryActionLabel: 'Try a repair question',
+                    onPrimaryAction: _onRetry,
+                    secondaryActionLabel: 'Explain answer',
+                    onSecondaryAction: _toggleExplanation,
                   ),
+              ],
+
+              // Concept Explanation Card (toggled via Explain controls)
+              if (_showExplanation) ...<Widget>[
+                const SizedBox(height: MemoraSpacing.space16),
+                MemoraConceptExplanationCard(
+                  conceptTitle: 'Antonyms & Etymology',
+                  explanation: 'Ancient designates times long past in human history. Modern designates the present era or contemporary times.',
+                  sourceExcerpt: 'English Vocabulary Mastery, Unit 4: Antonyms',
+                  onContinue: _onNext,
+                ),
               ],
             ],
           ),
@@ -236,12 +271,13 @@ class _QuizScreenState extends State<QuizScreen> {
   MemoraQuizOptionState _getOptionState(int index) {
     if (!_hasChecked) {
       if (_selectedIndex == index) {
-        return MemoraQuizOptionState.selected;
+        return MemoraQuizOptionState
+            .selected; // Distinct selected tint, not correct
       }
       return MemoraQuizOptionState.defaultState;
     }
 
-    // Checked state
+    // Evaluated state
     if (index == 1) {
       return MemoraQuizOptionState.correct; // "Modern" is correct
     }
@@ -251,7 +287,7 @@ class _QuizScreenState extends State<QuizScreen> {
     return MemoraQuizOptionState.defaultState;
   }
 
-  Widget _buildTopHeader() {
+  Widget _buildTopHeader(BuildContext context) {
     return SizedBox(
       height: 100,
       child: Stack(
@@ -273,48 +309,55 @@ class _QuizScreenState extends State<QuizScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
-                // Memora Logo & Menu
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
+                // Memora Logo & Exit / Menu
+                Row(
                   children: <Widget>[
-                    Row(
-                      children: <Widget>[
-                        Container(
-                          width: 20,
-                          height: 20,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: MemoraColors.brandPrimary,
-                              width: 2,
+                    Semantics(
+                      button: true,
+                      label: 'Exit quiz session',
+                      child: InkWell(
+                        onTap: () {
+                          if (Navigator.of(context).canPop()) {
+                            context.pop();
+                          } else {
+                            context.go('/');
+                          }
+                        },
+                        borderRadius: BorderRadius.circular(24.0),
+                        child: Container(
+                          constraints: const BoxConstraints(
+                            minWidth: MemoraSpacing.minTouchTarget,
+                            minHeight: MemoraSpacing.minTouchTarget,
+                          ),
+                          alignment: Alignment.center,
+                          child: Container(
+                            width: 24,
+                            height: 24,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: MemoraColors.brandPrimary,
+                                width: 2,
+                              ),
+                            ),
+                            child: const Center(
+                              child: Icon(
+                                Icons.close_rounded,
+                                size: 14,
+                                color: MemoraColors.brandPrimary,
+                              ),
                             ),
                           ),
                         ),
-                        const SizedBox(width: MemoraSpacing.space8),
-                        Text(
-                          'Memora',
-                          style: MemoraTypography.cardTitle.copyWith(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                    const SizedBox(height: 4),
-                    const Row(
-                      children: <Widget>[
-                        Icon(Icons.menu, size: 14, color: Color(0xFF00AFFF)),
-                        SizedBox(width: 4),
-                        Text(
-                          'Menu',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: MemoraColors.textPrimary,
-                          ),
-                        ),
-                      ],
+                    const SizedBox(width: MemoraSpacing.space8),
+                    Text(
+                      'Memora',
+                      style: MemoraTypography.cardTitle.copyWith(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
                 ),
@@ -358,6 +401,4 @@ class _QuizScreenState extends State<QuizScreen> {
       ),
     );
   }
-
-  static void _noop() {}
 }
