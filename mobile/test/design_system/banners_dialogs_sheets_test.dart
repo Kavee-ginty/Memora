@@ -4,7 +4,9 @@ import 'package:memora_mobile/src/design_system/design_system.dart';
 
 void main() {
   group('MemoraBanner, Dialog, BottomSheet and Toast', () {
-    testWidgets('MemoraBanner displays icons and pairs with text', (WidgetTester tester) async {
+    testWidgets('MemoraBanner displays icons and pairs with text', (
+      WidgetTester tester,
+    ) async {
       bool actionTapped = false;
       bool dismissed = false;
 
@@ -49,7 +51,9 @@ void main() {
       expect(dismissed, isTrue);
     });
 
-    testWidgets('MemoraDialog renders title, message and triggers actions', (WidgetTester tester) async {
+    testWidgets('MemoraDialog renders title, message and triggers actions', (
+      WidgetTester tester,
+    ) async {
       bool confirmed = false;
 
       await tester.pumpWidget(
@@ -96,7 +100,9 @@ void main() {
       expect(find.text('Discard draft?'), findsNothing);
     });
 
-    testWidgets('MemoraBottomSheet renders title, close button and content', (WidgetTester tester) async {
+    testWidgets('MemoraBottomSheet renders title, close button and content', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           theme: MemoraTheme.light(),
@@ -133,7 +139,9 @@ void main() {
       expect(find.text('Reef Details'), findsNothing);
     });
 
-    testWidgets('showMemoraToast shows floating toast message', (WidgetTester tester) async {
+    testWidgets('showMemoraToast shows floating toast message', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           theme: MemoraTheme.light(),

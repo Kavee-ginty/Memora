@@ -41,10 +41,10 @@ class _MemoraButtonState extends State<MemoraButton> {
   @override
   Widget build(BuildContext context) {
     final double textScale = MediaQuery.textScalerOf(context).scale(1.0);
-    final double minHeight = (MemoraSpacing.minTouchTarget * (textScale > 1.2 ? textScale * 0.9 : 1.0)).clamp(
-      MemoraSpacing.minTouchTarget,
-      120.0,
-    );
+    final double minHeight =
+        (MemoraSpacing.minTouchTarget *
+                (textScale > 1.2 ? textScale * 0.9 : 1.0))
+            .clamp(MemoraSpacing.minTouchTarget, 120.0);
 
     Widget content = Row(
       mainAxisSize: widget.isFullWidth ? MainAxisSize.max : MainAxisSize.min,
@@ -91,7 +91,9 @@ class _MemoraButtonState extends State<MemoraButton> {
     return Semantics(
       button: true,
       enabled: _isEnabled,
-      label: widget.semanticLabel ?? (widget.isLoading ? '${widget.label}, loading' : widget.label),
+      label:
+          widget.semanticLabel ??
+          (widget.isLoading ? '${widget.label}, loading' : widget.label),
       child: Focus(
         onFocusChange: (bool focused) {
           setState(() {
@@ -100,10 +102,15 @@ class _MemoraButtonState extends State<MemoraButton> {
         },
         child: Container(
           width: widget.isFullWidth ? double.infinity : null,
-          constraints: BoxConstraints(minHeight: minHeight, minWidth: MemoraSpacing.minTouchTarget),
+          constraints: BoxConstraints(
+            minHeight: minHeight,
+            minWidth: MemoraSpacing.minTouchTarget,
+          ),
           decoration: _isFocused
               ? BoxDecoration(
-                  borderRadius: BorderRadius.circular(MemoraRadii.controlValue + 2),
+                  borderRadius: BorderRadius.circular(
+                    MemoraRadii.controlValue + 2,
+                  ),
                   border: Border.all(color: MemoraColors.focus, width: 2.0),
                 )
               : null,
@@ -139,7 +146,9 @@ class _MemoraButtonState extends State<MemoraButton> {
     }
     switch (widget.variant) {
       case MemoraButtonVariant.primary:
-        return _isEnabled ? MemoraColors.textPrimary : MemoraColors.textPrimary.withValues(alpha: 0.5);
+        return _isEnabled
+            ? MemoraColors.textPrimary
+            : MemoraColors.textPrimary.withValues(alpha: 0.5);
       case MemoraButtonVariant.secondary:
         return MemoraColors.textPrimary;
       case MemoraButtonVariant.tertiary:
@@ -201,7 +210,13 @@ class _MemoraButtonState extends State<MemoraButton> {
                 ),
           borderRadius: MemoraRadii.control,
           boxShadow: _isEnabled
-              ? const <BoxShadow>[BoxShadow(color: Color(0x1F00AFFF), blurRadius: 8, offset: Offset(0, 3))]
+              ? const <BoxShadow>[
+                  BoxShadow(
+                    color: Color(0x1F00AFFF),
+                    blurRadius: 8,
+                    offset: Offset(0, 3),
+                  ),
+                ]
               : null,
         );
 
@@ -209,18 +224,28 @@ class _MemoraButtonState extends State<MemoraButton> {
         return BoxDecoration(
           color: MemoraColors.surfaceCanvas.withValues(alpha: opacity),
           borderRadius: MemoraRadii.control,
-          border: Border.all(color: _isEnabled ? MemoraColors.brandBlue : MemoraColors.borderDefault, width: 1.5),
+          border: Border.all(
+            color: _isEnabled
+                ? MemoraColors.brandBlue
+                : MemoraColors.borderDefault,
+            width: 1.5,
+          ),
         );
 
       case MemoraButtonVariant.tertiary:
-        return const BoxDecoration(color: Colors.transparent, borderRadius: MemoraRadii.control);
+        return const BoxDecoration(
+          color: Colors.transparent,
+          borderRadius: MemoraRadii.control,
+        );
 
       case MemoraButtonVariant.destructive:
         return BoxDecoration(
           color: const Color(0xFFFDE8E8).withValues(alpha: opacity),
           borderRadius: MemoraRadii.control,
           border: Border.all(
-            color: _isEnabled ? MemoraColors.feedbackCritical : MemoraColors.borderDefault,
+            color: _isEnabled
+                ? MemoraColors.feedbackCritical
+                : MemoraColors.borderDefault,
             width: 1.0,
           ),
         );

@@ -4,12 +4,17 @@ import 'package:memora_mobile/src/design_system/design_system.dart';
 
 void main() {
   group('MemoraTextField', () {
-    testWidgets('renders persistent label, hint, and min 48px height', (WidgetTester tester) async {
+    testWidgets('renders persistent label, hint, and min 48px height', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           theme: MemoraTheme.light(),
           home: const Scaffold(
-            body: MemoraTextField(label: 'Username', hintText: 'Enter your username'),
+            body: MemoraTextField(
+              label: 'Username',
+              hintText: 'Enter your username',
+            ),
           ),
         ),
       );
@@ -21,15 +26,23 @@ void main() {
       expect(fieldFinder, findsOneWidget);
 
       final Size fieldSize = tester.getSize(fieldFinder);
-      expect(fieldSize.height, greaterThanOrEqualTo(MemoraSpacing.minTouchTarget));
+      expect(
+        fieldSize.height,
+        greaterThanOrEqualTo(MemoraSpacing.minTouchTarget),
+      );
     });
 
-    testWidgets('displays error message and icon in error state', (WidgetTester tester) async {
+    testWidgets('displays error message and icon in error state', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           theme: MemoraTheme.light(),
           home: const Scaffold(
-            body: MemoraTextField(label: 'Email', errorText: 'Please enter a valid email address'),
+            body: MemoraTextField(
+              label: 'Email',
+              errorText: 'Please enter a valid email address',
+            ),
           ),
         ),
       );
@@ -39,12 +52,17 @@ void main() {
       expect(find.byIcon(Icons.error_outline), findsOneWidget);
     });
 
-    testWidgets('displays success message and icon in verified state', (WidgetTester tester) async {
+    testWidgets('displays success message and icon in verified state', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           theme: MemoraTheme.light(),
           home: const Scaffold(
-            body: MemoraTextField(label: 'Concept Title', successText: 'Concept verified'),
+            body: MemoraTextField(
+              label: 'Concept Title',
+              successText: 'Concept verified',
+            ),
           ),
         ),
       );
@@ -54,12 +72,18 @@ void main() {
       expect(find.byIcon(Icons.check_circle_outline), findsOneWidget);
     });
 
-    testWidgets('disabled field prevents text editing', (WidgetTester tester) async {
+    testWidgets('disabled field prevents text editing', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           theme: MemoraTheme.light(),
           home: const Scaffold(
-            body: MemoraTextField(label: 'Locked Field', initialValue: 'Original value', enabled: false),
+            body: MemoraTextField(
+              label: 'Locked Field',
+              initialValue: 'Original value',
+              enabled: false,
+            ),
           ),
         ),
       );

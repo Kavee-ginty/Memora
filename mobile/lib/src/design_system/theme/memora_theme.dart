@@ -71,7 +71,10 @@ abstract final class MemoraTheme {
         color: MemoraColors.surfaceOcean,
         elevation: 0,
         margin: EdgeInsets.zero,
-        shape: RoundedRectangleBorder(borderRadius: MemoraRadii.primaryCard, side: MemoraElevations.defaultBorderSide),
+        shape: RoundedRectangleBorder(
+          borderRadius: MemoraRadii.primaryCard,
+          side: MemoraElevations.defaultBorderSide,
+        ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -80,8 +83,13 @@ abstract final class MemoraTheme {
           foregroundColor: MemoraColors.textPrimary,
           textStyle: MemoraTypography.button,
           minimumSize: const Size.fromHeight(MemoraSpacing.minTouchTarget),
-          shape: const RoundedRectangleBorder(borderRadius: MemoraRadii.control),
-          padding: const EdgeInsets.symmetric(horizontal: MemoraSpacing.space24, vertical: MemoraSpacing.space12),
+          shape: const RoundedRectangleBorder(
+            borderRadius: MemoraRadii.control,
+          ),
+          padding: const EdgeInsets.symmetric(
+            horizontal: MemoraSpacing.space24,
+            vertical: MemoraSpacing.space12,
+          ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -92,22 +100,36 @@ abstract final class MemoraTheme {
           textStyle: MemoraTypography.button,
           side: const BorderSide(color: MemoraColors.brandBlue, width: 1.5),
           minimumSize: const Size.fromHeight(MemoraSpacing.minTouchTarget),
-          shape: const RoundedRectangleBorder(borderRadius: MemoraRadii.control),
-          padding: const EdgeInsets.symmetric(horizontal: MemoraSpacing.space24, vertical: MemoraSpacing.space12),
+          shape: const RoundedRectangleBorder(
+            borderRadius: MemoraRadii.control,
+          ),
+          padding: const EdgeInsets.symmetric(
+            horizontal: MemoraSpacing.space24,
+            vertical: MemoraSpacing.space12,
+          ),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: MemoraColors.brandBlue,
           textStyle: MemoraTypography.button,
-          minimumSize: const Size(MemoraSpacing.minTouchTarget, MemoraSpacing.minTouchTarget),
-          padding: const EdgeInsets.symmetric(horizontal: MemoraSpacing.space16, vertical: MemoraSpacing.space8),
+          minimumSize: const Size(
+            MemoraSpacing.minTouchTarget,
+            MemoraSpacing.minTouchTarget,
+          ),
+          padding: const EdgeInsets.symmetric(
+            horizontal: MemoraSpacing.space16,
+            vertical: MemoraSpacing.space8,
+          ),
         ),
       ),
       inputDecorationTheme: const InputDecorationTheme(
         filled: true,
         fillColor: MemoraColors.surfaceOcean,
-        contentPadding: EdgeInsets.symmetric(horizontal: MemoraSpacing.space16, vertical: MemoraSpacing.space12),
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: MemoraSpacing.space16,
+          vertical: MemoraSpacing.space12,
+        ),
         hintStyle: TextStyle(
           color: MemoraColors.textMuted,
           fontFamily: MemoraTypography.fontInter,
@@ -128,11 +150,17 @@ abstract final class MemoraTheme {
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: MemoraRadii.control,
-          borderSide: BorderSide(color: MemoraColors.feedbackCritical, width: 1.5),
+          borderSide: BorderSide(
+            color: MemoraColors.feedbackCritical,
+            width: 1.5,
+          ),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: MemoraRadii.control,
-          borderSide: BorderSide(color: MemoraColors.feedbackCritical, width: 2.0),
+          borderSide: BorderSide(
+            color: MemoraColors.feedbackCritical,
+            width: 2.0,
+          ),
         ),
         errorStyle: TextStyle(
           color: MemoraColors.feedbackCritical,
@@ -144,7 +172,10 @@ abstract final class MemoraTheme {
       dialogTheme: const DialogThemeData(
         backgroundColor: MemoraColors.surfaceCanvas,
         elevation: 4,
-        shape: RoundedRectangleBorder(borderRadius: MemoraRadii.dialog, side: MemoraElevations.defaultBorderSide),
+        shape: RoundedRectangleBorder(
+          borderRadius: MemoraRadii.dialog,
+          side: MemoraElevations.defaultBorderSide,
+        ),
         titleTextStyle: MemoraTypography.sectionTitle,
         contentTextStyle: MemoraTypography.body,
       ),

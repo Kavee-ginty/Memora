@@ -9,15 +9,24 @@ import '../tokens/typography.dart';
 import 'button.dart';
 
 class MemoraSkeleton extends StatefulWidget {
-  const MemoraSkeleton({super.key, this.width, this.height = 16.0, this.borderRadius, this.shape = BoxShape.rectangle});
+  const MemoraSkeleton({
+    super.key,
+    this.width,
+    this.height = 16.0,
+    this.borderRadius,
+    this.shape = BoxShape.rectangle,
+  });
 
   const MemoraSkeleton.card({super.key, this.width, this.height = 120.0})
     : borderRadius = MemoraRadii.primaryCard,
       shape = BoxShape.rectangle;
 
-  const MemoraSkeleton.text({super.key, this.width = double.infinity, this.height = 16.0})
-    : borderRadius = MemoraRadii.chip,
-      shape = BoxShape.rectangle;
+  const MemoraSkeleton.text({
+    super.key,
+    this.width = double.infinity,
+    this.height = 16.0,
+  }) : borderRadius = MemoraRadii.chip,
+       shape = BoxShape.rectangle;
 
   const MemoraSkeleton.circle({super.key, required double size})
     : width = size,
@@ -34,7 +43,8 @@ class MemoraSkeleton extends StatefulWidget {
   State<MemoraSkeleton> createState() => _MemoraSkeletonState();
 }
 
-class _MemoraSkeletonState extends State<MemoraSkeleton> with SingleTickerProviderStateMixin {
+class _MemoraSkeletonState extends State<MemoraSkeleton>
+    with SingleTickerProviderStateMixin {
   AnimationController? _controller;
   Animation<double>? _animation;
 
@@ -49,8 +59,10 @@ class _MemoraSkeletonState extends State<MemoraSkeleton> with SingleTickerProvid
       _controller = null;
       _animation = null;
     } else if (_controller == null) {
-      _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200))
-        ..repeat(reverse: true);
+      _controller = AnimationController(
+        vsync: this,
+        duration: const Duration(milliseconds: 1200),
+      )..repeat(reverse: true);
       _animation = Tween<double>(
         begin: 0.35,
         end: 0.75,
@@ -76,9 +88,13 @@ class _MemoraSkeletonState extends State<MemoraSkeleton> with SingleTickerProvid
                 width: widget.width,
                 height: widget.height,
                 decoration: BoxDecoration(
-                  color: MemoraColors.borderDefault.withValues(alpha: _animation!.value),
+                  color: MemoraColors.borderDefault.withValues(
+                    alpha: _animation!.value,
+                  ),
                   shape: widget.shape,
-                  borderRadius: widget.shape == BoxShape.circle ? null : widget.borderRadius,
+                  borderRadius: widget.shape == BoxShape.circle
+                      ? null
+                      : widget.borderRadius,
                 ),
               );
             },
@@ -89,7 +105,9 @@ class _MemoraSkeletonState extends State<MemoraSkeleton> with SingleTickerProvid
             decoration: BoxDecoration(
               color: MemoraColors.borderDefault.withValues(alpha: 0.5),
               shape: widget.shape,
-              borderRadius: widget.shape == BoxShape.circle ? null : widget.borderRadius,
+              borderRadius: widget.shape == BoxShape.circle
+                  ? null
+                  : widget.borderRadius,
             ),
           );
 
@@ -118,7 +136,8 @@ class MemoraLoadingTimeoutView extends StatefulWidget {
   final Duration timeout;
 
   @override
-  State<MemoraLoadingTimeoutView> createState() => _MemoraLoadingTimeoutViewState();
+  State<MemoraLoadingTimeoutView> createState() =>
+      _MemoraLoadingTimeoutViewState();
 }
 
 class _MemoraLoadingTimeoutViewState extends State<MemoraLoadingTimeoutView> {
@@ -158,9 +177,17 @@ class _MemoraLoadingTimeoutViewState extends State<MemoraLoadingTimeoutView> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              const Icon(Icons.access_time_rounded, size: 40, color: MemoraColors.brandBlue),
+              const Icon(
+                Icons.access_time_rounded,
+                size: 40,
+                color: MemoraColors.brandBlue,
+              ),
               const SizedBox(height: MemoraSpacing.space16),
-              Text(widget.timeoutMessage, style: MemoraTypography.body, textAlign: TextAlign.center),
+              Text(
+                widget.timeoutMessage,
+                style: MemoraTypography.body,
+                textAlign: TextAlign.center,
+              ),
               const SizedBox(height: MemoraSpacing.space24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -207,7 +234,9 @@ class _MemoraLoadingTimeoutViewState extends State<MemoraLoadingTimeoutView> {
           liveRegion: true,
           child: Text(
             widget.loadingMessage,
-            style: MemoraTypography.metadata.copyWith(color: MemoraColors.textMuted),
+            style: MemoraTypography.metadata.copyWith(
+              color: MemoraColors.textMuted,
+            ),
             textAlign: TextAlign.center,
           ),
         ),

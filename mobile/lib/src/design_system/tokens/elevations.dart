@@ -13,9 +13,18 @@ abstract final class MemoraElevations {
 
   static const List<BoxShadow> cardShadows = <BoxShadow>[subtleShadow];
 
-  static const BorderSide defaultBorderSide = BorderSide(color: MemoraColors.borderDefault, width: 1.0);
+  static const BorderSide defaultBorderSide = BorderSide(
+    color: MemoraColors.borderDefault,
+    width: 1.0,
+  );
 
-  static const BorderSide focusBorderSide = BorderSide(color: MemoraColors.focus, width: 2.0);
+  static const BorderSide focusBorderSide = BorderSide(
+    color: MemoraColors.focus,
+    width: 2.0,
+  );
 
-  static const BorderSide selectedBorderSide = BorderSide(color: MemoraColors.brandPrimary, width: 2.0);
+  static const BorderSide selectedBorderSide = BorderSide(
+    color: MemoraColors.brandPrimary,
+    width: 2.0,
+  );
 }

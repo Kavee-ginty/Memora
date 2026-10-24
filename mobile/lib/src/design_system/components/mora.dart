@@ -38,16 +38,28 @@ class MoraPlacement extends StatelessWidget {
           const SizedBox(width: MemoraSpacing.space12),
           Flexible(
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: MemoraSpacing.space16, vertical: MemoraSpacing.space12),
+              padding: const EdgeInsets.symmetric(
+                horizontal: MemoraSpacing.space16,
+                vertical: MemoraSpacing.space12,
+              ),
               decoration: BoxDecoration(
                 color: MemoraColors.surfaceCanvas,
                 borderRadius: MemoraRadii.compactCard,
                 border: Border.all(color: MemoraColors.borderDefault),
-                boxShadow: const <BoxShadow>[BoxShadow(color: Color(0x0A0B1A2C), blurRadius: 6, offset: Offset(0, 2))],
+                boxShadow: const <BoxShadow>[
+                  BoxShadow(
+                    color: Color(0x0A0B1A2C),
+                    blurRadius: 6,
+                    offset: Offset(0, 2),
+                  ),
+                ],
               ),
               child: Text(
                 speechBubbleText!,
-                style: MemoraTypography.body.copyWith(fontSize: 14, color: MemoraColors.textPrimary),
+                style: MemoraTypography.body.copyWith(
+                  fontSize: 14,
+                  color: MemoraColors.textPrimary,
+                ),
               ),
             ),
           ),
@@ -61,7 +73,9 @@ class MoraPlacement extends StatelessWidget {
 
     final String label = semanticLabel ?? _defaultSemanticLabel;
     return Semantics(
-      label: speechBubbleText != null ? '$label. Mora says: $speechBubbleText' : label,
+      label: speechBubbleText != null
+          ? '$label. Mora says: $speechBubbleText'
+          : label,
       child: ExcludeSemantics(child: content),
     );
   }
@@ -89,13 +103,23 @@ class MoraPlacement extends StatelessWidget {
         color: MemoraColors.surfaceOcean,
         shape: BoxShape.circle,
         border: Border.all(color: _stateBorderColor, width: 2.0),
-        boxShadow: const <BoxShadow>[BoxShadow(color: Color(0x1200AFFF), blurRadius: 8, offset: Offset(0, 3))],
+        boxShadow: const <BoxShadow>[
+          BoxShadow(
+            color: Color(0x1200AFFF),
+            blurRadius: 8,
+            offset: Offset(0, 3),
+          ),
+        ],
       ),
       child: Stack(
         alignment: Alignment.center,
         children: <Widget>[
           // Base shark icon representation
-          Icon(_stateMainIcon, size: size * 0.55, color: MemoraColors.brandPrimary),
+          Icon(
+            _stateMainIcon,
+            size: size * 0.55,
+            color: MemoraColors.brandPrimary,
+          ),
           // Badge in corner for specific state
           Positioned(
             right: 2,
@@ -105,9 +129,16 @@ class MoraPlacement extends StatelessWidget {
               decoration: BoxDecoration(
                 color: _stateBadgeColor,
                 shape: BoxShape.circle,
-                border: Border.all(color: MemoraColors.surfaceCanvas, width: 1.5),
+                border: Border.all(
+                  color: MemoraColors.surfaceCanvas,
+                  width: 1.5,
+                ),
               ),
-              child: Icon(_stateBadgeIcon, size: size * 0.22, color: Colors.white),
+              child: Icon(
+                _stateBadgeIcon,
+                size: size * 0.22,
+                color: Colors.white,
+              ),
             ),
           ),
         ],

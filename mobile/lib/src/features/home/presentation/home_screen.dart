@@ -35,9 +35,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
-                    MoraPlacement(state: MoraState.encourage, size: 72, speechBubbleText: 'Welcome to Memora!'),
+                    MoraPlacement(
+                      state: MoraState.encourage,
+                      size: 72,
+                      speechBubbleText: 'Welcome to Memora!',
+                    ),
                     SizedBox(height: MemoraSpacing.space16),
-                    Text('Development baseline ready', textAlign: TextAlign.center, style: MemoraTypography.cardTitle),
+                    Text(
+                      'Development baseline ready',
+                      textAlign: TextAlign.center,
+                      style: MemoraTypography.cardTitle,
+                    ),
                     SizedBox(height: MemoraSpacing.space8),
                     Text(
                       'Flutter design system and responsive app shell baseline established.',

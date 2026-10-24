@@ -31,7 +31,10 @@ class _ComponentCatalogScreenState extends State<ComponentCatalogScreen> {
   @override
   Widget build(BuildContext context) {
     return MemoraScaffold(
-      appBar: const MemoraHeader.root(title: 'Component Catalog', streakDays: 7),
+      appBar: const MemoraHeader.root(
+        title: 'Component Catalog',
+        streakDays: 7,
+      ),
       bottomNavigationBar: MemoraBottomNavigationBar(
         currentIndex: _selectedNavIndex,
         onTap: (int index) {
@@ -93,13 +96,24 @@ class _ComponentCatalogScreenState extends State<ComponentCatalogScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        MemoraButton(label: 'Primary Action', onPressed: () => showMemoraToast(context, 'Primary clicked')),
+        MemoraButton(
+          label: 'Primary Action',
+          onPressed: () => showMemoraToast(context, 'Primary clicked'),
+        ),
         const SizedBox(height: MemoraSpacing.space8),
-        MemoraButton(label: 'Primary with Icon', icon: const Icon(Icons.play_arrow), onPressed: () {}),
+        MemoraButton(
+          label: 'Primary with Icon',
+          icon: const Icon(Icons.play_arrow),
+          onPressed: () {},
+        ),
         const SizedBox(height: MemoraSpacing.space8),
         const MemoraButton(label: 'Primary Disabled', onPressed: null),
         const SizedBox(height: MemoraSpacing.space8),
-        MemoraButton(label: 'Primary Loading', isLoading: true, onPressed: () {}),
+        MemoraButton(
+          label: 'Primary Loading',
+          isLoading: true,
+          onPressed: () {},
+        ),
         const SizedBox(height: MemoraSpacing.space8),
         MemoraButton(
           label: 'Secondary Action',
@@ -134,7 +148,10 @@ class _ComponentCatalogScreenState extends State<ComponentCatalogScreen> {
             children: <Widget>[
               Text('Primary Surface Card', style: MemoraTypography.cardTitle),
               SizedBox(height: MemoraSpacing.space8),
-              Text('24px rounded geometry with ocean surface and subtle boundary cue.', style: MemoraTypography.body),
+              Text(
+                '24px rounded geometry with ocean surface and subtle boundary cue.',
+                style: MemoraTypography.body,
+              ),
             ],
           ),
         ),
@@ -182,7 +199,9 @@ class _ComponentCatalogScreenState extends State<ComponentCatalogScreen> {
             label: _obscurePassword ? 'Show password' : 'Hide password',
             child: IconButton(
               icon: Icon(
-                _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                _obscurePassword
+                    ? Icons.visibility_outlined
+                    : Icons.visibility_off_outlined,
                 color: MemoraColors.textSecondary,
               ),
               onPressed: () {
@@ -206,7 +225,11 @@ class _ComponentCatalogScreenState extends State<ComponentCatalogScreen> {
           errorText: 'Please enter a valid academic email address',
         ),
         const SizedBox(height: MemoraSpacing.space12),
-        const MemoraTextField(label: 'Disabled Input', initialValue: 'Locked curriculum field', enabled: false),
+        const MemoraTextField(
+          label: 'Disabled Input',
+          initialValue: 'Locked curriculum field',
+          enabled: false,
+        ),
       ],
     );
   }
@@ -229,7 +252,8 @@ class _ComponentCatalogScreenState extends State<ComponentCatalogScreen> {
         const MemoraBanner(
           variant: MemoraBannerVariant.critical,
           title: 'Connection Interrupted',
-          message: 'Could not sync mission results. We will retry automatically.',
+          message:
+              'Could not sync mission results. We will retry automatically.',
           actionLabel: 'Retry',
         ),
         const MemoraBanner(
@@ -258,7 +282,10 @@ class _ComponentCatalogScreenState extends State<ComponentCatalogScreen> {
           onBackPressed: () {},
         ),
         const SizedBox(height: MemoraSpacing.space16),
-        const Text('Mission Header Variant:', style: MemoraTypography.cardTitle),
+        const Text(
+          'Mission Header Variant:',
+          style: MemoraTypography.cardTitle,
+        ),
         const SizedBox(height: MemoraSpacing.space8),
         MemoraHeader.mission(
           missionProgressText: 'Memories protected 3 of 8',
@@ -297,7 +324,10 @@ class _ComponentCatalogScreenState extends State<ComponentCatalogScreen> {
               context: context,
               title: 'Physics Reef Status',
               subtitle: 'Healthy - next review in 18 hours',
-              action: MemoraButton(label: 'Start review mission', onPressed: () => Navigator.of(context).pop()),
+              action: MemoraButton(
+                label: 'Start review mission',
+                onPressed: () => Navigator.of(context).pop(),
+              ),
               child: const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
@@ -306,7 +336,10 @@ class _ComponentCatalogScreenState extends State<ComponentCatalogScreen> {
                     style: MemoraTypography.body,
                   ),
                   SizedBox(height: MemoraSpacing.space16),
-                  Text('Due memories: 4 concepts ready for care.', style: MemoraTypography.bodyStrong),
+                  Text(
+                    'Due memories: 4 concepts ready for care.',
+                    style: MemoraTypography.bodyStrong,
+                  ),
                 ],
               ),
             );
@@ -364,7 +397,8 @@ class _ComponentCatalogScreenState extends State<ComponentCatalogScreen> {
           state: MoraState.encourage,
           size: 72,
           isDecorative: false,
-          speechBubbleText: 'Protect today\'s memories to help your coral reef thrive!',
+          speechBubbleText:
+              'Protect today\'s memories to help your coral reef thrive!',
         ),
         const SizedBox(height: MemoraSpacing.space16),
         const SingleChildScrollView(

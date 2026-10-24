@@ -36,7 +36,10 @@ class MemoraDialog extends StatelessWidget {
         borderRadius: MemoraRadii.dialog,
         side: BorderSide(color: MemoraColors.borderDefault),
       ),
-      insetPadding: const EdgeInsets.symmetric(horizontal: MemoraSpacing.space24, vertical: MemoraSpacing.space24),
+      insetPadding: const EdgeInsets.symmetric(
+        horizontal: MemoraSpacing.space24,
+        vertical: MemoraSpacing.space24,
+      ),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 400),
         child: Padding(
@@ -51,7 +54,12 @@ class MemoraDialog extends StatelessWidget {
               ],
               Text(title, style: MemoraTypography.sectionTitle),
               const SizedBox(height: MemoraSpacing.space12),
-              Text(message, style: MemoraTypography.body.copyWith(color: MemoraColors.textSecondary)),
+              Text(
+                message,
+                style: MemoraTypography.body.copyWith(
+                  color: MemoraColors.textSecondary,
+                ),
+              ),
               const SizedBox(height: MemoraSpacing.space24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
@@ -61,7 +69,9 @@ class MemoraDialog extends StatelessWidget {
                       child: MemoraButton(
                         label: secondaryActionLabel!,
                         variant: MemoraButtonVariant.tertiary,
-                        onPressed: onSecondaryAction ?? () => Navigator.of(context).pop(false),
+                        onPressed:
+                            onSecondaryAction ??
+                            () => Navigator.of(context).pop(false),
                       ),
                     ),
                     const SizedBox(width: MemoraSpacing.space12),
@@ -69,7 +79,9 @@ class MemoraDialog extends StatelessWidget {
                   Expanded(
                     child: MemoraButton(
                       label: primaryActionLabel,
-                      variant: isDestructive ? MemoraButtonVariant.destructive : MemoraButtonVariant.primary,
+                      variant: isDestructive
+                          ? MemoraButtonVariant.destructive
+                          : MemoraButtonVariant.primary,
                       onPressed: onPrimaryAction,
                     ),
                   ),

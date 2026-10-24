@@ -89,8 +89,10 @@ class _MemoraTextFieldState extends State<MemoraTextField> {
 
   @override
   Widget build(BuildContext context) {
-    final bool hasError = widget.errorText != null && widget.errorText!.isNotEmpty;
-    final bool hasSuccess = widget.successText != null && widget.successText!.isNotEmpty;
+    final bool hasError =
+        widget.errorText != null && widget.errorText!.isNotEmpty;
+    final bool hasSuccess =
+        widget.successText != null && widget.successText!.isNotEmpty;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -103,21 +105,29 @@ class _MemoraTextFieldState extends State<MemoraTextField> {
             widget.label,
             style: MemoraTypography.bodyStrong.copyWith(
               fontSize: 14,
-              color: widget.enabled ? MemoraColors.textPrimary : MemoraColors.textMuted,
+              color: widget.enabled
+                  ? MemoraColors.textPrimary
+                  : MemoraColors.textMuted,
             ),
           ),
         ),
         const SizedBox(height: MemoraSpacing.space8),
         // Input container
         Container(
-          constraints: const BoxConstraints(minHeight: MemoraSpacing.minTouchTarget),
+          constraints: const BoxConstraints(
+            minHeight: MemoraSpacing.minTouchTarget,
+          ),
           decoration: BoxDecoration(
-            color: widget.enabled ? MemoraColors.surfaceOcean : MemoraColors.surfaceSoft,
+            color: widget.enabled
+                ? MemoraColors.surfaceOcean
+                : MemoraColors.surfaceSoft,
             borderRadius: MemoraRadii.control,
             border: Border.all(
               color: hasError
                   ? MemoraColors.feedbackCritical
-                  : (_isFocused ? MemoraColors.focus : MemoraColors.borderDefault),
+                  : (_isFocused
+                        ? MemoraColors.focus
+                        : MemoraColors.borderDefault),
               width: hasError || _isFocused ? 2.0 : 1.0,
             ),
           ),
@@ -127,7 +137,10 @@ class _MemoraTextFieldState extends State<MemoraTextField> {
                 Padding(
                   padding: const EdgeInsets.only(left: MemoraSpacing.space16),
                   child: IconTheme(
-                    data: const IconThemeData(color: MemoraColors.brandBlue, size: 20),
+                    data: const IconThemeData(
+                      color: MemoraColors.brandBlue,
+                      size: 20,
+                    ),
                     child: widget.prefixIcon!,
                   ),
                 ),
@@ -148,7 +161,9 @@ class _MemoraTextFieldState extends State<MemoraTextField> {
                   onFieldSubmitted: widget.onSubmitted,
                   validator: widget.validator,
                   style: MemoraTypography.body.copyWith(
-                    color: widget.enabled ? MemoraColors.textPrimary : MemoraColors.textMuted,
+                    color: widget.enabled
+                        ? MemoraColors.textPrimary
+                        : MemoraColors.textMuted,
                   ),
                   decoration: InputDecoration(
                     hintText: widget.hintText,
@@ -181,12 +196,18 @@ class _MemoraTextFieldState extends State<MemoraTextField> {
             liveRegion: true,
             child: Row(
               children: <Widget>[
-                const Icon(Icons.error_outline, color: MemoraColors.feedbackCritical, size: 16),
+                const Icon(
+                  Icons.error_outline,
+                  color: MemoraColors.feedbackCritical,
+                  size: 16,
+                ),
                 const SizedBox(width: MemoraSpacing.space4),
                 Expanded(
                   child: Text(
                     widget.errorText!,
-                    style: MemoraTypography.metadata.copyWith(color: MemoraColors.feedbackCritical),
+                    style: MemoraTypography.metadata.copyWith(
+                      color: MemoraColors.feedbackCritical,
+                    ),
                   ),
                 ),
               ],
@@ -198,12 +219,18 @@ class _MemoraTextFieldState extends State<MemoraTextField> {
             liveRegion: true,
             child: Row(
               children: <Widget>[
-                const Icon(Icons.check_circle_outline, color: MemoraColors.feedbackPositive, size: 16),
+                const Icon(
+                  Icons.check_circle_outline,
+                  color: MemoraColors.feedbackPositive,
+                  size: 16,
+                ),
                 const SizedBox(width: MemoraSpacing.space4),
                 Expanded(
                   child: Text(
                     widget.successText!,
-                    style: MemoraTypography.metadata.copyWith(color: MemoraColors.feedbackPositive),
+                    style: MemoraTypography.metadata.copyWith(
+                      color: MemoraColors.feedbackPositive,
+                    ),
                   ),
                 ),
               ],
@@ -211,7 +238,12 @@ class _MemoraTextFieldState extends State<MemoraTextField> {
           ),
         ] else if (widget.helperText != null) ...<Widget>[
           const SizedBox(height: MemoraSpacing.space4),
-          Text(widget.helperText!, style: MemoraTypography.metadata.copyWith(color: MemoraColors.textMuted)),
+          Text(
+            widget.helperText!,
+            style: MemoraTypography.metadata.copyWith(
+              color: MemoraColors.textMuted,
+            ),
+          ),
         ],
       ],
     );

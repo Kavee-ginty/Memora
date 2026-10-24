@@ -20,22 +20,39 @@ void showMemoraToast(
       behavior: SnackBarBehavior.floating,
       elevation: 4,
       backgroundColor: MemoraColors.textPrimary,
-      shape: const RoundedRectangleBorder(borderRadius: MemoraRadii.compactCard),
-      margin: const EdgeInsets.symmetric(horizontal: MemoraSpacing.space24, vertical: MemoraSpacing.space16),
-      padding: const EdgeInsets.symmetric(horizontal: MemoraSpacing.space16, vertical: MemoraSpacing.space12),
+      shape: const RoundedRectangleBorder(
+        borderRadius: MemoraRadii.compactCard,
+      ),
+      margin: const EdgeInsets.symmetric(
+        horizontal: MemoraSpacing.space24,
+        vertical: MemoraSpacing.space16,
+      ),
+      padding: const EdgeInsets.symmetric(
+        horizontal: MemoraSpacing.space16,
+        vertical: MemoraSpacing.space12,
+      ),
       content: Semantics(
         liveRegion: true,
         child: Row(
           children: <Widget>[
             if (icon != null) ...<Widget>[
               IconTheme(
-                data: const IconThemeData(color: MemoraColors.brandAqua, size: 20),
+                data: const IconThemeData(
+                  color: MemoraColors.brandAqua,
+                  size: 20,
+                ),
                 child: icon,
               ),
               const SizedBox(width: MemoraSpacing.space12),
             ],
             Expanded(
-              child: Text(message, style: MemoraTypography.body.copyWith(color: Colors.white, fontSize: 14)),
+              child: Text(
+                message,
+                style: MemoraTypography.body.copyWith(
+                  color: Colors.white,
+                  fontSize: 14,
+                ),
+              ),
             ),
           ],
         ),

@@ -33,7 +33,10 @@ class MemoraBottomSheet extends StatelessWidget {
       child: ConstrainedBox(
         constraints: BoxConstraints(maxHeight: maxSheetHeight),
         child: Container(
-          decoration: const BoxDecoration(color: MemoraColors.surfaceCanvas, borderRadius: MemoraRadii.sheet),
+          decoration: const BoxDecoration(
+            color: MemoraColors.surfaceCanvas,
+            borderRadius: MemoraRadii.sheet,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
@@ -43,7 +46,10 @@ class MemoraBottomSheet extends StatelessWidget {
                   margin: const EdgeInsets.only(top: MemoraSpacing.space12),
                   width: 36,
                   height: 4,
-                  decoration: BoxDecoration(color: MemoraColors.borderDefault, borderRadius: BorderRadius.circular(2)),
+                  decoration: BoxDecoration(
+                    color: MemoraColors.borderDefault,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
               ),
               // Header
@@ -90,12 +96,18 @@ class MemoraBottomSheet extends StatelessWidget {
               const Divider(height: 1),
               // Scrollable body
               Flexible(
-                child: SingleChildScrollView(padding: const EdgeInsets.all(MemoraSpacing.space24), child: child),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(MemoraSpacing.space24),
+                  child: child,
+                ),
               ),
               // Sticky bottom action if provided
               if (action != null) ...<Widget>[
                 const Divider(height: 1),
-                Padding(padding: const EdgeInsets.all(MemoraSpacing.space16), child: action!),
+                Padding(
+                  padding: const EdgeInsets.all(MemoraSpacing.space16),
+                  child: action!,
+                ),
               ],
             ],
           ),

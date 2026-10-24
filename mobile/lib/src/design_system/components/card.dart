@@ -35,13 +35,21 @@ class MemoraCard extends StatelessWidget {
         : MemoraRadii.compactCard;
 
     final EdgeInsetsGeometry effectivePadding =
-        padding ?? EdgeInsets.all(variant == MemoraCardVariant.primary ? MemoraSpacing.space24 : MemoraSpacing.space16);
+        padding ??
+        EdgeInsets.all(
+          variant == MemoraCardVariant.primary
+              ? MemoraSpacing.space24
+              : MemoraSpacing.space16,
+        );
 
     final Widget cardContent = Container(
       decoration: BoxDecoration(
         color: backgroundColor ?? MemoraColors.surfaceOcean,
         borderRadius: radius,
-        border: Border.all(color: borderColor ?? MemoraColors.borderDefault, width: 1.0),
+        border: Border.all(
+          color: borderColor ?? MemoraColors.borderDefault,
+          width: 1.0,
+        ),
         boxShadow: MemoraElevations.cardShadows,
       ),
       child: Material(
@@ -58,7 +66,11 @@ class MemoraCard extends StatelessWidget {
     );
 
     if (semanticLabel != null) {
-      return Semantics(label: semanticLabel, container: true, child: cardContent);
+      return Semantics(
+        label: semanticLabel,
+        container: true,
+        child: cardContent,
+      );
     }
 
     return cardContent;
@@ -88,7 +100,8 @@ class MemoraProgressCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final double clampedProgress = progress.clamp(0.0, 1.0);
-    final String percentText = metricText ?? '${(clampedProgress * 100).round()}%';
+    final String percentText =
+        metricText ?? '${(clampedProgress * 100).round()}%';
 
     return Semantics(
       label: '$title. $statusText. $percentText complete.',
@@ -106,7 +119,10 @@ class MemoraProgressCard extends StatelessWidget {
                   children: <Widget>[
                     if (icon != null) ...<Widget>[
                       IconTheme(
-                        data: const IconThemeData(size: 20, color: MemoraColors.brandBlue),
+                        data: const IconThemeData(
+                          size: 20,
+                          color: MemoraColors.brandBlue,
+                        ),
                         child: icon!,
                       ),
                       const SizedBox(width: MemoraSpacing.space8),
@@ -125,12 +141,20 @@ class MemoraProgressCard extends StatelessWidget {
                 ),
                 const SizedBox(height: MemoraSpacing.space8),
               ],
-              Text(title, style: MemoraTypography.pageTitle.copyWith(fontSize: 22, height: 30 / 22)),
+              Text(
+                title,
+                style: MemoraTypography.pageTitle.copyWith(
+                  fontSize: 22,
+                  height: 30 / 22,
+                ),
+              ),
               const SizedBox(height: MemoraSpacing.space8),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
-                  Flexible(child: Text(statusText, style: MemoraTypography.metadata)),
+                  Flexible(
+                    child: Text(statusText, style: MemoraTypography.metadata),
+                  ),
                   const SizedBox(width: MemoraSpacing.space8),
                   Text(
                     percentText,
@@ -147,8 +171,12 @@ class MemoraProgressCard extends StatelessWidget {
                 child: LinearProgressIndicator(
                   value: clampedProgress,
                   minHeight: 8,
-                  backgroundColor: MemoraColors.borderDefault.withValues(alpha: 0.5),
-                  valueColor: const AlwaysStoppedAnimation<Color>(MemoraColors.brandPrimary),
+                  backgroundColor: MemoraColors.borderDefault.withValues(
+                    alpha: 0.5,
+                  ),
+                  valueColor: const AlwaysStoppedAnimation<Color>(
+                    MemoraColors.brandPrimary,
+                  ),
                 ),
               ),
             ],
@@ -187,10 +215,17 @@ class MemoraSelectableCard extends StatelessWidget {
       label: '$title${subtitle != null ? ', $subtitle' : ''}',
       child: MemoraCard(
         variant: MemoraCardVariant.compact,
-        backgroundColor: isSelected ? MemoraColors.controlSelected : MemoraColors.surfaceSoft,
-        borderColor: isSelected ? MemoraColors.brandPrimary : MemoraColors.borderDefault,
+        backgroundColor: isSelected
+            ? MemoraColors.controlSelected
+            : MemoraColors.surfaceSoft,
+        borderColor: isSelected
+            ? MemoraColors.brandPrimary
+            : MemoraColors.borderDefault,
         onTap: onTap,
-        padding: const EdgeInsets.symmetric(horizontal: MemoraSpacing.space16, vertical: MemoraSpacing.space16),
+        padding: const EdgeInsets.symmetric(
+          horizontal: MemoraSpacing.space16,
+          vertical: MemoraSpacing.space16,
+        ),
         child: ExcludeSemantics(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -198,7 +233,10 @@ class MemoraSelectableCard extends StatelessWidget {
             children: <Widget>[
               Row(
                 children: <Widget>[
-                  if (leading != null) ...<Widget>[leading!, const SizedBox(width: MemoraSpacing.space12)],
+                  if (leading != null) ...<Widget>[
+                    leading!,
+                    const SizedBox(width: MemoraSpacing.space12),
+                  ],
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -223,10 +261,14 @@ class MemoraSelectableCard extends StatelessWidget {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: isSelected ? MemoraColors.brandPrimary : MemoraColors.borderDefault,
+                          color: isSelected
+                              ? MemoraColors.brandPrimary
+                              : MemoraColors.borderDefault,
                           width: isSelected ? 6.0 : 2.0,
                         ),
-                        color: isSelected ? MemoraColors.surfaceCanvas : Colors.transparent,
+                        color: isSelected
+                            ? MemoraColors.surfaceCanvas
+                            : Colors.transparent,
                       ),
                     ),
                   ],
@@ -239,8 +281,12 @@ class MemoraSelectableCard extends StatelessWidget {
                   child: LinearProgressIndicator(
                     value: progress!.clamp(0.0, 1.0),
                     minHeight: 6,
-                    backgroundColor: MemoraColors.borderDefault.withValues(alpha: 0.5),
-                    valueColor: const AlwaysStoppedAnimation<Color>(MemoraColors.brandPrimary),
+                    backgroundColor: MemoraColors.borderDefault.withValues(
+                      alpha: 0.5,
+                    ),
+                    valueColor: const AlwaysStoppedAnimation<Color>(
+                      MemoraColors.brandPrimary,
+                    ),
                   ),
                 ),
               ],

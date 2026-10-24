@@ -114,7 +114,10 @@ class MemoraColorTokens extends ThemeExtension<MemoraColorTokens> {
   }
 
   @override
-  ThemeExtension<MemoraColorTokens> lerp(covariant ThemeExtension<MemoraColorTokens>? other, double t) {
+  ThemeExtension<MemoraColorTokens> lerp(
+    covariant ThemeExtension<MemoraColorTokens>? other,
+    double t,
+  ) {
     if (other is! MemoraColorTokens) {
       return this;
     }
@@ -133,9 +136,21 @@ class MemoraColorTokens extends ThemeExtension<MemoraColorTokens> {
       borderDefault: Color.lerp(borderDefault, other.borderDefault, t)!,
       controlRest: Color.lerp(controlRest, other.controlRest, t)!,
       controlSelected: Color.lerp(controlSelected, other.controlSelected, t)!,
-      feedbackPositive: Color.lerp(feedbackPositive, other.feedbackPositive, t)!,
-      feedbackAttention: Color.lerp(feedbackAttention, other.feedbackAttention, t)!,
-      feedbackCritical: Color.lerp(feedbackCritical, other.feedbackCritical, t)!,
+      feedbackPositive: Color.lerp(
+        feedbackPositive,
+        other.feedbackPositive,
+        t,
+      )!,
+      feedbackAttention: Color.lerp(
+        feedbackAttention,
+        other.feedbackAttention,
+        t,
+      )!,
+      feedbackCritical: Color.lerp(
+        feedbackCritical,
+        other.feedbackCritical,
+        t,
+      )!,
       focus: Color.lerp(focus, other.focus, t)!,
       brandGradient: brandGradient,
     );
@@ -143,7 +158,8 @@ class MemoraColorTokens extends ThemeExtension<MemoraColorTokens> {
 }
 
 extension MemoraThemeContext on BuildContext {
-  MemoraColorTokens get memoraColors => Theme.of(this).extension<MemoraColorTokens>() ?? MemoraColorTokens.light;
+  MemoraColorTokens get memoraColors =>
+      Theme.of(this).extension<MemoraColorTokens>() ?? MemoraColorTokens.light;
 
   TextTheme get textTheme => Theme.of(this).textTheme;
 }

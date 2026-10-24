@@ -12,11 +12,21 @@ abstract final class MemoraRadii {
   static const double sheetValue = 24.0;
 
   // BorderRadius helpers
-  static const BorderRadius primaryCard = BorderRadius.all(Radius.circular(primaryCardValue));
-  static const BorderRadius control = BorderRadius.all(Radius.circular(controlValue));
-  static const BorderRadius compactCard = BorderRadius.all(Radius.circular(compactCardValue));
+  static const BorderRadius primaryCard = BorderRadius.all(
+    Radius.circular(primaryCardValue),
+  );
+  static const BorderRadius control = BorderRadius.all(
+    Radius.circular(controlValue),
+  );
+  static const BorderRadius compactCard = BorderRadius.all(
+    Radius.circular(compactCardValue),
+  );
   static const BorderRadius chip = BorderRadius.all(Radius.circular(chipValue));
   static const BorderRadius pill = BorderRadius.all(Radius.circular(pillValue));
-  static const BorderRadius dialog = BorderRadius.all(Radius.circular(dialogValue));
-  static const BorderRadius sheet = BorderRadius.vertical(top: Radius.circular(sheetValue));
+  static const BorderRadius dialog = BorderRadius.all(
+    Radius.circular(dialogValue),
+  );
+  static const BorderRadius sheet = BorderRadius.vertical(
+    top: Radius.circular(sheetValue),
+  );
 }

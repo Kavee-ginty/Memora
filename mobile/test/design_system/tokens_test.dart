@@ -30,26 +30,75 @@ void main() {
   group('Memora Design Tokens', () {
     test('WCAG 2.2 AA color contrast ratios pass', () {
       // Normal text requires >= 4.5:1
-      final double textOnCanvas = _contrastRatio(MemoraColors.textPrimary, MemoraColors.surfaceCanvas);
-      expect(textOnCanvas, greaterThanOrEqualTo(4.5), reason: 'Dark ink on canvas contrast');
+      final double textOnCanvas = _contrastRatio(
+        MemoraColors.textPrimary,
+        MemoraColors.surfaceCanvas,
+      );
+      expect(
+        textOnCanvas,
+        greaterThanOrEqualTo(4.5),
+        reason: 'Dark ink on canvas contrast',
+      );
 
-      final double textOnOcean = _contrastRatio(MemoraColors.textPrimary, MemoraColors.surfaceOcean);
-      expect(textOnOcean, greaterThanOrEqualTo(4.5), reason: 'Dark ink on ocean contrast');
+      final double textOnOcean = _contrastRatio(
+        MemoraColors.textPrimary,
+        MemoraColors.surfaceOcean,
+      );
+      expect(
+        textOnOcean,
+        greaterThanOrEqualTo(4.5),
+        reason: 'Dark ink on ocean contrast',
+      );
 
-      final double textOnCyan = _contrastRatio(MemoraColors.textPrimary, MemoraColors.brandPrimary);
-      expect(textOnCyan, greaterThanOrEqualTo(4.5), reason: 'Dark ink on cyan primary contrast');
+      final double textOnCyan = _contrastRatio(
+        MemoraColors.textPrimary,
+        MemoraColors.brandPrimary,
+      );
+      expect(
+        textOnCyan,
+        greaterThanOrEqualTo(4.5),
+        reason: 'Dark ink on cyan primary contrast',
+      );
 
-      final double secondaryOnCanvas = _contrastRatio(MemoraColors.textSecondary, MemoraColors.surfaceCanvas);
-      expect(secondaryOnCanvas, greaterThanOrEqualTo(4.5), reason: 'Secondary text on canvas contrast');
+      final double secondaryOnCanvas = _contrastRatio(
+        MemoraColors.textSecondary,
+        MemoraColors.surfaceCanvas,
+      );
+      expect(
+        secondaryOnCanvas,
+        greaterThanOrEqualTo(4.5),
+        reason: 'Secondary text on canvas contrast',
+      );
 
-      final double positiveOnMint = _contrastRatio(MemoraColors.feedbackPositive, MemoraColors.surfaceMint);
-      expect(positiveOnMint, greaterThanOrEqualTo(4.5), reason: 'Feedback positive on mint contrast');
+      final double positiveOnMint = _contrastRatio(
+        MemoraColors.feedbackPositive,
+        MemoraColors.surfaceMint,
+      );
+      expect(
+        positiveOnMint,
+        greaterThanOrEqualTo(4.5),
+        reason: 'Feedback positive on mint contrast',
+      );
 
-      final double attentionOnCanvas = _contrastRatio(MemoraColors.feedbackAttention, MemoraColors.surfaceCanvas);
-      expect(attentionOnCanvas, greaterThanOrEqualTo(4.5), reason: 'Feedback attention on canvas contrast');
+      final double attentionOnCanvas = _contrastRatio(
+        MemoraColors.feedbackAttention,
+        MemoraColors.surfaceCanvas,
+      );
+      expect(
+        attentionOnCanvas,
+        greaterThanOrEqualTo(4.5),
+        reason: 'Feedback attention on canvas contrast',
+      );
 
-      final double criticalOnCanvas = _contrastRatio(MemoraColors.feedbackCritical, MemoraColors.surfaceCanvas);
-      expect(criticalOnCanvas, greaterThanOrEqualTo(4.5), reason: 'Feedback critical on canvas contrast');
+      final double criticalOnCanvas = _contrastRatio(
+        MemoraColors.feedbackCritical,
+        MemoraColors.surfaceCanvas,
+      );
+      expect(
+        criticalOnCanvas,
+        greaterThanOrEqualTo(4.5),
+        reason: 'Feedback critical on canvas contrast',
+      );
     });
 
     test('Typography scale matches UI/UX Specification 4.3', () {
@@ -84,8 +133,14 @@ void main() {
       expect(MemoraSpacing.gutterForWidth(400), MemoraSpacing.gutterStandard);
 
       // Content bounds
-      expect(MemoraSpacing.maxContentWidthFor(400), MemoraSpacing.maxContentWidthMobile);
-      expect(MemoraSpacing.maxContentWidthFor(800), MemoraSpacing.maxContentWidthTablet);
+      expect(
+        MemoraSpacing.maxContentWidthFor(400),
+        MemoraSpacing.maxContentWidthMobile,
+      );
+      expect(
+        MemoraSpacing.maxContentWidthFor(800),
+        MemoraSpacing.maxContentWidthTablet,
+      );
     });
 
     test('Corner radii match UI/UX Specification Section 4.4', () {

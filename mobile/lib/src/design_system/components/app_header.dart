@@ -93,10 +93,21 @@ class MemoraHeader extends StatelessWidget implements PreferredSizeWidget {
         child: Container(
           decoration: const BoxDecoration(
             color: MemoraColors.surfaceOcean,
-            borderRadius: BorderRadius.vertical(bottom: Radius.circular(MemoraRadii.primaryCardValue)),
-            boxShadow: <BoxShadow>[BoxShadow(color: Color(0x0A0B1A2C), blurRadius: 8, offset: Offset(0, 2))],
+            borderRadius: BorderRadius.vertical(
+              bottom: Radius.circular(MemoraRadii.primaryCardValue),
+            ),
+            boxShadow: <BoxShadow>[
+              BoxShadow(
+                color: Color(0x0A0B1A2C),
+                blurRadius: 8,
+                offset: Offset(0, 2),
+              ),
+            ],
           ),
-          padding: const EdgeInsets.symmetric(horizontal: MemoraSpacing.space16, vertical: MemoraSpacing.space8),
+          padding: const EdgeInsets.symmetric(
+            horizontal: MemoraSpacing.space16,
+            vertical: MemoraSpacing.space8,
+          ),
           child: SingleChildScrollView(
             physics: const ClampingScrollPhysics(),
             child: Column(
@@ -140,10 +151,19 @@ class MemoraHeader extends StatelessWidget implements PreferredSizeWidget {
                   height: 36,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    border: Border.all(color: MemoraColors.brandBlue, width: 2.0),
+                    border: Border.all(
+                      color: MemoraColors.brandBlue,
+                      width: 2.0,
+                    ),
                     color: MemoraColors.surfaceCanvas,
                   ),
-                  child: const Center(child: Icon(Icons.person, size: 20, color: MemoraColors.brandBlue)),
+                  child: const Center(
+                    child: Icon(
+                      Icons.person,
+                      size: 20,
+                      color: MemoraColors.brandBlue,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -151,7 +171,10 @@ class MemoraHeader extends StatelessWidget implements PreferredSizeWidget {
             Expanded(
               child: Text(
                 title,
-                style: MemoraTypography.pageTitle.copyWith(fontSize: 22, fontWeight: FontWeight.w700),
+                style: MemoraTypography.pageTitle.copyWith(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -176,11 +199,18 @@ class MemoraHeader extends StatelessWidget implements PreferredSizeWidget {
                     minHeight: MemoraSpacing.minTouchTarget,
                     minWidth: MemoraSpacing.minTouchTarget,
                   ),
-                  padding: const EdgeInsets.symmetric(horizontal: MemoraSpacing.space8, vertical: MemoraSpacing.space8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: MemoraSpacing.space8,
+                    vertical: MemoraSpacing.space8,
+                  ),
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: <Widget>[
-                      Icon(Icons.menu, size: 22, color: MemoraColors.brandPrimary),
+                      Icon(
+                        Icons.menu,
+                        size: 22,
+                        color: MemoraColors.brandPrimary,
+                      ),
                       SizedBox(width: MemoraSpacing.space8),
                       Text('Menu', style: MemoraTypography.button),
                     ],
@@ -204,11 +234,18 @@ class MemoraHeader extends StatelessWidget implements PreferredSizeWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: <Widget>[
-                      const Icon(Icons.local_fire_department, size: 20, color: MemoraColors.brandBlue),
+                      const Icon(
+                        Icons.local_fire_department,
+                        size: 20,
+                        color: MemoraColors.brandBlue,
+                      ),
                       const SizedBox(width: MemoraSpacing.space4),
                       Text(
                         '$streakDays days',
-                        style: MemoraTypography.bodyStrong.copyWith(fontSize: 14, color: MemoraColors.textPrimary),
+                        style: MemoraTypography.bodyStrong.copyWith(
+                          fontSize: 14,
+                          color: MemoraColors.textPrimary,
+                        ),
                       ),
                     ],
                   ),
@@ -243,10 +280,20 @@ class MemoraHeader extends StatelessWidget implements PreferredSizeWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              Text(title, style: MemoraTypography.sectionTitle, maxLines: 1, overflow: TextOverflow.ellipsis),
+              Text(
+                title,
+                style: MemoraTypography.sectionTitle,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
               if (subtitle != null) ...<Widget>[
                 const SizedBox(height: MemoraSpacing.space4),
-                Text(subtitle!, style: MemoraTypography.metadata, maxLines: 1, overflow: TextOverflow.ellipsis),
+                Text(
+                  subtitle!,
+                  style: MemoraTypography.metadata,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ],
             ],
           ),
@@ -288,8 +335,13 @@ class MemoraHeader extends StatelessWidget implements PreferredSizeWidget {
               onTap: onTimerToggle,
               borderRadius: BorderRadius.circular(MemoraRadii.chipValue),
               child: Container(
-                constraints: const BoxConstraints(minHeight: MemoraSpacing.minTouchTarget),
-                padding: const EdgeInsets.symmetric(horizontal: MemoraSpacing.space8, vertical: MemoraSpacing.space4),
+                constraints: const BoxConstraints(
+                  minHeight: MemoraSpacing.minTouchTarget,
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: MemoraSpacing.space8,
+                  vertical: MemoraSpacing.space4,
+                ),
                 decoration: BoxDecoration(
                   color: MemoraColors.brandAqua.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(MemoraRadii.chipValue),

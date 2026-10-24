@@ -43,8 +43,11 @@ class MemoraScaffold extends StatelessWidget {
               child: LayoutBuilder(
                 builder: (BuildContext context, BoxConstraints constraints) {
                   final double width = constraints.maxWidth;
-                  final double gutter = applyResponsiveGutter ? MemoraSpacing.gutterForWidth(width) : 0.0;
-                  final double maxContentWidth = MemoraSpacing.maxContentWidthFor(width);
+                  final double gutter = applyResponsiveGutter
+                      ? MemoraSpacing.gutterForWidth(width)
+                      : 0.0;
+                  final double maxContentWidth =
+                      MemoraSpacing.maxContentWidthFor(width);
 
                   return Center(
                     child: ConstrainedBox(

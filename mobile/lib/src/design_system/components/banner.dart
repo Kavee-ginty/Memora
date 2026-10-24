@@ -48,10 +48,21 @@ class MemoraBanner extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
                   if (title != null) ...<Widget>[
-                    Text(title!, style: MemoraTypography.cardTitle.copyWith(color: _titleColor)),
+                    Text(
+                      title!,
+                      style: MemoraTypography.cardTitle.copyWith(
+                        color: _titleColor,
+                      ),
+                    ),
                     const SizedBox(height: MemoraSpacing.space4),
                   ],
-                  Text(message, style: MemoraTypography.body.copyWith(fontSize: 14, color: MemoraColors.textPrimary)),
+                  Text(
+                    message,
+                    style: MemoraTypography.body.copyWith(
+                      fontSize: 14,
+                      color: MemoraColors.textPrimary,
+                    ),
+                  ),
                   if (actionLabel != null && onAction != null) ...<Widget>[
                     const SizedBox(height: MemoraSpacing.space8),
                     TextButton(
@@ -60,7 +71,9 @@ class MemoraBanner extends StatelessWidget {
                         padding: EdgeInsets.zero,
                         minimumSize: const Size(48, 36),
                         foregroundColor: _iconColor,
-                        textStyle: MemoraTypography.button.copyWith(fontSize: 14),
+                        textStyle: MemoraTypography.button.copyWith(
+                          fontSize: 14,
+                        ),
                       ),
                       child: Text(actionLabel!),
                     ),
