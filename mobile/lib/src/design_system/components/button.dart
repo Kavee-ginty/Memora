@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../tokens/colors.dart';
 import '../tokens/radii.dart';
@@ -18,6 +19,8 @@ class MemoraButton extends StatefulWidget {
     this.isLoading = false,
     this.isFullWidth = true,
     this.semanticLabel,
+    this.focusNode,
+    this.autofocus = false,
   });
 
   final String label;
@@ -28,13 +31,55 @@ class MemoraButton extends StatefulWidget {
   final bool isLoading;
   final bool isFullWidth;
   final String? semanticLabel;
+  final FocusNode? focusNode;
+  final bool autofocus;
 
   @override
   State<MemoraButton> createState() => _MemoraButtonState();
 }
 
 class _MemoraButtonState extends State<MemoraButton> {
+  FocusNode? _internalFocusNode;
+  FocusNode get _effectiveFocusNode =>
+      widget.focusNode ?? (_internalFocusNode ??= FocusNode());
+
   bool _isFocused = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _isFocused = _effectiveFocusNode.hasFocus;
+    _effectiveFocusNode.addListener(_handleFocusChange);
+  }
+
+  @override
+  void didUpdateWidget(MemoraButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.focusNode != oldWidget.focusNode) {
+      (oldWidget.focusNode ?? _internalFocusNode)?.removeListener(
+        _handleFocusChange,
+      );
+      _effectiveFocusNode.addListener(_handleFocusChange);
+      _isFocused = _effectiveFocusNode.hasFocus;
+    }
+  }
+
+  void _handleFocusChange() {
+    if (mounted && _isFocused != _effectiveFocusNode.hasFocus) {
+      setState(() {
+        _isFocused = _effectiveFocusNode.hasFocus;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    (widget.focusNode ?? _internalFocusNode)?.removeListener(
+      _handleFocusChange,
+    );
+    _internalFocusNode?.dispose();
+    super.dispose();
+  }
 
   bool get _isEnabled => widget.onPressed != null && !widget.isLoading;
 
@@ -87,6 +132,7 @@ class _MemoraButtonState extends State<MemoraButton> {
     );
 
     final BoxDecoration decoration = _buildDecoration();
+    final bool isFocused = _effectiveFocusNode.hasFocus;
 
     return Semantics(
       button: true,
@@ -95,18 +141,34 @@ class _MemoraButtonState extends State<MemoraButton> {
           widget.semanticLabel ??
           (widget.isLoading ? '${widget.label}, loading' : widget.label),
       child: Focus(
+        focusNode: _effectiveFocusNode,
+        autofocus: widget.autofocus,
         onFocusChange: (bool focused) {
-          setState(() {
-            _isFocused = focused;
-          });
+          if (mounted && _isFocused != focused) {
+            setState(() {
+              _isFocused = focused;
+            });
+          }
+        },
+        onKeyEvent: (FocusNode node, KeyEvent event) {
+          if (_isEnabled &&
+              (event.logicalKey == LogicalKeyboardKey.enter ||
+                  event.logicalKey == LogicalKeyboardKey.space)) {
+            if (event is KeyDownEvent) {
+              widget.onPressed?.call();
+              return KeyEventResult.handled;
+            }
+          }
+          return KeyEventResult.ignored;
         },
         child: Container(
+          key: const ValueKey('MemoraButtonFocusContainer'),
           width: widget.isFullWidth ? double.infinity : null,
           constraints: BoxConstraints(
             minHeight: minHeight,
             minWidth: MemoraSpacing.minTouchTarget,
           ),
-          decoration: _isFocused
+          decoration: isFocused
               ? BoxDecoration(
                   borderRadius: BorderRadius.circular(
                     MemoraRadii.controlValue + 2,
@@ -114,7 +176,7 @@ class _MemoraButtonState extends State<MemoraButton> {
                   border: Border.all(color: MemoraColors.focus, width: 2.0),
                 )
               : null,
-          padding: _isFocused ? const EdgeInsets.all(2.0) : EdgeInsets.zero,
+          padding: isFocused ? const EdgeInsets.all(2.0) : EdgeInsets.zero,
           child: Material(
             color: Colors.transparent,
             borderRadius: MemoraRadii.control,

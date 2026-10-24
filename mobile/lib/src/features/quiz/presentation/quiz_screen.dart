@@ -288,15 +288,15 @@ class _QuizScreenState extends State<QuizScreen> {
   }
 
   Widget _buildTopHeader(BuildContext context) {
-    return SizedBox(
-      height: 100,
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 100),
       child: Stack(
         alignment: Alignment.bottomCenter,
         clipBehavior: Clip.none,
         children: <Widget>[
           // Header Card
           Container(
-            height: 72,
+            constraints: const BoxConstraints(minHeight: 72),
             padding: const EdgeInsets.symmetric(
               horizontal: MemoraSpacing.space16,
               vertical: MemoraSpacing.space8,
@@ -310,60 +310,69 @@ class _QuizScreenState extends State<QuizScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
                 // Memora Logo & Exit / Menu
-                Row(
-                  children: <Widget>[
-                    Semantics(
-                      button: true,
-                      label: 'Exit quiz session',
-                      child: InkWell(
-                        onTap: () {
-                          if (Navigator.of(context).canPop()) {
-                            context.pop();
-                          } else {
-                            context.go('/');
-                          }
-                        },
-                        borderRadius: BorderRadius.circular(24.0),
-                        child: Container(
-                          constraints: const BoxConstraints(
-                            minWidth: MemoraSpacing.minTouchTarget,
-                            minHeight: MemoraSpacing.minTouchTarget,
-                          ),
-                          alignment: Alignment.center,
+                Expanded(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      Semantics(
+                        button: true,
+                        label: 'Exit quiz session',
+                        child: InkWell(
+                          onTap: () {
+                            if (Navigator.of(context).canPop()) {
+                              context.pop();
+                            } else {
+                              context.go('/');
+                            }
+                          },
+                          borderRadius: BorderRadius.circular(24.0),
                           child: Container(
-                            width: 24,
-                            height: 24,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: MemoraColors.brandPrimary,
-                                width: 2,
-                              ),
+                            constraints: const BoxConstraints(
+                              minWidth: MemoraSpacing.minTouchTarget,
+                              minHeight: MemoraSpacing.minTouchTarget,
                             ),
-                            child: const Center(
-                              child: Icon(
-                                Icons.close_rounded,
-                                size: 14,
-                                color: MemoraColors.brandPrimary,
+                            alignment: Alignment.center,
+                            child: Container(
+                              width: 24,
+                              height: 24,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: MemoraColors.brandPrimary,
+                                  width: 2,
+                                ),
+                              ),
+                              child: const Center(
+                                child: Icon(
+                                  Icons.close_rounded,
+                                  size: 14,
+                                  color: MemoraColors.brandPrimary,
+                                ),
                               ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: MemoraSpacing.space8),
-                    Text(
-                      'Memora',
-                      style: MemoraTypography.cardTitle.copyWith(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                      const SizedBox(width: MemoraSpacing.space8),
+                      Flexible(
+                        child: Text(
+                          'Memora',
+                          style: MemoraTypography.cardTitle.copyWith(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
+
+                const SizedBox(width: MemoraSpacing.space8),
 
                 // Streak Flame
                 const Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
                     Icon(
                       Icons.local_fire_department_rounded,

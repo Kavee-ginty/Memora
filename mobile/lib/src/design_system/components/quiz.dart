@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../tokens/colors.dart';
 import '../tokens/elevations.dart';
@@ -18,11 +19,11 @@ enum MemoraQuizOptionState {
 
 /// A responsive, accessible answer choice card for quiz questions.
 ///
-/// Designed to exactly match the 2x2 solid colored pill buttons in Memora quiz screens
+/// Designed to exactly match the solid colored pill buttons in Memora quiz screens
 /// (docs/screens/quiz.png and UI mockups).
 /// Complies with UIX-005 (meaning never conveyed by color alone via semantics)
 /// and UIX-030 (minimum 48x48 px touch target).
-class MemoraQuizOption extends StatelessWidget {
+class MemoraQuizOption extends StatefulWidget {
   const MemoraQuizOption({
     super.key,
     required this.text,
@@ -31,6 +32,8 @@ class MemoraQuizOption extends StatelessWidget {
     this.onTap,
     this.isMultiSelect = false,
     this.showIndexBadge = false,
+    this.focusNode,
+    this.autofocus = false,
   });
 
   final String text;
@@ -39,6 +42,58 @@ class MemoraQuizOption extends StatelessWidget {
   final VoidCallback? onTap;
   final bool isMultiSelect;
   final bool showIndexBadge;
+  final FocusNode? focusNode;
+  final bool autofocus;
+
+  @override
+  State<MemoraQuizOption> createState() => _MemoraQuizOptionState();
+}
+
+class _MemoraQuizOptionState extends State<MemoraQuizOption> {
+  FocusNode? _internalFocusNode;
+  FocusNode get _effectiveFocusNode =>
+      widget.focusNode ?? (_internalFocusNode ??= FocusNode());
+
+  bool _isFocused = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _isFocused = _effectiveFocusNode.hasFocus;
+    _effectiveFocusNode.addListener(_handleFocusChange);
+  }
+
+  @override
+  void didUpdateWidget(MemoraQuizOption oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.focusNode != oldWidget.focusNode) {
+      (oldWidget.focusNode ?? _internalFocusNode)?.removeListener(
+        _handleFocusChange,
+      );
+      _effectiveFocusNode.addListener(_handleFocusChange);
+      _isFocused = _effectiveFocusNode.hasFocus;
+    }
+  }
+
+  void _handleFocusChange() {
+    if (mounted && _isFocused != _effectiveFocusNode.hasFocus) {
+      setState(() {
+        _isFocused = _effectiveFocusNode.hasFocus;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    (widget.focusNode ?? _internalFocusNode)?.removeListener(
+      _handleFocusChange,
+    );
+    _internalFocusNode?.dispose();
+    super.dispose();
+  }
+
+  bool get _isEnabled =>
+      widget.state != MemoraQuizOptionState.disabled && widget.onTap != null;
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +101,7 @@ class MemoraQuizOption extends StatelessWidget {
     Color borderColor;
     Color textColor = MemoraColors.textPrimary;
 
-    switch (state) {
+    switch (widget.state) {
       case MemoraQuizOptionState.defaultState:
         backgroundColor = MemoraColors.quizOptionRest; // #86BBE7
         borderColor = const Color(0xFF7CB1E8);
@@ -70,84 +125,113 @@ class MemoraQuizOption extends StatelessWidget {
         break;
     }
 
-    final String labelPrefix = indexLabel != null
-        ? 'Option $indexLabel, '
+    final String labelPrefix = widget.indexLabel != null
+        ? 'Option ${widget.indexLabel}, '
         : 'Option ';
-    final String stateLabel = switch (state) {
-      MemoraQuizOptionState.defaultState => '$labelPrefix$text',
-      MemoraQuizOptionState.selected => '$labelPrefix$text, selected',
+    final String stateLabel = switch (widget.state) {
+      MemoraQuizOptionState.defaultState => '$labelPrefix${widget.text}',
+      MemoraQuizOptionState.selected => '$labelPrefix${widget.text}, selected',
       MemoraQuizOptionState.correct =>
-        '$labelPrefix$text, correct, memory protected',
-      MemoraQuizOptionState.weakMemory => '$labelPrefix$text, weak memory',
-      MemoraQuizOptionState.disabled => '$labelPrefix$text, disabled',
+        '$labelPrefix${widget.text}, correct, memory protected',
+      MemoraQuizOptionState.weakMemory =>
+        '$labelPrefix${widget.text}, weak memory',
+      MemoraQuizOptionState.disabled => '$labelPrefix${widget.text}, disabled',
     };
+
+    final bool showFocusBorder =
+        _isFocused || widget.state == MemoraQuizOptionState.selected;
 
     return Semantics(
       button: true,
-      enabled: state != MemoraQuizOptionState.disabled,
-      selected: state == MemoraQuizOptionState.selected,
+      enabled: widget.state != MemoraQuizOptionState.disabled,
+      selected: widget.state == MemoraQuizOptionState.selected,
       label: stateLabel,
-      child: Material(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(18.0),
-        elevation: 0,
-        child: InkWell(
-          onTap: state == MemoraQuizOptionState.disabled ? null : onTap,
+      child: Focus(
+        focusNode: _effectiveFocusNode,
+        autofocus: widget.autofocus,
+        onFocusChange: (bool focused) {
+          if (mounted && _isFocused != focused) {
+            setState(() {
+              _isFocused = focused;
+            });
+          }
+        },
+        onKeyEvent: (FocusNode node, KeyEvent event) {
+          if (_isEnabled &&
+              (event.logicalKey == LogicalKeyboardKey.enter ||
+                  event.logicalKey == LogicalKeyboardKey.space)) {
+            if (event is KeyDownEvent) {
+              widget.onTap?.call();
+              return KeyEventResult.handled;
+            }
+          }
+          return KeyEventResult.ignored;
+        },
+        child: Material(
+          color: backgroundColor,
           borderRadius: BorderRadius.circular(18.0),
-          child: Container(
-            constraints: const BoxConstraints(minHeight: 56),
-            padding: const EdgeInsets.symmetric(
-              horizontal: MemoraSpacing.space16,
-              vertical: MemoraSpacing.space12,
-            ),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(18.0),
-              border: Border.all(
-                color: borderColor,
-                width: state == MemoraQuizOptionState.selected ? 2.0 : 1.0,
+          elevation: 0,
+          child: InkWell(
+            onTap: widget.state == MemoraQuizOptionState.disabled
+                ? null
+                : widget.onTap,
+            borderRadius: BorderRadius.circular(18.0),
+            child: Container(
+              constraints: const BoxConstraints(minHeight: 56),
+              padding: const EdgeInsets.symmetric(
+                horizontal: MemoraSpacing.space16,
+                vertical: MemoraSpacing.space12,
               ),
-              boxShadow: state == MemoraQuizOptionState.selected
-                  ? MemoraElevations.cardShadows
-                  : null,
-            ),
-            alignment: Alignment.center,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                if (showIndexBadge && indexLabel != null) ...<Widget>[
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 2,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(18.0),
+                border: Border.all(
+                  color: _isFocused ? MemoraColors.focus : borderColor,
+                  width: showFocusBorder ? 2.0 : 1.0,
+                ),
+                boxShadow: widget.state == MemoraQuizOptionState.selected
+                    ? MemoraElevations.cardShadows
+                    : null,
+              ),
+              alignment: Alignment.center,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  if (widget.showIndexBadge &&
+                      widget.indexLabel != null) ...<Widget>[
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.35),
+                        borderRadius: BorderRadius.circular(6.0),
+                      ),
+                      child: Text(
+                        widget.indexLabel!,
+                        style: MemoraTypography.metadata.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: textColor,
+                        ),
+                      ),
                     ),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.35),
-                      borderRadius: BorderRadius.circular(6.0),
-                    ),
+                    const SizedBox(width: MemoraSpacing.space8),
+                  ],
+                  Flexible(
                     child: Text(
-                      indexLabel!,
-                      style: MemoraTypography.metadata.copyWith(
-                        fontWeight: FontWeight.bold,
+                      widget.text,
+                      textAlign: TextAlign.center,
+                      softWrap: true,
+                      style: MemoraTypography.bodyStrong.copyWith(
                         color: textColor,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
-                  const SizedBox(width: MemoraSpacing.space8),
                 ],
-                Flexible(
-                  child: Text(
-                    text,
-                    textAlign: TextAlign.center,
-                    softWrap: true,
-                    style: MemoraTypography.bodyStrong.copyWith(
-                      color: textColor,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),
@@ -156,52 +240,128 @@ class MemoraQuizOption extends StatelessWidget {
   }
 }
 
-/// A 2x2 grid container for quiz answer choice buttons.
+/// A responsive container for quiz answer choice buttons conforming to UIX-017.
 ///
-/// Ensures uniform height and width across 2 columns and 2 rows, matching
-/// the layout in docs/screens/quiz.png.
+/// Per UIX-017: Answer options may use two columns only when every option fits
+/// on one line at the active text scale and each target remains at least 48 px tall.
+/// Otherwise, answers automatically switch to a single column layout.
 class MemoraQuizGrid extends StatelessWidget {
   const MemoraQuizGrid({
     super.key,
     required this.options,
     this.spacing = MemoraSpacing.space12,
+    this.forceSingleColumn = false,
   });
 
   final List<Widget> options;
   final double spacing;
+  final bool forceSingleColumn;
+
+  bool _shouldUseTwoColumns(BuildContext context, double maxWidth) {
+    if (forceSingleColumn) return false;
+    if (options.length != 4) return false;
+    if (!maxWidth.isFinite || maxWidth <= 0) return false;
+
+    final double columnWidth = (maxWidth - spacing) / 2.0;
+    // If column width is less than minimum viable touch width or cramped
+    if (columnWidth < 120.0) return false;
+
+    final TextScaler textScaler = MediaQuery.textScalerOf(context);
+
+    // Padding inside MemoraQuizOption: 16px horizontal on each side = 32px + 4px border margin
+    final double horizontalPadding = (MemoraSpacing.space16 * 2) + 4.0;
+    final double availableTextWidth = columnWidth - horizontalPadding;
+    if (availableTextWidth <= 0) return false;
+
+    // Check each option: all 4 must fit on a single line at the active text scale
+    for (final Widget option in options) {
+      if (option is MemoraQuizOption) {
+        double optAvailableWidth = availableTextWidth;
+        if (option.showIndexBadge && option.indexLabel != null) {
+          optAvailableWidth -= 40.0;
+        }
+        if (optAvailableWidth <= 0) return false;
+
+        final TextPainter painter = TextPainter(
+          text: TextSpan(
+            text: option.text,
+            style: MemoraTypography.bodyStrong.copyWith(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          textDirection: TextDirection.ltr,
+          textScaler: textScaler,
+          maxLines: 1,
+        )..layout(maxWidth: double.infinity);
+
+        // If single line width exceeds available column text width, must use single column
+        if (painter.width > optAvailableWidth) {
+          return false;
+        }
+      } else {
+        // Fallback for non-MemoraQuizOption widgets
+        if (textScaler.scale(1.0) >= 1.5 || columnWidth < 140.0) {
+          return false;
+        }
+      }
+    }
+
+    return true;
+  }
 
   @override
   Widget build(BuildContext context) {
-    if (options.length == 4) {
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          Row(
-            children: <Widget>[
-              Expanded(child: options[0]),
-              SizedBox(width: spacing),
-              Expanded(child: options[1]),
-            ],
-          ),
-          SizedBox(height: spacing),
-          Row(
-            children: <Widget>[
-              Expanded(child: options[2]),
-              SizedBox(width: spacing),
-              Expanded(child: options[3]),
-            ],
-          ),
-        ],
-      );
+    if (options.isEmpty) {
+      return const SizedBox.shrink();
     }
 
-    // Dynamic grid fallback if less or more than 4 options
-    return Wrap(
-      spacing: spacing,
-      runSpacing: spacing,
-      children: options
-          .map((Widget opt) => SizedBox(width: 140, child: opt))
-          .toList(),
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        final bool useTwoColumns = _shouldUseTwoColumns(
+          context,
+          constraints.maxWidth,
+        );
+
+        if (useTwoColumns && options.length == 4) {
+          return Column(
+            key: const ValueKey('MemoraQuizGridTwoColumns'),
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Row(
+                key: const ValueKey('MemoraQuizGridRow0'),
+                children: <Widget>[
+                  Expanded(child: options[0]),
+                  SizedBox(width: spacing),
+                  Expanded(child: options[1]),
+                ],
+              ),
+              SizedBox(height: spacing),
+              Row(
+                key: const ValueKey('MemoraQuizGridRow1'),
+                children: <Widget>[
+                  Expanded(child: options[2]),
+                  SizedBox(width: spacing),
+                  Expanded(child: options[3]),
+                ],
+              ),
+            ],
+          );
+        }
+
+        // Single column layout per UIX-017
+        return Column(
+          key: const ValueKey('MemoraQuizGridSingleColumn'),
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            for (int i = 0; i < options.length; i++) ...<Widget>[
+              if (i > 0) SizedBox(height: spacing),
+              options[i],
+            ],
+          ],
+        );
+      },
     );
   }
 }
@@ -377,6 +537,7 @@ class MemoraQuizProgressBar extends StatelessWidget {
             children: <Widget>[
               Text(
                 'Question ${currentQuestionIndex + 1} of $totalQuestions',
+                softWrap: true,
                 style: MemoraTypography.metadata.copyWith(
                   fontWeight: FontWeight.w600,
                   color: MemoraColors.textMuted,
@@ -384,6 +545,7 @@ class MemoraQuizProgressBar extends StatelessWidget {
               ),
               Text(
                 '$memoriesProtectedCount protected',
+                softWrap: true,
                 style: MemoraTypography.metadata.copyWith(
                   fontWeight: FontWeight.bold,
                   color: MemoraColors.feedbackPositive,

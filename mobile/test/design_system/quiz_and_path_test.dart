@@ -268,4 +268,139 @@ void main() {
       expect(find.text('16 concepts • 50% complete'), findsOneWidget);
     });
   });
+
+  group('MemoraQuizGrid answer layout (UIX-017)', () {
+    testWidgets(
+      'renders 2 columns when every option fits on a single line at standard scale',
+      (WidgetTester tester) async {
+        // 400px width container
+        await tester.pumpWidget(
+          buildApp(
+            const SizedBox(
+              width: 400,
+              child: MemoraQuizGrid(
+                options: <Widget>[
+                  MemoraQuizOption(text: 'Fast'),
+                  MemoraQuizOption(text: 'Slow'),
+                  MemoraQuizOption(text: 'Up'),
+                  MemoraQuizOption(text: 'Down'),
+                ],
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // Two columns are formed
+        expect(
+          find.byKey(const ValueKey('MemoraQuizGridTwoColumns')),
+          findsOneWidget,
+          reason: 'Short options fitting on 1 line must render 2 columns',
+        );
+      },
+    );
+
+    testWidgets(
+      'automatically switches to single column when an option exceeds single line width',
+      (WidgetTester tester) async {
+        // 400px width container with one long answer option
+        await tester.pumpWidget(
+          buildApp(
+            const SizedBox(
+              width: 400,
+              child: MemoraQuizGrid(
+                options: <Widget>[
+                  MemoraQuizOption(text: 'Fast'),
+                  MemoraQuizOption(
+                    text: 'The total energy in an isolated system remains constant over time',
+                  ),
+                  MemoraQuizOption(text: 'Up'),
+                  MemoraQuizOption(text: 'Down'),
+                ],
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // Single column layout
+        expect(
+          find.byKey(const ValueKey('MemoraQuizGridSingleColumn')),
+          findsOneWidget,
+          reason: 'Long option exceeding single line must switch to single column per UIX-017',
+        );
+      },
+    );
+
+    testWidgets('switches to single column at 200% text scale (UIX-017)', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: MemoraTheme.light(),
+          home: const MediaQuery(
+            data: MediaQueryData(textScaler: TextScaler.linear(2.0)),
+            child: Scaffold(
+              body: SizedBox(
+                width: 360,
+                child: MemoraQuizGrid(
+                  options: <Widget>[
+                    MemoraQuizOption(text: 'Historic'),
+                    MemoraQuizOption(text: 'Modern'),
+                    MemoraQuizOption(text: 'Timeless'),
+                    MemoraQuizOption(text: 'Traditional'),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const ValueKey('MemoraQuizGridSingleColumn')),
+        findsOneWidget,
+        reason: '200% text scale must switch to single column to prevent cramped wrapping',
+      );
+    });
+
+    testWidgets('switches to single column at 320 px screen width (UIX-017)', (
+      WidgetTester tester,
+    ) async {
+      tester.view.physicalSize = const Size(320 * 2, 600 * 2);
+      tester.view.devicePixelRatio = 2.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      // 320px viewport with screen padding (16*2=32) and card padding (24*2=48)
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: MemoraTheme.light(),
+          home: const Scaffold(
+            body: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 40.0),
+              child: MemoraQuizGrid(
+                options: <Widget>[
+                  MemoraQuizOption(text: 'Historic'),
+                  MemoraQuizOption(text: 'Modern'),
+                  MemoraQuizOption(text: 'Timeless'),
+                  MemoraQuizOption(text: 'Traditional'),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const ValueKey('MemoraQuizGridSingleColumn')),
+        findsOneWidget,
+        reason: '320px width must switch to single column per UIX-017',
+      );
+    });
+  });
 }

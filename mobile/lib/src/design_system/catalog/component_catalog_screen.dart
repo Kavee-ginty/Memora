@@ -490,17 +490,20 @@ class _ComponentCatalogScreenState extends State<ComponentCatalogScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        const Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        const Wrap(
+          alignment: WrapAlignment.spaceBetween,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: MemoraSpacing.space16,
+          runSpacing: MemoraSpacing.space8,
           children: <Widget>[
-            Expanded(
+            SizedBox(
+              width: 170,
               child: MemoraQuizProgressBar(
                 totalQuestions: 8,
                 currentQuestionIndex: 2,
                 memoriesProtectedCount: 2,
               ),
             ),
-            SizedBox(width: MemoraSpacing.space16),
             MemoraTimerBadge(),
           ],
         ),
