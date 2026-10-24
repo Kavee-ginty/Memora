@@ -57,4 +57,4 @@ flutter run
 
 ## Current CPM state
 
-`T01` is merged and defines this baseline. `T02`, `T03`, `T04` and `T05` are Ready to be claimed in parallel.
+`T01` and `T04` are merged and Done. `T02` and `T03` are Ready to be claimed in parallel. `T05` is in review; `T08` stays Blocked until it merges.
