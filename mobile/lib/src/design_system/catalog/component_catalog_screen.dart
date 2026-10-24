@@ -8,6 +8,8 @@ import '../components/button.dart';
 import '../components/card.dart';
 import '../components/dialog.dart';
 import '../components/mora.dart';
+import '../components/path.dart';
+import '../components/quiz.dart';
 import '../components/scaffold.dart';
 import '../components/skeleton.dart';
 import '../components/text_field.dart';
@@ -27,6 +29,7 @@ class _ComponentCatalogScreenState extends State<ComponentCatalogScreen> {
   int _selectedNavIndex = 0;
   bool _isCardSelected = false;
   bool _obscurePassword = true;
+  int _selectedQuizOption = 1;
 
   @override
   Widget build(BuildContext context) {
@@ -78,6 +81,14 @@ class _ComponentCatalogScreenState extends State<ComponentCatalogScreen> {
 
             _buildSectionHeader('8. Mora Mascot Placement'),
             _buildMoraSection(context),
+            const SizedBox(height: MemoraSpacing.space24),
+
+            _buildSectionHeader('9. Quiz & Retrieval Controls'),
+            _buildQuizSection(context),
+            const SizedBox(height: MemoraSpacing.space24),
+
+            _buildSectionHeader('10. Learning Path & Map Nodes'),
+            _buildPathSection(context),
             const SizedBox(height: MemoraSpacing.space32),
           ],
         ),
@@ -443,6 +454,148 @@ class _ComponentCatalogScreenState extends State<ComponentCatalogScreen> {
                   SizedBox(height: MemoraSpacing.space4),
                   Text('Rest', style: MemoraTypography.metadata),
                 ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildQuizSection(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        const MemoraQuizProgressBar(
+          totalQuestions: 8,
+          currentQuestionIndex: 2,
+          memoriesProtectedCount: 2,
+        ),
+        const SizedBox(height: MemoraSpacing.space16),
+        MemoraQuizOption(
+          indexLabel: 'A',
+          text: 'F = G(m1 * m2) / r^2',
+          state: _selectedQuizOption == 0
+              ? MemoraQuizOptionState.selected
+              : MemoraQuizOptionState.defaultState,
+          onTap: () {
+            setState(() {
+              _selectedQuizOption = 0;
+            });
+          },
+        ),
+        const SizedBox(height: MemoraSpacing.space8),
+        MemoraQuizOption(
+          indexLabel: 'B',
+          text: 'F = m * a (Newton\'s 2nd Law)',
+          state: _selectedQuizOption == 1
+              ? MemoraQuizOptionState.selected
+              : MemoraQuizOptionState.defaultState,
+          onTap: () {
+            setState(() {
+              _selectedQuizOption = 1;
+            });
+          },
+        ),
+        const SizedBox(height: MemoraSpacing.space8),
+        const MemoraQuizOption(
+          indexLabel: 'C',
+          text: 'E = m * c^2 (Verified Correct)',
+          state: MemoraQuizOptionState.correct,
+        ),
+        const SizedBox(height: MemoraSpacing.space8),
+        const MemoraQuizOption(
+          indexLabel: 'D',
+          text: 'P = V / I (Weak Memory State)',
+          state: MemoraQuizOptionState.weakMemory,
+        ),
+        const SizedBox(height: MemoraSpacing.space16),
+        MemoraFeedbackPanel(
+          type: MemoraFeedbackType.recalled,
+          headline: 'Memory protected',
+          body: 'Great job! Newton\'s second law connects resultant force directly to mass and acceleration.',
+          primaryActionLabel: 'Next memory',
+          onPrimaryAction: () {},
+          secondaryActionLabel: 'Explain',
+          onSecondaryAction: () {},
+        ),
+        const SizedBox(height: MemoraSpacing.space12),
+        MemoraFeedbackPanel(
+          type: MemoraFeedbackType.weakMemory,
+          headline: 'Weak memory found',
+          body: 'Electrical power is P = V * I. Let\'s reinforce this concept with a quick repair.',
+          primaryActionLabel: 'Try a repair question',
+          onPrimaryAction: () {},
+          secondaryActionLabel: 'Explain answer',
+          onSecondaryAction: () {},
+        ),
+        const SizedBox(height: MemoraSpacing.space16),
+        const MemoraConceptExplanationCard(
+          conceptTitle: 'Newton\'s Gravitational Law',
+          explanation: 'Every particle attracts every other particle with a force proportional to product of their masses and inversely proportional to square of distance.',
+          sourceExcerpt: 'Physics GCE A/L Unit 3: Mechanics, Page 42',
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPathSection(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        const MemoraPathMilestoneCard(
+          unitNumber: 1,
+          title: 'Measurement & Mechanics',
+          conceptsCount: 14,
+          progress: 0.72,
+        ),
+        const SizedBox(height: MemoraSpacing.space24),
+        const SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              MemoraPathNode(
+                stepNumber: 1,
+                title: 'Units & Dimensions',
+                state: MemoraPathNodeState.completed,
+              ),
+              Padding(
+                padding: EdgeInsets.only(top: 28),
+                child: MemoraPathConnector(isCompleted: true, length: 24),
+              ),
+              MemoraPathNode(
+                stepNumber: 2,
+                title: 'Vectors & Forces',
+                state: MemoraPathNodeState.current,
+              ),
+              Padding(
+                padding: EdgeInsets.only(top: 28),
+                child: MemoraPathConnector(isCompleted: false, length: 24),
+              ),
+              MemoraPathNode(
+                stepNumber: 3,
+                title: 'Circular Motion',
+                state: MemoraPathNodeState.needsReview,
+              ),
+              Padding(
+                padding: EdgeInsets.only(top: 28),
+                child: MemoraPathConnector(isCompleted: false, length: 24),
+              ),
+              MemoraPathNode(
+                stepNumber: 4,
+                title: 'Gravitational Fields',
+                state: MemoraPathNodeState.available,
+              ),
+              Padding(
+                padding: EdgeInsets.only(top: 28),
+                child: MemoraPathConnector(isCompleted: false, length: 24),
+              ),
+              MemoraPathNode(
+                stepNumber: 5,
+                title: 'Oscillations & Waves',
+                state: MemoraPathNodeState.locked,
+                lockReason: 'Complete Unit 1 first',
               ),
             ],
           ),

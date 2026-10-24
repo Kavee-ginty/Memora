@@ -18,6 +18,8 @@ export 'components/button.dart';
 export 'components/card.dart';
 export 'components/dialog.dart';
 export 'components/mora.dart';
+export 'components/path.dart';
+export 'components/quiz.dart';
 export 'components/scaffold.dart';
 export 'components/skeleton.dart';
 export 'components/text_field.dart';
