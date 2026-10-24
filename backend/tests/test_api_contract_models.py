@@ -2,8 +2,10 @@ from datetime import UTC, date, datetime, timedelta, timezone
 from uuid import uuid4
 
 import pytest
+from fastapi.security import HTTPBearer
 from pydantic import TypeAdapter, ValidationError
 
+from memora.api.security import bearer_auth
 from memora.api.v1.schemas.common import (
     AsyncOperation,
     CalendarDate,
@@ -21,6 +23,7 @@ from memora.api.v1.schemas.errors import (
     ErrorEnvelope,
     FieldError,
 )
+from memora.api.v1.schemas.headers import IdempotencyHeaders, RequestHeaders
 
 
 def test_utc_datetime_serializes_with_z_and_seconds() -> None:
@@ -247,3 +250,94 @@ def test_error_codes_and_actions_are_documented() -> None:
     assert "validation_failed" in ERROR_CODES
     assert "idempotency_key_reused" in ERROR_CODES
     assert "correct_input" in ERROR_ACTIONS
+
+
+def test_request_headers_accept_aliases() -> None:
+    correlation_id = uuid4()
+    headers = RequestHeaders.model_validate(
+        {
+            "X-Correlation-ID": str(correlation_id),
+            "X-Client-Version": "1.2.3",
+            "X-Platform": "android",
+            "Accept-Language": "en-US",
+        }
+    )
+
+    assert headers.correlation_id == correlation_id
+    assert headers.client_version == "1.2.3"
+    assert headers.platform == "android"
+    assert headers.accept_language == "en-US"
+
+
+def test_request_headers_accept_field_names_and_default_optional() -> None:
+    correlation_id = uuid4()
+    headers = RequestHeaders(
+        correlation_id=correlation_id,
+        client_version="1.2.3",
+        platform="ios",
+    )
+
+    assert headers.accept_language is None
+    assert headers.model_dump(by_alias=True, mode="json") == {
+        "X-Correlation-ID": str(correlation_id),
+        "X-Client-Version": "1.2.3",
+        "X-Platform": "ios",
+        "Accept-Language": None,
+    }
+
+
+def test_request_headers_require_required_headers() -> None:
+    payload = {
+        "X-Correlation-ID": str(uuid4()),
+        "X-Client-Version": "1.2.3",
+        "X-Platform": "android",
+    }
+
+    for header in ("X-Correlation-ID", "X-Client-Version", "X-Platform"):
+        missing = {key: value for key, value in payload.items() if key != header}
+        with pytest.raises(ValidationError):
+            RequestHeaders.model_validate(missing)
+
+
+def test_request_headers_validate_values() -> None:
+    valid = {
+        "X-Correlation-ID": str(uuid4()),
+        "X-Client-Version": "1.2.3",
+        "X-Platform": "android",
+    }
+
+    for values in (
+        {**valid, "X-Correlation-ID": "not-a-uuid"},
+        {**valid, "X-Client-Version": ""},
+        {**valid, "X-Client-Version": "x" * 51},
+        {**valid, "X-Platform": "web"},
+        {**valid, "Accept-Language": "x" * 36},
+    ):
+        with pytest.raises(ValidationError):
+            RequestHeaders.model_validate(values)
+
+    assert (
+        RequestHeaders.model_validate({**valid, "Accept-Language": "x" * 35}).accept_language
+        == "x" * 35
+    )
+
+
+def test_idempotency_headers_alias_and_bounds() -> None:
+    key = "x" * 16
+    headers = IdempotencyHeaders.model_validate({"Idempotency-Key": key})
+
+    assert headers.idempotency_key == key
+    assert IdempotencyHeaders(idempotency_key="y" * 255).idempotency_key == "y" * 255
+    assert headers.model_dump(by_alias=True) == {"Idempotency-Key": key}
+
+    for value in ("x" * 15, "x" * 256):
+        with pytest.raises(ValidationError):
+            IdempotencyHeaders.model_validate({"Idempotency-Key": value})
+    with pytest.raises(ValidationError):
+        IdempotencyHeaders.model_validate({})
+
+
+def test_bearer_auth_scheme() -> None:
+    assert isinstance(bearer_auth, HTTPBearer)
+    assert bearer_auth.scheme_name == "bearerAuth"
+    assert bearer_auth.auto_error is False
