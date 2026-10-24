@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../design_system/design_system.dart';
+import '../../learning/presentation/learning_path_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -25,48 +26,53 @@ class _HomeScreenState extends State<HomeScreen> {
           });
         },
       ),
-      body: Center(
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              const MemoraCard(
-                variant: MemoraCardVariant.primary,
+      body: _navIndex == 1
+          ? const LearningPathScreen()
+          : Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: MemoraSpacing.space16,
+                ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
-                    MoraPlacement(
-                      state: MoraState.encourage,
-                      size: 72,
-                      speechBubbleText: 'Welcome to Memora!',
+                    const MemoraCard(
+                      variant: MemoraCardVariant.primary,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          MoraPlacement(
+                            state: MoraState.encourage,
+                            size: 72,
+                            speechBubbleText: 'Welcome to Memora!',
+                          ),
+                          SizedBox(height: MemoraSpacing.space16),
+                          Text(
+                            'Development baseline ready',
+                            textAlign: TextAlign.center,
+                            style: MemoraTypography.cardTitle,
+                          ),
+                          SizedBox(height: MemoraSpacing.space8),
+                          Text(
+                            'Flutter design system and responsive app shell baseline established.',
+                            textAlign: TextAlign.center,
+                            style: MemoraTypography.body,
+                          ),
+                        ],
+                      ),
                     ),
-                    SizedBox(height: MemoraSpacing.space16),
-                    Text(
-                      'Development baseline ready',
-                      textAlign: TextAlign.center,
-                      style: MemoraTypography.cardTitle,
-                    ),
-                    SizedBox(height: MemoraSpacing.space8),
-                    Text(
-                      'Flutter design system and responsive app shell baseline established.',
-                      textAlign: TextAlign.center,
-                      style: MemoraTypography.body,
+                    const SizedBox(height: MemoraSpacing.space24),
+                    MemoraButton(
+                      label: 'View Component Catalog',
+                      icon: const Icon(Icons.widgets_outlined),
+                      onPressed: () {
+                        context.push('/catalog');
+                      },
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: MemoraSpacing.space24),
-              MemoraButton(
-                label: 'View Component Catalog',
-                icon: const Icon(Icons.widgets_outlined),
-                onPressed: () {
-                  context.push('/catalog');
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
+            ),
     );
   }
 }
