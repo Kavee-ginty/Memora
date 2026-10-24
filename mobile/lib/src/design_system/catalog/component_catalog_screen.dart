@@ -455,6 +455,30 @@ class _ComponentCatalogScreenState extends State<ComponentCatalogScreen> {
                   Text('Rest', style: MemoraTypography.metadata),
                 ],
               ),
+              SizedBox(width: MemoraSpacing.space16),
+              Column(
+                children: <Widget>[
+                  MoraPlacement(state: MoraState.happy, size: 56),
+                  SizedBox(height: MemoraSpacing.space4),
+                  Text('Happy', style: MemoraTypography.metadata),
+                ],
+              ),
+              SizedBox(width: MemoraSpacing.space16),
+              Column(
+                children: <Widget>[
+                  MoraPlacement(state: MoraState.sad, size: 56),
+                  SizedBox(height: MemoraSpacing.space4),
+                  Text('Sad', style: MemoraTypography.metadata),
+                ],
+              ),
+              SizedBox(width: MemoraSpacing.space16),
+              Column(
+                children: <Widget>[
+                  MoraPlacement(state: MoraState.crying, size: 56),
+                  SizedBox(height: MemoraSpacing.space4),
+                  Text('Crying', style: MemoraTypography.metadata),
+                ],
+              ),
             ],
           ),
         ),

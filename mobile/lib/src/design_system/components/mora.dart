@@ -5,8 +5,12 @@ import '../tokens/radii.dart';
 import '../tokens/spacing.dart';
 import '../tokens/typography.dart';
 
-enum MoraState { guide, encourage, celebrate, think, rest }
+/// The canonical visual states of Mora the mascot guardian.
+enum MoraState { guide, encourage, celebrate, think, rest, happy, sad, crying }
 
+/// A responsive, accessible mascot component rendering transparent mascot illustrations.
+///
+/// Complies with UIX-002, UIX-006, and UIX-031 (decorative art uses empty alternative text).
 class MoraPlacement extends StatelessWidget {
   const MoraPlacement({
     super.key,
@@ -22,6 +26,28 @@ class MoraPlacement extends StatelessWidget {
   final String? speechBubbleText;
   final bool isDecorative;
   final String? semanticLabel;
+
+  /// Returns the asset path for the transparent mascot PNG corresponding to this state.
+  String get assetPath {
+    switch (state) {
+      case MoraState.guide:
+        return 'assets/mascot/teaching.png';
+      case MoraState.encourage:
+        return 'assets/mascot/encouraging.png';
+      case MoraState.celebrate:
+        return 'assets/mascot/celebrating.png';
+      case MoraState.think:
+        return 'assets/mascot/questioning.png';
+      case MoraState.rest:
+        return 'assets/mascot/sleeping.png';
+      case MoraState.happy:
+        return 'assets/mascot/happy.png';
+      case MoraState.sad:
+        return 'assets/mascot/sad.png';
+      case MoraState.crying:
+        return 'assets/mascot/crying.png';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -83,125 +109,51 @@ class MoraPlacement extends StatelessWidget {
   String get _defaultSemanticLabel {
     switch (state) {
       case MoraState.guide:
-        return 'Mora the guide with a notebook';
+        return 'Mora guiding and teaching';
       case MoraState.encourage:
         return 'Mora smiling encouragingly';
       case MoraState.celebrate:
         return 'Mora celebrating joyfully';
       case MoraState.think:
-        return 'Mora thinking and analyzing';
+        return 'Mora thinking and questioning';
       case MoraState.rest:
-        return 'Mora resting';
+        return 'Mora resting peacefully';
+      case MoraState.happy:
+        return 'Mora looking happy and cheerful';
+      case MoraState.sad:
+        return 'Mora looking sympathetic';
+      case MoraState.crying:
+        return 'Mora feeling upset';
     }
   }
 
   Widget _buildMoraAvatar(BuildContext context) {
-    return Container(
+    return SizedBox(
       width: size,
       height: size,
-      decoration: BoxDecoration(
-        color: MemoraColors.surfaceOcean,
-        shape: BoxShape.circle,
-        border: Border.all(color: _stateBorderColor, width: 2.0),
-        boxShadow: const <BoxShadow>[
-          BoxShadow(
-            color: Color(0x1200AFFF),
-            blurRadius: 8,
-            offset: Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Stack(
-        alignment: Alignment.center,
-        children: <Widget>[
-          // Base shark icon representation
-          Icon(
-            _stateMainIcon,
-            size: size * 0.55,
-            color: MemoraColors.brandPrimary,
-          ),
-          // Badge in corner for specific state
-          Positioned(
-            right: 2,
-            bottom: 2,
-            child: Container(
-              padding: const EdgeInsets.all(3),
-              decoration: BoxDecoration(
-                color: _stateBadgeColor,
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: MemoraColors.surfaceCanvas,
-                  width: 1.5,
+      child: Image.asset(
+        assetPath,
+        width: size,
+        height: size,
+        fit: BoxFit.contain,
+        errorBuilder:
+            (BuildContext context, Object error, StackTrace? stackTrace) {
+              return Container(
+                width: size,
+                height: size,
+                decoration: BoxDecoration(
+                  color: MemoraColors.surfaceOcean,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: MemoraColors.brandPrimary),
                 ),
-              ),
-              child: Icon(
-                _stateBadgeIcon,
-                size: size * 0.22,
-                color: Colors.white,
-              ),
-            ),
-          ),
-        ],
+                child: Icon(
+                  Icons.pets_rounded,
+                  size: size * 0.5,
+                  color: MemoraColors.brandPrimary,
+                ),
+              );
+            },
       ),
     );
-  }
-
-  IconData get _stateMainIcon {
-    switch (state) {
-      case MoraState.guide:
-        return Icons.school_rounded;
-      case MoraState.encourage:
-        return Icons.mood_rounded;
-      case MoraState.celebrate:
-        return Icons.celebration_rounded;
-      case MoraState.think:
-        return Icons.psychology_rounded;
-      case MoraState.rest:
-        return Icons.nightlight_round;
-    }
-  }
-
-  IconData get _stateBadgeIcon {
-    switch (state) {
-      case MoraState.guide:
-        return Icons.auto_stories;
-      case MoraState.encourage:
-        return Icons.thumb_up_alt_rounded;
-      case MoraState.celebrate:
-        return Icons.star_rounded;
-      case MoraState.think:
-        return Icons.lightbulb_outline_rounded;
-      case MoraState.rest:
-        return Icons.bedtime_outlined;
-    }
-  }
-
-  Color get _stateBorderColor {
-    switch (state) {
-      case MoraState.guide:
-      case MoraState.encourage:
-        return MemoraColors.brandPrimary;
-      case MoraState.celebrate:
-        return MemoraColors.brandAqua;
-      case MoraState.think:
-        return MemoraColors.brandBlue;
-      case MoraState.rest:
-        return MemoraColors.borderDefault;
-    }
-  }
-
-  Color get _stateBadgeColor {
-    switch (state) {
-      case MoraState.guide:
-        return MemoraColors.brandBlue;
-      case MoraState.encourage:
-        return MemoraColors.feedbackPositive;
-      case MoraState.celebrate:
-        return const Color(0xFFFAAD14);
-      case MoraState.think:
-        return MemoraColors.brandPrimary;
-      case MoraState.rest:
-        return MemoraColors.textMuted;
-    }
   }
 }
