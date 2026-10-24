@@ -75,9 +75,9 @@ abstract final class MemoraTypography {
     color: MemoraColors.textPrimary,
   );
 
-  // Inter styles
+  // Body and copy styles (using Exo)
   static const TextStyle body = TextStyle(
-    fontFamily: fontInter,
+    fontFamily: fontExo,
     fontFamilyFallback: fontFallbacks,
     fontWeight: FontWeight.w400,
     fontSize: 16,
@@ -86,7 +86,7 @@ abstract final class MemoraTypography {
   );
 
   static const TextStyle bodyStrong = TextStyle(
-    fontFamily: fontInter,
+    fontFamily: fontExo,
     fontFamilyFallback: fontFallbacks,
     fontWeight: FontWeight.w600,
     fontSize: 16,
@@ -95,7 +95,7 @@ abstract final class MemoraTypography {
   );
 
   static const TextStyle metadata = TextStyle(
-    fontFamily: fontInter,
+    fontFamily: fontExo,
     fontFamilyFallback: fontFallbacks,
     fontWeight: FontWeight.w500,
     fontSize: 14,

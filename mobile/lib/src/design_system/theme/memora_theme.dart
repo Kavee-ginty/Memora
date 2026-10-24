@@ -55,7 +55,7 @@ abstract final class MemoraTheme {
       useMaterial3: true,
       colorScheme: colorScheme,
       scaffoldBackgroundColor: MemoraColors.surfaceSoft,
-      fontFamily: MemoraTypography.fontInter,
+      fontFamily: MemoraTypography.fontExo,
       fontFamilyFallback: MemoraTypography.fontFallbacks,
       textTheme: textTheme,
       extensions: const <ThemeExtension<dynamic>>[MemoraColorTokens.light],

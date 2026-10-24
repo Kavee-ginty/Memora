@@ -151,5 +151,24 @@ void main() {
       expect(MemoraRadii.dialogValue, 24.0);
       expect(MemoraRadii.sheetValue, 24.0);
     });
+
+    test('Typography uses Exo font family across all styles', () {
+      expect(MemoraTypography.fontExo, 'Exo');
+      expect(MemoraTypography.display.fontFamily, 'Exo');
+      expect(MemoraTypography.pageTitle.fontFamily, 'Exo');
+      expect(MemoraTypography.sectionTitle.fontFamily, 'Exo');
+      expect(MemoraTypography.question.fontFamily, 'Exo');
+      expect(MemoraTypography.cardTitle.fontFamily, 'Exo');
+      expect(MemoraTypography.button.fontFamily, 'Exo');
+      expect(MemoraTypography.navigation.fontFamily, 'Exo');
+      expect(MemoraTypography.body.fontFamily, 'Exo');
+      expect(MemoraTypography.bodyStrong.fontFamily, 'Exo');
+      expect(MemoraTypography.metadata.fontFamily, 'Exo');
+
+      final ThemeData theme = MemoraTheme.light();
+      expect(theme.textTheme.bodyMedium?.fontFamily, 'Exo');
+      expect(theme.textTheme.bodyLarge?.fontFamily, 'Exo');
+      expect(theme.textTheme.headlineLarge?.fontFamily, 'Exo');
+    });
   });
 }

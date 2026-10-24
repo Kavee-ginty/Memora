@@ -23,3 +23,16 @@ flutter:
   uses-material-design: true
   assets:
     - assets/mascot/
+    - assets/fonts/
+
+  fonts:
+    - family: Exo
+      fonts:
+        - asset: assets/fonts/Exo-400.ttf
+          weight: 400
+        - asset: assets/fonts/Exo-500.ttf
+          weight: 500
+        - asset: assets/fonts/Exo-600.ttf
+          weight: 600
+        - asset: assets/fonts/Exo-700.ttf
+          weight: 700
