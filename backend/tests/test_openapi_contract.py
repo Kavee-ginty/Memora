@@ -1,7 +1,16 @@
 import re
 from pathlib import Path
+from typing import Annotated
 
+import pytest
+from fastapi import Depends, FastAPI, Header
+from pydantic import BaseModel
+
+from memora.api.openapi import COMMON_ERROR_RESPONSES, ContractError, custom_openapi
 from memora.api.operation_ids import OPERATION_IDS, OperationId
+from memora.api.security import bearer_auth
+from memora.api.v1.schemas.headers import IdempotencyHeaders
+from memora.main import create_app
 
 INVENTORY_PATH = (
     Path(__file__).resolve().parents[2] / "contracts" / "openapi" / "operation-inventory.md"
@@ -81,3 +90,218 @@ def test_v1_operation_ids_start_with_verb() -> None:
 
 def test_health_operation_ids_are_grandfathered() -> None:
     assert {"healthLive", "healthReady"} <= OPERATION_IDS
+
+
+def test_shared_components_and_error_example() -> None:
+    schema = custom_openapi(create_app())
+    components = schema["components"]
+
+    assert schema["openapi"] == "3.1.0"
+    assert components["securitySchemes"]["bearerAuth"]["scheme"] == "bearer"
+    assert components["parameters"]["IdempotencyKey"]["name"] == "Idempotency-Key"
+    assert {"X-Correlation-ID", "X-Request-ID"} <= set(components["headers"])
+    assert {
+        "ErrorEnvelope",
+        "ErrorDetail",
+        "FieldError",
+        "PageMeta",
+        "PageParams",
+        "AsyncOperation",
+        "RequestHeaders",
+        "IdempotencyHeaders",
+    } <= set(components["schemas"])
+    assert components["schemas"]["ErrorEnvelope"]["examples"][0]["error"]["code"] == (
+        "validation_failed"
+    )
+    assert set(COMMON_ERROR_RESPONSES) == {400, 401, 403, 404, 409, 413, 415, 422, 429, 503}
+    assert (
+        "X-Correlation-ID" in schema["paths"]["/health/live"]["get"]["responses"]["200"]["headers"]
+    )
+    assert {
+        "health",
+        "session",
+        "profile",
+        "curriculum",
+        "learning-updates",
+        "verification",
+        "missions",
+        "progress",
+        "rewards",
+        "reports",
+        "privacy",
+    } == {tag["name"] for tag in schema["tags"]}
+
+
+def test_health_operation_ids() -> None:
+    schema = custom_openapi(create_app())
+
+    assert schema["paths"]["/health/live"]["get"]["operationId"] == "healthLive"
+    assert schema["paths"]["/health/ready"]["get"]["operationId"] == "healthReady"
+
+
+def test_custom_openapi_is_cached() -> None:
+    app = create_app()
+
+    assert custom_openapi(app) is custom_openapi(app)
+
+
+def test_contract_guard_rejects_unregistered_operation_id() -> None:
+    app = FastAPI()
+
+    @app.get(
+        "/v1/example",
+        operation_id="unknownOperation",
+        tags=["reports"],
+        dependencies=[Depends(bearer_auth)],
+        responses=COMMON_ERROR_RESPONSES,
+    )
+    def example() -> dict[str, str]:
+        return {"status": "ok"}
+
+    with pytest.raises(ContractError, match="not registered"):
+        custom_openapi(app)
+
+
+def test_contract_guard_rejects_duplicate_operation_ids() -> None:
+    app = FastAPI()
+
+    @app.get(
+        "/v1/first",
+        operation_id=OperationId.GET_HOME,
+        tags=["reports"],
+        dependencies=[Depends(bearer_auth)],
+        responses=COMMON_ERROR_RESPONSES,
+    )
+    def first() -> dict[str, str]:
+        return {"status": "ok"}
+
+    @app.get(
+        "/v1/second",
+        operation_id=OperationId.GET_HOME,
+        tags=["reports"],
+        dependencies=[Depends(bearer_auth)],
+        responses=COMMON_ERROR_RESPONSES,
+    )
+    def second() -> dict[str, str]:
+        return {"status": "ok"}
+
+    with (
+        pytest.warns(UserWarning, match="Duplicate Operation ID"),
+        pytest.raises(ContractError, match="Duplicate operationId"),
+    ):
+        custom_openapi(app)
+
+
+def test_contract_guard_rejects_undocumented_path() -> None:
+    app = FastAPI()
+
+    @app.get(
+        "/admin/example",
+        operation_id=OperationId.GET_HOME,
+        tags=["reports"],
+        dependencies=[Depends(bearer_auth)],
+        responses=COMMON_ERROR_RESPONSES,
+    )
+    def example() -> dict[str, str]:
+        return {"status": "ok"}
+
+    with pytest.raises(ContractError, match="Undocumented path"):
+        custom_openapi(app)
+
+
+def test_contract_guard_rejects_missing_bearer() -> None:
+    app = FastAPI()
+
+    @app.get(
+        "/v1/example",
+        operation_id=OperationId.GET_HOME,
+        tags=["reports"],
+        responses=COMMON_ERROR_RESPONSES,
+    )
+    def example() -> dict[str, str]:
+        return {"status": "ok"}
+
+    with pytest.raises(ContractError, match="bearerAuth"):
+        custom_openapi(app)
+
+
+def test_contract_guard_rejects_non_envelope_error() -> None:
+    app = FastAPI()
+    responses = {
+        **COMMON_ERROR_RESPONSES,
+        409: {
+            "description": "Conflict",
+            "content": {"application/json": {"schema": {"type": "object"}}},
+        },
+    }
+
+    @app.get(
+        "/v1/example",
+        operation_id=OperationId.GET_HOME,
+        tags=["reports"],
+        dependencies=[Depends(bearer_auth)],
+        responses=responses,
+    )
+    def example() -> dict[str, str]:
+        return {"status": "ok"}
+
+    with pytest.raises(ContractError, match="409 must use ErrorEnvelope"):
+        custom_openapi(app)
+
+
+def test_contract_guard_rejects_missing_idempotency() -> None:
+    app = FastAPI()
+
+    @app.post(
+        "/v1/example",
+        operation_id=OperationId.CREATE_QUESTION_REPORT,
+        tags=["reports"],
+        dependencies=[Depends(bearer_auth)],
+        responses=COMMON_ERROR_RESPONSES,
+    )
+    def example() -> dict[str, str]:
+        return {"status": "ok"}
+
+    with pytest.raises(ContractError, match="Idempotency-Key"):
+        custom_openapi(app)
+
+
+def test_contract_guard_accepts_idempotency_header_model() -> None:
+    app = FastAPI()
+
+    @app.post(
+        "/v1/example",
+        operation_id=OperationId.CREATE_QUESTION_REPORT,
+        tags=["reports"],
+        dependencies=[Depends(bearer_auth)],
+        responses=COMMON_ERROR_RESPONSES,
+    )
+    def example(headers: Annotated[IdempotencyHeaders, Header()]) -> dict[str, str]:
+        return {"status": "ok"}
+
+    operation = custom_openapi(app)["paths"]["/v1/example"]["post"]
+    parameter_names = {parameter.get("name") for parameter in operation["parameters"]}
+
+    assert "Idempotency-Key" in parameter_names
+    assert operation["responses"]["422"]["content"]["application/json"]["schema"] == {
+        "$ref": "#/components/schemas/ErrorEnvelope"
+    }
+
+
+def test_contract_guard_accepts_client_operation_id() -> None:
+    class AttemptRequest(BaseModel):
+        client_operation_id: str
+
+    app = FastAPI()
+
+    @app.post(
+        "/v1/example",
+        operation_id=OperationId.SUBMIT_ATTEMPT,
+        tags=["missions"],
+        dependencies=[Depends(bearer_auth)],
+        responses=COMMON_ERROR_RESPONSES,
+    )
+    def example(body: AttemptRequest) -> dict[str, str]:
+        return {"status": "ok"}
+
+    custom_openapi(app)
