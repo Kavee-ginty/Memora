@@ -18,6 +18,7 @@ export 'package:memora_api_client/src/model/error_detail.dart';
 export 'package:memora_api_client/src/model/error_envelope.dart';
 export 'package:memora_api_client/src/model/field_error.dart';
 export 'package:memora_api_client/src/model/health_response.dart';
+export 'package:memora_api_client/src/model/health_status.dart';
 export 'package:memora_api_client/src/model/idempotency_headers.dart';
 export 'package:memora_api_client/src/model/page_meta.dart';
 export 'package:memora_api_client/src/model/page_params.dart';

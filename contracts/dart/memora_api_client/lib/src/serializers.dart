@@ -19,6 +19,7 @@ import 'package:memora_api_client/src/model/error_detail.dart';
 import 'package:memora_api_client/src/model/error_envelope.dart';
 import 'package:memora_api_client/src/model/field_error.dart';
 import 'package:memora_api_client/src/model/health_response.dart';
+import 'package:memora_api_client/src/model/health_status.dart';
 import 'package:memora_api_client/src/model/idempotency_headers.dart';
 import 'package:memora_api_client/src/model/page_meta.dart';
 import 'package:memora_api_client/src/model/page_params.dart';
@@ -32,6 +33,7 @@ part 'serializers.g.dart';
   ErrorEnvelope,
   FieldError,
   HealthResponse,
+  HealthStatus,
   IdempotencyHeaders,
   PageMeta,
   PageParams,

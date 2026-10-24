@@ -370,25 +370,32 @@ Pop-Location
 
 Two analyzer warnings in the generated client are expected: an unused
 `built_value/json_object.dart` import and a raw `Map` in `optional.dart`.
+CI no longer merely tolerates them: the contract workflow captures the analyzer
+output and fails if the warning set changes, so a new warning cannot be merged
+silently.
 
 `.github/workflows/contracts.yml` runs the three backend test files, the drift
-check, the generated-client analysis and the client contract tests. It triggers on
+check, the generated-client analysis with the warning baseline and the client
+contract tests in strict mode (`--fatal-infos`). It triggers on
 pull requests and on pushes to `develop`/`main` for backend, contract, contract
 tooling and workflow changes.
 
 ## 10. Trade-offs and known gaps
 
-### Health status is a free string
+### Health status uses a named one-value enum
 
 The original model used `status: Literal["ok"]`. Generator 7.26.0 with
-`useOptional: true` emits `Optional<HealthResponseStatusEnum?>` but does not define
-the enum class, so the client does not compile. `useEnumExtension: true` defines
-the class but emits a `String?`-to-enum assignment in the deserializer. The branch
-therefore uses `str`, and the artifact no longer contains `const: "ok"`.
+`useOptional: true` emits `Optional<HealthResponseStatusEnum?>` but does not
+define the enum class, so the client does not compile.
 
-This is a deliberate generator workaround, not a specification requirement, but it
-weakens the published contract. It must be recorded as a deviation in the pull
-request. Restoring it needs a generator template override or a generator upgrade.
+The model now declares an explicit `HealthStatus(StrEnum)` with a single `OK`
+member. FastAPI emits a named `HealthStatus` schema (`enum: ["ok"]`) and the
+generator produces a Dart `HealthStatus` enum with its
+`unknownDefaultOpenApi` fallback, so the client compiles and forward-compatible
+deserialization keeps working. The inline `const` marker is still absent because
+the schema lives on the named enum; restoring it needs a generator template
+override or upgrade, but every response still validates against exactly one
+value.
 
 ### Unknown response fields are tolerated, not preserved
 
@@ -533,8 +540,8 @@ The unchecked items are the reason T05 cannot be called Done yet.
 6. Why does the guard accept either `Idempotency-Key` or `client_operation_id`?
 7. What does `generate_contracts.py --check` compare, and why does it need the
    committed `pubspec.lock`?
-8. Why is the health status a free string on this branch, and what would it take
-   to restore `const: "ok"`?
+8. Why does the health status use a named `HealthStatus` enum, and what still
+   differs from `Literal["ok"]` in the artifact?
 
 ## Specification map
 

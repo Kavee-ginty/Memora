@@ -7,7 +7,7 @@ void main() {
   // TODO add properties to the builder and call build()
 
   group(HealthResponse, () {
-    // Optional<String?> status (default value: 'ok')
+    // Optional<HealthStatus?> status (default value: HealthStatus.ok)
     test('to test the property `status`', () async {
       // TODO
     });

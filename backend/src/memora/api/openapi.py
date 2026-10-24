@@ -124,7 +124,7 @@ def _resolve_ref(schema: dict[str, Any], reference: str) -> dict[str, Any]:
 
 def _has_client_operation_id(schema: dict[str, Any], operation: dict[str, Any]) -> bool:
     for parameter in operation.get("parameters", []):
-        if parameter.get("name") == "client_operation_id":
+        if parameter.get("name") == "client_operation_id" and parameter.get("required") is True:
             return True
 
     content = operation.get("requestBody", {}).get("content", {})
@@ -134,7 +134,9 @@ def _has_client_operation_id(schema: dict[str, Any], operation: dict[str, Any]) 
             continue
         reference = request_schema.get("$ref")
         resolved = _resolve_ref(schema, reference) if reference else request_schema
-        if "client_operation_id" in resolved.get("properties", {}):
+        if "client_operation_id" in resolved.get(
+            "properties", {}
+        ) and "client_operation_id" in resolved.get("required", []):
             return True
     return False
 
@@ -146,9 +148,15 @@ def _has_idempotency_key(schema: dict[str, Any], operation: dict[str, Any]) -> b
         if reference:
             name = reference.rsplit("/", 1)[-1]
             if name in {"IdempotencyKey", "Idempotency-Key"} and name in parameters:
-                return True
+                resolved = parameters[name]
+                if resolved.get("required", False):
+                    return True
             continue
-        if parameter.get("name") == "Idempotency-Key" and parameter.get("in") == "header":
+        if (
+            parameter.get("name") == "Idempotency-Key"
+            and parameter.get("in") == "header"
+            and parameter.get("required", False)
+        ):
             return True
     return False
 
@@ -198,15 +206,29 @@ def _validate_operation(
             operation.get("security") == [{"bearerAuth": []}],
             f"{operation_id} must use bearerAuth",
         )
+        # API §20: /v1 operations must document error responses using ErrorEnvelope
+        _require(
+            any(
+                (isinstance(status, int) and 400 <= status < 600)
+                or (isinstance(status, str) and status.isdigit() and 400 <= int(status) < 600)
+                for status in responses
+            ),
+            f"{operation_id} must define error responses (4xx/5xx) for /v1 operations",
+        )
 
     if method in MUTATION_METHODS:
-        _require(
-            operation_id in NATURALLY_IDEMPOTENT_OPERATION_IDS
-            or operation_id in CLIENT_OPERATION_ID_OPERATION_IDS
-            or _has_client_operation_id(schema, operation)
-            or _has_idempotency_key(schema, operation),
-            f"{operation_id} must reference the Idempotency-Key parameter",
-        )
+        if operation_id in CLIENT_OPERATION_ID_OPERATION_IDS:
+            _require(
+                _has_client_operation_id(schema, operation)
+                or _has_idempotency_key(schema, operation),
+                f"{operation_id} must reference the Idempotency-Key parameter",
+            )
+        else:
+            _require(
+                operation_id in NATURALLY_IDEMPOTENT_OPERATION_IDS
+                or _has_idempotency_key(schema, operation),
+                f"{operation_id} must reference the Idempotency-Key parameter",
+            )
 
     for status, response in responses.items():
         _validate_error_response(operation_id, str(status), response)

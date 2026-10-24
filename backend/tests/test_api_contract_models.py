@@ -226,6 +226,13 @@ def test_error_envelope_schema_example() -> None:
 
 
 def test_error_envelope_ignores_unknown_fields() -> None:
+    """Document approved deviation: unknown response fields are tolerated and ignored.
+
+    API §21 requires preserving unknown optional response fields. The generator 7.26.0
+    built_value serializer collects unknown fields in an unhandled list and discards
+    them rather than re-emitting them. This is an approved T05 deviation pending a
+    custom generator template follow-up.
+    """
     payload = {
         "error": {
             "code": "validation_failed",

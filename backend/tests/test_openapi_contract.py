@@ -305,3 +305,78 @@ def test_contract_guard_accepts_client_operation_id() -> None:
         return {"status": "ok"}
 
     custom_openapi(app)
+
+
+def test_contract_guard_rejects_missing_error_responses() -> None:
+    app = FastAPI()
+
+    @app.get(
+        "/v1/example",
+        operation_id=OperationId.GET_HOME,
+        tags=["reports"],
+        dependencies=[Depends(bearer_auth)],
+    )
+    def example() -> dict[str, str]:
+        return {"status": "ok"}
+
+    with pytest.raises(ContractError, match="error responses"):
+        custom_openapi(app)
+
+
+def test_contract_guard_rejects_optional_client_operation_id() -> None:
+    class OptionalAttemptRequest(BaseModel):
+        client_operation_id: str | None = None
+
+    app = FastAPI()
+
+    @app.post(
+        "/v1/example",
+        operation_id=OperationId.SUBMIT_ATTEMPT,
+        tags=["missions"],
+        dependencies=[Depends(bearer_auth)],
+        responses=COMMON_ERROR_RESPONSES,
+    )
+    def example(body: OptionalAttemptRequest) -> dict[str, str]:
+        return {"status": "ok"}
+
+    with pytest.raises(ContractError, match="Idempotency-Key"):
+        custom_openapi(app)
+
+
+def test_contract_guard_rejects_optional_idempotency_header() -> None:
+    app = FastAPI()
+
+    @app.post(
+        "/v1/example",
+        operation_id=OperationId.CREATE_QUESTION_REPORT,
+        tags=["reports"],
+        dependencies=[Depends(bearer_auth)],
+        responses=COMMON_ERROR_RESPONSES,
+    )
+    def example(
+        idempotency_key: Annotated[str | None, Header(alias="Idempotency-Key")] = None,
+    ) -> dict[str, str]:
+        return {"status": "ok"}
+
+    with pytest.raises(ContractError, match="Idempotency-Key"):
+        custom_openapi(app)
+
+
+def test_contract_guard_rejects_client_operation_id_on_unauthorized_operation() -> None:
+    class AttemptRequest(BaseModel):
+        client_operation_id: str
+
+    app = FastAPI()
+
+    @app.post(
+        "/v1/example",
+        operation_id=OperationId.CREATE_QUESTION_REPORT,
+        tags=["reports"],
+        dependencies=[Depends(bearer_auth)],
+        responses=COMMON_ERROR_RESPONSES,
+    )
+    def example(body: AttemptRequest) -> dict[str, str]:
+        return {"status": "ok"}
+
+    with pytest.raises(ContractError, match="Idempotency-Key"):
+        custom_openapi(app)

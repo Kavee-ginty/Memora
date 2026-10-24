@@ -217,13 +217,19 @@
       "HealthResponse": {
         "properties": {
           "status": {
-            "default": "ok",
-            "title": "Status",
-            "type": "string"
+            "$ref": "#/components/schemas/HealthStatus",
+            "default": "ok"
           }
         },
         "title": "HealthResponse",
         "type": "object"
+      },
+      "HealthStatus": {
+        "enum": [
+          "ok"
+        ],
+        "title": "HealthStatus",
+        "type": "string"
       },
       "IdempotencyHeaders": {
         "properties": {

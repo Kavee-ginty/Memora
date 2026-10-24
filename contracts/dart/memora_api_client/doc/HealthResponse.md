@@ -8,7 +8,7 @@ import 'package:memora_api_client/api.dart';
 ## Properties
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**status** | **Optional&lt;String?&gt;** |  | [optional] [default to 'ok']
+**status** | [**Optional&lt;HealthStatus?&gt;**](HealthStatus.md) |  | [optional] [default to HealthStatus.ok]
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

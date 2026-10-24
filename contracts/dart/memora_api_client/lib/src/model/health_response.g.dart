@@ -8,7 +8,7 @@ part of 'health_response.dart';
 
 class _$HealthResponse extends HealthResponse {
   @override
-  final Optional<String?> status;
+  final Optional<HealthStatus?> status;
 
   factory _$HealthResponse([void Function(HealthResponseBuilder)? updates]) =>
       (HealthResponseBuilder()..update(updates))._build();
@@ -47,9 +47,9 @@ class HealthResponseBuilder
     implements Builder<HealthResponse, HealthResponseBuilder> {
   _$HealthResponse? _$v;
 
-  Optional<String?>? _status;
-  Optional<String?>? get status => _$this._status;
-  set status(Optional<String?>? status) => _$this._status = status;
+  Optional<HealthStatus?>? _status;
+  Optional<HealthStatus?>? get status => _$this._status;
+  set status(Optional<HealthStatus?>? status) => _$this._status = status;
 
   HealthResponseBuilder() {
     HealthResponse._defaults(this);

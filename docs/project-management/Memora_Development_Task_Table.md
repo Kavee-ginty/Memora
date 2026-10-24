@@ -37,7 +37,7 @@ If two sources appear inconsistent, stop implementation and resolve the conflict
 | T02 | CI and development environments | **Ready** | - | 3 | T01 | `task/T02-ci-environments` | CI and infrastructure |
 | T03 | Flutter design system and app shell | **Ready** | - | 5 | T01 | `task/T03-flutter-design-system` | Mobile shared UI |
 | T04 | PostgreSQL migrations and seed framework | **Done** | Codex | 6 | T01 | `task/T04-database-schema` | Backend database |
-| T05 | OpenAPI models and generated client pipeline | **Done** | Dasun Jayasanka | 4 | T01 | `task/T05-openapi-pipeline` | API contracts |
+| T05 | OpenAPI models and generated client pipeline | **Review** | Dasun Jayasanka | 4 | T01 | `task/T05-openapi-pipeline` | API contracts |
 | T06 | Identity and session backend | Blocked | - | 4 | T02, T04, T05 | `task/T06-identity-session` | Backend API |
 | T07 | Auth bootstrap mobile and guarded routes | Blocked | - | 5 | T03, T05, T06 | `task/T07-mobile-auth-routes` | Mobile navigation |
 | T08 | Curriculum and knowledge graph seed | Blocked | - | 5 | T04, T05 | `task/T08-curriculum-graph` | Data and knowledge |
@@ -89,9 +89,9 @@ This expands the acceptance gate in Section 4 for T05. It does not replace the b
 | Shared models | The shared Pydantic models define the documented error envelope, field errors, pagination, request headers, idempotency header, async operation and UTC datetime shapes. Validation rejects inconsistent pagination metadata and out-of-range values. | `backend/src/memora/api/v1/schemas/`; `backend/tests/test_api_contract_models.py` |
 | Contract surface | All 52 operations have permanent, unique IDs that match the inventory. The OpenAPI artifact is valid 3.1 and canonical, with shared security, tags and components. Guards reject undocumented operations, duplicate IDs, missing metadata, unsecured `/v1` operations, non-envelope errors and mutations without idempotency semantics. | `operation_ids.py`; `openapi.py`; `memora-v1.json`; `test_openapi_contract.py`; `test_openapi_artifact.py` |
 | Generated client | The generator is pinned by version and SHA-256. Regeneration is deterministic, `--check` produces no diff, dependency resolution is locked, the single template override is documented, and the client compiles without manual edits. | `tools/contracts/`; `contracts/dart/`; `generate_contracts.py --check` |
-| Tests | Backend model, guard and artifact tests pass, including negative authorization and idempotency checks at the contract level. Dart serialization tests pass for the error envelope, additive fields, pagination, async operation and optional values. The contract workflow runs these checks plus drift detection. | 49 backend contract tests; 8 Dart serialization tests; `.github/workflows/contracts.yml` |
+| Tests | Backend model, guard and artifact tests pass, including negative authorization, idempotency and error-response checks at the contract level. Dart serialization tests pass for the error envelope, additive fields, pagination, async operation, optional values, the health enum and the unknown platform fallback. The contract workflow runs these checks plus drift detection and an analyzer warning baseline. | 53 backend contract tests; 10 Dart serialization tests; `.github/workflows/contracts.yml` |
 | Documentation | Contract, OpenAPI, Dart, backend and tools documentation covers regeneration, drift checks, change rules, the generator pin, the template override and known deviations. The T05 study note records the design, trade-offs and follow-ups. | `contracts/**/README.md`; `backend/README.md`; `tools/README.md`; `docs/learning/T05_Study_Note.md` |
-| Known deviation | `HealthResponse.status` is typed as `str` because generator 7.26.0 cannot compile an inline `const` enum with `useOptional`; this is recorded for reviewer approval. Follow-ups cover unknown-field preservation and the remaining serialization cases. | T05 study note; PR deviation note |
+| Known deviation | Unknown additive response fields are tolerated (parsers do not fail) but are not preserved in the generated serializers because of a generator 7.26.0 limitation; preserving them needs a template override or an approved specification change, recorded as a follow-up. The inline `const` marker for `HealthStatus` is likewise absent, while the named enum keeps responses limited to `ok`. | T05 study note; PR deviation note |
 
 ### Learning ingestion and intelligence
 
@@ -156,5 +156,5 @@ Every task pull request must contain:
 
 ## 6 Current next action
 
-T01 and T04 are merged and Done. T02, T03 and T05 are Ready for developers to claim in parallel. Prefer T05 first when staffing is limited because T08 remains Blocked until T05 is Done and then continues the zero-float critical path.
+T01 and T04 are merged and Done. T02 and T03 are Ready for developers to claim in parallel. T05 is in Review under Dasun Jayasanka. T08 remains Blocked until T05 is merged; then it becomes Done and T08 becomes Ready on the zero-float critical path.
 

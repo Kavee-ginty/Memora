@@ -75,6 +75,7 @@ Class | Method | HTTP request | Description
  - [ErrorEnvelope](doc/ErrorEnvelope.md)
  - [FieldError](doc/FieldError.md)
  - [HealthResponse](doc/HealthResponse.md)
+ - [HealthStatus](doc/HealthStatus.md)
  - [IdempotencyHeaders](doc/IdempotencyHeaders.md)
  - [PageMeta](doc/PageMeta.md)
  - [PageParams](doc/PageParams.md)

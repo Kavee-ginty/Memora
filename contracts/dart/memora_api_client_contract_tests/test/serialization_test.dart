@@ -160,7 +160,7 @@ void main() {
 
     test('round-trips a present value', () {
       final response = HealthResponse(
-        (builder) => builder.status = const Optional.present('ok'),
+        (builder) => builder.status = const Optional.present(HealthStatus.ok),
       );
       final encoded = _encode(
         standardSerializers.serializeWith(HealthResponse.serializer, response),
@@ -172,7 +172,37 @@ void main() {
 
       expect(encoded, equals(<String, dynamic>{'status': 'ok'}));
       expect(decoded.status.isPresent, isTrue);
-      expect(decoded.status.value, 'ok');
+      expect(decoded.status.value, HealthStatus.ok);
+    });
+  });
+
+  group('RequestHeaders', () {
+    test('unknown X-Platform falls back to unknownDefaultOpenApi (API §22.2)', () {
+      final headers = standardSerializers.deserializeWith(
+        RequestHeaders.serializer,
+        <String, dynamic>{
+          'X-Correlation-ID': '00000000-0000-4000-8000-000000000001',
+          'X-Client-Version': '1.0.0',
+          'X-Platform': 'webos',
+        },
+      )!;
+
+      expect(headers.xPlatform, RequestHeadersXPlatformEnum.unknownDefaultOpenApi);
+      expect(headers.xCorrelationID, '00000000-0000-4000-8000-000000000001');
+      expect(headers.xClientVersion, '1.0.0');
+    });
+
+    test('known X-Platform value deserializes directly', () {
+      final headers = standardSerializers.deserializeWith(
+        RequestHeaders.serializer,
+        <String, dynamic>{
+          'X-Correlation-ID': '00000000-0000-4000-8000-000000000001',
+          'X-Client-Version': '1.0.0',
+          'X-Platform': 'android',
+        },
+      )!;
+
+      expect(headers.xPlatform, RequestHeadersXPlatformEnum.android);
     });
   });
 }

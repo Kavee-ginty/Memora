@@ -1,13 +1,20 @@
+from enum import StrEnum
+
 from fastapi import APIRouter
 from pydantic import BaseModel
 
 from memora.api.operation_ids import OperationId
 
+
+class HealthStatus(StrEnum):
+    OK = "ok"
+
+
 router = APIRouter(tags=["health"])
 
 
 class HealthResponse(BaseModel):
-    status: str = "ok"
+    status: HealthStatus = HealthStatus.OK
 
 
 @router.get(

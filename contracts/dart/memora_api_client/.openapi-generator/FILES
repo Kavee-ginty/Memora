@@ -8,6 +8,7 @@ doc/ErrorEnvelope.md
 doc/FieldError.md
 doc/HealthApi.md
 doc/HealthResponse.md
+doc/HealthStatus.md
 doc/IdempotencyHeaders.md
 doc/PageMeta.md
 doc/PageParams.md
@@ -28,6 +29,7 @@ lib/src/model/error_detail.dart
 lib/src/model/error_envelope.dart
 lib/src/model/field_error.dart
 lib/src/model/health_response.dart
+lib/src/model/health_status.dart
 lib/src/model/idempotency_headers.dart
 lib/src/model/page_meta.dart
 lib/src/model/page_params.dart
@@ -41,6 +43,7 @@ test/error_envelope_test.dart
 test/field_error_test.dart
 test/health_api_test.dart
 test/health_response_test.dart
+test/health_status_test.dart
 test/idempotency_headers_test.dart
 test/page_meta_test.dart
 test/page_params_test.dart

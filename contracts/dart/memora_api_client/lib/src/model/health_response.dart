@@ -3,6 +3,7 @@
 //
 
 // ignore_for_file: unused_element
+import 'package:memora_api_client/src/model/health_status.dart';
 import 'package:built_value/built_value.dart';
 import 'package:built_value/serializer.dart';
 import 'package:memora_api_client/src/optional.dart';
@@ -17,7 +18,8 @@ part 'health_response.g.dart';
 abstract class HealthResponse
     implements Built<HealthResponse, HealthResponseBuilder> {
   @BuiltValueField(wireName: r'status')
-  Optional<String?> get status;
+  Optional<HealthStatus?> get status;
+  // enum statusEnum {  ok,  };
 
   HealthResponse._();
 
@@ -54,7 +56,7 @@ class _$HealthResponseSerializer
       } else {
         yield serializers.serialize(
           optionalValue,
-          specifiedType: const FullType.nullable(String),
+          specifiedType: const FullType.nullable(HealthStatus),
         );
       }
     }
@@ -86,8 +88,8 @@ class _$HealthResponseSerializer
         case r'status':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType.nullable(String),
-          ) as String?;
+            specifiedType: const FullType.nullable(HealthStatus),
+          ) as HealthStatus?;
           result.status = Optional.present(valueDes);
           break;
         default:
