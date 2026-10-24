@@ -1,0 +1,13 @@
+name: memora_api_client_contract_tests
+description: Serialization contract tests for the generated Memora Dart API client.
+publish_to: none
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  memora_api_client:
+    path: ../memora_api_client
+
+dev_dependencies:
+  test: ^1.16.0
