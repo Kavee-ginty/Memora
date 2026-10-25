@@ -35,12 +35,12 @@ If two sources appear inconsistent, stop implementation and resolve the conflict
 | --- | --- | --- | --- | ---: | --- | --- | --- |
 | T01 | Architecture baseline and repository scaffold | **Done** | Codex | 2 | None | `task/T01-repo-baseline` | Repository-wide |
 | T02 | CI and development environments | **Ready** | - | 3 | T01 | `task/T02-ci-environments` | CI and infrastructure |
-| T03 | Flutter design system and app shell | **Ready** | - | 5 | T01 | `task/T03-flutter-design-system` | Mobile shared UI |
-| T04 | PostgreSQL migrations and seed framework | **Ready** | - | 6 | T01 | `task/T04-database-schema` | Backend database |
-| T05 | OpenAPI models and generated client pipeline | **Ready** | - | 4 | T01 | `task/T05-openapi-pipeline` | API contracts |
+| T03 | Flutter design system and app shell | **In Progress** | Antigravity | 5 | T01 | `task/T03-flutter-design-system` | Mobile shared UI |
+| T04 | PostgreSQL migrations and seed framework | **Done** | Codex | 6 | T01 | `task/T04-database-schema` | Backend database |
+| T05 | OpenAPI models and generated client pipeline | **Done** | Dasun Jayasanka | 4 | T01 | `task/T05-openapi-pipeline` | API contracts |
 | T06 | Identity and session backend | Blocked | - | 4 | T02, T04, T05 | `task/T06-identity-session` | Backend API |
 | T07 | Auth bootstrap mobile and guarded routes | Blocked | - | 5 | T03, T05, T06 | `task/T07-mobile-auth-routes` | Mobile navigation |
-| T08 | Curriculum and knowledge graph seed | Blocked | - | 5 | T04 | `task/T08-curriculum-graph` | Data and knowledge |
+| T08 | Curriculum and knowledge graph seed | **Ready** | - | 5 | T04, T05 | `task/T08-curriculum-graph` | Data and knowledge |
 | T09 | Learning ingestion backend | Blocked | - | 7 | T05, T06, T08 | `task/T09-ingestion-backend` | API and worker |
 | T10 | Learning ingestion mobile | Blocked | - | 6 | T07, T09 | `task/T10-ingestion-mobile` | Mobile feature |
 | T11 | Memory engine v1 | Blocked | - | 7 | T08 | `task/T11-memory-engine` | Learning engine |
@@ -80,6 +80,19 @@ If two sources appear inconsistent, stop implementation and resolve the conflict
 | T07 | Implement splash/bootstrap resolution, onboarding/auth routes, root shell, guarded routes, one-time return locations, session refresh and safe sign-out clearing. Consume generated DTOs through repositories. | Every guarded route has tested signed-out, expired-session, invalid-owner and invalid-state behavior; process restart restores only approved state; visual implementation follows matching PNGs. | Flow 3-6; UI/UX 8-9.7; API 8-10 |
 | T08 | Seed the approved Physics subject/curriculum framework, typed concepts, aliases, claims, objectives and edge allowlist. Implement bounded authorized knowledge access methods and seed validation. | Seeds are versioned and environment-safe; cycles/invalid edge types fail; curriculum mapping and provenance tests pass; no production user or secret appears in seed data. | PRD 9; TRD 8; Schema 7, 18 |
 
+### T05 Definition of Done
+
+This expands the acceptance gate in Section 4 for T05. It does not replace the board rule in Section 2.
+
+| Area | Done criteria | Evidence |
+| --- | --- | --- |
+| Shared models | The shared Pydantic models define the documented error envelope, field errors, pagination, request headers, idempotency header, async operation and UTC datetime shapes. Validation rejects inconsistent pagination metadata and out-of-range values. | `backend/src/memora/api/v1/schemas/`; `backend/tests/test_api_contract_models.py` |
+| Contract surface | All 52 operations have permanent, unique IDs that match the inventory. The OpenAPI artifact is valid 3.1 and canonical, with shared security, tags and components. Guards reject undocumented operations, duplicate IDs, missing metadata, unsecured `/v1` operations, non-envelope errors and mutations without idempotency semantics. | `operation_ids.py`; `openapi.py`; `memora-v1.json`; `test_openapi_contract.py`; `test_openapi_artifact.py` |
+| Generated client | The generator is pinned by version and SHA-256. Regeneration is deterministic, `--check` produces no diff, dependency resolution is locked, the single template override is documented, and the client compiles without manual edits. | `tools/contracts/`; `contracts/dart/`; `generate_contracts.py --check` |
+| Tests | Backend model, guard and artifact tests pass, including negative authorization, idempotency and error-response checks at the contract level. Dart serialization tests pass for the error envelope, additive fields, pagination, async operation, optional values, the health enum and the unknown platform fallback. The contract workflow runs these checks plus drift detection and an analyzer warning baseline. | 63 backend contract tests; 10 Dart serialization tests; `.github/workflows/contracts.yml` |
+| Documentation | Contract, OpenAPI, Dart, backend and tools documentation covers regeneration, drift checks, change rules, the generator pin, the template override and generator constraints. The T05 study note records the design, trade-offs and follow-ups. | `contracts/**/README.md`; `backend/README.md`; `tools/README.md`; `docs/learning/T05_Study_Note.md` |
+| Generator representation | `HealthStatus` is emitted as a named one-value enum rather than an inline `const`, so responses remain limited to `ok`. Unknown additive response fields are tolerated and ignored per approved API §21 policy. | T05 study note |
+
 ### Learning ingestion and intelligence
 
 | ID | Required work and deliverables | Acceptance gate | Main authorities |
@@ -114,7 +127,7 @@ If two sources appear inconsistent, stop implementation and resolve the conflict
 | --- | --- | --- | --- |
 | T22 | Implement versioned local persistence for drafts, cached mission, pending answer envelopes and dependency-ordered reconciliation. Harden every retriable mutation with stable operation identity. | Process kill and reconnection tests pass; answers sync in order; unknown outcomes resolve without duplicates; data cannot cross accounts; stale projections remain labeled. | TRD 5.2, 16; Flow 14-16; API 7, 18 |
 | T23 | Add structured safe logging, correlation IDs, metrics, traces, alerts, rate limits, upload defenses, circuit breakers, secret handling, audit events and operational dashboards. | Redaction tests prove prohibited content absent; alerts cover API/jobs/database/security; threat-model controls are exercised; failure modes preserve safe degraded operation. | TRD 14, 16-18; Schema 13, 16-17; API 18-19 |
-| T24 | Produce the minimum reviewed Physics concept/question set for the pilot, including objectives, claims, formulas, units, prerequisites, rubrics, explanations, provenance and coverage reporting. | Qualified review is recorded; every item maps to curriculum and concepts; ambiguity/duplicate checks pass; gaps are explicit; no private student content enters shared seeds. | PRD 9; Schema 7, 9; open curriculum decision |
+| T24 | Produce the minimum reviewed Physics concept/question set for the pilot, including objectives, claims, formulas, units, prerequisites, rubrics, explanations, provenance and coverage reporting. | Qualified review is recorded; every item maps to curriculum and concepts; ambiguity/duplicate checks pass; gaps are explicit; no private student content enters shared seeds. | PRD 9; Schema 7, 9 |
 | T25 | Implement provider/consumer contract tests, cross-user negative tests, RLS checks, pagination, errors, idempotency, concurrency and generated-client compatibility across completed API resources. | Every private resource rejects cross-user access; declared examples deserialize; changed idempotency bodies fail; OpenAPI and deployed behavior agree; test suite runs in CI. | API 20-22; TRD 19; Schema 16 |
 | T26 | Connect all merged features and run the required new-student-to-updated-reef scenario, including interruption, retry, repair, report and restart. Resolve only integration defects within task scope. | Full scenario passes on production-shaped APIs; no mock remains on the path; analytics and durable rows reconcile; smoke test is repeatable in CI/staging. | PRD 12.1; Flow 20.1; API 22.3 |
 | T27 | Test all implemented screens at 320 px, 200% text, screen reader, keyboard/switch access, reduced motion, long copy, loading, empty, error, offline and restored states. Compare against approved PNGs/spec changes. | No critical accessibility defect; WCAG 2.2 AA target checks pass; visual deviations are approved and recorded; every essential state has text/non-color meaning. | UI/UX 12-16; Flow 17, 20.2 |
@@ -143,5 +156,5 @@ Every task pull request must contain:
 
 ## 6 Current next action
 
-T01 is merged and Done. T02, T03, T04 and T05 are Ready for developers to claim in parallel. Prefer T04 first when staffing is limited because it has zero float on the current critical path.
+T01, T04 and T05 are merged and Done. T02 and T08 are Ready, and T03 is In Progress. T08 is the next unclaimed zero-float task; T06 remains Blocked until T02 is Done.
 

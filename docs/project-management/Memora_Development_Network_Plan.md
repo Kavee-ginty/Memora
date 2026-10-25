@@ -47,6 +47,7 @@ flowchart TD
     T01 --> T05["T05 OpenAPI pipeline (4)"]
 
     T04 --> T08["T08 Curriculum graph seed (5)"]
+    T05 --> T08
     T02 --> T06["T06 Identity backend (4)"]
     T04 --> T06
     T05 --> T06
@@ -153,7 +154,7 @@ Day zero is the start of `T01`. ES is earliest start, EF earliest finish, LS lat
 | T05 | OpenAPI models and generated client pipeline | 4 | T01 | 2 | 6 | 9 | 13 | 7 |
 | T06 | Identity and session backend | 4 | T02, T04, T05 | 8 | 12 | 16 | 20 | 8 |
 | T07 | Auth bootstrap mobile and guarded routes | 5 | T03, T05, T06 | 12 | 17 | 25 | 30 | 13 |
-| T08 | Curriculum and knowledge graph seed | 5 | T04 | 8 | 13 | 8 | 13 | **0** |
+| T08 | Curriculum and knowledge graph seed | 5 | T04, T05 | 8 | 13 | 8 | 13 | **0** |
 | T09 | Learning ingestion backend | 7 | T05, T06, T08 | 13 | 20 | 24 | 31 | 11 |
 | T10 | Learning ingestion mobile | 6 | T07, T09 | 20 | 26 | 31 | 37 | 11 |
 | T11 | Memory engine v1 | 7 | T08 | 13 | 20 | 13 | 20 | **0** |
@@ -183,7 +184,7 @@ Day zero is the start of `T01`. ES is earliest start, EF earliest finish, LS lat
 | Window | Critical work | Parallel work that can also proceed |
 | --- | --- | --- |
 | After T01 | T04 | T02, T03 and T05 |
-| After T04 | T08 | T06 after its other inputs |
+| After T04 and T05 | T08 | T06 after its other inputs |
 | After T08 | T11 and T12 in parallel | T09 when T06 is ready |
 | After T13 | T15 | T14, T22 and T23 |
 | After T15 | T16 and T25 in parallel | Profile, privacy, notifications and content branches |
