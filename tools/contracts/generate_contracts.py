@@ -207,25 +207,19 @@ def _compare_client(committed: Path, generated: Path) -> bool:
     return False
 
 
-def write_client(jar: Path) -> None:
-    # Save the committed lockfile before regeneration
-    lockfile = CLIENT_DIR / "pubspec.lock"
-    lockfile_existed = lockfile.is_file()
-    saved_lockfile = ROOT / ".tmp_contracts_lockfile"
-    if lockfile_existed:
-        saved_lockfile.write_bytes(lockfile.read_bytes())
+def write_client(jar: Path, client_dir: Path = CLIENT_DIR) -> None:
+    # Save the committed lockfile in memory before regeneration
+    lockfile = client_dir / "pubspec.lock"
+    lockfile_bytes = lockfile.read_bytes() if lockfile.is_file() else None
 
-    try:
-        generate_client(jar, CLIENT_DIR)
+    generate_client(jar, client_dir)
 
-        # Restore the lockfile so --enforce-lockfile can find it
-        if lockfile_existed:
-            CLIENT_DIR.mkdir(parents=True, exist_ok=True)
-            (CLIENT_DIR / "pubspec.lock").write_bytes(saved_lockfile.read_bytes())
+    # Restore the lockfile so --enforce-lockfile can find it
+    if lockfile_bytes is not None:
+        client_dir.mkdir(parents=True, exist_ok=True)
+        (client_dir / "pubspec.lock").write_bytes(lockfile_bytes)
 
-        _build_client(CLIENT_DIR, enforce_lockfile=lockfile_existed)
-    finally:
-        saved_lockfile.unlink(missing_ok=True)
+    _build_client(client_dir, enforce_lockfile=lockfile_bytes is not None)
 
 
 def check_client(jar: Path) -> None:

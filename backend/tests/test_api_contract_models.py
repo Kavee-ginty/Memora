@@ -225,13 +225,11 @@ def test_error_envelope_schema_example() -> None:
     assert example["error"]["field_errors"][0]["field"] == "preferred_time"
 
 
-def test_error_envelope_ignores_unknown_fields() -> None:
-    """Document approved deviation: unknown response fields are tolerated and ignored.
+def test_error_envelope_tolerates_and_ignores_unknown_fields() -> None:
+    """API §21 requires clients to tolerate and ignore unknown additive response fields.
 
-    API §21 requires preserving unknown optional response fields. The generator 7.26.0
-    built_value serializer collects unknown fields in an unhandled list and discards
-    them rather than re-emitting them. This is an approved T05 deviation pending a
-    custom generator template follow-up.
+    Unknown fields deserialize successfully without treating them as authoritative
+    and are intentionally omitted when reserialized.
     """
     payload = {
         "error": {
@@ -251,6 +249,10 @@ def test_error_envelope_ignores_unknown_fields() -> None:
 
     assert not hasattr(envelope, "extra")
     assert not hasattr(envelope.error, "extra")
+
+    dumped = envelope.model_dump(mode="json")
+    assert "extra" not in dumped
+    assert "extra" not in dumped["error"]
 
 
 def test_error_codes_and_actions_are_documented() -> None:

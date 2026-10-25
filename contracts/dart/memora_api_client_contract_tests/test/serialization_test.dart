@@ -56,7 +56,7 @@ void main() {
       );
     });
 
-    test('ignores unknown additive fields in the envelope and error', () {
+    test('tolerates and ignores unknown additive fields in the envelope and error', () {
       final payload = _documentedErrorExample();
       payload['future_envelope_field'] = <String, dynamic>{'added': true};
       final detail = payload['error']! as Map<String, dynamic>;
@@ -69,6 +69,17 @@ void main() {
 
       expect(envelope.error.code, 'validation_failed');
       expect(envelope.error.fieldErrors.single.field, 'preferred_time');
+
+      final serialized = _encode(
+        standardSerializers.serializeWith(ErrorEnvelope.serializer, envelope),
+      );
+      expect(serialized.containsKey('future_envelope_field'), isFalse);
+      expect(
+        (serialized['error'] as Map<String, dynamic>).containsKey(
+          'future_error_field',
+        ),
+        isFalse,
+      );
     });
   });
 

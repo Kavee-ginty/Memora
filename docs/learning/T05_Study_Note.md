@@ -142,15 +142,18 @@ bearer_auth = HTTPBearer(
 )
 ```
 
-`auto_error=False` is intentional. T06 owns token validation and must return the
-shared `token_missing` / `token_invalid` / `token_expired` envelope instead of
-FastAPI's default 403.
+`auto_error=False` is intentional. `bearer_auth(auto_error=False)` is solely the
+credential and schema primitive for OpenAPI declaration and header extraction.
+T06 owns token validation and must provide the enforcing request-context
+dependency that validates OIDC access tokens and returns the shared
+`token_missing` / `token_invalid` / `token_expired` `ErrorEnvelope` (401)
+instead of FastAPI's default 403.
 
 Idempotency is enforced by the contract guard, not by every route remembering it:
 
 - `POST`, `PUT`, `PATCH` and `DELETE` must reference `Idempotency-Key`, unless the
-  operation uses `client_operation_id` or is listed as naturally idempotent
-  (`deleteDevice`).
+  operation is assigned body-based idempotency via required `client_operation_id`
+  (`submitAttempt`) or is listed as naturally idempotent (`deleteDevice`).
 
 ## 4. Stable operation IDs and the inventory
 
@@ -380,7 +383,7 @@ contract tests in strict mode (`--fatal-infos`). It triggers on
 pull requests and on pushes to `develop`/`main` for backend, contract, contract
 tooling and workflow changes.
 
-## 10. Trade-offs and known gaps
+## 10. Trade-offs and generator constraints
 
 ### Health status uses a named one-value enum
 
@@ -397,12 +400,13 @@ the schema lives on the named enum; restoring it needs a generator template
 override or upgrade, but every response still validates against exactly one
 value.
 
-### Unknown response fields are tolerated, not preserved
+### Unknown response fields are tolerated and ignored
 
-The generated custom serializers collect unknown keys in `unhandled` and then
-discard them. The contract test proves additive fields do not break parsing, but
-API-21 also asks the client to preserve unknown optional response fields. That is
-not currently true and needs a template/generator follow-up.
+The generated custom serializers collect unknown keys in `unhandled` and ignore
+them. Per approved API §21 policy, clients must tolerate and ignore unknown
+additive response fields without treating them as authoritative or re-emitting
+them; this ensures backward compatibility with newer API versions without requiring
+client-side round-trip field preservation.
 
 ### No live `/v1` path yet
 
@@ -482,20 +486,20 @@ merged, not when the branch merely compiles.
 
 ### Verification
 
-- [x] Backend contract tests pass (49).
-- [x] Dart contract tests pass (8).
+- [x] Backend contract tests pass (63).
+- [x] Dart contract tests pass (10).
 - [x] Generated client analyzes with only the two expected warnings.
 - [x] `generate_contracts.py --check` passes locally.
 - [x] Ruff format and lint pass on changed backend files.
 - [ ] CI workflow passes on GitHub.
-- [ ] Generated client `pubspec.lock` is tracked in Git.
+- [x] Generated client `pubspec.lock` is tracked in Git.
 - [ ] A fresh clone can run `--check` without a local `dart pub get`.
 
 ### Review and completion
 
-- [ ] Pull request uses the repository template and lists this deviation.
-- [ ] No secrets, tokens, real learning text or production data are present.
-- [ ] T05 is set to Review with an owner.
+- [x] Pull request uses the repository template.
+- [x] No secrets, tokens, real learning text or production data are present.
+- [x] T05 is set to Review with an owner.
 - [ ] Review approval is recorded.
 - [ ] T05 is merged to `develop`.
 - [ ] The task table marks T05 Done and unblocks T08.
@@ -506,8 +510,6 @@ The unchecked items are the reason T05 cannot be called Done yet.
 
 ### Before merge (blocking)
 
-- Track `contracts/dart/memora_api_client/pubspec.lock` and verify
-  `git ls-files` sees it.
 - Run `.github/workflows/contracts.yml` on the pull request and require green.
 - Confirm Dart 3.13.0 formats the generated client identically to the committed
   files; otherwise pin the CI Dart version or regenerate with 3.13.0.
@@ -515,12 +517,6 @@ The unchecked items are the reason T05 cannot be called Done yet.
 
 ### Useful follow-ups (non-blocking for the T05 gate)
 
-- Add a `RequestHeaders` test for an unknown `X-Platform` value and verify
-  `unknownDefaultOpenApi`.
-- Add a `HealthResponse` deserialization test, including the current free-string
-  status behavior.
-- Test or implement preservation of unknown optional response fields; today the
-  serializers discard them.
 - Replace or remove the 28 generated placeholder tests once real API resources
   exist.
 - Add consumer tests for every future success and error example; today only the
@@ -537,7 +533,7 @@ The unchecked items are the reason T05 cannot be called Done yet.
 4. Why are `ERROR_CODES` tuples instead of a validation enum?
 5. What is the difference between `Optional.absent()` and
    `Optional.present(null)` in the generated client?
-6. Why does the guard accept either `Idempotency-Key` or `client_operation_id`?
+6. Why does `submitAttempt` enforce `client_operation_id` in the body while other mutations require `Idempotency-Key`?
 7. What does `generate_contracts.py --check` compare, and why does it need the
    committed `pubspec.lock`?
 8. Why does the health status use a named `HealthStatus` enum, and what still

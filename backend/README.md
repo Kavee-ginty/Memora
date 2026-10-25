@@ -50,7 +50,7 @@ When adding a `/v1` route:
 
 - Use `operation_id=OperationId.NAME` from `memora/api/operation_ids.py`.
 - Add a non-empty `tags=` value from the shared tag list.
-- Attach `dependencies=[Depends(bearer_auth)]`.
+- Attach `dependencies=[Depends(bearer_auth)]`. `bearer_auth(auto_error=False)` is solely the credential/schema primitive; T06 must provide the enforcing request-context dependency and safe 401 `ErrorEnvelope` responses.
 - Merge success responses with `COMMON_ERROR_RESPONSES`.
 - For mutations, accept `Annotated[IdempotencyHeaders, Header()]` unless the
   operation uses `client_operation_id` or is naturally idempotent.

@@ -1,4 +1,7 @@
+import importlib
 import json
+import shutil
+import sys
 from pathlib import Path
 
 from memora.api.export_openapi import (
@@ -8,7 +11,14 @@ from memora.api.export_openapi import (
     write_document,
 )
 
-ARTIFACT_PATH = Path(__file__).resolve().parents[2] / "contracts" / "openapi" / "memora-v1.json"
+REPO_ROOT = Path(__file__).resolve().parents[2]
+ARTIFACT_PATH = REPO_ROOT / "contracts" / "openapi" / "memora-v1.json"
+
+
+def _load_contract_tool():
+    if str(REPO_ROOT) not in sys.path:
+        sys.path.insert(0, str(REPO_ROOT))
+    return importlib.import_module("tools.contracts.generate_contracts")
 
 
 def test_artifact_is_current() -> None:
@@ -81,3 +91,66 @@ def test_cli_check_rejects_stale_artifact(tmp_path: Path, capsys) -> None:
 
     assert main(["--check", "--output", str(output)]) == 1
     assert "stale or invalid" in capsys.readouterr().err
+
+
+def test_write_client_restores_lockfile(tmp_path: Path, monkeypatch) -> None:
+    gen_tool = _load_contract_tool()
+
+    client_dir = tmp_path / "memora_api_client"
+    client_dir.mkdir()
+    lockfile = client_dir / "pubspec.lock"
+    lockfile_content = b"# Simulated pubspec.lock\npackages: {}\n"
+    lockfile.write_bytes(lockfile_content)
+
+    events: list[str] = []
+
+    def mock_generate_client(jar: Path, output: Path) -> None:
+        events.append("generate")
+        # Generator wipes directory output
+        shutil.rmtree(output)
+        output.mkdir(parents=True, exist_ok=True)
+        (output / "pubspec.yaml").write_text("name: memora_api_client\n")
+        assert not (output / "pubspec.lock").exists()
+
+    def mock_build_client(output: Path, *, enforce_lockfile: bool) -> None:
+        events.append(f"build:enforce={enforce_lockfile}")
+        # At build time, pubspec.lock must already have been restored
+        assert (output / "pubspec.lock").read_bytes() == lockfile_content
+
+    monkeypatch.setattr(gen_tool, "generate_client", mock_generate_client)
+    monkeypatch.setattr(gen_tool, "_build_client", mock_build_client)
+
+    dummy_jar = tmp_path / "fake-generator.jar"
+    dummy_jar.write_text("jar")
+
+    gen_tool.write_client(dummy_jar, client_dir=client_dir)
+
+    assert events == ["generate", "build:enforce=True"]
+    assert lockfile.read_bytes() == lockfile_content
+
+
+def test_write_client_handles_absent_lockfile(tmp_path: Path, monkeypatch) -> None:
+    gen_tool = _load_contract_tool()
+
+    client_dir = tmp_path / "memora_api_client"
+    client_dir.mkdir()
+
+    events: list[str] = []
+
+    def mock_generate_client(jar: Path, output: Path) -> None:
+        events.append("generate")
+        (output / "pubspec.yaml").write_text("name: memora_api_client\n")
+
+    def mock_build_client(output: Path, *, enforce_lockfile: bool) -> None:
+        events.append(f"build:enforce={enforce_lockfile}")
+        assert not (output / "pubspec.lock").exists()
+
+    monkeypatch.setattr(gen_tool, "generate_client", mock_generate_client)
+    monkeypatch.setattr(gen_tool, "_build_client", mock_build_client)
+
+    dummy_jar = tmp_path / "fake-generator.jar"
+    dummy_jar.write_text("jar")
+
+    gen_tool.write_client(dummy_jar, client_dir=client_dir)
+
+    assert events == ["generate", "build:enforce=False"]

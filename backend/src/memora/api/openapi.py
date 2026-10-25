@@ -122,21 +122,25 @@ def _resolve_ref(schema: dict[str, Any], reference: str) -> dict[str, Any]:
     return current if isinstance(current, dict) else {}
 
 
-def _has_client_operation_id(schema: dict[str, Any], operation: dict[str, Any]) -> bool:
-    for parameter in operation.get("parameters", []):
-        if parameter.get("name") == "client_operation_id" and parameter.get("required") is True:
-            return True
+def _has_required_body_client_operation_id(
+    schema: dict[str, Any], operation: dict[str, Any]
+) -> bool:
+    request_body = operation.get("requestBody")
+    if not isinstance(request_body, dict) or request_body.get("required") is not True:
+        return False
 
-    content = operation.get("requestBody", {}).get("content", {})
+    content = request_body.get("content", {})
     for media_type in ("application/json", "application/*+json"):
         request_schema = content.get(media_type, {}).get("schema")
         if not isinstance(request_schema, dict):
             continue
         reference = request_schema.get("$ref")
         resolved = _resolve_ref(schema, reference) if reference else request_schema
-        if "client_operation_id" in resolved.get(
-            "properties", {}
-        ) and "client_operation_id" in resolved.get("required", []):
+        if (
+            isinstance(resolved, dict)
+            and "client_operation_id" in resolved.get("properties", {})
+            and "client_operation_id" in resolved.get("required", [])
+        ):
             return True
     return False
 
@@ -161,11 +165,14 @@ def _has_idempotency_key(schema: dict[str, Any], operation: dict[str, Any]) -> b
     return False
 
 
+def _is_error_status(status: str) -> bool:
+    if status.isdigit():
+        return 400 <= int(status) < 600
+    return status.upper() in {"DEFAULT", "4XX", "5XX"}
+
+
 def _validate_error_response(operation_id: str, status: str, response: dict[str, Any]) -> None:
-    if not status.isdigit():
-        return
-    code = int(status)
-    if not 400 <= code < 600:
+    if not _is_error_status(status):
         return
     _require(isinstance(response, dict), f"{operation_id} {status} must be a response object")
     response_schema = response.get("content", {}).get("application/json", {}).get("schema")
@@ -219,9 +226,8 @@ def _validate_operation(
     if method in MUTATION_METHODS:
         if operation_id in CLIENT_OPERATION_ID_OPERATION_IDS:
             _require(
-                _has_client_operation_id(schema, operation)
-                or _has_idempotency_key(schema, operation),
-                f"{operation_id} must reference the Idempotency-Key parameter",
+                _has_required_body_client_operation_id(schema, operation),
+                f"{operation_id} must require client_operation_id in the request body",
             )
         else:
             _require(

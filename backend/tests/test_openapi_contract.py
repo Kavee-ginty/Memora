@@ -339,8 +339,178 @@ def test_contract_guard_rejects_optional_client_operation_id() -> None:
     def example(body: OptionalAttemptRequest) -> dict[str, str]:
         return {"status": "ok"}
 
-    with pytest.raises(ContractError, match="Idempotency-Key"):
+    with pytest.raises(ContractError, match="client_operation_id in the request body"):
         custom_openapi(app)
+
+
+def test_contract_guard_rejects_header_only_for_client_operation_id() -> None:
+    app = FastAPI()
+
+    @app.post(
+        "/v1/example",
+        operation_id=OperationId.SUBMIT_ATTEMPT,
+        tags=["missions"],
+        dependencies=[Depends(bearer_auth)],
+        responses=COMMON_ERROR_RESPONSES,
+    )
+    def example(
+        idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
+    ) -> dict[str, str]:
+        return {"status": "ok"}
+
+    with pytest.raises(ContractError, match="client_operation_id in the request body"):
+        custom_openapi(app)
+
+
+def test_contract_guard_rejects_query_only_for_client_operation_id() -> None:
+    app = FastAPI()
+
+    @app.post(
+        "/v1/example",
+        operation_id=OperationId.SUBMIT_ATTEMPT,
+        tags=["missions"],
+        dependencies=[Depends(bearer_auth)],
+        responses=COMMON_ERROR_RESPONSES,
+    )
+    def example(client_operation_id: str) -> dict[str, str]:
+        return {"status": "ok"}
+
+    with pytest.raises(ContractError, match="client_operation_id in the request body"):
+        custom_openapi(app)
+
+
+def test_contract_guard_rejects_optional_body_for_client_operation_id() -> None:
+    class AttemptRequest(BaseModel):
+        client_operation_id: str
+
+    app = FastAPI()
+
+    @app.post(
+        "/v1/example",
+        operation_id=OperationId.SUBMIT_ATTEMPT,
+        tags=["missions"],
+        dependencies=[Depends(bearer_auth)],
+        responses=COMMON_ERROR_RESPONSES,
+    )
+    def example(body: AttemptRequest | None = None) -> dict[str, str]:
+        return {"status": "ok"}
+
+    with pytest.raises(ContractError, match="client_operation_id in the request body"):
+        custom_openapi(app)
+
+
+def test_contract_guard_rejects_catchall_only_error_response() -> None:
+    app = FastAPI()
+
+    @app.get(
+        "/v1/example",
+        operation_id=OperationId.GET_HOME,
+        tags=["reports"],
+        dependencies=[Depends(bearer_auth)],
+        responses={
+            "default": {
+                "description": "Default error",
+                "content": {
+                    "application/json": {"schema": {"$ref": "#/components/schemas/ErrorEnvelope"}}
+                },
+            }
+        },
+    )
+    def example() -> dict[str, str]:
+        return {"status": "ok"}
+
+    with pytest.raises(ContractError, match="error responses"):
+        custom_openapi(app)
+
+
+def test_contract_guard_rejects_non_envelope_numeric_error() -> None:
+    app = FastAPI()
+
+    @app.get(
+        "/v1/example",
+        operation_id=OperationId.GET_HOME,
+        tags=["reports"],
+        dependencies=[Depends(bearer_auth)],
+        responses={
+            400: {
+                "description": "Bad Request",
+                "content": {"application/json": {"schema": {"type": "object"}}},
+            }
+        },
+    )
+    def example() -> dict[str, str]:
+        return {"status": "ok"}
+
+    with pytest.raises(ContractError, match="400 must use ErrorEnvelope"):
+        custom_openapi(app)
+
+
+def test_contract_guard_rejects_non_envelope_default_error() -> None:
+    app = FastAPI()
+
+    responses = dict(COMMON_ERROR_RESPONSES)
+    responses["default"] = {
+        "description": "Default error",
+        "content": {"application/json": {"schema": {"type": "object"}}},
+    }
+
+    @app.get(
+        "/v1/example",
+        operation_id=OperationId.GET_HOME,
+        tags=["reports"],
+        dependencies=[Depends(bearer_auth)],
+        responses=responses,
+    )
+    def example() -> dict[str, str]:
+        return {"status": "ok"}
+
+    with pytest.raises(ContractError, match="default must use ErrorEnvelope"):
+        custom_openapi(app)
+
+
+def test_contract_guard_rejects_non_envelope_wildcard_errors() -> None:
+    for wildcard in ("4XX", "5XX"):
+        app = FastAPI()
+        responses = dict(COMMON_ERROR_RESPONSES)
+        responses[wildcard] = {
+            "description": f"{wildcard} error",
+            "content": {"application/json": {"schema": {"type": "object"}}},
+        }
+
+        @app.get(
+            "/v1/example",
+            operation_id=OperationId.GET_HOME,
+            tags=["reports"],
+            dependencies=[Depends(bearer_auth)],
+            responses=responses,
+        )
+        def example() -> dict[str, str]:
+            return {"status": "ok"}
+
+        with pytest.raises(ContractError, match=f"{wildcard} must use ErrorEnvelope"):
+            custom_openapi(app)
+
+
+def test_contract_guard_accepts_envelope_catchall_error() -> None:
+    app = FastAPI()
+    responses = dict(COMMON_ERROR_RESPONSES)
+    responses["default"] = {
+        "description": "Default catch-all error",
+        "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ErrorEnvelope"}}},
+    }
+
+    @app.get(
+        "/v1/example",
+        operation_id=OperationId.GET_HOME,
+        tags=["reports"],
+        dependencies=[Depends(bearer_auth)],
+        responses=responses,
+    )
+    def example() -> dict[str, str]:
+        return {"status": "ok"}
+
+    schema = custom_openapi(app)
+    assert schema["paths"]["/v1/example"]["get"]["responses"]["default"] is not None
 
 
 def test_contract_guard_rejects_optional_idempotency_header() -> None:
