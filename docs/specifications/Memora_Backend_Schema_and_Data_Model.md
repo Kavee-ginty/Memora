@@ -209,7 +209,7 @@ Current consent is the latest valid record per `user_id` and `consent_type`; it 
 | `subjects` | `id`; `code` UQ; `name`; `status`; `created_at` |
 | `curriculum_versions` | `id`; `subject_id` FK; `authority`; `edition_code`; `language_medium`; `valid_from`; `valid_to`; `status`; UQ `(subject_id, edition_code, language_medium)` |
 
-The MVP seed contains Physics and exactly one approved launch curriculum version. A curriculum is retired or superseded, never overwritten.
+The MVP seed contains Physics and exactly one approved launch curriculum version: the National Institute of Education G.C.E. Advanced Level Physics syllabus implemented from 2017, English medium. A curriculum is retired or superseded, never overwritten.
 
 ### 7.2 learning_objectives
 
@@ -293,6 +293,8 @@ Join table with `concept_version_id`, `learning_objective_id`, `mapping_type`, `
 ### 7.8 Semantic embeddings
 
 Embeddings use target-specific tables rather than an unconstrained polymorphic foreign key:
+
+The MVP embedding model is a self-hosted NVIDIA Nemotron 3.5 Embed 1B deployment using its 2048-dimensional output. Each embedding column is therefore `vector(2048)`. The OpenRouter free endpoint is prohibited because its provider retains requests and may use them for training, which conflicts with private student-note ingestion. A model or dimension change requires a new reviewed migration and re-embedding workflow; vectors from different model keys are never compared.
 
 - `concept_embeddings(concept_version_id, model_key, embedding, content_hash, created_at)`
 - `claim_embeddings(knowledge_claim_id, model_key, embedding, content_hash, created_at)`
@@ -780,7 +782,7 @@ Backups intentionally exclude temporary object storage. Database restoration mus
 Seed data is version-controlled and environment-safe. The MVP requires:
 
 - Physics subject definition.
-- One approved curriculum version after the open curriculum decision is resolved.
+- The approved NIE G.C.E. Advanced Level Physics curriculum implemented from 2017, English medium.
 - Mission types and reason-code allowlists.
 - Graph edge-type allowlist.
 - Question type and source-class allowlists.
@@ -872,10 +874,9 @@ Document 4 is implemented when:
 
 These values must be resolved before production data is created, but they do not change the model shape:
 
-- Official Physics syllabus edition and launch language medium.
 - Final OIDC provider and locally retained profile fields.
 - Exact retention periods by data class.
-- Approved embedding model, vector dimension and vector-index strategy.
+- Vector-index strategy after production-like recall and latency benchmarks. Embeddings use self-hosted NVIDIA Nemotron 3.5 Embed 1B at 2048 dimensions.
 - Initial memory parameters and evidence-confidence thresholds.
 - Minimum verified-question coverage and reviewer identity source.
 - Age, consent and cross-border processing rules from the legal review.

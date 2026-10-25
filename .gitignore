@@ -18,6 +18,9 @@ ui_review_flat/
 plan_assets/
 /Memora_Product_and_Technical_Plan.docx
 
+# Local task implementation guides
+/docs/learning/*_Implementation_Guide.md
+
 # Python
 __pycache__/
 *.py[cod]
@@ -50,3 +53,6 @@ Thumbs.db
 # Generated contracts are produced by T05
 contracts/openapi/generated/
 contracts/dart/generated/
+
+# Contract tooling cache
+tools/.cache/

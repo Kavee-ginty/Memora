@@ -141,7 +141,7 @@ Open a new terminal after changing persistent environment variables.
 ```powershell
 git clone https://github.com/Kavee-ginty/Memora.git D:\Memora
 cd D:\Memora
-git switch main
+git switch develop
 git pull --ff-only
 git switch -c task/Txx-exact-name
 ```

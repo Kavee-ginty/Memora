@@ -508,7 +508,6 @@ Document 5 is implemented when:
 
 ## 24 Open decisions inherited from earlier documents
 
-- Exact syllabus edition, language medium and examination-year applicability.
 - Final identity provider, age range and consent renewal policy.
 - Supported upload formats, size limits and multi-source policy.
 - Mission workload cap, repair allowance and practice availability.

@@ -419,7 +419,7 @@ CI fails when the generated schema differs from the reviewed schema artifact, co
 
 The Flutter client is generated from the reviewed OpenAPI schema, then wrapped by small feature repositories that map transport DTOs to domain state. Screens and Riverpod providers do not construct URLs or parse raw error JSON.
 
-Generated code is not manually edited. A schema change regenerates the client and runs compile, serialization and contract tests. Date/time, decimal, union and nullable handling receive explicit tests. The client preserves unknown optional response fields and uses a safe fallback for unknown enums.
+Generated code is not manually edited. A schema change regenerates the client and runs compile, serialization and contract tests. Date/time, decimal, union and nullable handling receive explicit tests. The client tolerates and ignores unknown additive response fields without treating them as authoritative, and uses a safe fallback for unknown enums.
 
 Object-storage upload is the only approved direct third-party data path from the mobile app for learning sources. OIDC and push notification SDKs are separate provider integrations. All business state still resolves through the Memora API.
 
