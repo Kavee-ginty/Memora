@@ -237,7 +237,7 @@ class CurriculumService:
         return [dict(r) for r in rows]
 
     def get_concept_claims(self, concept_version_id: UUID | str) -> list[dict[str, Any]]:
-        """Retrieve approved knowledge claims for an approved concept version."""
+        """Retrieve approved knowledge claims for an approved concept version and concept."""
         query = text(
             """
             SELECT kc.id, kc.claim_group_id, kc.concept_version_id, kc.version_no,
@@ -245,9 +245,11 @@ class CurriculumService:
                    kc.provenance_type, kc.provenance_ref
             FROM knowledge_claims kc
             JOIN concept_versions cv ON cv.id = kc.concept_version_id
+            JOIN concepts c ON c.id = cv.concept_id
             WHERE kc.concept_version_id = :concept_version_id
               AND kc.status = 'approved'
               AND cv.content_status = 'approved'
+              AND c.status = 'approved'
             ORDER BY kc.claim_type, kc.version_no
             """
         )
@@ -258,10 +260,18 @@ class CurriculumService:
         )
         return [dict(r) for r in rows]
 
-    def validate_graph_integrity(
-        self, curriculum_version_id: UUID | str | None = None
-    ) -> dict[str, Any]:
-        """Perform cycle detection, edge type validation, mapping and provenance checks."""
+    def validate_graph_integrity(self) -> dict[str, Any]:
+        """Perform global graph integrity validation across all approved knowledge graph data.
+
+        Validates:
+        1. No cycles in the learning objective hierarchy.
+        2. No cycles in concept prerequisite relationships.
+        3. No unallowlisted edge types.
+        4. All approved concept versions map to at least one learning objective.
+        5. All concept edges have explicit provenance.
+        6. All knowledge claims have explicit provenance.
+        7. All concept-objective mappings have explicit provenance.
+        """
         results: dict[str, Any] = {"valid": True, "errors": []}
 
         # 1. Cycle detection in learning_objectives hierarchy
@@ -373,6 +383,21 @@ class CurriculumService:
             results["valid"] = False
             results["errors"].append(
                 f"Knowledge claims missing provenance: {len(missing_claim_prov)} rows"
+            )
+
+        # 7. Check that all concept_objective_maps have provenance
+        missing_map_prov_query = text(
+            """
+            SELECT concept_version_id, learning_objective_id FROM concept_objective_maps
+            WHERE provenance_type IS NULL OR provenance_ref IS NULL
+               OR trim(provenance_type) = '' OR trim(provenance_ref) = ''
+            """
+        )
+        missing_map_prov = self.connection.execute(missing_map_prov_query).fetchall()
+        if missing_map_prov:
+            results["valid"] = False
+            results["errors"].append(
+                f"Concept objective maps missing provenance: {len(missing_map_prov)} rows"
             )
 
         return results

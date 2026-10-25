@@ -158,4 +158,3 @@ Every task pull request must contain:
 
 T01, T04 and T05 are merged and Done. T02 is Ready, T03 is In Progress, and T08 is In Progress on the zero-float critical path.
 
-

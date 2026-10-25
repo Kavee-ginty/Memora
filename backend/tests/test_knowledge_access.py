@@ -182,11 +182,26 @@ def test_service_get_concept_claims() -> None:
     query_str = str(connection.execute.call_args[0][0])
     assert "kc.status = 'approved'" in query_str
     assert "cv.content_status = 'approved'" in query_str
+    assert "c.status = 'approved'" in query_str
+    assert "JOIN concepts c" in query_str
+
+
+def test_service_get_concept_claims_requires_approved_concept() -> None:
+    connection = MagicMock()
+    version_id = uuid4()
+    connection.execute.return_value.mappings.return_value.all.return_value = []
+
+    service = CurriculumService(connection)
+    result = service.get_concept_claims(version_id)
+    assert result == []
+
+    query_str = str(connection.execute.call_args[0][0])
+    assert "c.status = 'approved'" in query_str
 
 
 def test_validate_graph_integrity_passes_when_clean() -> None:
     connection = MagicMock()
-    # Mocking all 6 validation queries returning no errors
+    # Mocking all 7 validation queries returning no errors
     connection.execute.return_value.fetchall.side_effect = [
         [],  # 1. no obj cycles
         [],  # 2. no edge cycles
@@ -194,6 +209,7 @@ def test_validate_graph_integrity_passes_when_clean() -> None:
         [],  # 4. no unmapped concepts
         [],  # 5. no missing edge provenance
         [],  # 6. no missing claim provenance
+        [],  # 7. no missing mapping provenance
     ]
 
     service = CurriculumService(connection)
@@ -212,16 +228,18 @@ def test_validate_graph_integrity_fails_when_cycles_or_invalid_edges() -> None:
         [(uuid4(), "PHYS-UNMAPPED")],  # 4. unmapped concept!
         [(uuid4(),)],  # 5. missing edge provenance!
         [(uuid4(),)],  # 6. missing claim provenance!
+        [(uuid4(), uuid4())],  # 7. missing mapping provenance!
     ]
 
     service = CurriculumService(connection)
     result = service.validate_graph_integrity()
 
     assert result["valid"] is False
-    assert len(result["errors"]) == 6
+    assert len(result["errors"]) == 7
     assert any("Cycle detected in learning_objectives" in e for e in result["errors"])
     assert any("Cycle detected in concept_edges" in e for e in result["errors"])
     assert any("Unallowlisted edge types found" in e for e in result["errors"])
     assert any("Concepts missing learning objective mapping" in e for e in result["errors"])
     assert any("Concept edges missing provenance" in e for e in result["errors"])
     assert any("Knowledge claims missing provenance" in e for e in result["errors"])
+    assert any("Concept objective maps missing provenance" in e for e in result["errors"])

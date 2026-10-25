@@ -130,7 +130,20 @@ CONCEPT_EDGE_SEED_SQL = text(
     ) VALUES (
         :id, :from_concept_version_id, :to_concept_version_id, :edge_type, :confidence,
         'approved', 'syllabus_specification', :provenance_ref, now()
-    ) ON CONFLICT (id) DO NOTHING
+    ) ON CONFLICT (from_concept_version_id, to_concept_version_id, edge_type)
+      WHERE status = 'approved' AND valid_to IS NULL
+      DO NOTHING
+    """
+)
+RESOLVE_EDGE_SQL = text(
+    """
+    SELECT id FROM concept_edges
+    WHERE from_concept_version_id = :from_concept_version_id
+      AND to_concept_version_id = :to_concept_version_id
+      AND edge_type = :edge_type
+      AND status = 'approved'
+      AND valid_to IS NULL
+    LIMIT 1
     """
 )
 
@@ -141,7 +154,7 @@ CONCEPT_OBJECTIVE_MAP_SEED_SQL = text(
         provenance_type, provenance_ref
     ) VALUES (
         :concept_version_id, :learning_objective_id, 'primary', 1.0,
-        'curriculum_framework', :provenance_ref
+        :provenance_type, :provenance_ref
     ) ON CONFLICT (concept_version_id, learning_objective_id, mapping_type) DO NOTHING
     """
 )
@@ -289,11 +302,12 @@ def seed_database(database_url: str | None = None) -> None:
                     {
                         "concept_version_id": version_db_id,
                         "learning_objective_id": objective_id,
+                        "provenance_type": "curriculum_framework",
                         "provenance_ref": PROVENANCE_NIE_2017,
                     },
                 )
 
-        # 3. Concept Edges (resolved version IDs)
+        # 3. Concept Edges (resolved version IDs and natural-key convergence)
         for edge in CONCEPT_EDGES:
             from_vid = resolved_version_ids.get(
                 edge.get("from_concept_code"), edge.get("from_version_id")
@@ -302,6 +316,15 @@ def seed_database(database_url: str | None = None) -> None:
                 edge.get("to_concept_code"), edge.get("to_version_id")
             )
             etype = edge["edge_type"]
+            edge_params = {
+                "from_concept_version_id": str(from_vid),
+                "to_concept_version_id": str(to_vid),
+                "edge_type": etype,
+            }
+            existing_edge_id = connection.scalar(RESOLVE_EDGE_SQL, edge_params)
+            if existing_edge_id is not None:
+                continue
+
             edge_id = str(uuid5(NAMESPACE_DNS, f"memora:edge:{from_vid}:{to_vid}:{etype}"))
             connection.execute(
                 CONCEPT_EDGE_SEED_SQL,

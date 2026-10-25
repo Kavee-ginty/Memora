@@ -203,6 +203,17 @@ def test_seed_data_provenance_is_populated() -> None:
 
     assert edge_count > 0, "No edges verified"
 
+    # Verify every concept maps to a valid learning objective with provenance
+    mapped_count = 0
+    valid_lo_codes = {obj["objective_code"] for obj in LEARNING_OBJECTIVES}
+    for c in CONCEPTS_DATA:
+        mapped_count += 1
+        assert c.get("objective_code") in valid_lo_codes, (
+            f"Concept {c['stable_code']} maps to unknown objective {c.get('objective_code')}"
+        )
+
+    assert mapped_count > 0, "No objective mappings verified"
+
 
 def test_reward_definitions_conform_to_schema() -> None:
     """Verify initial reward definitions and XP thresholds (Schema §18.2)."""
@@ -320,3 +331,61 @@ def test_seed_natural_key_convergence_with_existing_rows(monkeypatch) -> None:
     assert len(map_inserts) > 0
     assert map_inserts[0].args[1]["concept_version_id"] == str(existing_version_id)
     assert map_inserts[0].args[1]["learning_objective_id"] == str(existing_obj_id)
+    assert map_inserts[0].args[1]["provenance_type"] == "curriculum_framework"
+    assert map_inserts[0].args[1]["provenance_ref"] == PROVENANCE_NIE_2017
+
+
+def test_curriculum_mapping_provenance_in_seed(monkeypatch) -> None:
+    """Verify that every concept_objective_map insert carries required provenance fields."""
+    connection = MagicMock()
+    connection.scalar.return_value = None
+    transaction = MagicMock()
+    transaction.__enter__.return_value = connection
+    engine = MagicMock()
+    engine.begin.return_value = transaction
+    monkeypatch.setattr(seed, "create_engine", lambda _: engine)
+
+    seed.seed_database("postgresql+psycopg://unused")
+
+    map_inserts = [
+        c
+        for c in connection.execute.call_args_list
+        if "INSERT INTO concept_objective_maps" in str(c.args[0])
+    ]
+    assert len(map_inserts) == len(CONCEPTS_DATA), "Mismatch in seeded objective maps count"
+    for call_item in map_inserts:
+        params = call_item.args[1]
+        assert params["provenance_type"] == "curriculum_framework", (
+            f"Missing or invalid provenance_type in mapping insert: {params}"
+        )
+        assert params["provenance_ref"] == PROVENANCE_NIE_2017, (
+            f"Missing or invalid provenance_ref in mapping insert: {params}"
+        )
+
+
+def test_seed_edge_natural_key_convergence_skips_existing_active_edge(monkeypatch) -> None:
+    """Verify that seed_database resolves existing active edges by natural key and skips inserts."""
+    existing_edge_id = uuid4()
+    connection = MagicMock()
+
+    def mock_scalar(query, params=None):
+        query_str = str(query)
+        if "FROM concept_edges" in query_str:
+            return existing_edge_id
+        return None
+
+    connection.scalar.side_effect = mock_scalar
+    transaction = MagicMock()
+    transaction.__enter__.return_value = connection
+    engine = MagicMock()
+    engine.begin.return_value = transaction
+    monkeypatch.setattr(seed, "create_engine", lambda _: engine)
+
+    seed.seed_database("postgresql+psycopg://unused")
+
+    edge_inserts = [
+        c
+        for c in connection.execute.call_args_list
+        if "INSERT INTO concept_edges" in str(c.args[0])
+    ]
+    assert len(edge_inserts) == 0, "Edge insert should have been skipped for existing active edge"
