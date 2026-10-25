@@ -37,7 +37,7 @@ If two sources appear inconsistent, stop implementation and resolve the conflict
 | T02 | CI and development environments | **Ready** | - | 3 | T01 | `task/T02-ci-environments` | CI and infrastructure |
 | T03 | Flutter design system and app shell | **In Progress** | Antigravity | 5 | T01 | `task/T03-flutter-design-system` | Mobile shared UI |
 | T04 | PostgreSQL migrations and seed framework | **Done** | Codex | 6 | T01 | `task/T04-database-schema` | Backend database |
-| T05 | OpenAPI models and generated client pipeline | **Ready** | - | 4 | T01 | `task/T05-openapi-pipeline` | API contracts |
+| T05 | OpenAPI models and generated client pipeline | **Review** | Dasun Jayasanka | 4 | T01 | `task/T05-openapi-pipeline` | API contracts |
 | T06 | Identity and session backend | Blocked | - | 4 | T02, T04, T05 | `task/T06-identity-session` | Backend API |
 | T07 | Auth bootstrap mobile and guarded routes | Blocked | - | 5 | T03, T05, T06 | `task/T07-mobile-auth-routes` | Mobile navigation |
 | T08 | Curriculum and knowledge graph seed | Blocked | - | 5 | T04, T05 | `task/T08-curriculum-graph` | Data and knowledge |
@@ -79,6 +79,19 @@ If two sources appear inconsistent, stop implementation and resolve the conflict
 | T06 | Integrate the approved OIDC contract, token validation, request context, scoped repositories, session bootstrap/revocation, device registration and consent status. Add recent-authentication handling. | Invalid tokens fail safely; private reads are server-scoped; bootstrap returns the contracted summary; negative authorization and session-expiry tests pass; tokens are absent from logs. | API 4, 8-9; Schema 6; Flow 4-6; TRD 14 |
 | T07 | Implement splash/bootstrap resolution, onboarding/auth routes, root shell, guarded routes, one-time return locations, session refresh and safe sign-out clearing. Consume generated DTOs through repositories. | Every guarded route has tested signed-out, expired-session, invalid-owner and invalid-state behavior; process restart restores only approved state; visual implementation follows matching PNGs. | Flow 3-6; UI/UX 8-9.7; API 8-10 |
 | T08 | Seed the approved Physics subject/curriculum framework, typed concepts, aliases, claims, objectives and edge allowlist. Implement bounded authorized knowledge access methods and seed validation. | Seeds are versioned and environment-safe; cycles/invalid edge types fail; curriculum mapping and provenance tests pass; no production user or secret appears in seed data. | PRD 9; TRD 8; Schema 7, 18 |
+
+### T05 Definition of Done
+
+This expands the acceptance gate in Section 4 for T05. It does not replace the board rule in Section 2.
+
+| Area | Done criteria | Evidence |
+| --- | --- | --- |
+| Shared models | The shared Pydantic models define the documented error envelope, field errors, pagination, request headers, idempotency header, async operation and UTC datetime shapes. Validation rejects inconsistent pagination metadata and out-of-range values. | `backend/src/memora/api/v1/schemas/`; `backend/tests/test_api_contract_models.py` |
+| Contract surface | All 52 operations have permanent, unique IDs that match the inventory. The OpenAPI artifact is valid 3.1 and canonical, with shared security, tags and components. Guards reject undocumented operations, duplicate IDs, missing metadata, unsecured `/v1` operations, non-envelope errors and mutations without idempotency semantics. | `operation_ids.py`; `openapi.py`; `memora-v1.json`; `test_openapi_contract.py`; `test_openapi_artifact.py` |
+| Generated client | The generator is pinned by version and SHA-256. Regeneration is deterministic, `--check` produces no diff, dependency resolution is locked, the single template override is documented, and the client compiles without manual edits. | `tools/contracts/`; `contracts/dart/`; `generate_contracts.py --check` |
+| Tests | Backend model, guard and artifact tests pass, including negative authorization, idempotency and error-response checks at the contract level. Dart serialization tests pass for the error envelope, additive fields, pagination, async operation, optional values, the health enum and the unknown platform fallback. The contract workflow runs these checks plus drift detection and an analyzer warning baseline. | 63 backend contract tests; 10 Dart serialization tests; `.github/workflows/contracts.yml` |
+| Documentation | Contract, OpenAPI, Dart, backend and tools documentation covers regeneration, drift checks, change rules, the generator pin, the template override and generator constraints. The T05 study note records the design, trade-offs and follow-ups. | `contracts/**/README.md`; `backend/README.md`; `tools/README.md`; `docs/learning/T05_Study_Note.md` |
+| Generator representation | `HealthStatus` is emitted as a named one-value enum rather than an inline `const`, so responses remain limited to `ok`. Unknown additive response fields are tolerated and ignored per approved API §21 policy. | T05 study note |
 
 ### Learning ingestion and intelligence
 
@@ -143,5 +156,5 @@ Every task pull request must contain:
 
 ## 6 Current next action
 
-T01 and T04 are merged and Done. T03 is In Progress closing remaining UI acceptance gates. T02 and T05 are Ready for developers to claim in parallel. Prefer T05 first when staffing is limited because T08 remains Blocked until T05 is Done and then continues the zero-float critical path.
+T01 and T04 are merged and Done. T02 is Ready and T03 is In Progress. T05 is in Review under Dasun Jayasanka. T08 remains Blocked until T05 is merged; then it becomes Done and T08 becomes Ready on the zero-float critical path.
 

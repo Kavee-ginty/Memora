@@ -1,0 +1,16 @@
+additionalProperties:
+  pubName: memora_api_client
+  pubVersion: 0.1.0
+  pubDescription: Generated Dart client for the Memora /v1 API. Do not edit by hand.
+  pubRepository: https://github.com/Kavee-ginty/Memora
+  pubHomepage: https://github.com/Kavee-ginty/Memora
+  pubAuthor: Memora
+  pubAuthorEmail: ""
+  pubPublishTo: none
+  pubLibrary: memora_api_client.api
+  serializationLibrary: built_value
+  enumUnknownDefaultCase: true
+  useOptional: true
+  disallowAdditionalPropertiesIfNotPresent: false
+  dateLibrary: core
+  sourceFolder: src
