@@ -25,8 +25,8 @@ mobile repositories → Riverpod state → screens
 The important consequence is that a backend schema change cannot silently diverge
 from the mobile client. Regeneration is deterministic, and CI runs a drift check.
 
-T05 is code-complete but not merged. The definition of done at the end lists the
-remaining repository and review actions.
+T05 was merged to `develop` in PR #11. The definition of done at the end records
+the completed repository and review evidence.
 
 ## 1. Pydantic is the source of truth
 
@@ -432,7 +432,7 @@ guarantees live in the separate contract-test package.
   `RequestHeaders`, `IdempotencyHeaders` and `COMMON_ERROR_RESPONSES`.
 - **T07** consumes generated DTOs through repositories; it must not create its own
   API models.
-- **T08** stays Blocked until T05 is merged and marked Done.
+- **T08** is Ready now that T04 and T05 are Done.
 - **T12 and T25** add resource schemas and the full provider/consumer,
   cross-user and idempotency suite.
 
@@ -491,31 +491,23 @@ merged, not when the branch merely compiles.
 - [x] Generated client analyzes with only the two expected warnings.
 - [x] `generate_contracts.py --check` passes locally.
 - [x] Ruff format and lint pass on changed backend files.
-- [ ] CI workflow passes on GitHub.
+- [x] CI workflow passes on GitHub.
 - [x] Generated client `pubspec.lock` is tracked in Git.
-- [ ] A fresh clone can run `--check` without a local `dart pub get`.
+- [x] A fresh GitHub Actions checkout runs `--check` before the explicit client
+  `dart pub get` step.
 
 ### Review and completion
 
 - [x] Pull request uses the repository template.
 - [x] No secrets, tokens, real learning text or production data are present.
-- [x] T05 is set to Review with an owner.
-- [ ] Review approval is recorded.
-- [ ] T05 is merged to `develop`.
-- [ ] The task table marks T05 Done and unblocks T08.
+- [x] T05 was reviewed with an owner.
+- [x] Merge approval is recorded in PR #11.
+- [x] T05 is merged to `develop`.
+- [x] The task table marks T05 Done and unblocks T08.
 
-The unchecked items are the reason T05 cannot be called Done yet.
+T05 satisfies its task-level definition of done.
 
-## Remaining testing work
-
-### Before merge (blocking)
-
-- Run `.github/workflows/contracts.yml` on the pull request and require green.
-- Confirm Dart 3.13.0 formats the generated client identically to the committed
-  files; otherwise pin the CI Dart version or regenerate with 3.13.0.
-- Re-run `--check` from a fresh clone so the lock-file path is exercised.
-
-### Useful follow-ups (non-blocking for the T05 gate)
+## Useful testing follow-ups
 
 - Replace or remove the 28 generated placeholder tests once real API resources
   exist.
