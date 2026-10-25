@@ -4,7 +4,7 @@
 
 1. Select a Ready task from `docs/project-management/Memora_Development_Task_Table.md`.
 2. Set its Owner and status to In Progress.
-3. Create the exact listed branch from the latest `main`.
+3. Create the exact listed branch from the latest `develop`.
 4. Implement only the task's acceptance boundary.
 5. Run affected checks and update generated artifacts.
 6. Open one pull request with the task ID in its title.
