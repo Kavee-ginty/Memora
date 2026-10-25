@@ -57,4 +57,4 @@ flutter run
 
 ## Current CPM state
 
-`T01` and `T04` are merged and Done. `T02` and `T03` are Ready to be claimed in parallel. `T05` is in review; `T08` stays Blocked until it merges.
+`T01`, `T04` and `T05` are merged and Done. `T02` and `T08` are Ready, and `T03` is In Progress.

@@ -41,11 +41,11 @@ The Markdown files are the machine-readable authorities. DOCX files are review c
 
 ## 4 Task branch and merge rules
 
-- Never implement a development task directly on `main`.
+- Never implement a development task directly on `main` or `develop`.
 - Use the exact branch listed in the task table, such as `task/T09-ingestion-backend`.
 - One branch and pull request should normally contain one task.
 - Do not start a Blocked task by assuming an unfinished contract.
-- Update from `main` before final verification and resolve conflicts inside the task boundary.
+- Update from `develop` before final verification and resolve conflicts inside the task boundary.
 - A task becomes Done only after its code, tests, migrations/generated artifacts and documentation are merged.
 - After merge, update the task table and expose successors only when all their dependencies are Done.
 - Do not push, merge, tag or deploy unless the human explicitly authorizes that external action.
