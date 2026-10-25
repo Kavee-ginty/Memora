@@ -12,6 +12,7 @@ LEARNING_OBJECTIVES: list[dict[str, Any]] = [
     {
         "id": "30000000-0000-0000-0000-000000000001",
         "objective_code": "LO-PHYS-01-MEAS",
+        "parent_objective_code": None,
         "parent_objective_id": None,
         "title": "Measurement",
         "description": "Units, dimensions, and measurement techniques in physics.",
@@ -21,6 +22,7 @@ LEARNING_OBJECTIVES: list[dict[str, Any]] = [
     {
         "id": "30000000-0000-0000-0000-000000000002",
         "objective_code": "LO-PHYS-01-01-UNITS",
+        "parent_objective_code": "LO-PHYS-01-MEAS",
         "parent_objective_id": "30000000-0000-0000-0000-000000000001",
         "title": "Physical Quantities and SI Units",
         "description": "Distinguish between base and derived physical quantities and units.",
@@ -30,6 +32,7 @@ LEARNING_OBJECTIVES: list[dict[str, Any]] = [
     {
         "id": "30000000-0000-0000-0000-000000000003",
         "objective_code": "LO-PHYS-01-02-DIMS",
+        "parent_objective_code": "LO-PHYS-01-MEAS",
         "parent_objective_id": "30000000-0000-0000-0000-000000000001",
         "title": "Dimensions and Dimensional Analysis",
         "description": "Determine dimensions of physical quantities and equation homogeneity.",
@@ -40,6 +43,7 @@ LEARNING_OBJECTIVES: list[dict[str, Any]] = [
     {
         "id": "30000000-0000-0000-0000-000000000004",
         "objective_code": "LO-PHYS-02-MECH",
+        "parent_objective_code": None,
         "parent_objective_id": None,
         "title": "Mechanics",
         "description": "Kinematics, dynamics, energy, and rotational motion.",
@@ -49,6 +53,7 @@ LEARNING_OBJECTIVES: list[dict[str, Any]] = [
     {
         "id": "30000000-0000-0000-0000-000000000005",
         "objective_code": "LO-PHYS-02-01-KINEMATICS",
+        "parent_objective_code": "LO-PHYS-02-MECH",
         "parent_objective_id": "30000000-0000-0000-0000-000000000004",
         "title": "Kinematics in One Dimension",
         "description": "Describe rectilinear motion using displacement, velocity, acceleration.",
@@ -58,6 +63,7 @@ LEARNING_OBJECTIVES: list[dict[str, Any]] = [
     {
         "id": "30000000-0000-0000-0000-000000000006",
         "objective_code": "LO-PHYS-02-02-NEWTON-LAWS",
+        "parent_objective_code": "LO-PHYS-02-MECH",
         "parent_objective_id": "30000000-0000-0000-0000-000000000004",
         "title": "Newton's Laws of Motion and Momentum",
         "description": "Apply Newton's laws of motion and conservation of linear momentum.",
@@ -67,6 +73,7 @@ LEARNING_OBJECTIVES: list[dict[str, Any]] = [
     {
         "id": "30000000-0000-0000-0000-000000000007",
         "objective_code": "LO-PHYS-02-03-WORK-ENERGY",
+        "parent_objective_code": "LO-PHYS-02-MECH",
         "parent_objective_id": "30000000-0000-0000-0000-000000000004",
         "title": "Work, Energy, and Power",
         "description": "Analyze mechanical work, kinetic and potential energy, and power.",
@@ -77,6 +84,7 @@ LEARNING_OBJECTIVES: list[dict[str, Any]] = [
     {
         "id": "30000000-0000-0000-0000-000000000008",
         "objective_code": "LO-PHYS-03-WAVES",
+        "parent_objective_code": None,
         "parent_objective_id": None,
         "title": "Oscillations and Waves",
         "description": "Simple harmonic motion and wave properties.",
@@ -86,6 +94,7 @@ LEARNING_OBJECTIVES: list[dict[str, Any]] = [
     {
         "id": "30000000-0000-0000-0000-000000000009",
         "objective_code": "LO-PHYS-03-01-SHM",
+        "parent_objective_code": "LO-PHYS-03-WAVES",
         "parent_objective_id": "30000000-0000-0000-0000-000000000008",
         "title": "Simple Harmonic Motion",
         "description": "Characteristics and equations of simple harmonic motion.",
@@ -126,6 +135,8 @@ CONCEPTS_DATA: list[dict[str, Any]] = [
                     "SI is the globally adopted metric system consisting of seven fundamental "
                     "base units."
                 ),
+                "provenance_type": "syllabus_specification",
+                "provenance_ref": PROVENANCE_NIE_2017,
             }
         ],
     },
@@ -155,6 +166,8 @@ CONCEPTS_DATA: list[dict[str, Any]] = [
                     "Only terms having the same dimensions can be added, subtracted, or equated "
                     "(Principle of Homogeneity)."
                 ),
+                "provenance_type": "syllabus_specification",
+                "provenance_ref": PROVENANCE_NIE_2017,
             }
         ],
     },
@@ -183,6 +196,8 @@ CONCEPTS_DATA: list[dict[str, Any]] = [
                 "statement": (
                     "Displacement is the straight-line directed distance between start and end."
                 ),
+                "provenance_type": "syllabus_specification",
+                "provenance_ref": PROVENANCE_NIE_2017,
             }
         ],
     },
@@ -207,6 +222,8 @@ CONCEPTS_DATA: list[dict[str, Any]] = [
                 "group_id": "71000000-0000-0000-0000-000000000004",
                 "claim_type": "formula",
                 "statement": "Velocity is the first time derivative of displacement: v = ds/dt.",
+                "provenance_type": "syllabus_specification",
+                "provenance_ref": PROVENANCE_NIE_2017,
             }
         ],
     },
@@ -234,6 +251,8 @@ CONCEPTS_DATA: list[dict[str, Any]] = [
                 "group_id": "71000000-0000-0000-0000-000000000005",
                 "claim_type": "formula",
                 "statement": "Acceleration is the time rate of change of velocity: a = dv/dt.",
+                "provenance_type": "syllabus_specification",
+                "provenance_ref": PROVENANCE_NIE_2017,
             }
         ],
     },
@@ -266,6 +285,8 @@ CONCEPTS_DATA: list[dict[str, Any]] = [
                 "statement": (
                     "Linear momentum p = mv is a vector quantity having the direction of velocity."
                 ),
+                "provenance_type": "syllabus_specification",
+                "provenance_ref": PROVENANCE_NIE_2017,
             }
         ],
     },
@@ -296,6 +317,8 @@ CONCEPTS_DATA: list[dict[str, Any]] = [
                     "In the absence of a resultant external force, an object maintains "
                     "constant velocity."
                 ),
+                "provenance_type": "syllabus_specification",
+                "provenance_ref": PROVENANCE_NIE_2017,
             },
             {
                 "claim_id": "70000000-0000-0000-0000-000000000008",
@@ -304,6 +327,8 @@ CONCEPTS_DATA: list[dict[str, Any]] = [
                 "statement": (
                     "A continuous force is required to keep an object moving with uniform velocity."
                 ),
+                "provenance_type": "syllabus_specification",
+                "provenance_ref": PROVENANCE_NIE_2017,
             },
         ],
     },
@@ -336,6 +361,8 @@ CONCEPTS_DATA: list[dict[str, Any]] = [
                 "group_id": "71000000-0000-0000-0000-000000000009",
                 "claim_type": "formula",
                 "statement": "Resultant Force F = dp/dt. When mass m is constant, F = ma.",
+                "provenance_type": "syllabus_specification",
+                "provenance_ref": PROVENANCE_NIE_2017,
             }
         ],
     },
@@ -367,6 +394,8 @@ CONCEPTS_DATA: list[dict[str, Any]] = [
                     "Action and reaction forces act on different bodies and are of the exact "
                     "same physical nature."
                 ),
+                "provenance_type": "syllabus_specification",
+                "provenance_ref": PROVENANCE_NIE_2017,
             }
         ],
     },
@@ -402,6 +431,8 @@ CONCEPTS_DATA: list[dict[str, Any]] = [
                     "Work W = F · s = F s cos(θ). Work is zero if displacement is "
                     "perpendicular to force."
                 ),
+                "provenance_type": "syllabus_specification",
+                "provenance_ref": PROVENANCE_NIE_2017,
             }
         ],
     },
@@ -429,6 +460,8 @@ CONCEPTS_DATA: list[dict[str, Any]] = [
                 "group_id": "71000000-0000-0000-0000-000000000012",
                 "claim_type": "formula",
                 "statement": "E_k = (1/2) * m * v^2 = p^2 / (2m).",
+                "provenance_type": "syllabus_specification",
+                "provenance_ref": PROVENANCE_NIE_2017,
             }
         ],
     },
@@ -456,6 +489,8 @@ CONCEPTS_DATA: list[dict[str, Any]] = [
                 "group_id": "71000000-0000-0000-0000-000000000013",
                 "claim_type": "formula",
                 "statement": "Near Earth's surface, E_p = mgh relative to reference height h = 0.",
+                "provenance_type": "syllabus_specification",
+                "provenance_ref": PROVENANCE_NIE_2017,
             }
         ],
     },
@@ -484,6 +519,8 @@ CONCEPTS_DATA: list[dict[str, Any]] = [
                 "statement": (
                     "Mechanical energy is conserved only when non-conservative forces do zero work."
                 ),
+                "provenance_type": "syllabus_specification",
+                "provenance_ref": PROVENANCE_NIE_2017,
             }
         ],
     },
@@ -513,6 +550,8 @@ CONCEPTS_DATA: list[dict[str, Any]] = [
                     "Defining condition of SHM: acceleration is proportional to displacement "
                     "from center and directed opposite to displacement."
                 ),
+                "provenance_type": "syllabus_specification",
+                "provenance_ref": PROVENANCE_NIE_2017,
             }
         ],
     },
@@ -526,130 +565,194 @@ CONCEPT_EDGES: list[dict[str, Any]] = [
     # Units -> Dimensions
     {
         "id": "80000000-0000-0000-0000-000000000001",
-        "from_version_id": "50000000-0000-0000-0000-000000000001",  # SI Units
-        "to_version_id": "50000000-0000-0000-0000-000000000002",  # Dimensions
+        "from_concept_code": "PHYS-MEA-SI-UNITS",
+        "to_concept_code": "PHYS-MEA-DIMENSIONS",
+        "from_version_id": "50000000-0000-0000-0000-000000000001",
+        "to_version_id": "50000000-0000-0000-0000-000000000002",
         "edge_type": "prerequisite_of",
         "confidence": 1.0,
+        "provenance_type": "syllabus_specification",
+        "provenance_ref": PROVENANCE_NIE_2017,
     },
     # Units -> Displacement
     {
         "id": "80000000-0000-0000-0000-000000000002",
-        "from_version_id": "50000000-0000-0000-0000-000000000001",  # SI Units
-        "to_version_id": "50000000-0000-0000-0000-000000000003",  # Displacement
+        "from_concept_code": "PHYS-MEA-SI-UNITS",
+        "to_concept_code": "PHYS-MEC-DISPLACEMENT",
+        "from_version_id": "50000000-0000-0000-0000-000000000001",
+        "to_version_id": "50000000-0000-0000-0000-000000000003",
         "edge_type": "prerequisite_of",
         "confidence": 1.0,
+        "provenance_type": "syllabus_specification",
+        "provenance_ref": PROVENANCE_NIE_2017,
     },
     # Displacement -> Velocity
     {
         "id": "80000000-0000-0000-0000-000000000003",
-        "from_version_id": "50000000-0000-0000-0000-000000000003",  # Displacement
-        "to_version_id": "50000000-0000-0000-0000-000000000004",  # Velocity
+        "from_concept_code": "PHYS-MEC-DISPLACEMENT",
+        "to_concept_code": "PHYS-MEC-VELOCITY",
+        "from_version_id": "50000000-0000-0000-0000-000000000003",
+        "to_version_id": "50000000-0000-0000-0000-000000000004",
         "edge_type": "prerequisite_of",
         "confidence": 1.0,
+        "provenance_type": "syllabus_specification",
+        "provenance_ref": PROVENANCE_NIE_2017,
     },
     # Velocity -> Acceleration
     {
         "id": "80000000-0000-0000-0000-000000000004",
-        "from_version_id": "50000000-0000-0000-0000-000000000004",  # Velocity
-        "to_version_id": "50000000-0000-0000-0000-000000000005",  # Acceleration
+        "from_concept_code": "PHYS-MEC-VELOCITY",
+        "to_concept_code": "PHYS-MEC-ACCELERATION",
+        "from_version_id": "50000000-0000-0000-0000-000000000004",
+        "to_version_id": "50000000-0000-0000-0000-000000000005",
         "edge_type": "prerequisite_of",
         "confidence": 1.0,
+        "provenance_type": "syllabus_specification",
+        "provenance_ref": PROVENANCE_NIE_2017,
     },
     # Velocity -> Momentum
     {
         "id": "80000000-0000-0000-0000-000000000005",
-        "from_version_id": "50000000-0000-0000-0000-000000000004",  # Velocity
-        "to_version_id": "50000000-0000-0000-0000-000000000006",  # Momentum
+        "from_concept_code": "PHYS-MEC-VELOCITY",
+        "to_concept_code": "PHYS-MEC-MOMENTUM",
+        "from_version_id": "50000000-0000-0000-0000-000000000004",
+        "to_version_id": "50000000-0000-0000-0000-000000000006",
         "edge_type": "prerequisite_of",
         "confidence": 1.0,
+        "provenance_type": "syllabus_specification",
+        "provenance_ref": PROVENANCE_NIE_2017,
     },
     # Newton 1 -> Newton 2
     {
         "id": "80000000-0000-0000-0000-000000000006",
-        "from_version_id": "50000000-0000-0000-0000-000000000007",  # Newton 1
-        "to_version_id": "50000000-0000-0000-0000-000000000008",  # Newton 2
+        "from_concept_code": "PHYS-MEC-NEWTON1",
+        "to_concept_code": "PHYS-MEC-NEWTON2",
+        "from_version_id": "50000000-0000-0000-0000-000000000007",
+        "to_version_id": "50000000-0000-0000-0000-000000000008",
         "edge_type": "prerequisite_of",
         "confidence": 1.0,
+        "provenance_type": "syllabus_specification",
+        "provenance_ref": PROVENANCE_NIE_2017,
     },
     # Acceleration -> Newton 2
     {
         "id": "80000000-0000-0000-0000-000000000007",
-        "from_version_id": "50000000-0000-0000-0000-000000000005",  # Acceleration
-        "to_version_id": "50000000-0000-0000-0000-000000000008",  # Newton 2
+        "from_concept_code": "PHYS-MEC-ACCELERATION",
+        "to_concept_code": "PHYS-MEC-NEWTON2",
+        "from_version_id": "50000000-0000-0000-0000-000000000005",
+        "to_version_id": "50000000-0000-0000-0000-000000000008",
         "edge_type": "prerequisite_of",
         "confidence": 1.0,
+        "provenance_type": "syllabus_specification",
+        "provenance_ref": PROVENANCE_NIE_2017,
     },
     # Momentum -> Newton 2
     {
         "id": "80000000-0000-0000-0000-000000000008",
-        "from_version_id": "50000000-0000-0000-0000-000000000006",  # Momentum
-        "to_version_id": "50000000-0000-0000-0000-000000000008",  # Newton 2
+        "from_concept_code": "PHYS-MEC-MOMENTUM",
+        "to_concept_code": "PHYS-MEC-NEWTON2",
+        "from_version_id": "50000000-0000-0000-0000-000000000006",
+        "to_version_id": "50000000-0000-0000-0000-000000000008",
         "edge_type": "prerequisite_of",
         "confidence": 1.0,
+        "provenance_type": "syllabus_specification",
+        "provenance_ref": PROVENANCE_NIE_2017,
     },
     # Newton 2 -> Newton 3
     {
         "id": "80000000-0000-0000-0000-000000000009",
-        "from_version_id": "50000000-0000-0000-0000-000000000008",  # Newton 2
-        "to_version_id": "50000000-0000-0000-0000-000000000009",  # Newton 3
+        "from_concept_code": "PHYS-MEC-NEWTON2",
+        "to_concept_code": "PHYS-MEC-NEWTON3",
+        "from_version_id": "50000000-0000-0000-0000-000000000008",
+        "to_version_id": "50000000-0000-0000-0000-000000000009",
         "edge_type": "related_to",
         "confidence": 1.0,
+        "provenance_type": "syllabus_specification",
+        "provenance_ref": PROVENANCE_NIE_2017,
     },
     # Displacement -> Work
     {
         "id": "80000000-0000-0000-0000-000000000010",
-        "from_version_id": "50000000-0000-0000-0000-000000000003",  # Displacement
-        "to_version_id": "50000000-0000-0000-0000-000000000010",  # Work
+        "from_concept_code": "PHYS-MEC-DISPLACEMENT",
+        "to_concept_code": "PHYS-MEC-WORK",
+        "from_version_id": "50000000-0000-0000-0000-000000000003",
+        "to_version_id": "50000000-0000-0000-0000-000000000010",
         "edge_type": "prerequisite_of",
         "confidence": 1.0,
+        "provenance_type": "syllabus_specification",
+        "provenance_ref": PROVENANCE_NIE_2017,
     },
     # Newton 2 -> Work
     {
         "id": "80000000-0000-0000-0000-000000000011",
-        "from_version_id": "50000000-0000-0000-0000-000000000008",  # Newton 2
-        "to_version_id": "50000000-0000-0000-0000-000000000010",  # Work
+        "from_concept_code": "PHYS-MEC-NEWTON2",
+        "to_concept_code": "PHYS-MEC-WORK",
+        "from_version_id": "50000000-0000-0000-0000-000000000008",
+        "to_version_id": "50000000-0000-0000-0000-000000000010",
         "edge_type": "prerequisite_of",
         "confidence": 1.0,
+        "provenance_type": "syllabus_specification",
+        "provenance_ref": PROVENANCE_NIE_2017,
     },
     # Work -> Kinetic Energy
     {
         "id": "80000000-0000-0000-0000-000000000012",
-        "from_version_id": "50000000-0000-0000-0000-000000000010",  # Work
-        "to_version_id": "50000000-0000-0000-0000-000000000011",  # Kinetic Energy
+        "from_concept_code": "PHYS-MEC-WORK",
+        "to_concept_code": "PHYS-MEC-KINETIC-ENERGY",
+        "from_version_id": "50000000-0000-0000-0000-000000000010",
+        "to_version_id": "50000000-0000-0000-0000-000000000011",
         "edge_type": "prerequisite_of",
         "confidence": 1.0,
+        "provenance_type": "syllabus_specification",
+        "provenance_ref": PROVENANCE_NIE_2017,
     },
     # Work -> Gravitational Potential Energy
     {
         "id": "80000000-0000-0000-0000-000000000013",
-        "from_version_id": "50000000-0000-0000-0000-000000000010",  # Work
-        "to_version_id": "50000000-0000-0000-0000-000000000012",  # GPE
+        "from_concept_code": "PHYS-MEC-WORK",
+        "to_concept_code": "PHYS-MEC-GRAV-POT-ENERGY",
+        "from_version_id": "50000000-0000-0000-0000-000000000010",
+        "to_version_id": "50000000-0000-0000-0000-000000000012",
         "edge_type": "prerequisite_of",
         "confidence": 1.0,
+        "provenance_type": "syllabus_specification",
+        "provenance_ref": PROVENANCE_NIE_2017,
     },
     # Kinetic Energy -> Conservation of Mechanical Energy
     {
         "id": "80000000-0000-0000-0000-000000000014",
-        "from_version_id": "50000000-0000-0000-0000-000000000011",  # Kinetic Energy
-        "to_version_id": "50000000-0000-0000-0000-000000000013",  # Conservation Energy
+        "from_concept_code": "PHYS-MEC-KINETIC-ENERGY",
+        "to_concept_code": "PHYS-MEC-CONSERV-ENERGY",
+        "from_version_id": "50000000-0000-0000-0000-000000000011",
+        "to_version_id": "50000000-0000-0000-0000-000000000013",
         "edge_type": "prerequisite_of",
         "confidence": 1.0,
+        "provenance_type": "syllabus_specification",
+        "provenance_ref": PROVENANCE_NIE_2017,
     },
     # Gravitational Potential Energy -> Conservation of Mechanical Energy
     {
         "id": "80000000-0000-0000-0000-000000000015",
-        "from_version_id": "50000000-0000-0000-0000-000000000012",  # GPE
-        "to_version_id": "50000000-0000-0000-0000-000000000013",  # Conservation Energy
+        "from_concept_code": "PHYS-MEC-GRAV-POT-ENERGY",
+        "to_concept_code": "PHYS-MEC-CONSERV-ENERGY",
+        "from_version_id": "50000000-0000-0000-0000-000000000012",
+        "to_version_id": "50000000-0000-0000-0000-000000000013",
         "edge_type": "prerequisite_of",
         "confidence": 1.0,
+        "provenance_type": "syllabus_specification",
+        "provenance_ref": PROVENANCE_NIE_2017,
     },
     # Acceleration -> SHM
     {
         "id": "80000000-0000-0000-0000-000000000016",
-        "from_version_id": "50000000-0000-0000-0000-000000000005",  # Acceleration
-        "to_version_id": "50000000-0000-0000-0000-000000000014",  # SHM
+        "from_concept_code": "PHYS-MEC-ACCELERATION",
+        "to_concept_code": "PHYS-WAV-SHM",
+        "from_version_id": "50000000-0000-0000-0000-000000000005",
+        "to_version_id": "50000000-0000-0000-0000-000000000014",
         "edge_type": "prerequisite_of",
         "confidence": 1.0,
+        "provenance_type": "syllabus_specification",
+        "provenance_ref": PROVENANCE_NIE_2017,
     },
 ]
 

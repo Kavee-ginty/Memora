@@ -55,12 +55,26 @@ OBJECTIVE_SEED_SQL = text(
     ) ON CONFLICT (curriculum_version_id, objective_code) DO NOTHING
     """
 )
+RESOLVE_OBJECTIVE_SQL = text(
+    """
+    SELECT id FROM learning_objectives
+    WHERE curriculum_version_id = :curriculum_version_id
+      AND objective_code = :objective_code
+    """
+)
 
 CONCEPT_SEED_SQL = text(
     """
     INSERT INTO concepts(id, subject_id, stable_code, status)
     VALUES (:id, :subject_id, :stable_code, 'approved')
     ON CONFLICT (subject_id, stable_code) DO NOTHING
+    """
+)
+RESOLVE_CONCEPT_SQL = text(
+    """
+    SELECT id FROM concepts
+    WHERE subject_id = :subject_id
+      AND stable_code = :stable_code
     """
 )
 
@@ -73,6 +87,13 @@ CONCEPT_VERSION_SEED_SQL = text(
         :id, :concept_id, 1, :kind, :title, :definition,
         CAST(:symbol_context AS jsonb), CAST(:unit_context AS jsonb), 'approved', now()
     ) ON CONFLICT (concept_id, version_no) DO NOTHING
+    """
+)
+RESOLVE_VERSION_SQL = text(
+    """
+    SELECT id FROM concept_versions
+    WHERE concept_id = :concept_id
+      AND version_no = 1
     """
 )
 
@@ -137,7 +158,7 @@ REWARD_DEFINITION_SEED_SQL = text(
 
 
 def seed_database(database_url: str | None = None) -> None:
-    """Seed foundational curriculum, knowledge graph, and progression data."""
+    """Seed foundational curriculum and knowledge graph data with natural-key convergence."""
     engine = create_engine(database_url or get_settings().database_url)
     with engine.begin() as connection:
         values = {"subject_id": PHYSICS_SUBJECT_ID, "curriculum_id": PHYSICS_CURRICULUM_ID}
@@ -158,39 +179,60 @@ def seed_database(database_url: str | None = None) -> None:
         curriculum_id = str(resolved_curriculum_id)
         subject_id = str(resolved_subject_id)
 
-        # 1. Learning Objectives
-        obj_code_to_id: dict[str, str] = {}
+        # 1. Learning Objectives (natural-key convergence)
+        resolved_obj_ids: dict[str, str] = {}
         for obj in LEARNING_OBJECTIVES:
-            obj_code_to_id[obj["objective_code"]] = obj["id"]
+            parent_id = None
+            parent_code = obj.get("parent_objective_code")
+            if parent_code and parent_code in resolved_obj_ids:
+                parent_id = resolved_obj_ids[parent_code]
+            elif obj.get("parent_objective_id"):
+                parent_id = obj["parent_objective_id"]
+
             connection.execute(
                 OBJECTIVE_SEED_SQL,
                 {
                     "id": obj["id"],
                     "curriculum_version_id": curriculum_id,
                     "objective_code": obj["objective_code"],
-                    "parent_objective_id": obj["parent_objective_id"],
+                    "parent_objective_id": parent_id,
                     "title": obj["title"],
                     "description": obj["description"],
                     "sequence_no": obj["sequence_no"],
                     "status": obj["status"],
                 },
             )
+            actual_obj_id = connection.scalar(
+                RESOLVE_OBJECTIVE_SQL,
+                {
+                    "curriculum_version_id": curriculum_id,
+                    "objective_code": obj["objective_code"],
+                },
+            )
+            resolved_obj_ids[obj["objective_code"]] = str(actual_obj_id or obj["id"])
 
-        # 2. Concepts, Versions, Aliases, Claims, and Objective Maps
+        # 2. Concepts & Versions (natural-key convergence)
+        resolved_concept_ids: dict[str, str] = {}
+        resolved_version_ids: dict[str, str] = {}
+
         for cdata in CONCEPTS_DATA:
-            concept_id = cdata["concept_id"]
-            version_id = cdata["version_id"]
-
+            code = cdata["stable_code"]
             connection.execute(
                 CONCEPT_SEED_SQL,
-                {"id": concept_id, "subject_id": subject_id, "stable_code": cdata["stable_code"]},
+                {"id": cdata["concept_id"], "subject_id": subject_id, "stable_code": code},
             )
+            actual_cid = connection.scalar(
+                RESOLVE_CONCEPT_SQL,
+                {"subject_id": subject_id, "stable_code": code},
+            )
+            resolved_concept_ids[code] = str(actual_cid or cdata["concept_id"])
+            concept_db_id = resolved_concept_ids[code]
 
             connection.execute(
                 CONCEPT_VERSION_SEED_SQL,
                 {
-                    "id": version_id,
-                    "concept_id": concept_id,
+                    "id": cdata["version_id"],
+                    "concept_id": concept_db_id,
                     "kind": cdata["kind"],
                     "title": cdata["title"],
                     "definition": cdata["definition"],
@@ -202,14 +244,21 @@ def seed_database(database_url: str | None = None) -> None:
                     else None,
                 },
             )
+            actual_vid = connection.scalar(
+                RESOLVE_VERSION_SQL,
+                {"concept_id": concept_db_id},
+            )
+            resolved_version_ids[code] = str(actual_vid or cdata["version_id"])
+            version_db_id = resolved_version_ids[code]
 
             for alias in cdata["aliases"]:
-                alias_id = str(uuid5(NAMESPACE_DNS, f"memora:alias:{version_id}:{alias['text']}"))
+                alias_name = alias["text"]
+                alias_id = str(uuid5(NAMESPACE_DNS, f"memora:alias:{version_db_id}:{alias_name}"))
                 connection.execute(
                     CONCEPT_ALIAS_SEED_SQL,
                     {
                         "id": alias_id,
-                        "concept_version_id": version_id,
+                        "concept_version_id": version_db_id,
                         "alias_text": alias["text"],
                         "normalized_alias": alias["text"].strip().lower(),
                         "alias_type": alias["type"],
@@ -223,38 +272,46 @@ def seed_database(database_url: str | None = None) -> None:
                     {
                         "id": claim["claim_id"],
                         "claim_group_id": claim["group_id"],
-                        "concept_version_id": version_id,
+                        "concept_version_id": version_db_id,
                         "claim_type": claim["claim_type"],
                         "statement": claim["statement"],
                         "structured_value": json.dumps(claim.get("structured_value"))
                         if claim.get("structured_value")
                         else None,
-                        "provenance_ref": PROVENANCE_NIE_2017,
+                        "provenance_ref": claim.get("provenance_ref", PROVENANCE_NIE_2017),
                     },
                 )
 
-            objective_id = obj_code_to_id.get(cdata["objective_code"])
+            objective_id = resolved_obj_ids.get(cdata["objective_code"])
             if objective_id:
                 connection.execute(
                     CONCEPT_OBJECTIVE_MAP_SEED_SQL,
                     {
-                        "concept_version_id": version_id,
+                        "concept_version_id": version_db_id,
                         "learning_objective_id": objective_id,
                         "provenance_ref": PROVENANCE_NIE_2017,
                     },
                 )
 
-        # 3. Concept Edges
+        # 3. Concept Edges (resolved version IDs)
         for edge in CONCEPT_EDGES:
+            from_vid = resolved_version_ids.get(
+                edge.get("from_concept_code"), edge.get("from_version_id")
+            )
+            to_vid = resolved_version_ids.get(
+                edge.get("to_concept_code"), edge.get("to_version_id")
+            )
+            etype = edge["edge_type"]
+            edge_id = str(uuid5(NAMESPACE_DNS, f"memora:edge:{from_vid}:{to_vid}:{etype}"))
             connection.execute(
                 CONCEPT_EDGE_SEED_SQL,
                 {
-                    "id": edge["id"],
-                    "from_concept_version_id": edge["from_version_id"],
-                    "to_concept_version_id": edge["to_version_id"],
+                    "id": edge_id,
+                    "from_concept_version_id": str(from_vid),
+                    "to_concept_version_id": str(to_vid),
                     "edge_type": edge["edge_type"],
                     "confidence": edge["confidence"],
-                    "provenance_ref": PROVENANCE_NIE_2017,
+                    "provenance_ref": edge.get("provenance_ref", PROVENANCE_NIE_2017),
                 },
             )
 

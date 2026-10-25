@@ -37,10 +37,10 @@ If two sources appear inconsistent, stop implementation and resolve the conflict
 | T02 | CI and development environments | **Ready** | - | 3 | T01 | `task/T02-ci-environments` | CI and infrastructure |
 | T03 | Flutter design system and app shell | **In Progress** | Antigravity | 5 | T01 | `task/T03-flutter-design-system` | Mobile shared UI |
 | T04 | PostgreSQL migrations and seed framework | **Done** | Codex | 6 | T01 | `task/T04-database-schema` | Backend database |
-| T05 | OpenAPI models and generated client pipeline | **Review** | Dasun Jayasanka | 4 | T01 | `task/T05-openapi-pipeline` | API contracts |
+| T05 | OpenAPI models and generated client pipeline | **Done** | Dasun Jayasanka | 4 | T01 | `task/T05-openapi-pipeline` | API contracts |
 | T06 | Identity and session backend | Blocked | - | 4 | T02, T04, T05 | `task/T06-identity-session` | Backend API |
 | T07 | Auth bootstrap mobile and guarded routes | Blocked | - | 5 | T03, T05, T06 | `task/T07-mobile-auth-routes` | Mobile navigation |
-| T08 | Curriculum and knowledge graph seed | Blocked | - | 5 | T04, T05 | `task/T08-curriculum-graph` | Data and knowledge |
+| T08 | Curriculum and knowledge graph seed | **In Progress** | Antigravity | 5 | T04, T05 | `task/T08-curriculum-graph` | Data and knowledge |
 | T09 | Learning ingestion backend | Blocked | - | 7 | T05, T06, T08 | `task/T09-ingestion-backend` | API and worker |
 | T10 | Learning ingestion mobile | Blocked | - | 6 | T07, T09 | `task/T10-ingestion-mobile` | Mobile feature |
 | T11 | Memory engine v1 | Blocked | - | 7 | T08 | `task/T11-memory-engine` | Learning engine |
@@ -156,5 +156,6 @@ Every task pull request must contain:
 
 ## 6 Current next action
 
-T01 and T04 are merged and Done. T02 is Ready and T03 is In Progress. T05 is in Review under Dasun Jayasanka. T08 remains Blocked until T05 is merged; then it becomes Done and T08 becomes Ready on the zero-float critical path.
+T01, T04 and T05 are merged and Done. T02 is Ready, T03 is In Progress, and T08 is In Progress on the zero-float critical path.
+
 

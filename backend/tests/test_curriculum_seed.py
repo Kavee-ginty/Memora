@@ -9,7 +9,7 @@ Acceptance gate:
 
 from collections import defaultdict
 from unittest.mock import MagicMock
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import pytest
 
@@ -97,8 +97,8 @@ def test_concept_edges_have_no_prerequisite_cycles() -> None:
 
     for edge in CONCEPT_EDGES:
         if edge["edge_type"] == "prerequisite_of":
-            u = edge["from_version_id"]
-            v = edge["to_version_id"]
+            u = edge.get("from_concept_code", edge.get("from_version_id"))
+            v = edge.get("to_concept_code", edge.get("to_version_id"))
             assert u != v, f"Self-edge forbidden: {u} -> {v}"
             adj[u].append(v)
             nodes.add(u)
@@ -175,11 +175,33 @@ def test_all_concepts_map_to_valid_learning_objectives() -> None:
 
 
 def test_seed_data_provenance_is_populated() -> None:
-    """Verify that all academic content carries valid provenance."""
-    assert PROVENANCE_NIE_2017.strip()
+    """Verify that all academic records carry explicit provenance to NIE 2017."""
+    assert PROVENANCE_NIE_2017 == "NIE Sri Lanka G.C.E. (A/L) Physics Syllabus (2017)"
+
+    claim_count = 0
     for c in CONCEPTS_DATA:
-        for _claim in c["claims"]:
-            assert PROVENANCE_NIE_2017 in PROVENANCE_NIE_2017
+        for claim in c["claims"]:
+            claim_count += 1
+            assert claim.get("provenance_type") == "syllabus_specification", (
+                f"Missing or invalid provenance_type on claim {claim['claim_id']}"
+            )
+            assert claim.get("provenance_ref") == PROVENANCE_NIE_2017, (
+                f"Missing or invalid provenance_ref on claim {claim['claim_id']}"
+            )
+
+    assert claim_count > 0, "No claims verified"
+
+    edge_count = 0
+    for edge in CONCEPT_EDGES:
+        edge_count += 1
+        assert edge.get("provenance_type") == "syllabus_specification", (
+            f"Missing or invalid provenance_type on edge {edge['id']}"
+        )
+        assert edge.get("provenance_ref") == PROVENANCE_NIE_2017, (
+            f"Missing or invalid provenance_ref on edge {edge['id']}"
+        )
+
+    assert edge_count > 0, "No edges verified"
 
 
 def test_reward_definitions_conform_to_schema() -> None:
@@ -220,10 +242,16 @@ def test_no_production_user_or_secret_in_seeds() -> None:
 def test_seed_database_executes_idempotently(monkeypatch) -> None:
     """Verify that seed_database executes and passes all expected SQL operations."""
     connection = MagicMock()
-    connection.scalar.side_effect = [
-        UUID("10000000-0000-0000-0000-000000000001"),
-        UUID("20000000-0000-0000-0000-000000000001"),
-    ]
+
+    def mock_scalar(query, params=None):
+        query_str = str(query)
+        if "FROM subjects WHERE code" in query_str:
+            return UUID("10000000-0000-0000-0000-000000000001")
+        if "FROM curriculum_versions" in query_str:
+            return UUID("20000000-0000-0000-0000-000000000001")
+        return None
+
+    connection.scalar.side_effect = mock_scalar
     transaction = MagicMock()
     transaction.__enter__.return_value = connection
     engine = MagicMock()
@@ -239,3 +267,56 @@ def test_seed_database_executes_idempotently(monkeypatch) -> None:
     second_call_sql = str(connection.execute.call_args_list[1].args[0])
     assert "INSERT INTO subjects" in first_call_sql
     assert "INSERT INTO curriculum_versions" in second_call_sql
+
+
+def test_seed_natural_key_convergence_with_existing_rows(monkeypatch) -> None:
+    """Verify that seed_database resolves existing DB IDs by natural key rather than failing."""
+    existing_subject_id = uuid4()
+    existing_curriculum_id = uuid4()
+    existing_concept_id = uuid4()
+    existing_version_id = uuid4()
+    existing_obj_id = uuid4()
+
+    connection = MagicMock()
+
+    def mock_scalar(query, params=None):
+        query_str = str(query)
+        if "FROM subjects WHERE code" in query_str:
+            return existing_subject_id
+        if "FROM curriculum_versions" in query_str:
+            return existing_curriculum_id
+        if "FROM learning_objectives" in query_str:
+            return existing_obj_id
+        if "FROM concepts" in query_str:
+            return existing_concept_id
+        if "FROM concept_versions" in query_str:
+            return existing_version_id
+        return None
+
+    connection.scalar.side_effect = mock_scalar
+    transaction = MagicMock()
+    transaction.__enter__.return_value = connection
+    engine = MagicMock()
+    engine.begin.return_value = transaction
+    monkeypatch.setattr(seed, "create_engine", lambda _: engine)
+
+    seed.seed_database("postgresql+psycopg://unused")
+
+    # Check that concept versions and objective maps used the resolved existing IDs
+    executed_calls = connection.execute.call_args_list
+    assert len(executed_calls) > 20
+
+    # Look for a concept_versions insert call
+    version_inserts = [
+        c for c in executed_calls if "INSERT INTO concept_versions" in str(c.args[0])
+    ]
+    assert len(version_inserts) > 0
+    assert version_inserts[0].args[1]["concept_id"] == str(existing_concept_id)
+
+    # Look for a concept_objective_maps insert call
+    map_inserts = [
+        c for c in executed_calls if "INSERT INTO concept_objective_maps" in str(c.args[0])
+    ]
+    assert len(map_inserts) > 0
+    assert map_inserts[0].args[1]["concept_version_id"] == str(existing_version_id)
+    assert map_inserts[0].args[1]["learning_objective_id"] == str(existing_obj_id)

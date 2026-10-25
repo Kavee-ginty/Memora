@@ -12,7 +12,14 @@ from uuid import UUID
 
 from sqlalchemy import Connection, text
 
-from memora.modules.curriculum.constants import EDGE_TYPES
+from memora.modules.curriculum.constants import (
+    DEFAULT_ALIAS_LIMIT,
+    DEFAULT_PREREQ_DEPTH,
+    EDGE_TYPES,
+    MAX_ALIAS_LIMIT,
+    MAX_PREREQ_DEPTH,
+    MAX_PREREQ_RESULTS,
+)
 
 
 class CurriculumService:
@@ -23,7 +30,13 @@ class CurriculumService:
 
     def get_subject_by_code(self, code: str = "physics") -> dict[str, Any] | None:
         """Retrieve subject record by its unique code."""
-        query = text("SELECT id, code, name, status, created_at FROM subjects WHERE code = :code")
+        query = text(
+            """
+            SELECT id, code, name, status, created_at
+            FROM subjects
+            WHERE code = :code AND status = 'approved'
+            """
+        )
         row = self.connection.execute(query, {"code": code}).mappings().first()
         return dict(row) if row else None
 
@@ -33,7 +46,7 @@ class CurriculumService:
         edition_code: str = "GCE-AL-PHYSICS-2017",
         language_medium: str = "en",
     ) -> dict[str, Any] | None:
-        """Retrieve curriculum version record."""
+        """Retrieve approved curriculum version record."""
         query = text(
             """
             SELECT id, subject_id, authority, edition_code, language_medium,
@@ -42,6 +55,7 @@ class CurriculumService:
             WHERE subject_id = :subject_id
               AND edition_code = :edition_code
               AND language_medium = :language_medium
+              AND status = 'approved'
             """
         )
         row = (
@@ -59,13 +73,14 @@ class CurriculumService:
         return dict(row) if row else None
 
     def get_learning_objectives(self, curriculum_version_id: UUID | str) -> list[dict[str, Any]]:
-        """Retrieve ordered hierarchical learning objectives for a curriculum version."""
+        """Retrieve ordered hierarchical approved learning objectives for a curriculum version."""
         query = text(
             """
             SELECT id, curriculum_version_id, objective_code, parent_objective_id,
                    title, description, sequence_no, status
             FROM learning_objectives
             WHERE curriculum_version_id = :curriculum_version_id
+              AND status = 'approved'
             ORDER BY sequence_no, objective_code
             """
         )
@@ -77,9 +92,9 @@ class CurriculumService:
         return [dict(r) for r in rows]
 
     def get_concept_by_code(
-        self, stable_code: str, subject_id: UUID | str | None = None
+        self, stable_code: str, subject_id: UUID | str
     ) -> dict[str, Any] | None:
-        """Retrieve a concept and its latest approved version by stable code."""
+        """Retrieve a concept and its latest approved version scoped to subject."""
         query = text(
             """
             SELECT c.id AS concept_id, c.subject_id, c.stable_code, c.status AS concept_status,
@@ -88,7 +103,8 @@ class CurriculumService:
             FROM concepts c
             JOIN concept_versions cv ON cv.concept_id = c.id
             WHERE c.stable_code = :stable_code
-              AND (:subject_id IS NULL OR c.subject_id = :subject_id)
+              AND c.subject_id = :subject_id
+              AND c.status = 'approved'
               AND cv.content_status = 'approved'
             ORDER BY cv.version_no DESC
             LIMIT 1
@@ -97,7 +113,7 @@ class CurriculumService:
         row = (
             self.connection.execute(
                 query,
-                {"stable_code": stable_code, "subject_id": str(subject_id) if subject_id else None},
+                {"stable_code": stable_code, "subject_id": str(subject_id)},
             )
             .mappings()
             .first()
@@ -105,9 +121,15 @@ class CurriculumService:
         return dict(row) if row else None
 
     def find_concepts_by_alias(
-        self, alias_query: str, subject_id: UUID | str | None = None, limit: int = 20
+        self,
+        alias_query: str,
+        subject_id: UUID | str,
+        limit: int = DEFAULT_ALIAS_LIMIT,
     ) -> list[dict[str, Any]]:
-        """Find concepts matching a normalized alias term or symbol (used for note ingestion)."""
+        """Find approved concepts matching a normalized alias term or symbol (TRD §8.2 bounded)."""
+        if not (1 <= limit <= MAX_ALIAS_LIMIT):
+            raise ValueError(f"limit must be between 1 and {MAX_ALIAS_LIMIT}")
+
         normalized = alias_query.strip().lower()
         query = text(
             """
@@ -117,7 +139,8 @@ class CurriculumService:
             JOIN concept_versions cv ON cv.id = ca.concept_version_id
             JOIN concepts c ON c.id = cv.concept_id
             WHERE ca.normalized_alias = :normalized
-              AND (:subject_id IS NULL OR c.subject_id = :subject_id)
+              AND c.subject_id = :subject_id
+              AND c.status = 'approved'
               AND cv.content_status = 'approved'
             ORDER BY ca.is_preferred DESC, cv.title
             LIMIT :limit
@@ -128,7 +151,7 @@ class CurriculumService:
                 query,
                 {
                     "normalized": normalized,
-                    "subject_id": str(subject_id) if subject_id else None,
+                    "subject_id": str(subject_id),
                     "limit": limit,
                 },
             )
@@ -138,11 +161,17 @@ class CurriculumService:
         return [dict(r) for r in rows]
 
     def get_prerequisites(
-        self, concept_version_id: UUID | str, max_depth: int = 5
+        self,
+        concept_version_id: UUID | str,
+        max_depth: int = DEFAULT_PREREQ_DEPTH,
+        result_limit: int = MAX_PREREQ_RESULTS,
+        subject_id: UUID | str | None = None,
     ) -> list[dict[str, Any]]:
-        """Bounded recursive CTE traversal to find all prerequisites of a concept version."""
-        if max_depth < 1:
-            raise ValueError("max_depth must be at least 1")
+        """Bounded recursive CTE traversal for approved prerequisites (TRD §8.2)."""
+        if not (1 <= max_depth <= MAX_PREREQ_DEPTH):
+            raise ValueError(f"max_depth must be between 1 and {MAX_PREREQ_DEPTH}")
+        if not (1 <= result_limit <= MAX_PREREQ_RESULTS):
+            raise ValueError(f"result_limit must be between 1 and {MAX_PREREQ_RESULTS}")
 
         query = text(
             """
@@ -157,6 +186,7 @@ class CurriculumService:
                 WHERE e.to_concept_version_id = :concept_version_id
                   AND e.edge_type = 'prerequisite_of'
                   AND e.status = 'approved'
+                  AND e.valid_from <= now()
                   AND (e.valid_to IS NULL OR e.valid_to > now())
                 UNION ALL
                 SELECT
@@ -169,6 +199,7 @@ class CurriculumService:
                 JOIN prereqs p ON e.to_concept_version_id = p.from_concept_version_id
                 WHERE e.edge_type = 'prerequisite_of'
                   AND e.status = 'approved'
+                  AND e.valid_from <= now()
                   AND (e.valid_to IS NULL OR e.valid_to > now())
                   AND p.depth < :max_depth
             )
@@ -183,12 +214,22 @@ class CurriculumService:
             FROM prereqs p
             JOIN concept_versions cv ON cv.id = p.from_concept_version_id
             JOIN concepts c ON c.id = cv.concept_id
+            WHERE c.status = 'approved'
+              AND cv.content_status = 'approved'
+              AND (:subject_id IS NULL OR c.subject_id = :subject_id)
             ORDER BY p.depth, c.stable_code
+            LIMIT :result_limit
             """
         )
         rows = (
             self.connection.execute(
-                query, {"concept_version_id": str(concept_version_id), "max_depth": max_depth}
+                query,
+                {
+                    "concept_version_id": str(concept_version_id),
+                    "max_depth": max_depth,
+                    "result_limit": result_limit,
+                    "subject_id": str(subject_id) if subject_id else None,
+                },
             )
             .mappings()
             .all()
@@ -196,15 +237,18 @@ class CurriculumService:
         return [dict(r) for r in rows]
 
     def get_concept_claims(self, concept_version_id: UUID | str) -> list[dict[str, Any]]:
-        """Retrieve approved knowledge claims for a concept version."""
+        """Retrieve approved knowledge claims for an approved concept version."""
         query = text(
             """
-            SELECT id, claim_group_id, concept_version_id, version_no, claim_type,
-                   statement, structured_value, status, provenance_type, provenance_ref
-            FROM knowledge_claims
-            WHERE concept_version_id = :concept_version_id
-              AND status = 'approved'
-            ORDER BY claim_type, version_no
+            SELECT kc.id, kc.claim_group_id, kc.concept_version_id, kc.version_no,
+                   kc.claim_type, kc.statement, kc.structured_value, kc.status,
+                   kc.provenance_type, kc.provenance_ref
+            FROM knowledge_claims kc
+            JOIN concept_versions cv ON cv.id = kc.concept_version_id
+            WHERE kc.concept_version_id = :concept_version_id
+              AND kc.status = 'approved'
+              AND cv.content_status = 'approved'
+            ORDER BY kc.claim_type, kc.version_no
             """
         )
         rows = (
@@ -226,12 +270,12 @@ class CurriculumService:
             WITH RECURSIVE obj_path AS (
                 SELECT id, parent_objective_id, ARRAY[id] AS path, false AS is_cycle
                 FROM learning_objectives
-                WHERE parent_objective_id IS NOT NULL
+                WHERE parent_objective_id IS NOT NULL AND status = 'approved'
                 UNION ALL
                 SELECT lo.id, lo.parent_objective_id, p.path || lo.id, lo.id = ANY(p.path)
                 FROM learning_objectives lo
                 JOIN obj_path p ON lo.id = p.parent_objective_id
-                WHERE NOT p.is_cycle AND array_length(p.path, 1) < 20
+                WHERE NOT p.is_cycle AND lo.status = 'approved' AND array_length(p.path, 1) < 20
             )
             SELECT id FROM obj_path WHERE is_cycle
             """
@@ -252,6 +296,7 @@ class CurriculumService:
                        false AS is_cycle
                 FROM concept_edges
                 WHERE edge_type = 'prerequisite_of' AND status = 'approved'
+                  AND (valid_to IS NULL OR valid_to > now())
                 UNION ALL
                 SELECT e.from_concept_version_id, e.to_concept_version_id,
                        p.path || e.to_concept_version_id,
@@ -259,6 +304,7 @@ class CurriculumService:
                 FROM concept_edges e
                 JOIN edge_path p ON e.from_concept_version_id = p.to_concept_version_id
                 WHERE e.edge_type = 'prerequisite_of' AND e.status = 'approved'
+                  AND (e.valid_to IS NULL OR e.valid_to > now())
                   AND NOT p.is_cycle AND array_length(p.path, 1) < 30
             )
             SELECT DISTINCT unnest(path) FROM edge_path WHERE is_cycle
@@ -313,5 +359,20 @@ class CurriculumService:
         if missing_prov:
             results["valid"] = False
             results["errors"].append(f"Concept edges missing provenance: {len(missing_prov)} rows")
+
+        # 6. Check that all knowledge_claims have provenance
+        missing_claim_prov_query = text(
+            """
+            SELECT id FROM knowledge_claims
+            WHERE provenance_type IS NULL OR provenance_ref IS NULL
+               OR trim(provenance_type) = '' OR trim(provenance_ref) = ''
+            """
+        )
+        missing_claim_prov = self.connection.execute(missing_claim_prov_query).fetchall()
+        if missing_claim_prov:
+            results["valid"] = False
+            results["errors"].append(
+                f"Knowledge claims missing provenance: {len(missing_claim_prov)} rows"
+            )
 
         return results

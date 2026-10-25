@@ -72,3 +72,10 @@ REASON_CODES: frozenset[str] = frozenset(
         "high_error_rate_repair",
     }
 )
+
+# TRD §8.2: Knowledge traversal bounds to protect latency and prevent unbounded expansion
+DEFAULT_ALIAS_LIMIT: int = 20
+MAX_ALIAS_LIMIT: int = 50
+DEFAULT_PREREQ_DEPTH: int = 3
+MAX_PREREQ_DEPTH: int = 5
+MAX_PREREQ_RESULTS: int = 50
