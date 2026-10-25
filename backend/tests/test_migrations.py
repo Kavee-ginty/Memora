@@ -6,11 +6,14 @@ import pytest
 from alembic import command
 from alembic.config import Config
 from sqlalchemy import create_engine, text
+from sqlalchemy.engine import Engine, make_url
 from sqlalchemy.exc import DBAPIError
 
 from memora.db.seed import seed_database
 
 BACKEND_ROOT = Path(__file__).parents[1]
+CONNECT_TIMEOUT_SECONDS = 10
+DISPOSABLE_DATABASE_SUFFIXES = ("_test", "_ci")
 MIGRATION_SQL = (
     BACKEND_ROOT / "migrations" / "versions" / "20261023_0001_mvp_schema.up.sql"
 ).read_text(encoding="utf-8")
@@ -183,6 +186,38 @@ def alembic_config(database_url: str) -> Config:
     return config
 
 
+@pytest.fixture
+def migration_database_url(monkeypatch: pytest.MonkeyPatch) -> str:
+    """Provide a disposable database and stop a downgrade from reaching real data."""
+    database_url = os.getenv("MEMORA_TEST_DATABASE_URL")
+    if not database_url:
+        pytest.skip("MEMORA_TEST_DATABASE_URL is not configured")
+
+    try:
+        database_name = make_url(database_url).database or ""
+    except Exception:
+        pytest.fail("MEMORA_TEST_DATABASE_URL is not a valid SQLAlchemy URL", pytrace=False)
+
+    if not database_name.endswith(DISPOSABLE_DATABASE_SUFFIXES):
+        pytest.fail(
+            "MEMORA_TEST_DATABASE_URL must target a disposable database ending in "
+            f"{' or '.join(DISPOSABLE_DATABASE_SUFFIXES)}; these tests downgrade to base",
+            pytrace=False,
+        )
+
+    # Alembic's env.py reads this variable, so scope it to the test and restore it afterwards.
+    monkeypatch.setenv("MEMORA_DATABASE_URL", database_url)
+    return database_url
+
+
+def create_test_engine(database_url: str) -> Engine:
+    """Create an engine that cannot wait forever for an unreachable server."""
+    return create_engine(
+        database_url,
+        connect_args={"connect_timeout": CONNECT_TIMEOUT_SECONDS},
+    )
+
+
 def test_alembic_requires_database_url(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("MEMORA_DATABASE_URL", raising=False)
     with pytest.raises(RuntimeError, match="MEMORA_DATABASE_URL is required"):
@@ -199,18 +234,13 @@ def test_initial_migration_declares_every_contract_table() -> None:
     assert "memora_forbid_mutation" in MIGRATION_SQL
 
 
-def test_upgrade_downgrade_upgrade_against_postgres() -> None:
-    database_url = os.getenv("MEMORA_TEST_DATABASE_URL")
-    if not database_url:
-        pytest.skip("MEMORA_TEST_DATABASE_URL is not configured")
-
-    config = alembic_config(database_url)
-    os.environ["MEMORA_DATABASE_URL"] = database_url
+def test_upgrade_downgrade_upgrade_against_postgres(migration_database_url: str) -> None:
+    config = alembic_config(migration_database_url)
 
     command.upgrade(config, "head")
-    seed_database(database_url)
-    seed_database(database_url)
-    engine = create_engine(database_url)
+    seed_database(migration_database_url)
+    seed_database(migration_database_url)
+    engine = create_test_engine(migration_database_url)
     with engine.connect() as connection:
         tables = set(
             connection.execute(
@@ -234,15 +264,10 @@ def test_upgrade_downgrade_upgrade_against_postgres() -> None:
     command.upgrade(config, "head")
 
 
-def test_rls_and_append_only_guards_against_postgres() -> None:
-    database_url = os.getenv("MEMORA_TEST_DATABASE_URL")
-    if not database_url:
-        pytest.skip("MEMORA_TEST_DATABASE_URL is not configured")
+def test_rls_and_append_only_guards_against_postgres(migration_database_url: str) -> None:
+    command.upgrade(alembic_config(migration_database_url), "head")
 
-    os.environ["MEMORA_DATABASE_URL"] = database_url
-    command.upgrade(alembic_config(database_url), "head")
-
-    engine = create_engine(database_url)
+    engine = create_test_engine(migration_database_url)
     user_one = str(uuid4())
     user_two = str(uuid4())
     update_id = str(uuid4())
@@ -359,14 +384,11 @@ def test_rls_and_append_only_guards_against_postgres() -> None:
     engine.dispose()
 
 
-def test_role_grants_rls_coverage_and_status_checks_against_postgres() -> None:
-    database_url = os.getenv("MEMORA_TEST_DATABASE_URL")
-    if not database_url:
-        pytest.skip("MEMORA_TEST_DATABASE_URL is not configured")
-
-    os.environ["MEMORA_DATABASE_URL"] = database_url
-    command.upgrade(alembic_config(database_url), "head")
-    engine = create_engine(database_url)
+def test_role_grants_rls_coverage_and_status_checks_against_postgres(
+    migration_database_url: str,
+) -> None:
+    command.upgrade(alembic_config(migration_database_url), "head")
+    engine = create_test_engine(migration_database_url)
     with engine.connect() as connection:
         assert connection.scalar(
             text("SELECT has_table_privilege('memora_api', 'subjects', 'SELECT')")
@@ -442,14 +464,11 @@ def test_role_grants_rls_coverage_and_status_checks_against_postgres() -> None:
     engine.dispose()
 
 
-def test_worker_can_publish_outbox_and_use_service_idempotency() -> None:
-    database_url = os.getenv("MEMORA_TEST_DATABASE_URL")
-    if not database_url:
-        pytest.skip("MEMORA_TEST_DATABASE_URL is not configured")
-
-    os.environ["MEMORA_DATABASE_URL"] = database_url
-    command.upgrade(alembic_config(database_url), "head")
-    engine = create_engine(database_url)
+def test_worker_can_publish_outbox_and_use_service_idempotency(
+    migration_database_url: str,
+) -> None:
+    command.upgrade(alembic_config(migration_database_url), "head")
+    engine = create_test_engine(migration_database_url)
     event_id = str(uuid4())
     event_key = str(uuid4())
     service_key = str(uuid4())
@@ -538,14 +557,11 @@ def test_worker_can_publish_outbox_and_use_service_idempotency() -> None:
     engine.dispose()
 
 
-def test_grading_authority_can_move_without_rewriting_evidence() -> None:
-    database_url = os.getenv("MEMORA_TEST_DATABASE_URL")
-    if not database_url:
-        pytest.skip("MEMORA_TEST_DATABASE_URL is not configured")
-
-    os.environ["MEMORA_DATABASE_URL"] = database_url
-    command.upgrade(alembic_config(database_url), "head")
-    engine = create_engine(database_url)
+def test_grading_authority_can_move_without_rewriting_evidence(
+    migration_database_url: str,
+) -> None:
+    command.upgrade(alembic_config(migration_database_url), "head")
+    engine = create_test_engine(migration_database_url)
 
     with engine.begin() as connection:
         fixture = (

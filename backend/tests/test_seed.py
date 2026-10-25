@@ -12,7 +12,7 @@ def test_seed_uses_existing_physics_subject_identity(monkeypatch) -> None:
     transaction.__enter__.return_value = connection
     engine = MagicMock()
     engine.begin.return_value = transaction
-    monkeypatch.setattr(seed, "create_engine", lambda _: engine)
+    monkeypatch.setattr(seed, "create_engine", lambda _url, **_kwargs: engine)
 
     seed.seed_database("postgresql+psycopg://unused")
 

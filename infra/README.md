@@ -26,6 +26,8 @@ Local endpoints:
 
 The API container reaches PostgreSQL through the Compose service name `postgres`. If you run `uvicorn` on the host instead, set a loopback database URL in your shell, for example with the synthetic local password from `.env.example`.
 
+Host commands must use `127.0.0.1`, not `localhost`. Windows resolves `localhost` to both `::1` and `127.0.0.1`, but Compose publishes PostgreSQL on `127.0.0.1` only, so every connection first waits for the IPv6 attempt to fail. The Compose service name `postgres` also resolves only inside the Compose network. See `../backend/README.md` for migration-test setup and the disposable `memora_migration_test` database.
+
 ## Health and verification
 
 ```powershell

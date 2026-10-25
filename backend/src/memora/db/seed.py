@@ -1,9 +1,11 @@
 """Idempotent foundational database seeds for local and deployed environments."""
 
 from sqlalchemy import create_engine, text
+from sqlalchemy.engine import make_url
 
 from memora.core.config import get_settings
 
+DEFAULT_CONNECT_TIMEOUT_SECONDS = 10
 PHYSICS_SUBJECT_ID = "10000000-0000-0000-0000-000000000001"
 PHYSICS_CURRICULUM_ID = "20000000-0000-0000-0000-000000000001"
 
@@ -28,7 +30,11 @@ CURRICULUM_SEED_SQL = text(
 
 
 def seed_database(database_url: str | None = None) -> None:
-    engine = create_engine(database_url or get_settings().database_url)
+    resolved_url = database_url or get_settings().database_url
+    connect_args: dict[str, int] = {}
+    if make_url(resolved_url).get_backend_name() == "postgresql":
+        connect_args["connect_timeout"] = DEFAULT_CONNECT_TIMEOUT_SECONDS
+    engine = create_engine(resolved_url, connect_args=connect_args)
     with engine.begin() as connection:
         values = {"subject_id": PHYSICS_SUBJECT_ID, "curriculum_id": PHYSICS_CURRICULUM_ID}
         connection.execute(SUBJECT_SEED_SQL, values)

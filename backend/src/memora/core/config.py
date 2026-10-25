@@ -7,7 +7,7 @@ from sqlalchemy.engine import make_url
 
 Environment = Literal["local", "development", "staging", "production"]
 
-LOCAL_DATABASE_URL = "postgresql+psycopg://memora:change-for-local-only@localhost:5432/memora"
+LOCAL_DATABASE_URL = "postgresql+psycopg://memora:change-for-local-only@127.0.0.1:5432/memora"
 LOCAL_DATABASE_HOSTS = frozenset(
     {"localhost", "127.0.0.1", "::1", "postgres", "host.docker.internal"}
 )

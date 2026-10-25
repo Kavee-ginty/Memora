@@ -10,12 +10,13 @@ The T02 quality baseline is defined in `.github/workflows/ci.yml`. It runs on ev
 | `Flutter format, analyze and tests` | Dart formatting, Flutter analysis and widget tests | None |
 | `Compose configuration` | Resolves the local Compose definition without starting services | None |
 | `Migration checks` | Applies T04 migrations to a fresh pgvector database and runs T04 migration tests when that tooling is present; fails clearly if tests exist without the Alembic configuration | None |
+| `OpenAPI and Dart client` | Calls the T05 contract workflow: backend contract tests, OpenAPI and Dart client drift, generated-client analysis and client tests | None |
 | `Dependency and secret scans` | Hash-locked Python audit, git-history secret scan and repository vulnerability/secret scan | None |
 | `Flutter debug APK` | Builds the Android debug APK | `memora-debug-apk` |
 | `Backend container build` | Builds and scans the backend image, then creates a CycloneDX SBOM | `memora-backend-image` |
 | `CI gate` | Aggregates every T02 job and fails if any required job did not succeed | None |
 
-Configure branch protection to require the `CI gate` check. Do not require the individual T02 jobs separately; the gate reports their results. Once T05 is integrated, its contract check must also be a required check.
+Configure branch protection to require the `CI gate` check. Do not require the individual T02 jobs separately; the gate reports their results. The gate calls the T05 contract workflow, so contract drift blocks every pull request. Do not require the standalone path-filtered `OpenAPI and Dart client` check separately; it does not report on pull requests that do not touch contract paths.
 
 `CI gate` uses `if: always()` and requires every listed job result to be exactly `success`. A failed, cancelled or skipped required job makes the gate fail. If the entire workflow run is cancelled before the gate starts, GitHub cannot report a gate result; branch protection must treat the missing required check as not passing.
 
@@ -36,18 +37,17 @@ When both the Alembic files and the test file are absent, the job emits a notice
 
 ### T05 OpenAPI drift
 
-T05 owns `tools/contracts/generate_contracts.py`, generated OpenAPI, generated Dart clients and their contract workflow. The current T02 branch does not contain that tooling or `.github/workflows/contracts.yml`.
+T05 owns `tools/contracts/generate_contracts.py`, generated OpenAPI, generated Dart clients and their contract workflow. This branch now contains that tooling and `.github/workflows/contracts.yml` after the `develop` merge.
 
-This workflow therefore does not run or duplicate OpenAPI drift checks. Duplicating the T05 generator here would create two sources of truth and could overwrite T05 behaviour. After T05 is merged, its contract workflow remains a separate required check; branch protection must require both `CI gate` and the T05 contract check. Until that integration happens, T02 cannot claim that OpenAPI drift is enforced in this checkout.
+T02's `CI gate` calls the T05 workflow through `workflow_call` as the `OpenAPI and Dart client` job. It does not duplicate the generator, so there is still one source of truth. The called workflow runs the backend contract tests, `python tools/contracts/generate_contracts.py --check`, generated-client analysis and client contract tests.
 
-This T02 task branch was cut from `main` and does not yet contain the T05 tooling, although `develop` now includes the T05 merge. The T05 branch carries `.github/workflows/contracts.yml` and `tools/contracts/generate_contracts.py`; after this branch is updated from `develop`, the T05 workflow runs its own `python tools/contracts/generate_contracts.py --check` and generated-client tests. No T02 job writes generated contracts or the Dart client.
+The standalone `pull_request` and `push` triggers keep their path filters for T05's own runs. Those filters do not apply to a reusable-workflow call, so the gate runs the contract checks on every pull request, including pull requests that do not touch contract paths. The standalone path-filtered check is not a reliable required check; require only `CI gate` in branch protection.
 
 T05 integration checklist:
 
-1. Merge the T05 contract workflow and generated-artifact checks.
-2. Confirm it runs the generator in check mode and the backend/Dart contract tests.
-3. Add its check name to branch protection alongside `CI gate`.
-4. Do not copy the generator into this T02 workflow.
+1. Confirm the merged generator and Dart client are the reviewed artifacts.
+2. Confirm the reusable workflow passes on a hosted runner and that the gate reports it.
+3. Require `CI gate`, not the standalone path-filtered check, in branch protection.
 
 ## Dependency and secret scanning
 
@@ -123,20 +123,29 @@ Pop-Location
 docker compose --env-file .env.example -f infra/compose.yaml config --quiet
 ```
 
-The backend tests do not read a developer `.env` file or connect to a live database. The Compose check validates configuration only; it does not create containers, volumes or network services.
+Backend unit tests do not require a live database. Migration tests are skipped unless `MEMORA_TEST_DATABASE_URL` is set. The Compose check validates configuration only; it does not create containers, volumes or network services.
 
-After T04 is integrated, run its checks against the local pgvector service with the database URL from your untracked `.env`. Set it in the shell without printing it, then run the checks:
+T04 migration checks run against the local pgvector service. Create a disposable database whose name ends in `_test` or `_ci`; these tests downgrade to base, so never reuse the development database URL. The `createdb` command reports "already exists" on later runs, which is safe to ignore:
 
 ```powershell
-$env:MEMORA_DATABASE_URL = '<copy from your untracked .env>'
+docker compose --env-file .env -f infra/compose.yaml exec -T postgres createdb -U memora memora_migration_test
+
+$dbPassword = docker compose --env-file .env -f infra/compose.yaml exec -T postgres printenv POSTGRES_PASSWORD
+$encoded = [uri]::EscapeDataString($dbPassword.Trim())
+$env:MEMORA_DATABASE_URL = "postgresql+psycopg://memora:$encoded@127.0.0.1:5432/memora_migration_test"
 $env:MEMORA_TEST_DATABASE_URL = $env:MEMORA_DATABASE_URL
+
 Push-Location backend
 ..\.venv\Scripts\python.exe -m alembic -c alembic.ini upgrade head
 ..\.venv\Scripts\python.exe -m pytest tests/test_migrations.py
 Pop-Location
 ```
 
-After T05 is integrated, verify contract artifacts without writing generated files:
+Use `127.0.0.1`, not `localhost` or the Compose service name `postgres`: only `127.0.0.1` is published to the Windows host, and `postgres` resolves only inside the Compose network. Alembic bounds each connection attempt with `MEMORA_DB_CONNECT_TIMEOUT_SECONDS` (default 10 seconds). The migration fixture refuses a database name that does not end in `_test` or `_ci`, so a copy-paste mistake cannot downgrade the development database.
+
+The contract check imports the FastAPI application, so `Settings` reads the untracked `.env`. If that file contains an invalid or non-`postgresql+psycopg://` database URL, the check stops before comparing artifacts. Export a valid URL for the command, or fix `.env`, before rerunning it.
+
+Verify contract artifacts without writing generated files:
 
 ```powershell
 .\.venv\Scripts\python.exe tools\contracts\generate_contracts.py --check
@@ -168,6 +177,7 @@ docker run --rm -v "${artifactDir}:/work" aquasec/trivy:0.76.1@sha256:790fd66d16
 
 - Hosted GitHub Actions execution is confirmed only after the branch is pushed and the workflow runs.
 - T04 migration checks stay skipped only while both the Alembic files and the migration test file are absent. A partial integration that adds tests without the Alembic configuration fails closed.
-- OpenAPI drift remains T05-owned and cannot be enforced from this checkout until T05 is integrated and its check is required.
+- OpenAPI drift is T05-owned and runs inside `CI gate` through the reusable T05 workflow. Hosted execution is still unconfirmed until the branch is pushed. Do not require the standalone path-filtered `OpenAPI and Dart client` check directly.
+- Local migration tests are validated on Windows against the Compose database through `127.0.0.1`. Hosted CI runs the same tests on Linux against a service container.
 - Branch protection is configured in GitHub settings, not in this repository.
 - Builds are unsigned and unpushed; deployment and release signing are outside T02.
