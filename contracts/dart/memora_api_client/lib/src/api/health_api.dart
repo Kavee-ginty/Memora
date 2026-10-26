@@ -8,6 +8,7 @@ import 'package:built_value/json_object.dart';
 import 'package:built_value/serializer.dart';
 import 'package:dio/dio.dart';
 
+import 'package:memora_api_client/src/model/error_envelope.dart';
 import 'package:memora_api_client/src/model/health_response.dart';
 
 class HealthApi {

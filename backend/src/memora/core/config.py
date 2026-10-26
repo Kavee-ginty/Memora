@@ -1,4 +1,5 @@
 from functools import lru_cache
+from ipaddress import ip_address
 from typing import Literal, Self
 
 from pydantic import Field, model_validator
@@ -11,6 +12,18 @@ LOCAL_DATABASE_URL = "postgresql+psycopg://memora:change-for-local-only@127.0.0.
 LOCAL_DATABASE_HOSTS = frozenset(
     {"localhost", "127.0.0.1", "::1", "postgres", "host.docker.internal"}
 )
+
+
+def is_local_database_host(host: str) -> bool:
+    normalized = host.rstrip(".").lower()
+    if normalized in LOCAL_DATABASE_HOSTS:
+        return True
+    try:
+        address = ip_address(normalized)
+    except ValueError:
+        return False
+    mapped = getattr(address, "ipv4_mapped", None)
+    return address.is_loopback or address.is_unspecified or bool(mapped and mapped.is_loopback)
 
 
 class Settings(BaseSettings):
@@ -45,7 +58,7 @@ class Settings(BaseSettings):
             )
 
         if self.environment in {"staging", "production"}:
-            if not parsed.host or parsed.host in LOCAL_DATABASE_HOSTS:
+            if not parsed.host or is_local_database_host(parsed.host):
                 raise ValueError(
                     "MEMORA_DATABASE_URL must use a managed, non-local host "
                     "in staging and production"

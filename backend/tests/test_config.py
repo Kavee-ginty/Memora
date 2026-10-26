@@ -53,12 +53,27 @@ def test_non_local_environment_requires_explicit_database_url(
 
 
 @pytest.mark.parametrize("environment", ["staging", "production"])
-@pytest.mark.parametrize("host", ["localhost", "127.0.0.1", "postgres", "host.docker.internal"])
+@pytest.mark.parametrize(
+    "host",
+    [
+        "localhost",
+        "LOCALHOST",
+        "localhost.",
+        "127.0.0.1",
+        "127.0.0.2",
+        "0.0.0.0",
+        "::1",
+        "::ffff:127.0.0.1",
+        "postgres",
+        "host.docker.internal",
+    ],
+)
 def test_deployed_environments_reject_local_database_hosts(
     environment: str,
     host: str,
 ) -> None:
-    database_url = f"postgresql+psycopg://memora:secret@{host}:5432/memora"
+    url_host = f"[{host}]" if ":" in host else host
+    database_url = f"postgresql+psycopg://memora:secret@{url_host}:5432/memora"
 
     with pytest.raises(ValidationError, match="non-local host"):
         Settings(
