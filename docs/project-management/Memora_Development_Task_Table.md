@@ -38,7 +38,7 @@ If two sources appear inconsistent, stop implementation and resolve the conflict
 | T03 | Flutter design system and app shell | **In Progress** | Antigravity | 5 | T01 | `task/T03-flutter-design-system` | Mobile shared UI |
 | T04 | PostgreSQL migrations and seed framework | **Done** | Codex | 6 | T01 | `task/T04-database-schema` | Backend database |
 | T05 | OpenAPI models and generated client pipeline | **Done** | Dasun Jayasanka | 4 | T01 | `task/T05-openapi-pipeline` | API contracts |
-| T06 | Identity and session backend | **Ready** | - | 4 | T02, T04, T05 | `task/T06-identity-session` | Backend API |
+| T06 | Identity and session backend | **In Progress** | Codex | 4 | T02, T04, T05 | `task/T06-identity-session` | Backend API |
 | T07 | Auth bootstrap mobile and guarded routes | Blocked | - | 5 | T03, T05, T06 | `task/T07-mobile-auth-routes` | Mobile navigation |
 | T08 | Curriculum and knowledge graph seed | **Done** | Antigravity | 5 | T04, T05 | `task/T08-curriculum-graph` | Data and knowledge |
 | T09 | Learning ingestion backend | Blocked | - | 7 | T05, T06, T08 | `task/T09-ingestion-backend` | API and worker |
@@ -79,6 +79,19 @@ If two sources appear inconsistent, stop implementation and resolve the conflict
 | T06 | Integrate the approved OIDC contract, token validation, request context, scoped repositories, session bootstrap/revocation, device registration and consent status. Add recent-authentication handling. | Invalid tokens fail safely; private reads are server-scoped; bootstrap returns the contracted summary; negative authorization and session-expiry tests pass; tokens are absent from logs. | API 4, 8-9; Schema 6; Flow 4-6; TRD 14 |
 | T07 | Implement splash/bootstrap resolution, onboarding/auth routes, root shell, guarded routes, one-time return locations, session refresh and safe sign-out clearing. Consume generated DTOs through repositories. | Every guarded route has tested signed-out, expired-session, invalid-owner and invalid-state behavior; process restart restores only approved state; visual implementation follows matching PNGs. | Flow 3-6; UI/UX 8-9.7; API 8-10 |
 | T08 | Seed the approved Physics subject/curriculum framework, typed concepts, aliases, claims, objectives and edge allowlist. Implement bounded authorized knowledge access methods and seed validation. | Seeds are versioned and environment-safe; cycles/invalid edge types fail; curriculum mapping and provenance tests pass; no production user or secret appears in seed data. | PRD 9; TRD 8; Schema 7, 18 |
+
+### T06 Definition of Done
+
+This expands the acceptance gate in Section 4 for T06. It does not replace the board rule in Section 2.
+
+| Area | Done criteria | Evidence |
+| --- | --- | --- |
+| Supabase identity | Google sign-in access tokens are verified against the configured Supabase issuer and JWKS with exact audience, expiry, subject, authenticated role and session checks. Invalid or expired tokens return the shared safe error envelope and token values are never logged. | `security.py`; identity security tests |
+| Request scope | Authentication context derives the local user from the validated provider subject. Every private query applies the user RLS context and explicit ownership predicate; cross-user device access is rejected. | identity repository; migration authorization test |
+| Session lifecycle | Bootstrap returns the bounded account, profile, consent, curriculum, active mission, pending work and capability summary. Revocation supports current, other and all Supabase sessions, is idempotent, requires recent interactive authentication and records a safe audit event. | identity service/routes; bootstrap and recent-auth tests |
+| Consent and devices | Consent reads expose configured current policy versions and append immutable acceptance records. Device registration validates locale/timezone, encrypts push tokens with AES-256-GCM, stores only an independent HMAC fingerprint and supports owner-scoped deletion. | identity schemas/service/repository; encryption and policy tests |
+| Shared contract | The six T06 operations use permanent T05 operation IDs, shared headers and error models. OpenAPI and the generated Dart client are regenerated together and drift checks pass. | `memora-v1.json`; generated Dart client; contract checks |
+| Verification and documentation | Affected lint, unit, integration, migration, OpenAPI and generated-client checks pass. Deployment variables and the T06 design/security decisions are documented without secrets. | validation commands; environment guide; T06 study note |
 
 ### T05 Definition of Done
 
@@ -156,5 +169,5 @@ Every task pull request must contain:
 
 ## 6 Current next action
 
-T01, T02, T04, T05 and T08 are merged and Done. T06, T11 and T12 are Ready, and T03 is In Progress. T11 and T12 are the next zero-float critical-path tasks and may proceed in parallel.
+T01, T02, T04, T05 and T08 are merged and Done. T03 and T06 are In Progress, while T11 and T12 are Ready. T11 and T12 are the next zero-float critical-path tasks and may proceed in parallel.
 

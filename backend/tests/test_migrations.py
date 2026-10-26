@@ -1,6 +1,7 @@
 import os
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 from alembic import command
@@ -9,7 +10,10 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine, make_url
 from sqlalchemy.exc import DBAPIError
 
+from memora.api.errors import ApiError
+from memora.api.security import AuthContext
 from memora.db.seed import seed_database
+from memora.modules.identity.repository import IdentityRepository
 
 BACKEND_ROOT = Path(__file__).parents[1]
 CONNECT_TIMEOUT_SECONDS = 10
@@ -381,6 +385,198 @@ def test_rls_and_append_only_guards_against_postgres(migration_database_url: str
             text("UPDATE learning_objectives SET parent_objective_id=:child WHERE id=:parent"),
             {"child": child_id, "parent": parent_id},
         )
+    engine.dispose()
+
+
+def test_device_registration_is_owner_scoped(migration_database_url: str) -> None:
+    command.upgrade(alembic_config(migration_database_url), "head")
+    engine = create_test_engine(migration_database_url)
+    user_one = str(uuid4())
+    user_two = str(uuid4())
+    device_id = str(uuid4())
+    installation_id = str(uuid4())
+
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                """
+                INSERT INTO users(
+                    id, oidc_issuer, oidc_subject, status, default_timezone, locale
+                ) VALUES
+                    (:u1, 'test', 'device-one', 'active', 'Asia/Colombo', 'en'),
+                    (:u2, 'test', 'device-two', 'active', 'Asia/Colombo', 'en')
+                """
+            ),
+            {"u1": user_one, "u2": user_two},
+        )
+        connection.execute(
+            text(
+                """
+                INSERT INTO device_registrations(
+                    id, user_id, installation_id, platform, app_version, last_seen_at
+                ) VALUES (:id, :user_id, :installation_id, 'android', '1.0.0', now())
+                """
+            ),
+            {"id": device_id, "user_id": user_one, "installation_id": installation_id},
+        )
+
+    with engine.begin() as connection:
+        connection.execute(text("SET LOCAL ROLE memora_api"))
+        connection.execute(
+            text("SELECT set_config('memora.user_id', :user_id, true)"),
+            {"user_id": user_two},
+        )
+        assert connection.scalar(text("SELECT count(*) FROM device_registrations")) == 0
+        updated = connection.execute(
+            text(
+                "UPDATE device_registrations SET revoked_at = now() "
+                "WHERE id = :device_id RETURNING id"
+            ),
+            {"device_id": device_id},
+        ).scalar()
+        assert updated is None
+
+    engine.dispose()
+
+
+def test_identity_repository_bootstrap_idempotency_and_ownership(
+    migration_database_url: str,
+) -> None:
+    command.upgrade(alembic_config(migration_database_url), "head")
+    seed_database(migration_database_url)
+    engine = create_test_engine(migration_database_url)
+    repository = IdentityRepository(engine)
+    now = datetime.now(UTC)
+
+    def auth(subject: str) -> AuthContext:
+        return AuthContext(
+            issuer="https://synthetic.supabase.co/auth/v1",
+            subject=subject,
+            session_id=uuid4(),
+            role="authenticated",
+            authenticated_at=now,
+            expires_at=now + timedelta(minutes=5),
+        )
+
+    user_one = auth(str(uuid4()))
+    user_two = auth(str(uuid4()))
+    bootstrap = repository.bootstrap(
+        user_one,
+        default_timezone="Asia/Colombo",
+        default_locale="en-LK",
+    )
+    repository.bootstrap(
+        user_two,
+        default_timezone="Asia/Colombo",
+        default_locale="en-LK",
+    )
+    assert bootstrap["account"]["status"] == "active"
+    assert bootstrap["subjects"][0]["code"] == "physics"
+
+    consent_key = str(uuid4())
+    consent = repository.accept_consent(
+        user_one,
+        idempotency_key=consent_key,
+        policy_id="privacy",
+        policy_version="privacy-v1",
+        accepted_scopes=["privacy"],
+        locale="en-LK",
+    )
+    replay = repository.accept_consent(
+        user_one,
+        idempotency_key=consent_key,
+        policy_id="privacy",
+        policy_version="privacy-v1",
+        accepted_scopes=["privacy"],
+        locale="en-LK",
+    )
+    assert replay["id"] == consent["id"]
+    with pytest.raises(ApiError, match="idempotency_key_reused"):
+        repository.accept_consent(
+            user_one,
+            idempotency_key=consent_key,
+            policy_id="terms",
+            policy_version="terms-v1",
+            accepted_scopes=["terms"],
+            locale="en-LK",
+        )
+
+    revoke_key = str(uuid4())
+    assert not repository.claim_revocation(
+        user_one,
+        idempotency_key=revoke_key,
+        scope="current",
+    )
+    assert not repository.claim_revocation(
+        user_one,
+        idempotency_key=revoke_key,
+        scope="current",
+    )
+    with pytest.raises(ApiError, match="idempotency_key_reused"):
+        repository.claim_revocation(
+            user_one,
+            idempotency_key=revoke_key,
+            scope="all",
+        )
+    repository.complete_revocation(
+        user_one,
+        idempotency_key=revoke_key,
+        scope="current",
+        request_id=uuid4(),
+        correlation_id=uuid4(),
+    )
+    repository.complete_revocation(
+        user_one,
+        idempotency_key=revoke_key,
+        scope="current",
+        request_id=uuid4(),
+        correlation_id=uuid4(),
+    )
+    assert repository.claim_revocation(
+        user_one,
+        idempotency_key=revoke_key,
+        scope="current",
+    )
+    with engine.connect() as connection:
+        assert (
+            connection.scalar(
+                text(
+                    "SELECT count(*) FROM audit_events "
+                    "WHERE action='session.revoke' AND actor_id=:actor_id"
+                ),
+                {"actor_id": str(bootstrap["user_id"])},
+            )
+            == 1
+        )
+
+    device_id = repository.register_device(
+        user_one,
+        idempotency_key=str(uuid4()),
+        body_hash="synthetic-device-body",
+        installation_id=uuid4(),
+        platform="android",
+        ciphertext=b"synthetic-ciphertext",
+        fingerprint="synthetic-fingerprint",
+        locale="en-LK",
+        timezone="Asia/Colombo",
+        app_version="1.0.0",
+    )[0]["id"]
+    repository.delete_device(user_two, UUID(str(device_id)))
+    with engine.connect() as connection:
+        assert connection.scalar(
+            text("SELECT revoked_at IS NULL FROM device_registrations WHERE id=:id"),
+            {"id": device_id},
+        )
+    repository.delete_device(user_one, UUID(str(device_id)))
+    with engine.connect() as connection:
+        assert connection.scalar(
+            text(
+                "SELECT revoked_at IS NOT NULL AND push_token_ciphertext IS NULL "
+                "FROM device_registrations WHERE id=:id"
+            ),
+            {"id": device_id},
+        )
+
     engine.dispose()
 
 

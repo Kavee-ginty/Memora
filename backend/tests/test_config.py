@@ -6,11 +6,27 @@ from pydantic import ValidationError
 from memora.core.config import LOCAL_DATABASE_URL, Settings
 
 MANAGED_DATABASE_URL = "postgresql+psycopg://memora:managed-secret@db.staging.example:5432/memora"
+DEPLOYED_IDENTITY_SETTINGS = {
+    "supabase_url": "https://example.supabase.co",
+    "supabase_publishable_key": "synthetic-publishable-key",
+    "device_encryption_key": "YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=",
+    "device_fingerprint_key": "YmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmI=",
+    "consent_terms_version": "test-v1",
+    "consent_privacy_version": "test-v1",
+    "consent_material_processing_version": "test-v1",
+    "consent_model_processing_version": "test-v1",
+    "consent_notifications_version": "test-v1",
+}
 
 
 @pytest.fixture(autouse=True)
 def clear_memora_environment(monkeypatch: pytest.MonkeyPatch) -> None:
-    for name in ("MEMORA_ENVIRONMENT", "MEMORA_DATABASE_URL", "MEMORA_LOG_LEVEL"):
+    for name in (
+        "MEMORA_ENVIRONMENT",
+        "MEMORA_DATABASE_URL",
+        "MEMORA_LOG_LEVEL",
+        *(f"MEMORA_{name.upper()}" for name in DEPLOYED_IDENTITY_SETTINGS),
+    ):
         monkeypatch.delenv(name, raising=False)
 
 
@@ -37,6 +53,8 @@ def test_environment_is_read_from_process_environment(
 ) -> None:
     monkeypatch.setenv("MEMORA_ENVIRONMENT", "staging")
     monkeypatch.setenv("MEMORA_DATABASE_URL", MANAGED_DATABASE_URL)
+    for name, value in DEPLOYED_IDENTITY_SETTINGS.items():
+        monkeypatch.setenv(f"MEMORA_{name.upper()}", value)
 
     settings = Settings(_env_file=None)
 
@@ -99,10 +117,62 @@ def test_deployed_environments_accept_managed_database(environment: str) -> None
         _env_file=None,
         environment=environment,
         database_url=MANAGED_DATABASE_URL,
+        **DEPLOYED_IDENTITY_SETTINGS,
     )
 
     assert settings.database_url == MANAGED_DATABASE_URL
     assert settings.docs_enabled is False
+
+
+def test_deployed_environment_requires_identity_settings() -> None:
+    with pytest.raises(ValidationError, match="MEMORA_SUPABASE_URL"):
+        Settings(
+            _env_file=None,
+            environment="production",
+            database_url=MANAGED_DATABASE_URL,
+        )
+
+
+@pytest.mark.parametrize(
+    "field",
+    [
+        "supabase_url",
+        "supabase_publishable_key",
+        "device_encryption_key",
+        "device_fingerprint_key",
+        "consent_terms_version",
+        "consent_privacy_version",
+        "consent_material_processing_version",
+        "consent_model_processing_version",
+        "consent_notifications_version",
+    ],
+)
+def test_production_rejects_blank_identity_settings(field: str) -> None:
+    with pytest.raises(ValidationError, match="Missing required identity settings"):
+        Settings(
+            _env_file=None,
+            environment="production",
+            database_url=MANAGED_DATABASE_URL,
+            **{**DEPLOYED_IDENTITY_SETTINGS, field: "   "},
+        )
+
+
+def test_production_rejects_invalid_device_keys_and_unapproved_policies() -> None:
+    with pytest.raises(ValidationError, match="decode to exactly 32 bytes"):
+        Settings(
+            _env_file=None,
+            environment="production",
+            database_url=MANAGED_DATABASE_URL,
+            **{**DEPLOYED_IDENTITY_SETTINGS, "device_encryption_key": "c2hvcnQ="},
+        )
+
+    with pytest.raises(ValidationError, match="Unapproved consent policy versions"):
+        Settings(
+            _env_file=None,
+            environment="production",
+            database_url=MANAGED_DATABASE_URL,
+            **{**DEPLOYED_IDENTITY_SETTINGS, "consent_terms_version": "unapproved-local-v1"},
+        )
 
 
 def test_production_disables_api_documentation() -> None:
@@ -110,6 +180,7 @@ def test_production_disables_api_documentation() -> None:
         _env_file=None,
         environment="production",
         database_url=MANAGED_DATABASE_URL,
+        **DEPLOYED_IDENTITY_SETTINGS,
     )
 
     assert settings.docs_enabled is False
@@ -156,9 +227,11 @@ def test_database_url_is_not_exposed_in_repr() -> None:
         _env_file=None,
         environment="staging",
         database_url=MANAGED_DATABASE_URL,
+        **DEPLOYED_IDENTITY_SETTINGS,
     )
 
     assert "managed-secret" not in repr(settings)
+    assert "synthetic-publishable-key" not in repr(settings)
 
 
 @pytest.mark.parametrize(
@@ -182,6 +255,7 @@ def test_app_docs_follow_environment_boundary(
         _env_file=None,
         environment=environment,
         database_url=database_url,
+        **(DEPLOYED_IDENTITY_SETTINGS if environment in {"staging", "production"} else {}),
     )
     monkeypatch.setattr("memora.main.get_settings", lambda: settings)
 

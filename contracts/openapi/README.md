@@ -5,10 +5,9 @@ generates it from the typed Pydantic models and registered operations; it is the
 source of truth for the generated Dart client and the contract tests. Do not edit
 it by hand.
 
-The artifact currently contains the health operations and shared components
-(errors, pagination, headers, async operations and bearer security). `/v1`
-resource paths are added by their owning tasks without changing the shared client
-surface.
+The artifact contains health plus the T06 session, device and consent operations,
+along with shared errors, pagination, headers, async operations and bearer
+security. Later `/v1` resource paths are added by their owning tasks.
 
 ## Regenerate
 
