@@ -267,7 +267,7 @@ def test_seed_database_executes_idempotently(monkeypatch) -> None:
     transaction.__enter__.return_value = connection
     engine = MagicMock()
     engine.begin.return_value = transaction
-    monkeypatch.setattr(seed, "create_engine", lambda _: engine)
+    monkeypatch.setattr(seed, "create_engine", lambda _url, **_kwargs: engine)
 
     # First run
     seed.seed_database("postgresql+psycopg://unused")
@@ -309,7 +309,7 @@ def test_seed_natural_key_convergence_with_existing_rows(monkeypatch) -> None:
     transaction.__enter__.return_value = connection
     engine = MagicMock()
     engine.begin.return_value = transaction
-    monkeypatch.setattr(seed, "create_engine", lambda _: engine)
+    monkeypatch.setattr(seed, "create_engine", lambda _url, **_kwargs: engine)
 
     seed.seed_database("postgresql+psycopg://unused")
 
@@ -343,7 +343,7 @@ def test_curriculum_mapping_provenance_in_seed(monkeypatch) -> None:
     transaction.__enter__.return_value = connection
     engine = MagicMock()
     engine.begin.return_value = transaction
-    monkeypatch.setattr(seed, "create_engine", lambda _: engine)
+    monkeypatch.setattr(seed, "create_engine", lambda _url, **_kwargs: engine)
 
     seed.seed_database("postgresql+psycopg://unused")
 
@@ -379,7 +379,7 @@ def test_seed_edge_natural_key_convergence_skips_existing_active_edge(monkeypatc
     transaction.__enter__.return_value = connection
     engine = MagicMock()
     engine.begin.return_value = transaction
-    monkeypatch.setattr(seed, "create_engine", lambda _: engine)
+    monkeypatch.setattr(seed, "create_engine", lambda _url, **_kwargs: engine)
 
     seed.seed_database("postgresql+psycopg://unused")
 
