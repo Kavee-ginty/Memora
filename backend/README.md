@@ -90,3 +90,21 @@ When adding a `/v1` route:
 - For mutations, accept `Annotated[IdempotencyHeaders, Header()]` unless the
   operation uses `client_operation_id` or is naturally idempotent.
 - Regenerate the OpenAPI artifact and Dart client in the same change.
+
+## Identity and session configuration
+
+T06 uses Supabase Auth with Google OAuth. The API validates asymmetric Supabase
+access tokens locally from the project JWKS endpoint. It accepts only audience
+`authenticated`, role `authenticated`, a non-anonymous subject and the required
+issuer, expiry, issued-at and session claims.
+
+Copy the identity variable names from `../.env.example`. Local `.env` values stay
+untracked. Staging and production obtain the Supabase publishable key, independent
+device encryption/fingerprint keys and approved consent policy versions from the
+platform secret manager. The backend does not read or need a Supabase secret or
+service-role key.
+
+Supabase logout revokes refresh material; an already issued access token remains
+valid until its short expiry. Keep the provider access-token lifetime short. Session
+revocation requires interactive authentication within the configured ten-minute
+window and records a safe audit event without the token.

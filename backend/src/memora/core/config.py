@@ -1,8 +1,11 @@
+import base64
+import binascii
 from functools import lru_cache
 from ipaddress import ip_address
 from typing import Literal, Self
+from urllib.parse import urlparse
 
-from pydantic import Field, model_validator
+from pydantic import Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.engine import make_url
 
@@ -36,6 +39,18 @@ class Settings(BaseSettings):
     environment: Environment = "local"
     log_level: str = "INFO"
     database_url: str | None = Field(default=None, repr=False)
+    supabase_url: str | None = None
+    supabase_publishable_key: SecretStr | None = Field(default=None, repr=False)
+    recent_auth_window_seconds: int = Field(default=600, ge=60, le=3600)
+    default_timezone: str = "Asia/Colombo"
+    default_locale: str = "en-LK"
+    device_encryption_key: SecretStr | None = Field(default=None, repr=False)
+    device_fingerprint_key: SecretStr | None = Field(default=None, repr=False)
+    consent_terms_version: str | None = None
+    consent_privacy_version: str | None = None
+    consent_material_processing_version: str | None = None
+    consent_model_processing_version: str | None = None
+    consent_notifications_version: str | None = None
 
     @model_validator(mode="after")
     def validate_environment_boundaries(self) -> Self:
@@ -69,11 +84,93 @@ class Settings(BaseSettings):
                 )
 
         self.database_url = database_url
+
+        if self.supabase_url is not None:
+            self.supabase_url = self.supabase_url.strip().rstrip("/")
+            if self.supabase_url:
+                parsed_supabase = urlparse(self.supabase_url)
+                if parsed_supabase.scheme != "https" or not parsed_supabase.netloc:
+                    raise ValueError("MEMORA_SUPABASE_URL must be an HTTPS URL")
+
+        if self.environment in {"staging", "production"}:
+            required = {
+                "MEMORA_SUPABASE_URL": self.supabase_url,
+                "MEMORA_SUPABASE_PUBLISHABLE_KEY": self.supabase_publishable_key,
+                "MEMORA_DEVICE_ENCRYPTION_KEY": self.device_encryption_key,
+                "MEMORA_DEVICE_FINGERPRINT_KEY": self.device_fingerprint_key,
+                "MEMORA_CONSENT_TERMS_VERSION": self.consent_terms_version,
+                "MEMORA_CONSENT_PRIVACY_VERSION": self.consent_privacy_version,
+                "MEMORA_CONSENT_MATERIAL_PROCESSING_VERSION": (
+                    self.consent_material_processing_version
+                ),
+                "MEMORA_CONSENT_MODEL_PROCESSING_VERSION": (self.consent_model_processing_version),
+                "MEMORA_CONSENT_NOTIFICATIONS_VERSION": self.consent_notifications_version,
+            }
+            missing = [
+                name
+                for name, value in required.items()
+                if value is None
+                or (isinstance(value, SecretStr) and not value.get_secret_value().strip())
+                or (isinstance(value, str) and not value.strip())
+            ]
+            if missing:
+                raise ValueError(f"Missing required identity settings: {', '.join(missing)}")
+            for name, value in (
+                ("MEMORA_DEVICE_ENCRYPTION_KEY", self.device_encryption_key),
+                ("MEMORA_DEVICE_FINGERPRINT_KEY", self.device_fingerprint_key),
+            ):
+                try:
+                    decoded = base64.b64decode(value.get_secret_value(), validate=True)  # type: ignore[union-attr]
+                except (binascii.Error, ValueError) as exc:
+                    raise ValueError(f"{name} must be valid base64") from exc
+                if len(decoded) != 32:
+                    raise ValueError(f"{name} must decode to exactly 32 bytes")
+            unapproved = [
+                name
+                for name, version in (
+                    ("MEMORA_CONSENT_TERMS_VERSION", self.consent_terms_version),
+                    ("MEMORA_CONSENT_PRIVACY_VERSION", self.consent_privacy_version),
+                    (
+                        "MEMORA_CONSENT_MATERIAL_PROCESSING_VERSION",
+                        self.consent_material_processing_version,
+                    ),
+                    (
+                        "MEMORA_CONSENT_MODEL_PROCESSING_VERSION",
+                        self.consent_model_processing_version,
+                    ),
+                    (
+                        "MEMORA_CONSENT_NOTIFICATIONS_VERSION",
+                        self.consent_notifications_version,
+                    ),
+                )
+                if version and version.startswith("unapproved-")
+            ]
+            if unapproved:
+                raise ValueError(f"Unapproved consent policy versions: {', '.join(unapproved)}")
         return self
 
     @property
     def docs_enabled(self) -> bool:
         return self.environment in {"local", "development"}
+
+    @property
+    def oidc_issuer(self) -> str | None:
+        return f"{self.supabase_url}/auth/v1" if self.supabase_url else None
+
+    @property
+    def oidc_jwks_url(self) -> str | None:
+        return f"{self.oidc_issuer}/.well-known/jwks.json" if self.oidc_issuer else None
+
+    @property
+    def consent_policy_versions(self) -> dict[str, str]:
+        values = {
+            "terms": self.consent_terms_version,
+            "privacy": self.consent_privacy_version,
+            "material_processing": self.consent_material_processing_version,
+            "model_processing": self.consent_model_processing_version,
+            "notifications": self.consent_notifications_version,
+        }
+        return {name: version for name, version in values.items() if version is not None}
 
 
 @lru_cache

@@ -39,7 +39,16 @@ def test_artifact_is_canonical_and_environment_free() -> None:
     assert "127.0.0.1" not in text
     assert "servers" not in schema
     assert schema["openapi"] == "3.1.0"
-    assert set(schema["paths"]) == {"/health/live", "/health/ready"}
+    assert set(schema["paths"]) == {
+        "/health/live",
+        "/health/ready",
+        "/v1/consent",
+        "/v1/consent/acceptances",
+        "/v1/devices",
+        "/v1/devices/{device_id}",
+        "/v1/session/bootstrap",
+        "/v1/session/revoke",
+    }
     assert "bearerAuth" in schema["components"]["securitySchemes"]
     assert {
         "ErrorEnvelope",
