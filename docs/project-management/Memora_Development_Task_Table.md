@@ -38,10 +38,10 @@ If two sources appear inconsistent, stop implementation and resolve the conflict
 | T03 | Flutter design system and app shell | **In Progress** | Antigravity | 5 | T01 | `task/T03-flutter-design-system` | Mobile shared UI |
 | T04 | PostgreSQL migrations and seed framework | **Done** | Codex | 6 | T01 | `task/T04-database-schema` | Backend database |
 | T05 | OpenAPI models and generated client pipeline | **Done** | Dasun Jayasanka | 4 | T01 | `task/T05-openapi-pipeline` | API contracts |
-| T06 | Identity and session backend | **In Progress** | Codex | 4 | T02, T04, T05 | `task/T06-identity-session` | Backend API |
+| T06 | Identity and session backend | **Done** | Codex | 4 | T02, T04, T05 | `task/T06-identity-session` | Backend API |
 | T07 | Auth bootstrap mobile and guarded routes | Blocked | - | 5 | T03, T05, T06 | `task/T07-mobile-auth-routes` | Mobile navigation |
 | T08 | Curriculum and knowledge graph seed | **Done** | Antigravity | 5 | T04, T05 | `task/T08-curriculum-graph` | Data and knowledge |
-| T09 | Learning ingestion backend | Blocked | - | 7 | T05, T06, T08 | `task/T09-ingestion-backend` | API and worker |
+| T09 | Learning ingestion backend | **Ready** | - | 7 | T05, T06, T08 | `task/T09-ingestion-backend` | API and worker |
 | T10 | Learning ingestion mobile | Blocked | - | 6 | T07, T09 | `task/T10-ingestion-mobile` | Mobile feature |
 | T11 | Memory engine v1 | **Ready** | - | 7 | T08 | `task/T11-memory-engine` | Learning engine |
 | T12 | Question bank and grading backend | **Ready** | - | 7 | T08, T05 | `task/T12-questions-grading` | Backend learning |
@@ -49,10 +49,10 @@ If two sources appear inconsistent, stop implementation and resolve the conflict
 | T14 | Mission mobile experience | Blocked | - | 7 | T07, T13 | `task/T14-mission-mobile` | Mobile feature |
 | T15 | Progress XP streak and reef backend | Blocked | - | 5 | T11, T13 | `task/T15-progress-backend` | Backend engagement |
 | T16 | Progress mobile experience | Blocked | - | 5 | T07, T15 | `task/T16-progress-mobile` | Mobile feature |
-| T17 | Profile preferences and notifications backend | Blocked | - | 4 | T06 | `task/T17-profile-backend` | Backend account |
+| T17 | Profile preferences and notifications backend | **Ready** | - | 4 | T06 | `task/T17-profile-backend` | Backend account |
 | T18 | Profile and settings mobile | Blocked | - | 4 | T07, T17 | `task/T18-profile-mobile` | Mobile feature |
 | T19 | Push notifications and deep links | Blocked | - | 4 | T07, T17 | `task/T19-push-deep-links` | Mobile and backend |
-| T20 | Privacy export and deletion backend | Blocked | - | 5 | T06, T04 | `task/T20-privacy-backend` | Backend privacy |
+| T20 | Privacy export and deletion backend | **Ready** | - | 5 | T06, T04 | `task/T20-privacy-backend` | Backend privacy |
 | T21 | Privacy mobile experience | Blocked | - | 3 | T07, T20 | `task/T21-privacy-mobile` | Mobile feature |
 | T22 | Offline sync and idempotency hardening | Blocked | - | 6 | T09, T13, T07 | `task/T22-offline-idempotency` | Cross-platform |
 | T23 | Observability and security hardening | Blocked | - | 5 | T02, T09, T13, T17, T20 | `task/T23-security-observability` | Platform |
@@ -169,5 +169,5 @@ Every task pull request must contain:
 
 ## 6 Current next action
 
-T01, T02, T04, T05 and T08 are merged and Done. T03 and T06 are In Progress, while T11 and T12 are Ready. T11 and T12 are the next zero-float critical-path tasks and may proceed in parallel.
+T01, T02, T04, T05, T06 and T08 are merged and Done. T03 is In Progress. T09, T11, T12, T17 and T20 are Ready; T07 remains blocked only by T03. T11 and T12 remain the next zero-float critical-path tasks and may proceed in parallel.
 
