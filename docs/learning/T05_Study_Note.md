@@ -371,8 +371,11 @@ dart test
 Pop-Location
 ```
 
-Two analyzer warnings in the generated client are expected: an unused
-`built_value/json_object.dart` import and a raw `Map` in `optional.dart`.
+Three analyzer warnings in the generated client are expected: unused
+`built_value/json_object.dart` and `error_envelope.dart` imports in the health
+API, plus a raw `Map` in `optional.dart`. The error-envelope import is emitted
+for the documented readiness `503` response but is not referenced by the
+generated success-return method.
 CI no longer merely tolerates them: the contract workflow captures the analyzer
 output and fails if the warning set changes, so a new warning cannot be merged
 silently.
