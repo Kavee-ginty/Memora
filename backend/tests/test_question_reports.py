@@ -33,7 +33,7 @@ from memora.modules.questions.service import (
 QUESTION_VERSION_ID = UUID("50000000-0000-0000-0000-000000000001")
 ATTEMPT_ID = UUID("70000000-0000-0000-0000-000000000001")
 CORRELATION_ID = "80000000-0000-0000-0000-000000000001"
-IDEMPOTENCY_KEY = "synthetic-idempotency-key-0001"
+IDEMPOTENCY_KEY = "test-key-test-key"
 REQUEST_HEADERS = {
     "X-Correlation-ID": CORRELATION_ID,
     "X-Client-Version": "1.0.0",
