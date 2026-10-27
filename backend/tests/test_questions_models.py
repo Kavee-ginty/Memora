@@ -101,6 +101,173 @@ def test_changed_content_creates_a_different_hash() -> None:
     assert first.content_hash != second.content_hash
 
 
+def content_hash(value: QuestionImportBundle) -> str:
+    return validate_question_import(value).content_hash
+
+
+def rubric(**overrides: object) -> dict[str, object]:
+    payload: dict[str, object] = {
+        "rubric_type": "exact",
+        "max_score": Decimal("1"),
+        "evidence_ceiling": Decimal("1"),
+        "status": "approved",
+        "payload": {"schema_version": "1"},
+    }
+    payload.update(overrides)
+    return payload
+
+
+def test_hash_covers_subject_and_curriculum() -> None:
+    baseline = content_hash(bundle())
+
+    assert baseline != content_hash(bundle(subject_id=UUID("10000000-0000-0000-0000-000000000002")))
+    assert baseline != content_hash(
+        bundle(curriculum_version_id=UUID("20000000-0000-0000-0000-000000000002"))
+    )
+
+
+def test_hash_covers_every_rubric_grading_field() -> None:
+    baseline = content_hash(bundle())
+
+    assert baseline != content_hash(bundle(rubric=rubric(max_score=Decimal("2"))))
+    assert baseline != content_hash(bundle(rubric=rubric(evidence_ceiling=Decimal("0.5"))))
+    assert baseline != content_hash(
+        bundle(
+            validation_status="draft",
+            rubric=rubric(status="draft"),
+        )
+    )
+
+
+def test_hash_covers_rubric_payload() -> None:
+    first = content_hash(
+        bundle(
+            question_type="numeric",
+            content={"unit_affordance": False},
+            options=[],
+            rubric={
+                "rubric_type": "numeric",
+                "max_score": Decimal("1"),
+                "evidence_ceiling": Decimal("1"),
+                "status": "approved",
+                "payload": {
+                    "expected_value": "9.81",
+                    "unit_rule": "ignored",
+                    "tolerance": {"mode": "absolute", "value": "0.05"},
+                },
+            },
+        )
+    )
+    second = content_hash(
+        bundle(
+            question_type="numeric",
+            content={"unit_affordance": False},
+            options=[],
+            rubric={
+                "rubric_type": "numeric",
+                "max_score": Decimal("1"),
+                "evidence_ceiling": Decimal("1"),
+                "status": "approved",
+                "payload": {
+                    "expected_value": "9.80",
+                    "unit_rule": "ignored",
+                    "tolerance": {"mode": "absolute", "value": "0.05"},
+                },
+            },
+        )
+    )
+
+    assert first != second
+
+
+def test_hash_covers_mapping_provenance() -> None:
+    baseline = content_hash(bundle())
+    mapping = {
+        "concept_version_id": CONCEPT_ID,
+        "mapping_role": "primary",
+        "weight": Decimal("1"),
+        "provenance_type": "review",
+        "provenance_ref": "synthetic-review",
+    }
+
+    assert baseline != content_hash(
+        bundle(
+            concept_mappings=[
+                {**mapping, "provenance_ref": "different-review"},
+            ]
+        )
+    )
+    assert baseline != content_hash(
+        bundle(
+            concept_mappings=[
+                {**mapping, "provenance_type": "synthetic"},
+            ]
+        )
+    )
+
+
+def test_hash_covers_all_generated_provenance() -> None:
+    baseline = content_hash(generated_bundle())
+
+    assert baseline != content_hash(generated_bundle(model_key="other-model"))
+    assert baseline != content_hash(generated_bundle(prompt_version="other-prompt"))
+    assert baseline != content_hash(
+        generated_bundle(grounding_evidence_ids=[UUID("70000000-0000-0000-0000-000000000001")])
+    )
+    assert baseline != content_hash(generated_bundle(validator_version="other-validator"))
+    assert baseline != content_hash(generated_bundle(validation_score=Decimal("0.8")))
+    assert baseline != content_hash(generated_bundle(generation_trace_ref="other-trace"))
+
+
+def test_hash_normalizes_values_to_database_scale() -> None:
+    first = content_hash(
+        bundle(
+            rubric=rubric(
+                max_score=Decimal("1.2344"),
+                evidence_ceiling=Decimal("0.912344"),
+            ),
+            concept_mappings=[
+                {
+                    "concept_version_id": CONCEPT_ID,
+                    "mapping_role": "primary",
+                    "weight": Decimal("0.500004"),
+                    "provenance_type": "review",
+                    "provenance_ref": "synthetic-review",
+                }
+            ],
+        )
+    )
+    second = content_hash(
+        bundle(
+            rubric=rubric(
+                max_score=Decimal("1.2341"),
+                evidence_ceiling=Decimal("0.912341"),
+            ),
+            concept_mappings=[
+                {
+                    "concept_version_id": CONCEPT_ID,
+                    "mapping_role": "primary",
+                    "weight": Decimal("0.500001"),
+                    "provenance_type": "review",
+                    "provenance_ref": "synthetic-review",
+                }
+            ],
+        )
+    )
+
+    assert first == second
+
+    changed = content_hash(
+        bundle(
+            rubric=rubric(
+                max_score=Decimal("1.235"),
+                evidence_ceiling=Decimal("0.91235"),
+            )
+        )
+    )
+    assert first != changed
+
+
 def test_import_rejects_teacher_content_until_enabled() -> None:
     with pytest.raises(QuestionValidationError) as captured:
         validate_question_import(

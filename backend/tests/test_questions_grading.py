@@ -18,7 +18,7 @@ from memora.modules.questions.models import (
     QuestionSnapshot,
     ShortAnswerContent,
 )
-from memora.modules.questions.short_answer import ClaimMatch
+from memora.modules.questions.short_answer import ClaimEvidence, ClaimMatch
 from memora.modules.questions.validation import QuestionValidationError
 
 CONCEPT_ID = UUID("30000000-0000-0000-0000-000000000001")
@@ -398,19 +398,56 @@ def test_short_answer_unrecognized_response_stays_uncertain() -> None:
     assert outcome.repair_action == "confirm_or_appeal"
 
 
-def test_short_answer_uses_pluggable_evaluator_boundary() -> None:
+def test_short_answer_evaluator_can_cite_stored_rubric_phrases() -> None:
+    class DirectionOnly:
+        version = "synthetic-evaluator-v1"
+
+        def evaluate(self, claim: object, normalized_response: str) -> ClaimEvidence:
+            if claim.claim_id == "direction":  # type: ignore[attr-defined]
+                return ClaimEvidence(matched_variant="Direction of motion")
+            return ClaimEvidence()
+
+    outcome = grade_answer(
+        short_answer_snapshot(),
+        {"type": "short_answer", "text": "Direction of motion."},
+        evaluator=DirectionOnly(),
+    )
+
+    assert outcome.classification == "partial"
+    assert outcome.score == Decimal("0.50000")
+    assert outcome.evidence["evaluator_version"] == "synthetic-evaluator-v1"
+    assert outcome.evidence["matched_claim_ids"] == ["direction"]
+    assert outcome.evidence["missing_required_claim_ids"] == ["magnitude"]
+    assert outcome.evidence["evaluator_evidence_rejected"] is False
+
+
+def test_short_answer_rejects_declared_evidence_absent_from_response() -> None:
+    class CitesDeclaredPhrase:
+        version = "synthetic-evaluator-v1"
+
+        def evaluate(self, claim: object, normalized_response: str) -> ClaimEvidence:
+            if claim.claim_id == "direction":  # type: ignore[attr-defined]
+                return ClaimEvidence(matched_variant="Direction of motion")
+            return ClaimEvidence(matched_variant="velocity has magnitude")
+
+    outcome = grade_answer(
+        short_answer_snapshot(),
+        {"type": "short_answer", "text": "Anything."},
+        evaluator=CitesDeclaredPhrase(),
+    )
+
+    assert outcome.classification == "ungradable"
+    assert outcome.score == Decimal("0.00000")
+    assert outcome.evidence["evaluator_evidence_rejected"] is True
+    assert outcome.evidence["matched_claim_ids"] == []
+
+
+def test_short_answer_rejects_undeclared_evaluator_evidence() -> None:
     class AlwaysMatched:
         version = "synthetic-evaluator-v1"
 
-        def evaluate(self, claim: object, normalized_response: str) -> ClaimMatch:
-            return ClaimMatch(
-                claim_id=claim.claim_id,  # type: ignore[attr-defined]
-                required=claim.required,  # type: ignore[attr-defined]
-                weight=claim.weight,  # type: ignore[attr-defined]
-                matched=True,
-                matched_variant="synthetic",
-                contradiction_phrase=None,
-            )
+        def evaluate(self, claim: object, normalized_response: str) -> ClaimEvidence:
+            return ClaimEvidence(matched_variant="synthetic")
 
     outcome = grade_answer(
         short_answer_snapshot(),
@@ -418,8 +455,127 @@ def test_short_answer_uses_pluggable_evaluator_boundary() -> None:
         evaluator=AlwaysMatched(),
     )
 
-    assert outcome.classification == "correct"
+    assert outcome.classification == "ungradable"
+    assert outcome.score == Decimal("0.00000")
+    assert outcome.public_outcome == "uncertain"
     assert outcome.evidence["evaluator_version"] == "synthetic-evaluator-v1"
+    assert outcome.evidence["evaluator_evidence_rejected"] is True
+    assert outcome.evidence["matched_claim_ids"] == []
+
+
+def test_short_answer_ignores_evaluator_authority_fields() -> None:
+    class LegacyClaimMatch:
+        version = "synthetic-evaluator-v1"
+
+        def evaluate(self, claim: object, normalized_response: str) -> ClaimMatch:
+            return ClaimMatch(
+                claim_id="invented",  # type: ignore[arg-type]
+                required=False,
+                weight=Decimal("100"),
+                matched=True,
+                matched_variant="invented phrase",
+                contradiction_phrase=None,
+            )
+
+    outcome = grade_answer(
+        short_answer_snapshot(),
+        {"type": "short_answer", "text": "Anything."},
+        evaluator=LegacyClaimMatch(),
+    )
+
+    assert outcome.classification == "ungradable"
+    assert outcome.score == Decimal("0.00000")
+    assert outcome.evidence["evaluator_evidence_rejected"] is True
+    assert outcome.evidence["matched_claim_ids"] == []
+
+
+def test_short_answer_optional_claim_weight_cannot_raise_coverage() -> None:
+    rubric = ClaimRubricPayload.model_validate(
+        {
+            "claims": [
+                {
+                    "claim_id": "required",
+                    "required": True,
+                    "weight": "1",
+                    "variants": ["required phrase"],
+                },
+                {
+                    "claim_id": "optional",
+                    "required": False,
+                    "weight": "100",
+                    "variants": ["optional phrase"],
+                },
+            ]
+        }
+    )
+    snapshot_with_optional = snapshot(
+        "short_answer",
+        ShortAnswerContent(max_characters=400),
+        (),
+        rubric,
+        rubric_type="claim",
+    )
+
+    class CitesOptional:
+        version = "synthetic-evaluator-v1"
+
+        def evaluate(self, claim: object, normalized_response: str) -> ClaimEvidence:
+            if claim.claim_id == "optional":  # type: ignore[attr-defined]
+                return ClaimEvidence(matched_variant="optional phrase")
+            return ClaimEvidence()
+
+    outcome = grade_answer(
+        snapshot_with_optional,
+        {"type": "short_answer", "text": "optional phrase"},
+        evaluator=CitesOptional(),
+    )
+
+    assert outcome.classification == "ungradable"
+    assert outcome.score == Decimal("0.00000")
+    assert outcome.evidence["matched_claim_ids"] == ["optional"]
+    assert outcome.evidence["missing_required_claim_ids"] == ["required"]
+
+
+def test_short_answer_valid_contradiction_is_a_misconception() -> None:
+    class ContradictsDirection:
+        version = "synthetic-evaluator-v1"
+
+        def evaluate(self, claim: object, normalized_response: str) -> ClaimEvidence:
+            if claim.claim_id == "direction":  # type: ignore[attr-defined]
+                return ClaimEvidence(contradiction_phrase="Velocity has no direction")
+            return ClaimEvidence()
+
+    outcome = grade_answer(
+        short_answer_snapshot(),
+        {"type": "short_answer", "text": "Velocity has no direction."},
+        evaluator=ContradictsDirection(),
+    )
+
+    assert outcome.classification == "misconception"
+    assert outcome.score == Decimal("0.00000")
+    assert outcome.evidence["contradiction_claim_ids"] == ["direction"]
+    assert outcome.evidence["evaluator_evidence_rejected"] is False
+
+
+def test_short_answer_invalid_contradiction_is_not_a_misconception() -> None:
+    class InventsContradiction:
+        version = "synthetic-evaluator-v1"
+
+        def evaluate(self, claim: object, normalized_response: str) -> ClaimEvidence:
+            if claim.claim_id == "direction":  # type: ignore[attr-defined]
+                return ClaimEvidence(contradiction_phrase="not in the stored rubric")
+            return ClaimEvidence(matched_variant="velocity has magnitude")
+
+    outcome = grade_answer(
+        short_answer_snapshot(),
+        {"type": "short_answer", "text": "Velocity has magnitude."},
+        evaluator=InventsContradiction(),
+    )
+
+    assert outcome.classification == "partial"
+    assert outcome.score == Decimal("0.50000")
+    assert outcome.evidence["contradiction_claim_ids"] == []
+    assert outcome.evidence["evaluator_evidence_rejected"] is True
 
 
 def test_stored_rubric_type_mismatch_is_a_server_data_error() -> None:

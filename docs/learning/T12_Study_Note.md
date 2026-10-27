@@ -48,19 +48,51 @@ ValidatedQuestionImport
         ↓
 QuestionImportRepository.import_question()
   - advisory lock on subject + question_code
-  - validate referenced concept/objective versions
+  - validate curriculum, concept, objective and AI grounding references
   - replay when the canonical hash already exists
   - otherwise append version_no = max + 1
   - insert options, rubric and concept mappings under a draft version
   - publish to approved in the same transaction when reviewed
 ```
 
-The canonical SHA-256 hash covers the question type, source class, trusted label,
-prompt, explanation, content, options, rubric and mappings. Decimal values are
-normalized before hashing. Exact replay returns the existing version with
-`created: false`; changed content creates a new immutable version. The same
-question code cannot change source class, and identical content with a different
-validation status is rejected instead of silently changing history.
+The canonical SHA-256 hash covers every immutable content, grading and provenance
+field of a version:
+
+- subject and curriculum IDs, question type, source class, trusted label, prompt,
+  explanation, content and options;
+- rubric type, version, payload, maximum score, evidence ceiling and status;
+- every concept mapping, including its role, weight and provenance;
+- generated-question provenance: model key, prompt version, grounding claim IDs,
+  validator version and score, and generation trace reference.
+
+Numeric fields that live in fixed-scale PostgreSQL columns are quantized to the
+column scale before hashing (`max_score` to `0.001`; ceilings, weights and
+validation scores to `0.00001`). Stored content and rubric JSONB are parsed back
+through the typed models before hashing, so a replay after database rounding still
+matches the import rather than creating a spurious new version. A real
+within-scale change still creates a new immutable version. Exact replay returns
+the existing version with `created: false`. The same question code cannot change
+source class, and identical content with a different validation status is rejected
+instead of silently changing history.
+
+### Reference validation
+
+An import is rejected unless:
+
+- the curriculum is approved and belongs to the bundle subject;
+- every mapped concept and concept version is approved and belongs to the bundle
+  subject;
+- every supplied learning objective is approved, belongs to the bundle
+  curriculum, and is mapped to the mapped concept version;
+- an approved question has at least one mapping aligned to an approved objective
+  in its curriculum;
+- each AI grounding ID resolves to an approved knowledge claim whose approved
+  concept version belongs to the same subject and maps to an approved objective
+  in the question's curriculum.
+
+These checks close the gap between a syntactically valid UUID and a real,
+reviewed, in-scope source. Missing, disputed, retired, cross-subject and
+cross-curriculum claims are rejected.
 
 ### Source precedence and trust
 
@@ -175,12 +207,30 @@ with a zero expected value.
 
 The MVP uses `DeterministicClaimEvaluator`, an exact normalized phrase matcher.
 `ClaimEvaluator` is a protocol so a validated evaluator can be added later without
-changing grading or persistence. Any model output remains candidate evidence and
-cannot set scores or confidence without server validation.
+changing grading or persistence. An evaluator receives one stored rubric claim and
+the normalized response and may return only `ClaimEvidence`:
+
+- `matched_variant`: a phrase the evaluator claims is present;
+- `contradiction_phrase`: a contradiction phrase it claims is present.
+
+The server ignores any claim identity, required flag, weight, score or confidence
+from the evaluator. It takes the claim ID, required status and weight from the
+stored rubric, canonicalizes the cited phrase against that claim's declared
+variants or contradictions, and requires the cited phrase to occur in the
+learner's normalized response. Anything undeclared or absent from the response is
+discarded and reported through `evidence.evaluator_evidence_rejected: true`; it
+cannot add coverage or turn an answer into a misconception. If an evaluator cites
+a match and a contradiction for the same claim, the contradiction wins and no
+credit is awarded. Optional claim weight never increases coverage because the
+score is derived only from required claims.
 
 Rubric claims have required/optional status, weight, bounded variants and
 contradiction phrases. Phrases must be unique after normalization across the whole
 rubric. Matching is on alphanumeric token boundaries.
+
+Extreme numeric answers cannot crash significant-figure rounding; invalid or
+overflowing exponents fail closed to the unrounded value and are handled by the
+existing tolerance logic.
 
 Outcomes are deliberately capped:
 
@@ -210,9 +260,18 @@ A report target is valid when:
 - no attempt is supplied and the question version is approved.
 
 A grading dispute must include the related attempt. Report creation never updates
-the historical question, rubric, grading result or attempt. The report response
-states `evidence_state: limited_pending_review` for an open `grading_dispute` or
-`answer_error`, and `review_required` while the report is open.
+the historical question, rubric, grading result or attempt. An open
+`grading_dispute` or `answer_error` is reported as
+`evidence_state: limited_pending_review` only when it is linked to an attempt;
+a report without an attempt remains `recorded`. `review_required` is true for any
+open report because every report still needs review.
+
+`QuestionReportRepository.attempt_evidence_eligibility()` is the T13-facing hook.
+For the owner's attempt it returns `eligible` or `limited_pending_review` by
+checking for an open `grading_dispute` or `answer_error` linked to that attempt.
+T13 must not consume attempt evidence for memory, XP, streak, reef or other
+high-impact updates while the result is limited. A missing or foreign attempt
+returns the same `404 resource_not_found` shape as other owner-scoped reads.
 
 ### Idempotency
 
@@ -268,14 +327,19 @@ review is open.
 
 ## 7. Verification
 
-Backend tests cover model bounds and source precedence, hash stability, answer
-validation, pre-submission redaction, MCQ/numeric/short-answer grading fixtures,
-report encryption, cursor behavior, API payloads and route headers.
+Backend tests cover model bounds and source precedence, canonical-hash coverage of
+every immutable field, database-scale normalization, reference and grounding
+validation, answer validation, pre-submission redaction, MCQ/numeric/short-answer
+grading fixtures, evaluator-authority boundaries, report encryption, cursor
+behavior, API payloads and route headers.
 
-PostgreSQL integration tests cover import replay/versioning, approved-content
-immutability, publication prerequisites, pinned draft immutability, owner-only
-historical reads, report idempotency/ownership/pagination/encryption and report
-provenance with grading preservation.
+PostgreSQL integration tests cover import replay/versioning, replay after numeric
+rounding, approved-content immutability, publication prerequisites, pinned draft
+immutability, owner-only historical reads, curriculum/concept/objective alignment,
+missing/disputed/cross-subject/cross-curriculum AI grounding, report
+idempotency/ownership/pagination/encryption, report provenance with grading
+preservation, `answer_error` recorded without an attempt, and attempt-evidence
+eligibility before and after dispute resolution.
 
 Commands run from the repository root unless noted:
 
@@ -284,21 +348,27 @@ cd backend
 $env:MEMORA_TEST_DATABASE_URL = 'postgresql+psycopg://memora:memora@127.0.0.1:5432/memora_test'
 ..\.venv\Scripts\python.exe -m ruff check .
 ..\.venv\Scripts\python.exe -m ruff format --check .
-..\.venv\Scripts\python.exe -m pytest -q
+..\.venv\Scripts\python.exe -m pytest
 ..\.venv\Scripts\python.exe -m pytest tests\test_question_db_contracts.py tests\test_migrations.py -q
 
 cd ..
 .\.venv\Scripts\python.exe tools\contracts\generate_contracts.py --check
+
+cd mobile
+flutter analyze
+flutter test
 ```
 
 Results:
 
-- Ruff lint and format checks pass.
-- Full backend suite with `MEMORA_TEST_DATABASE_URL` configured: 214 passed, with
+- Ruff lint and format checks pass; 66 backend files formatted.
+- Full backend suite with `MEMORA_TEST_DATABASE_URL` configured: 248 passed, with
   one existing Starlette/httpx deprecation warning.
-- Focused PostgreSQL question contract and migration subset: 15 passed.
+- Focused PostgreSQL question contract suite: 18 passed.
 - `generate_contracts.py --check` exits `0` after export, generation, formatting
-  and comparison.
+  and comparison. It reports the same five pre-existing unused-model
+  recommendations.
+- Flutter analyzer reports no issues; Flutter tests: 58 passed.
 
 The generated artifact and Dart client are produced only by
 `tools/contracts/generate_contracts.py`; generated files are never hand-edited.
@@ -309,13 +379,16 @@ client exports the corresponding `ReportsApi` and report models.
 
 - T13 must pin the question version and persist grading results; T12 supplies the
   pure grading service and snapshot loader, not mission assembly.
+- T13 must call `attempt_evidence_eligibility()` before using an attempt for
+  memory, XP, streak, reef or other high-impact updates and honour
+  `limited_pending_review`.
 - The import repository is for offline reviewed content. No admin HTTP endpoint is
   introduced here.
 - Report review/resolution is a future workflow. T12 records reports and exposes
   safe status; it does not build a reviewer console.
 - Short-answer grading is intentionally deterministic in the MVP. A model-backed
-  evaluator can implement `ClaimEvaluator` later, but must remain bounded and
-  confidence-capped.
+  evaluator can implement `ClaimEvaluator` later, but may emit only bounded
+  `ClaimEvidence`; the server continues to derive outcomes from the stored rubric.
 - Report descriptions depend on `MEMORA_DEVICE_ENCRYPTION_KEY`. Environments that
   enable descriptions must provision it before deployment.
 - T12 must not be marked Done until the branch is reviewed, merged and the task

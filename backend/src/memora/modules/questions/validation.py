@@ -10,20 +10,24 @@ from __future__ import annotations
 import hashlib
 import json
 from collections.abc import Collection, Iterable, Mapping
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 from typing import Any
 
 from pydantic import TypeAdapter, ValidationError
 
 from memora.modules.questions.constants import (
     AI_EVIDENCE_CEILING,
+    CONCEPT_WEIGHT_QUANTUM,
+    EVIDENCE_CEILING_QUANTUM,
     MAX_CONCEPT_MAPPINGS,
     MAX_OPTIONS,
     MIN_OPTIONS,
     OPTION_QUESTION_TYPES,
+    RUBRIC_MAX_SCORE_QUANTUM,
     SOURCE_PRECEDENCE,
     TEACHER_CONTENT_ENABLED,
     TRUST_LABELS,
+    VALIDATION_SCORE_QUANTUM,
 )
 from memora.modules.questions.models import (
     AnswerPayload,
@@ -45,6 +49,13 @@ from memora.modules.questions.normalization import normalize_text
 _CONTENT_ADAPTER = TypeAdapter(QuestionContent)
 _RUBRIC_ADAPTER = TypeAdapter(RubricPayload)
 _ANSWER_ADAPTER = TypeAdapter(AnswerPayload)
+
+# These quanta mirror the numeric column scales in the MVP schema. Import and
+# stored-content hashing must agree even when PostgreSQL rounds an input value.
+_MAX_SCORE_QUANTUM = RUBRIC_MAX_SCORE_QUANTUM
+_EVIDENCE_CEILING_QUANTUM = EVIDENCE_CEILING_QUANTUM
+_MAPPING_WEIGHT_QUANTUM = CONCEPT_WEIGHT_QUANTUM
+_VALIDATION_SCORE_QUANTUM = VALIDATION_SCORE_QUANTUM
 
 _EXPECTED_CONTENT_KIND = {
     "mcq": "choice",
@@ -262,6 +273,8 @@ def validate_question_import(bundle: QuestionImportBundle) -> ValidatedQuestionI
         rubric_payload=rubric,
         trust_label=trust_label,
         content_hash=canonical_content_hash(
+            subject_id=bundle.subject_id,
+            curriculum_version_id=bundle.curriculum_version_id,
             question_type=bundle.question_type,
             source_class=bundle.source_class,
             trust_label=trust_label,
@@ -270,16 +283,28 @@ def validate_question_import(bundle: QuestionImportBundle) -> ValidatedQuestionI
             content=content.model_dump(mode="json"),
             options=(option.model_dump(mode="json") for option in bundle.options),
             rubric_type=bundle.rubric.rubric_type,
+            rubric_version=1,
             rubric_payload=rubric.model_dump(mode="json"),
+            rubric_max_score=bundle.rubric.max_score,
+            rubric_evidence_ceiling=bundle.rubric.evidence_ceiling,
+            rubric_status=bundle.rubric.status,
             mappings=(
                 {
                     "concept_version_id": mapping.concept_version_id,
                     "learning_objective_id": mapping.learning_objective_id,
                     "mapping_role": mapping.mapping_role,
                     "weight": mapping.weight,
+                    "provenance_type": mapping.provenance_type,
+                    "provenance_ref": mapping.provenance_ref,
                 }
                 for mapping in bundle.concept_mappings
             ),
+            model_key=bundle.model_key,
+            prompt_version=bundle.prompt_version,
+            grounding_evidence_ids=bundle.grounding_evidence_ids,
+            validator_version=bundle.validator_version,
+            validation_score=bundle.validation_score,
+            generation_trace_ref=bundle.generation_trace_ref,
         ),
     )
 
@@ -380,7 +405,10 @@ def _validate_mappings(bundle: QuestionImportBundle) -> None:
             "concept_mappings",
         )
     for mapping in bundle.concept_mappings:
-        if mapping.mapping_role == "primary" and mapping.weight <= 0:
+        if (
+            mapping.mapping_role == "primary"
+            and mapping.weight.quantize(CONCEPT_WEIGHT_QUANTUM, rounding=ROUND_HALF_UP) <= 0
+        ):
             raise QuestionValidationError(
                 "concept_mapping_invalid",
                 "A primary concept mapping must have a positive weight.",
@@ -420,7 +448,10 @@ def _validate_publication(
             "An approved question needs an approved rubric.",
             "rubric.status",
         )
-    if bundle.rubric.evidence_ceiling <= 0:
+    if (
+        bundle.rubric.evidence_ceiling.quantize(EVIDENCE_CEILING_QUANTUM, rounding=ROUND_HALF_UP)
+        <= 0
+    ):
         raise QuestionValidationError(
             "publish_requirements_missing",
             "An approved rubric needs a positive evidence ceiling.",
@@ -462,7 +493,10 @@ def _validate_generated_metadata(bundle: QuestionImportBundle) -> None:
             "Generated content needs grounding and validation evidence.",
             "model_key",
         )
-    if bundle.rubric.evidence_ceiling > AI_EVIDENCE_CEILING:
+    if (
+        bundle.rubric.evidence_ceiling.quantize(EVIDENCE_CEILING_QUANTUM, rounding=ROUND_HALF_UP)
+        > AI_EVIDENCE_CEILING
+    ):
         raise QuestionValidationError(
             "rubric_invalid",
             "Generated content has a lower evidence ceiling.",
@@ -470,13 +504,18 @@ def _validate_generated_metadata(bundle: QuestionImportBundle) -> None:
         )
 
 
-def _canonical_decimal_text(value: object) -> str:
+def _canonical_decimal_text(value: object, quantum: Decimal) -> str:
     decimal_value = value if isinstance(value, Decimal) else Decimal(str(value))
+    decimal_value = decimal_value.quantize(quantum, rounding=ROUND_HALF_UP)
+    if decimal_value == 0:
+        return "0"
     return format(decimal_value.normalize(), "f")
 
 
 def canonical_content_hash(
     *,
+    subject_id: object,
+    curriculum_version_id: object,
     question_type: str,
     source_class: str,
     trust_label: str,
@@ -485,9 +524,26 @@ def canonical_content_hash(
     content: Mapping[str, Any],
     options: Iterable[Mapping[str, Any]],
     rubric_type: str,
+    rubric_version: int,
     rubric_payload: Mapping[str, Any],
+    rubric_max_score: object,
+    rubric_evidence_ceiling: object,
+    rubric_status: str,
     mappings: Iterable[Mapping[str, Any]],
+    model_key: str | None,
+    prompt_version: str | None,
+    grounding_evidence_ids: Iterable[object],
+    validator_version: str | None,
+    validation_score: object | None,
+    generation_trace_ref: str | None,
 ) -> str:
+    """Hash every immutable content, grading and provenance field of a version.
+
+    Numeric fields that live in fixed-scale PostgreSQL columns are quantized to
+    that scale before hashing. This keeps an import replay stable after the
+    database has rounded the stored value, while still detecting any real change.
+    """
+
     normalized_mappings = sorted(
         (
             {
@@ -498,7 +554,9 @@ def canonical_content_hash(
                     else None
                 ),
                 "mapping_role": str(mapping["mapping_role"]),
-                "weight": _canonical_decimal_text(mapping["weight"]),
+                "weight": _canonical_decimal_text(mapping["weight"], _MAPPING_WEIGHT_QUANTUM),
+                "provenance_type": str(mapping["provenance_type"]),
+                "provenance_ref": str(mapping["provenance_ref"]),
             }
             for mapping in mappings
         ),
@@ -519,6 +577,8 @@ def canonical_content_hash(
         key=lambda item: item["display_order"],
     )
     payload = {
+        "subject_id": str(subject_id),
+        "curriculum_version_id": str(curriculum_version_id),
         "question_type": question_type,
         "source_class": source_class,
         "trust_label": trust_label,
@@ -526,9 +586,29 @@ def canonical_content_hash(
         "explanation": explanation,
         "content": dict(content),
         "options": normalized_options,
-        "rubric_type": rubric_type,
-        "rubric_payload": dict(rubric_payload),
+        "rubric": {
+            "type": rubric_type,
+            "version": int(rubric_version),
+            "payload": dict(rubric_payload),
+            "max_score": _canonical_decimal_text(rubric_max_score, _MAX_SCORE_QUANTUM),
+            "evidence_ceiling": _canonical_decimal_text(
+                rubric_evidence_ceiling, _EVIDENCE_CEILING_QUANTUM
+            ),
+            "status": rubric_status,
+        },
         "concept_mappings": normalized_mappings,
+        "generated_provenance": {
+            "model_key": model_key,
+            "prompt_version": prompt_version,
+            "grounding_evidence_ids": [str(claim_id) for claim_id in grounding_evidence_ids],
+            "validator_version": validator_version,
+            "validation_score": (
+                _canonical_decimal_text(validation_score, _VALIDATION_SCORE_QUANTUM)
+                if validation_score is not None
+                else None
+            ),
+            "generation_trace_ref": generation_trace_ref,
+        },
     }
     canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()

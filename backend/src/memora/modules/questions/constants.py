@@ -39,6 +39,11 @@ REPORT_STATUSES: Final[frozenset[str]] = frozenset(
     {"submitted", "triaged", "under_review", "resolved", "dismissed"}
 )
 OPEN_REPORT_STATUSES: Final[frozenset[str]] = frozenset({"submitted", "triaged", "under_review"})
+# These reports can suspend high-impact use of an attempt's evidence while review
+# is open. T13 must call the attempt-evidence eligibility hook before consuming it.
+LIMITING_REPORT_TYPES: Final[frozenset[str]] = frozenset({"grading_dispute", "answer_error"})
+ATTEMPT_EVIDENCE_ELIGIBLE: Final[str] = "eligible"
+ATTEMPT_EVIDENCE_LIMITED: Final[str] = "limited_pending_review"
 MAPPING_ROLES: Final[frozenset[str]] = frozenset(
     {"primary", "supporting", "prerequisite", "misconception"}
 )
@@ -70,6 +75,14 @@ MAX_NUMERIC_ABSOLUTE_VALUE: Final[Decimal] = Decimal("1e12")
 MAX_ABSOLUTE_TOLERANCE: Final[Decimal] = Decimal("1e12")
 MAX_RELATIVE_TOLERANCE: Final[Decimal] = Decimal("1")
 MAX_RUBRIC_MAX_SCORE: Final[Decimal] = Decimal("1000")
+
+# Numeric column scales from the MVP schema. Values are quantized to these
+# scales before hashing or bounds checks so PostgreSQL rounding cannot create a
+# different canonical content hash or silently publish a zero value.
+RUBRIC_MAX_SCORE_QUANTUM: Final[Decimal] = Decimal("0.001")
+EVIDENCE_CEILING_QUANTUM: Final[Decimal] = Decimal("0.00001")
+CONCEPT_WEIGHT_QUANTUM: Final[Decimal] = Decimal("0.00001")
+VALIDATION_SCORE_QUANTUM: Final[Decimal] = Decimal("0.00001")
 
 # Deterministic rubric grading cannot claim more confidence than this.
 MAX_SHORT_ANSWER_CONFIDENCE: Final[Decimal] = Decimal("0.85")

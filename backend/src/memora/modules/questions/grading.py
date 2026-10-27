@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from decimal import ROUND_HALF_UP, Decimal, localcontext
+from decimal import ROUND_HALF_UP, Decimal, InvalidOperation, localcontext
 from typing import Any, Literal
 
 from memora.modules.questions.constants import (
@@ -323,6 +323,7 @@ def _grade_short_answer(
         "matched_claim_ids": list(evaluation.matched_claim_ids),
         "missing_required_claim_ids": list(evaluation.missing_required_claim_ids),
         "contradiction_claim_ids": list(evaluation.contradiction_claim_ids),
+        "evaluator_evidence_rejected": bool(evaluation.rejected_claim_ids),
         "coverage": _decimal_text(evaluation.coverage),
     }
     ceiling = snapshot.rubric.evidence_ceiling
@@ -465,10 +466,14 @@ def _decimal_text(value: Decimal) -> str:
 def _round_significant(value: Decimal, digits: int) -> Decimal:
     if value == 0:
         return ZERO
-    with localcontext() as context:
-        context.prec = 40
-        exponent = value.adjusted() - digits + 1
-        return value.quantize(Decimal(1).scaleb(exponent), rounding=ROUND_HALF_UP)
+    try:
+        with localcontext() as context:
+            context.prec = 40
+            exponent = value.adjusted() - digits + 1
+            return value.quantize(Decimal(1).scaleb(exponent), rounding=ROUND_HALF_UP)
+    except (InvalidOperation, OverflowError):
+        # An extreme exponent must not turn a malformed answer into a server error.
+        return value
 
 
 def _within_tolerance(value: Decimal, expected: Decimal, tolerance: NumericTolerance) -> bool:

@@ -27,6 +27,7 @@ from memora.api.v1.schemas.question_reports import (
 from memora.core.config import Settings, get_settings
 from memora.db.runtime import database_engine
 from memora.modules.questions.constants import (
+    LIMITING_REPORT_TYPES,
     OPEN_REPORT_STATUSES,
     REPORT_CURSOR_VERSION,
     REPORT_ENCRYPTION_CONTEXT,
@@ -207,23 +208,28 @@ def _request_hash(body: QuestionReportCreateRequest, question_version_id: UUID) 
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
-def _evidence_state(report_type: str, status: str) -> str:
-    if status in OPEN_REPORT_STATUSES and report_type in {"grading_dispute", "answer_error"}:
+def _evidence_state(report_type: str, status: str, attempt_id: object | None) -> str:
+    if (
+        attempt_id is not None
+        and status in OPEN_REPORT_STATUSES
+        and report_type in LIMITING_REPORT_TYPES
+    ):
         return "limited_pending_review"
     return "recorded"
 
 
 def _report_summary(row: dict[str, object]) -> QuestionReportSummary:
+    attempt_id = UUID(str(row["attempt_id"])) if row["attempt_id"] is not None else None
     return QuestionReportSummary(
         id=UUID(str(row["id"])),
         question_version_id=UUID(str(row["question_version_id"])),
-        attempt_id=(UUID(str(row["attempt_id"])) if row["attempt_id"] is not None else None),
+        attempt_id=attempt_id,
         report_type=str(row["report_type"]),
         status=str(row["status"]),
         submitted_at=row["submitted_at"],
         resolved_at=row["resolved_at"],
         description_present=bool(row["description_present"]),
-        evidence_state=_evidence_state(str(row["report_type"]), str(row["status"])),
+        evidence_state=_evidence_state(str(row["report_type"]), str(row["status"]), attempt_id),
     )
 
 

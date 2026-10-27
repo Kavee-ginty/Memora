@@ -237,6 +237,26 @@ def test_grading_dispute_without_attempt_is_rejected_before_persistence() -> Non
     assert repository.created is None
 
 
+def test_answer_error_without_attempt_is_recorded_not_limiting() -> None:
+    repository = FakeReportRepository()
+    service = QuestionService(repository, service_settings())  # type: ignore[arg-type]
+
+    response, created = service.create_report(
+        authenticated_request(),
+        QUESTION_VERSION_ID,
+        QuestionReportCreateRequest(
+            report_type="answer_error",
+            description="Synthetic private description.",
+        ),
+        idempotency_key=IDEMPOTENCY_KEY,
+    )
+
+    assert created is True
+    assert response.attempt_id is None
+    assert response.evidence_state == "recorded"
+    assert response.review_required is True
+
+
 def test_create_report_without_description_does_not_require_encryption_key() -> None:
     repository = FakeReportRepository()
     service = QuestionService(

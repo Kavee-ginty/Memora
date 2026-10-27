@@ -18,6 +18,12 @@ from sqlalchemy import Connection, Engine, text
 
 from memora.api.errors import ApiError
 from memora.api.security import AuthContext
+from memora.modules.questions.constants import (
+    ATTEMPT_EVIDENCE_ELIGIBLE,
+    ATTEMPT_EVIDENCE_LIMITED,
+    LIMITING_REPORT_TYPES,
+    OPEN_REPORT_STATUSES,
+)
 from memora.modules.questions.models import (
     ConceptMappingSnapshot,
     QuestionOptionSnapshot,
@@ -164,6 +170,45 @@ class QuestionReportRepository:
     def get_report(self, auth: AuthContext, *, report_id: UUID) -> dict[str, Any] | None:
         with self._connection(auth) as (connection, user_id):
             return self._report_by_id(connection, user_id, report_id, missing_ok=True)
+
+    def attempt_evidence_eligibility(self, auth: AuthContext, *, attempt_id: UUID) -> str:
+        """Return whether an owner's attempt evidence is safe for high-impact use.
+
+        T13 must treat `limited_pending_review` as "do not use for memory, XP or
+        streak updates" until the linked report is resolved or dismissed. The
+        query is owner-scoped under the same `memora_api` role as report access.
+        """
+
+        with self._connection(auth) as (connection, user_id):
+            row = (
+                connection.execute(
+                    text(
+                        """
+                        SELECT EXISTS (
+                            SELECT 1
+                            FROM question_reports qr
+                            WHERE qr.user_id = a.user_id
+                              AND qr.attempt_id = a.id
+                              AND qr.report_type = ANY(:report_types)
+                              AND qr.status = ANY(:open_statuses)
+                        ) AS limited
+                        FROM attempts a
+                        WHERE a.id = :attempt_id AND a.user_id = :user_id
+                        """
+                    ),
+                    {
+                        "attempt_id": attempt_id,
+                        "user_id": user_id,
+                        "report_types": sorted(LIMITING_REPORT_TYPES),
+                        "open_statuses": sorted(OPEN_REPORT_STATUSES),
+                    },
+                )
+                .mappings()
+                .first()
+            )
+        if row is None:
+            raise ApiError(404, "resource_not_found", "Attempt was not found.")
+        return ATTEMPT_EVIDENCE_LIMITED if row["limited"] else ATTEMPT_EVIDENCE_ELIGIBLE
 
     def load_snapshot(self, auth: AuthContext, *, question_version_id: UUID) -> QuestionSnapshot:
         """Load a pinned version; attempt-scoped RLS keeps retired history readable."""
@@ -488,7 +533,7 @@ class QuestionImportRepository:
                 connection.execute(
                     text(
                         """
-                        SELECT id, source_class, status
+                        SELECT id, subject_id, source_class, status
                         FROM questions
                         WHERE subject_id = :subject_id AND question_code = :question_code
                         """
@@ -515,7 +560,10 @@ class QuestionImportRepository:
                         text(
                             """
                             SELECT id, version_no, question_type, prompt, explanation,
-                                   content_payload, trust_label, validation_status
+                                   content_payload, trust_label, curriculum_version_id,
+                                   validation_status, model_key, prompt_version,
+                                   grounding_evidence_ids, validator_version,
+                                   validation_score, generation_trace_ref
                             FROM question_versions
                             WHERE question_id = :question_id
                             ORDER BY version_no
@@ -743,28 +791,195 @@ class QuestionImportRepository:
 
     @staticmethod
     def _validate_references(connection: Connection, imported: ValidatedQuestionImport) -> None:
-        for mapping in imported.bundle.concept_mappings:
-            concept_status = connection.scalar(
-                text("SELECT content_status FROM concept_versions WHERE id = :concept_version_id"),
-                {"concept_version_id": mapping.concept_version_id},
+        bundle = imported.bundle
+        curriculum = (
+            connection.execute(
+                text(
+                    """
+                    SELECT cv.subject_id, cv.status, s.status AS subject_status
+                    FROM curriculum_versions cv
+                    JOIN subjects s ON s.id = cv.subject_id
+                    WHERE cv.id = :curriculum_version_id
+                    """
+                ),
+                {"curriculum_version_id": bundle.curriculum_version_id},
             )
-            if concept_status != "approved":
+            .mappings()
+            .first()
+        )
+        if (
+            curriculum is None
+            or UUID(str(curriculum["subject_id"])) != bundle.subject_id
+            or curriculum["status"] != "approved"
+            or curriculum["subject_status"] != "approved"
+        ):
+            raise QuestionValidationError(
+                "curriculum_invalid",
+                "The question curriculum must be approved and belong to its subject.",
+                "curriculum_version_id",
+            )
+
+        curriculum_aligned = False
+        for mapping in bundle.concept_mappings:
+            concept = (
+                connection.execute(
+                    text(
+                        """
+                        SELECT c.subject_id, c.status AS concept_status,
+                               cv.content_status
+                        FROM concept_versions cv
+                        JOIN concepts c ON c.id = cv.concept_id
+                        WHERE cv.id = :concept_version_id
+                        """
+                    ),
+                    {"concept_version_id": mapping.concept_version_id},
+                )
+                .mappings()
+                .first()
+            )
+            if (
+                concept is None
+                or UUID(str(concept["subject_id"])) != bundle.subject_id
+                or concept["concept_status"] != "approved"
+                or concept["content_status"] != "approved"
+            ):
                 raise QuestionValidationError(
                     "concept_mapping_invalid",
-                    "A concept mapping must reference an approved concept version.",
+                    "A concept mapping must reference an approved concept in this subject.",
                     "concept_mappings",
                 )
+
             if mapping.learning_objective_id is not None:
-                objective_status = connection.scalar(
-                    text("SELECT status FROM learning_objectives WHERE id = :objective_id"),
-                    {"objective_id": mapping.learning_objective_id},
+                objective = (
+                    connection.execute(
+                        text(
+                            """
+                            SELECT curriculum_version_id, status
+                            FROM learning_objectives
+                            WHERE id = :objective_id
+                            """
+                        ),
+                        {"objective_id": mapping.learning_objective_id},
+                    )
+                    .mappings()
+                    .first()
                 )
-                if objective_status != "approved":
+                if (
+                    objective is None
+                    or UUID(str(objective["curriculum_version_id"])) != bundle.curriculum_version_id
+                    or objective["status"] != "approved"
+                ):
                     raise QuestionValidationError(
                         "concept_mapping_invalid",
-                        "A concept mapping must reference an approved learning objective.",
+                        "A concept mapping must reference an approved objective "
+                        "in this curriculum.",
                         "concept_mappings",
                     )
+                aligned = (
+                    connection.scalar(
+                        text(
+                            """
+                            SELECT 1
+                            FROM concept_objective_maps
+                            WHERE concept_version_id = :concept_version_id
+                              AND learning_objective_id = :objective_id
+                            """
+                        ),
+                        {
+                            "concept_version_id": mapping.concept_version_id,
+                            "objective_id": mapping.learning_objective_id,
+                        },
+                    )
+                    is not None
+                )
+                if not aligned:
+                    raise QuestionValidationError(
+                        "concept_mapping_invalid",
+                        "A concept mapping must align its concept with its learning objective.",
+                        "concept_mappings",
+                    )
+            else:
+                aligned = (
+                    connection.scalar(
+                        text(
+                            """
+                            SELECT 1
+                            FROM concept_objective_maps com
+                            JOIN learning_objectives lo ON lo.id = com.learning_objective_id
+                            WHERE com.concept_version_id = :concept_version_id
+                              AND lo.curriculum_version_id = :curriculum_version_id
+                              AND lo.status = 'approved'
+                            """
+                        ),
+                        {
+                            "concept_version_id": mapping.concept_version_id,
+                            "curriculum_version_id": bundle.curriculum_version_id,
+                        },
+                    )
+                    is not None
+                )
+            curriculum_aligned = curriculum_aligned or aligned
+
+        if bundle.validation_status == "approved" and not curriculum_aligned:
+            raise QuestionValidationError(
+                "curriculum_mapping_missing",
+                "An approved question must map to an objective in its curriculum.",
+                "concept_mappings",
+            )
+
+        if bundle.source_class == "ai_generated":
+            QuestionImportRepository._validate_grounding_evidence(connection, imported)
+
+    @staticmethod
+    def _validate_grounding_evidence(
+        connection: Connection, imported: ValidatedQuestionImport
+    ) -> None:
+        bundle = imported.bundle
+        for claim_id in bundle.grounding_evidence_ids:
+            claim = (
+                connection.execute(
+                    text(
+                        """
+                        SELECT kc.status AS claim_status,
+                               cv.content_status AS concept_content_status,
+                               c.status AS concept_status,
+                               c.subject_id,
+                               EXISTS (
+                                   SELECT 1
+                                   FROM concept_objective_maps com
+                                   JOIN learning_objectives lo
+                                     ON lo.id = com.learning_objective_id
+                                   WHERE com.concept_version_id = cv.id
+                                     AND lo.curriculum_version_id = :curriculum_version_id
+                                     AND lo.status = 'approved'
+                               ) AS curriculum_aligned
+                        FROM knowledge_claims kc
+                        JOIN concept_versions cv ON cv.id = kc.concept_version_id
+                        JOIN concepts c ON c.id = cv.concept_id
+                        WHERE kc.id = :claim_id
+                        """
+                    ),
+                    {
+                        "claim_id": claim_id,
+                        "curriculum_version_id": bundle.curriculum_version_id,
+                    },
+                )
+                .mappings()
+                .first()
+            )
+            if (
+                claim is None
+                or claim["claim_status"] != "approved"
+                or claim["concept_content_status"] != "approved"
+                or claim["concept_status"] != "approved"
+                or UUID(str(claim["subject_id"])) != bundle.subject_id
+                or not claim["curriculum_aligned"]
+            ):
+                raise QuestionValidationError(
+                    "grounding_evidence_invalid",
+                    "Generated content must cite approved knowledge claims in this curriculum.",
+                    "grounding_evidence_ids",
+                )
 
     @staticmethod
     def _stored_content_hash(
@@ -793,7 +1008,8 @@ class QuestionImportRepository:
             connection.execute(
                 text(
                     """
-                    SELECT rubric_type, rubric_payload
+                    SELECT rubric_type, rubric_version, rubric_payload, max_score,
+                           evidence_ceiling, status
                     FROM question_rubrics
                     WHERE question_version_id = :question_version_id
                     """
@@ -813,7 +1029,8 @@ class QuestionImportRepository:
             connection.execute(
                 text(
                     """
-                    SELECT concept_version_id, learning_objective_id, mapping_role, weight
+                    SELECT concept_version_id, learning_objective_id, mapping_role,
+                           weight, provenance_type, provenance_ref
                     FROM question_concept_maps
                     WHERE question_version_id = :question_version_id
                     """
@@ -823,17 +1040,35 @@ class QuestionImportRepository:
             .mappings()
             .all()
         )
+        content = parse_question_content(str(version["question_type"]), version["content_payload"])
+        rubric_payload = parse_rubric_payload(
+            str(version["question_type"]),
+            str(rubric["rubric_type"]),
+            rubric["rubric_payload"],
+        )
         return canonical_content_hash(
+            subject_id=parent["subject_id"],
+            curriculum_version_id=version["curriculum_version_id"],
             question_type=str(version["question_type"]),
             source_class=str(parent["source_class"]),
             trust_label=str(version["trust_label"]),
             prompt=str(version["prompt"]),
             explanation=str(version["explanation"]),
-            content=version["content_payload"],
+            content=content.model_dump(mode="json"),
             options=options,
             rubric_type=str(rubric["rubric_type"]),
-            rubric_payload=rubric["rubric_payload"],
+            rubric_version=int(rubric["rubric_version"]),
+            rubric_payload=rubric_payload.model_dump(mode="json"),
+            rubric_max_score=rubric["max_score"],
+            rubric_evidence_ceiling=rubric["evidence_ceiling"],
+            rubric_status=str(rubric["status"]),
             mappings=mappings,
+            model_key=version["model_key"],
+            prompt_version=version["prompt_version"],
+            grounding_evidence_ids=version["grounding_evidence_ids"] or (),
+            validator_version=version["validator_version"],
+            validation_score=version["validation_score"],
+            generation_trace_ref=version["generation_trace_ref"],
         )
 
 

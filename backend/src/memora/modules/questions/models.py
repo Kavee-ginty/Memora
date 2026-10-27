@@ -8,7 +8,7 @@ contain grading rules only and are never returned by a public endpoint.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 from typing import Annotated, Literal
 from uuid import UUID
 
@@ -37,6 +37,7 @@ from memora.modules.questions.constants import (
     MAX_SIGNIFICANT_FIGURES,
     MAX_UNIT_LENGTH,
     MIN_SIGNIFICANT_FIGURES,
+    RUBRIC_MAX_SCORE_QUANTUM,
 )
 
 _STRICT = ConfigDict(extra="forbid", str_strip_whitespace=True)
@@ -277,6 +278,8 @@ class RubricImport(BaseModel):
         _finite(self.max_score, field="max_score")
         if self.max_score <= 0 or self.max_score > MAX_RUBRIC_MAX_SCORE:
             raise ValueError("max_score is out of bounds")
+        if self.max_score.quantize(RUBRIC_MAX_SCORE_QUANTUM, rounding=ROUND_HALF_UP) <= 0:
+            raise ValueError("max_score is below the stored precision")
         return self
 
 
