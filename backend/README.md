@@ -14,12 +14,47 @@ uvicorn memora.main:app --reload
 Create or update the local database and apply foundational seeds:
 
 Set `MEMORA_DATABASE_URL` in the process environment first; Alembic has no committed
-credential fallback.
+credential fallback. Host commands must use the loopback host `127.0.0.1`; the Compose
+service name `postgres` resolves only inside the Compose network.
 
 ```powershell
+$env:MEMORA_DATABASE_URL = 'postgresql+psycopg://memora:<local-password>@127.0.0.1:5432/memora'
 alembic upgrade head
 python -m memora.db.seed
 ```
+
+The placeholder password is the synthetic `POSTGRES_PASSWORD` from your untracked `.env`.
+
+Alembic waits at most 10 seconds for a database connection; set
+`MEMORA_DB_CONNECT_TIMEOUT_SECONDS` to change that bound. The seed command uses the same
+10-second default.
+
+### Migration tests
+
+The migration tests drop and recreate every table, so they only accept a disposable
+database whose name ends in `_test` or `_ci`. Never point `MEMORA_TEST_DATABASE_URL` at
+the development database or a deployed database.
+
+Create the isolated database once. The command reports "already exists" on later runs,
+which is safe to ignore:
+
+```powershell
+docker compose --env-file .env -f infra/compose.yaml exec -T postgres createdb -U memora memora_migration_test
+```
+
+Then run the tests with a loopback URL built from the local container password. These
+commands do not print the password:
+
+```powershell
+$dbPassword = docker compose --env-file .env -f infra/compose.yaml exec -T postgres printenv POSTGRES_PASSWORD
+$encoded = [uri]::EscapeDataString($dbPassword.Trim())
+$env:MEMORA_TEST_DATABASE_URL = "postgresql+psycopg://memora:$encoded@127.0.0.1:5432/memora_migration_test"
+.\.venv\Scripts\python.exe -m pytest backend\tests\test_migrations.py -vv
+```
+
+`localhost` also works, but Windows resolves it to both `::1` and `127.0.0.1`. Compose
+publishes PostgreSQL on `127.0.0.1` only, so each connection first waits for the IPv6
+attempt to fail. Use `127.0.0.1` for fast, predictable local runs.
 
 Runtime and development dependencies are locked with hashes. After an intentional change to `pyproject.toml`, regenerate both files with Python 3.12:
 
@@ -55,3 +90,21 @@ When adding a `/v1` route:
 - For mutations, accept `Annotated[IdempotencyHeaders, Header()]` unless the
   operation uses `client_operation_id` or is naturally idempotent.
 - Regenerate the OpenAPI artifact and Dart client in the same change.
+
+## Identity and session configuration
+
+T06 uses Supabase Auth with Google OAuth. The API validates asymmetric Supabase
+access tokens locally from the project JWKS endpoint. It accepts only audience
+`authenticated`, role `authenticated`, a non-anonymous subject and the required
+issuer, expiry, issued-at and session claims.
+
+Copy the identity variable names from `../.env.example`. Local `.env` values stay
+untracked. Staging and production obtain the Supabase publishable key, independent
+device encryption/fingerprint keys and approved consent policy versions from the
+platform secret manager. The backend does not read or need a Supabase secret or
+service-role key.
+
+Supabase logout revokes refresh material; an already issued access token remains
+valid until its short expiry. Keep the provider access-token lifetime short. Session
+revocation requires interactive authentication within the configured ten-minute
+window and records a safe audit event without the token.

@@ -34,29 +34,29 @@ If two sources appear inconsistent, stop implementation and resolve the conflict
 | ID | Task | Status | Owner | Days | Dependencies | Branch | Primary area |
 | --- | --- | --- | --- | ---: | --- | --- | --- |
 | T01 | Architecture baseline and repository scaffold | **Done** | Codex | 2 | None | `task/T01-repo-baseline` | Repository-wide |
-| T02 | CI and development environments | **Ready** | - | 3 | T01 | `task/T02-ci-environments` | CI and infrastructure |
-| T03 | Flutter design system and app shell | **In Progress** | Antigravity | 5 | T01 | `task/T03-flutter-design-system` | Mobile shared UI |
+| T02 | CI and development environments | **Done** | Codex | 3 | T01 | `task/T02-ci-environments` | CI and infrastructure |
+| T03 | Flutter design system and app shell | **Done** | Antigravity | 5 | T01 | `task/T03-flutter-design-system` | Mobile shared UI |
 | T04 | PostgreSQL migrations and seed framework | **Done** | Codex | 6 | T01 | `task/T04-database-schema` | Backend database |
 | T05 | OpenAPI models and generated client pipeline | **Done** | Dasun Jayasanka | 4 | T01 | `task/T05-openapi-pipeline` | API contracts |
-| T06 | Identity and session backend | Blocked | - | 4 | T02, T04, T05 | `task/T06-identity-session` | Backend API |
-| T07 | Auth bootstrap mobile and guarded routes | Blocked | - | 5 | T03, T05, T06 | `task/T07-mobile-auth-routes` | Mobile navigation |
+| T06 | Identity and session backend | **Done** | Codex | 4 | T02, T04, T05 | `task/T06-identity-session` | Backend API |
+| T07 | Auth bootstrap mobile and guarded routes | **Ready** | - | 5 | T03, T05, T06 | `task/T07-mobile-auth-routes` | Mobile navigation |
 | T08 | Curriculum and knowledge graph seed | **Done** | Antigravity | 5 | T04, T05 | `task/T08-curriculum-graph` | Data and knowledge |
-| T09 | Learning ingestion backend | Blocked | - | 7 | T05, T06, T08 | `task/T09-ingestion-backend` | API and worker |
+| T09 | Learning ingestion backend | **Ready** | - | 7 | T05, T06, T08 | `task/T09-ingestion-backend` | API and worker |
 | T10 | Learning ingestion mobile | Blocked | - | 6 | T07, T09 | `task/T10-ingestion-mobile` | Mobile feature |
 | T11 | Memory engine v1 | **Ready** | - | 7 | T08 | `task/T11-memory-engine` | Learning engine |
-| T12 | Question bank and grading backend | **Ready** | - | 7 | T08, T05 | `task/T12-questions-grading` | Backend learning |
+| T12 | Question bank and grading backend | **Done** | Neleesha Peiris | 7 | T08, T05 | `task/T12-questions-grading` | Backend learning |
 | T13 | Mission assembly and completion backend | Blocked | - | 7 | T06, T11, T12 | `task/T13-mission-backend` | Backend learning |
 | T14 | Mission mobile experience | Blocked | - | 7 | T07, T13 | `task/T14-mission-mobile` | Mobile feature |
 | T15 | Progress XP streak and reef backend | Blocked | - | 5 | T11, T13 | `task/T15-progress-backend` | Backend engagement |
 | T16 | Progress mobile experience | Blocked | - | 5 | T07, T15 | `task/T16-progress-mobile` | Mobile feature |
-| T17 | Profile preferences and notifications backend | Blocked | - | 4 | T06 | `task/T17-profile-backend` | Backend account |
+| T17 | Profile preferences and notifications backend | **Ready** | - | 4 | T06 | `task/T17-profile-backend` | Backend account |
 | T18 | Profile and settings mobile | Blocked | - | 4 | T07, T17 | `task/T18-profile-mobile` | Mobile feature |
 | T19 | Push notifications and deep links | Blocked | - | 4 | T07, T17 | `task/T19-push-deep-links` | Mobile and backend |
-| T20 | Privacy export and deletion backend | Blocked | - | 5 | T06, T04 | `task/T20-privacy-backend` | Backend privacy |
+| T20 | Privacy export and deletion backend | **Ready** | - | 5 | T06, T04 | `task/T20-privacy-backend` | Backend privacy |
 | T21 | Privacy mobile experience | Blocked | - | 3 | T07, T20 | `task/T21-privacy-mobile` | Mobile feature |
 | T22 | Offline sync and idempotency hardening | Blocked | - | 6 | T09, T13, T07 | `task/T22-offline-idempotency` | Cross-platform |
 | T23 | Observability and security hardening | Blocked | - | 5 | T02, T09, T13, T17, T20 | `task/T23-security-observability` | Platform |
-| T24 | Verified Physics pilot content | Blocked | - | 6 | T08, T12 | `task/T24-physics-content` | Academic content |
+| T24 | Verified Physics pilot content | **Ready** | - | 6 | T08, T12 | `task/T24-physics-content` | Academic content |
 | T25 | API contract and authorization tests | Blocked | - | 5 | T09, T13, T15, T17, T20 | `task/T25-api-auth-tests` | QA and backend |
 | T26 | Cross-feature end-to-end integration | Blocked | - | 6 | T10, T14, T16, T18, T19, T21, T22, T25 | `task/T26-e2e-integration` | Integration |
 | T27 | Accessibility and visual QA | Blocked | - | 5 | T10, T14, T16, T18, T19, T21 | `task/T27-accessibility-visual-qa` | QA and mobile |
@@ -79,6 +79,19 @@ If two sources appear inconsistent, stop implementation and resolve the conflict
 | T06 | Integrate the approved OIDC contract, token validation, request context, scoped repositories, session bootstrap/revocation, device registration and consent status. Add recent-authentication handling. | Invalid tokens fail safely; private reads are server-scoped; bootstrap returns the contracted summary; negative authorization and session-expiry tests pass; tokens are absent from logs. | API 4, 8-9; Schema 6; Flow 4-6; TRD 14 |
 | T07 | Implement splash/bootstrap resolution, onboarding/auth routes, root shell, guarded routes, one-time return locations, session refresh and safe sign-out clearing. Consume generated DTOs through repositories. | Every guarded route has tested signed-out, expired-session, invalid-owner and invalid-state behavior; process restart restores only approved state; visual implementation follows matching PNGs. | Flow 3-6; UI/UX 8-9.7; API 8-10 |
 | T08 | Seed the approved Physics subject/curriculum framework, typed concepts, aliases, claims, objectives and edge allowlist. Implement bounded authorized knowledge access methods and seed validation. | Seeds are versioned and environment-safe; cycles/invalid edge types fail; curriculum mapping and provenance tests pass; no production user or secret appears in seed data. | PRD 9; TRD 8; Schema 7, 18 |
+
+### T06 Definition of Done
+
+This expands the acceptance gate in Section 4 for T06. It does not replace the board rule in Section 2.
+
+| Area | Done criteria | Evidence |
+| --- | --- | --- |
+| Supabase identity | Google sign-in access tokens are verified against the configured Supabase issuer and JWKS with exact audience, expiry, subject, authenticated role and session checks. Invalid or expired tokens return the shared safe error envelope and token values are never logged. | `security.py`; identity security tests |
+| Request scope | Authentication context derives the local user from the validated provider subject. Every private query applies the user RLS context and explicit ownership predicate; cross-user device access is rejected. | identity repository; migration authorization test |
+| Session lifecycle | Bootstrap returns the bounded account, profile, consent, curriculum, active mission, pending work and capability summary. Revocation supports current, other and all Supabase sessions, is idempotent, requires recent interactive authentication and records a safe audit event. | identity service/routes; bootstrap and recent-auth tests |
+| Consent and devices | Consent reads expose configured current policy versions and append immutable acceptance records. Device registration validates locale/timezone, encrypts push tokens with AES-256-GCM, stores only an independent HMAC fingerprint and supports owner-scoped deletion. | identity schemas/service/repository; encryption and policy tests |
+| Shared contract | The six T06 operations use permanent T05 operation IDs, shared headers and error models. OpenAPI and the generated Dart client are regenerated together and drift checks pass. | `memora-v1.json`; generated Dart client; contract checks |
+| Verification and documentation | Affected lint, unit, integration, migration, OpenAPI and generated-client checks pass. Deployment variables and the T06 design/security decisions are documented without secrets. | validation commands; environment guide; T06 study note |
 
 ### T05 Definition of Done
 
@@ -141,7 +154,70 @@ This expands the acceptance gate in Section 4 for T05. It does not replace the b
 | T30 | Fix accepted UAT blockers, add regression tests, regenerate contracts/builds, repeat affected release gates and produce the immutable release candidate. | Every blocker has a test; schema/API artifacts match code; release notes and known limitations are accurate; candidate is signed and reproducible. | Findings from T29 plus all six specs |
 | T31 | Run production migration/deployment, verify health and synthetic smoke tests, enable the pilot cohort, monitor alerts and document launch outcome. | Production health, auth, ingestion, mission, progress and privacy checks pass; monitoring and incident ownership are active; rollback decision window closes successfully. | TRD 18; PRD release criteria; release runbook |
 
-## 5 Pull request checklist
+## 5 Remaining-task definitions of done
+
+These gates apply to every task not already Done: `T07` and `T09`-`T31`. The acceptance
+gate in Section 4 defines the delivery boundary; this section defines the minimum evidence
+required to prove that boundary. A task may be marked **Done** only when all of the following
+are true:
+
+1. Every criterion in the task row below is satisfied by the merged implementation, not by a
+   mock, local-only result or planned follow-up.
+2. The implementation pull request records the successful required CI run and the exact automated
+   and manual evidence named below. The later status update links that merged pull request and its
+   merge commit. A green CI summary without the required task evidence is not sufficient.
+3. All changed shared surfaces are regenerated and drift-clean in the same pull request. This
+   includes migrations, OpenAPI, generated clients, design tokens, routes, authentication context,
+   error models and CI configuration.
+4. Security, privacy, ownership, idempotency and accessibility checks are mandatory whenever the
+   task touches those concerns. A skipped mandatory check keeps the task in **Review** or
+   **Blocked** unless the governing specification is changed and the deviation is approved.
+5. Documentation, runbooks, fixtures and synthetic test data required to operate or reproduce the
+   feature are merged with the implementation. No secret, production data or prohibited learning
+   content appears in code, logs, fixtures, screenshots or build artifacts.
+6. The status update names the merged pull request and confirms that every dependency and successor
+   status was recalculated. A task is never marked Done solely because its branch was merged.
+
+### 5.1 Mobile authentication and learning
+
+| ID | Done criteria | Required evidence |
+| --- | --- | --- |
+| T07 | Bootstrap, onboarding/auth, root-shell and guarded routes use generated DTOs through repositories; signed-out, expired-session, wrong-owner and invalid-state navigation falls back safely; sign-out clears only approved state and process restart restores only approved state. | Router and repository tests for every guard and restoration case; 320 px, 200% text, screen-reader and reduced-motion results for matching screens; screenshots against approved PNG composition; Flutter format, analyze, test and build jobs. |
+| T09 | Text and file ingestion cover create, upload grant, finalize, status, retry, extraction, verification, commit and deletion reconciliation; duplicate finalize/commit requests converge; unsupported or malicious input fails safely; uncertain candidates cannot commit without verification; raw-file deletion records proof. | Owner-negative, validation, idempotency, concurrency, worker retry/provider-failure and deletion-proof integration tests; migration and seed checks; OpenAPI and generated-client drift checks; logs proven free of source text, signed URLs and authorization data. |
+| T10 | Add-material, progress/status, concept-verification and learning-path-preview screens cover every contracted update state; safe drafts and edits survive interruption; text and file flows can leave and resume; unavailable actions explain connectivity. | Mobile integration tests for text and file paths plus retry/restoration; loading, empty, error, offline and deletion-pending state tests; 320 px, 200% text, semantics and reduced-motion evidence; approved screenshots. |
+| T11 | Versioned memory inputs reproduce the same decision; updates are isolated per learner concept; expert bounds control first review, overdue and comeback cases; model output cannot directly set due dates; explanations identify the governing evidence and policy. | Deterministic unit/property tests, versioned calibration fixtures and scheduling simulations covering new, overdue, weak-prerequisite and comeback cases; persistence tests proving append-only evidence and concept isolation; recorded policy and fixture versions. |
+| T12 | Verified questions, versions, options, rubrics and concept mappings remain immutable after use; answer keys stay hidden before submission; MCQ and numeric grading are deterministic; enabled short-answer grading is bounded and low-confidence evidence has limited influence; report/dispute hooks preserve provenance. | Import and schema validation tests; authorization and pre-submission response tests; grading fixtures for correct, partial, uncertain, unit and tolerance cases; immutable-version and report/dispute tests; OpenAPI/client drift checks for changed contracts. |
+
+### 5.2 Missions progress account and privacy
+
+| ID | Done criteria | Required evidence |
+| --- | --- | --- |
+| T13 | Mission ranking follows workload, due-state, prerequisite and trust rules; start, answer and completion retries produce one logical result; item/question versions remain pinned; pause, skip, repair and completion transitions recover safely; grading and memory evidence publish through the outbox. | Deterministic ranking fixtures; owner-negative, idempotency, concurrency and full lifecycle integration tests; timeout/outbox replay and dependency-failure tests; migration/OpenAPI/client drift checks. |
+| T14 | Mission preview, active formats, pending answer, recalled/weak/uncertain feedback, explanation, one bounded repair, reporting and results match authoritative server state; selecting never submits; pending offline work never reveals grading; resume uses the authoritative item; root navigation stays hidden during a mission. | Widget and mobile integration tests for every state and interruption path; duplicate-tap and resume/reconciliation tests; accessible focus/announcement, 320 px, 200% text and reduced-motion evidence; approved screenshots. |
+| T15 | Each source event awards XP once; streak/grace rules never remove permanent rewards; the five-state reef projection is deterministic and rebuildable; new reefs are neutral; Home, progress and statistics read models are authoritative. | Ledger uniqueness/idempotency, missed-day/grace, permanent-grant and projection-rebuild tests; deterministic fixtures for all five reef states; owner-negative and migration tests; OpenAPI/client drift checks. |
+| T16 | Home and progress render all five reef states without color-only meaning; cached projections are labelled stale; queued answers do not alter the reef locally; continuous seabed, reef detail, statistics summaries and reward transitions use authoritative responses. | Widget/integration tests for fresh, cached, offline, empty, loading and error states; chart text summaries and semantics checks; 320 px, 200% text and reduced-motion evidence; approved screenshots for all reef states. |
+| T17 | Profile, preference, notification, quiet-hour, category and accessibility APIs enforce ownership and optimistic concurrency; notification denial never blocks use; device tokens remain encrypted and redacted through registration, refresh and revocation. | Owner-negative, version-conflict, validation, idempotency and device-lifecycle tests; ciphertext/fingerprint and prohibited-log assertions; migration/OpenAPI/generated-client drift checks. |
+| T18 | Profile, edit, notification, accessibility and mission settings retain confirmed values across restart; local-safe accessibility changes apply immediately; failed persistence restores confirmed server values; Profile does not duplicate Progress. | Widget/repository/integration tests for save, retry, conflict, restart, offline and rollback; 320 px, 200% text, screen-reader, keyboard/switch and reduced-motion evidence; approved screenshots. |
+| T19 | Push payloads contain no sensitive learning detail; foreground handling does not interrupt active answers; mission, verification, learning-path, reward and privacy links validate authentication, ownership, expiry and workflow state; each intent is consumed once. | Provider-adapter contract tests; redaction tests; signed-out, expired, wrong-owner, invalid-state, foreground and consume-once deep-link tests; Android/iOS integration evidence and safe fallback screenshots. |
+| T20 | Export and deletion require recent authentication, run as durable idempotent jobs and report pending versus terminal state truthfully; completion requires proof or a documented exception for every scope; provider deletion, cancellation, audit and reconciliation rules are enforced. | Recent-auth and owner-negative tests; duplicate/concurrent request tests; job retry/provider-outage, cancellation, restore and reconciliation tests; deletion-proof and safe-audit assertions; migration/OpenAPI/client drift checks. |
+| T21 | Retained-data, export and deletion screens distinguish pending, failed and complete states; destructive confirmation is explicit; offline operations are disabled with a reason; account/session data is cleared only after confirmed deletion state; reauthentication recovers safely. | Widget/integration tests for request, polling, download, reauthentication, cancellation, failure, offline and confirmed clearing; 320 px, 200% text, semantics and focus evidence; approved screenshots. |
+
+### 5.3 Hardening integration and release
+
+| ID | Done criteria | Required evidence |
+| --- | --- | --- |
+| T22 | Versioned local storage covers drafts, cached mission and pending answers; process kill and reconnection preserve only approved state; reconciliation respects dependency order and stable operation identity; unknown outcomes converge without duplicates; data never crosses accounts; stale projections remain labelled. | Process-recreation, schema-migration, ordered-replay, timeout/unknown-outcome, duplicate-delivery and account-switch isolation tests on production-shaped APIs; offline capability matrix results. |
+| T23 | Structured telemetry redacts prohibited content; correlation, metrics, traces and alerts cover API, jobs, database and security; rate limits, upload defenses, circuit breakers, secrets and audit controls preserve safe degraded operation. | Automated redaction and log-capture tests; exercised threat-model controls; alert/dashboard evidence; rate-limit, malicious-upload and provider/database outage tests; reviewed runbooks with no unresolved critical/high security finding. |
+| T24 | The pilot Physics set has qualified review, curriculum/objective/concept mapping, formulas, units, prerequisites, rubrics, explanations and provenance; ambiguity, duplicates and coverage gaps are explicit; no private student content enters shared seeds. | Versioned content bundle; reviewer identity/approval record; schema, mapping, provenance, ambiguity, duplicate and coverage-report tests; deterministic seed validation using synthetic/public academic data only. |
+| T25 | Every completed private API resource rejects cross-user access; examples deserialize; pagination, errors, idempotency-body mismatch, retry, concurrency and generated-client compatibility match OpenAPI and deployed behavior. | Provider/consumer contract suite covering every completed resource class; RLS and owner-negative matrix; concurrency/idempotency results; canonical OpenAPI/client drift pass in CI. |
+| T26 | The complete new-student-to-updated-reef scenario uses production-shaped APIs with no mock on the path and covers interruption, retry, verification, repair, report and restart; analytics, outbox events and durable rows reconcile. | Repeatable CI/staging end-to-end run with synthetic data; operation and durable-row reconciliation report; failure diagnostics proving retries do not duplicate evidence or rewards. |
+| T27 | Every implemented screen passes the mandatory state matrix at 320 px, 200% text, screen reader, keyboard/switch, reduced motion and long copy; essential meaning has text/non-color representation; visual deviations are approved; no critical accessibility defect remains. | Device/test matrix, automated semantics results, manual assistive-technology record, comparison screenshots and approved deviation log mapped to `UIX-` requirements and WCAG 2.2 AA targets. |
+| T28 | Production-like load, concurrency, authorization, malicious-upload, prompt-injection, queue retry, provider outage, backup/restore and deletion reconciliation are exercised; SLOs pass or have approved limits; concurrency cannot duplicate evidence/rewards; no unresolved critical/high security finding remains. | Versioned load and failure-test plans/results; threat-review closure; backup/restore and retention reconciliation record; measured bottleneck changes with before/after evidence; approved exceptions for any missed SLO. |
+| T29 | Signed staging builds, migrations and reviewed content are deployed; smoke, regression and UAT pass; monitoring works; rollback/roll-forward and support procedures are rehearsed; product, academic, security, privacy and accessibility approvals are recorded. | Immutable staging build identifiers; migration/seed logs; test and UAT report; monitoring screenshots/events; rehearsal record and named approval evidence; zero unresolved critical/high defect. |
+| T30 | Every accepted UAT blocker is fixed with a regression test; affected gates are rerun; migrations, OpenAPI, clients and builds match source; release notes and known limitations are accurate; the release candidate is signed and reproducible. | Blocker-to-test traceability; successful affected CI/release gates; drift reports; signed artifact hashes and reproducible-build record; approved release notes/limitations. |
+| T31 | Production migration and deployment complete from the approved candidate; health, authentication, ingestion, mission, progress and privacy synthetic checks pass; monitoring and incident ownership are active; the rollback decision window closes with a recorded launch outcome. | Production change record and artifact hashes; migration/deployment logs; synthetic smoke results; live alert/owner verification; rollback-window decision and signed launch report. |
+
+## 6 Pull request checklist
 
 Every task pull request must contain:
 
@@ -149,12 +225,14 @@ Every task pull request must contain:
 - Short description of the completed acceptance boundary.
 - Relevant PRD, TRD, UIX, schema, flow and API sections.
 - Tests added and exact commands run.
+- Each applicable Section 5 DoD criterion mapped to evidence; `not applicable` requires a documented
+  specification reason or approved deviation.
 - Migration, OpenAPI, generated client or seed changes where applicable.
 - Screenshots or accessibility evidence for UI tasks.
 - Security/privacy impact and confirmation that prohibited data is not logged.
 - Any approved deviation, reviewer and follow-up task ID.
 
-## 6 Current next action
+## 7 Current next action
 
-T01, T04, T05 and T08 are merged and Done. T02, T11 and T12 are Ready, and T03 is In Progress. T11 and T12 are the next zero-float critical-path tasks and may proceed in parallel.
+T01, T02, T03, T04, T05, T06, T08 and T12 are merged and Done. T07, T09, T11, T17, T20 and T24 are Ready. T11 remains the next zero-float critical-path task; T13 remains Blocked until T11 is Done.
 

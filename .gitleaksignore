@@ -1,0 +1,3 @@
+# Synthetic idempotency-key fixture in the T12 question-report tests.
+# This is not a credential; the fingerprint only suppresses that exact finding.
+57a812425cb22d17894dd38fd5d3d730eeb4e276:backend/tests/test_question_reports.py:generic-api-key:35

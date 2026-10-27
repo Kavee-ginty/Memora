@@ -66,11 +66,31 @@ Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
 [*HealthApi*](doc/HealthApi.md) | [**healthLive**](doc/HealthApi.md#healthlive) | **GET** /health/live | Live
 [*HealthApi*](doc/HealthApi.md) | [**healthReady**](doc/HealthApi.md#healthready) | **GET** /health/ready | Ready
+[*ProfileApi*](doc/ProfileApi.md) | [**acceptConsent**](doc/ProfileApi.md#acceptconsent) | **POST** /v1/consent/acceptances | Accept a current consent policy
+[*ProfileApi*](doc/ProfileApi.md) | [**getConsent**](doc/ProfileApi.md#getconsent) | **GET** /v1/consent | Get current consent status
+[*ReportsApi*](doc/ReportsApi.md) | [**createQuestionReport**](doc/ReportsApi.md#createquestionreport) | **POST** /v1/questions/{question_version_id}/reports | Report a question, answer, explanation or grading issue
+[*ReportsApi*](doc/ReportsApi.md) | [**getQuestionReport**](doc/ReportsApi.md#getquestionreport) | **GET** /v1/question-reports/{report_id} | Read a question report and its safe resolution state
+[*ReportsApi*](doc/ReportsApi.md) | [**listQuestionReports**](doc/ReportsApi.md#listquestionreports) | **GET** /v1/question-reports | List the authenticated student&#39;s question reports
+[*SessionApi*](doc/SessionApi.md) | [**bootstrapSession**](doc/SessionApi.md#bootstrapsession) | **GET** /v1/session/bootstrap | Bootstrap the authenticated session
+[*SessionApi*](doc/SessionApi.md) | [**deleteDevice**](doc/SessionApi.md#deletedevice) | **DELETE** /v1/devices/{device_id} | Remove a notification device
+[*SessionApi*](doc/SessionApi.md) | [**registerDevice**](doc/SessionApi.md#registerdevice) | **POST** /v1/devices | Register or refresh a notification device
+[*SessionApi*](doc/SessionApi.md) | [**revokeSession**](doc/SessionApi.md#revokesession) | **POST** /v1/session/revoke | Revoke authenticated sessions
 
 
 ## Documentation For Models
 
+ - [AccountStatus](doc/AccountStatus.md)
+ - [ActiveMissionSummary](doc/ActiveMissionSummary.md)
  - [AsyncOperation](doc/AsyncOperation.md)
+ - [CapabilityFlags](doc/CapabilityFlags.md)
+ - [ConsentAcceptanceRequest](doc/ConsentAcceptanceRequest.md)
+ - [ConsentAcceptanceResponse](doc/ConsentAcceptanceResponse.md)
+ - [ConsentDecision](doc/ConsentDecision.md)
+ - [ConsentResponse](doc/ConsentResponse.md)
+ - [ConsentStatus](doc/ConsentStatus.md)
+ - [ConsentType](doc/ConsentType.md)
+ - [DeviceRegistrationRequest](doc/DeviceRegistrationRequest.md)
+ - [DeviceRegistrationResponse](doc/DeviceRegistrationResponse.md)
  - [ErrorDetail](doc/ErrorDetail.md)
  - [ErrorEnvelope](doc/ErrorEnvelope.md)
  - [FieldError](doc/FieldError.md)
@@ -79,7 +99,17 @@ Class | Method | HTTP request | Description
  - [IdempotencyHeaders](doc/IdempotencyHeaders.md)
  - [PageMeta](doc/PageMeta.md)
  - [PageParams](doc/PageParams.md)
+ - [PageQuestionReportSummary](doc/PageQuestionReportSummary.md)
+ - [PendingResourceSummary](doc/PendingResourceSummary.md)
+ - [ProfileSummary](doc/ProfileSummary.md)
+ - [QuestionReportCreateRequest](doc/QuestionReportCreateRequest.md)
+ - [QuestionReportResponse](doc/QuestionReportResponse.md)
+ - [QuestionReportSummary](doc/QuestionReportSummary.md)
  - [RequestHeaders](doc/RequestHeaders.md)
+ - [SessionBootstrapResponse](doc/SessionBootstrapResponse.md)
+ - [SessionRevocationScope](doc/SessionRevocationScope.md)
+ - [SessionRevokeRequest](doc/SessionRevokeRequest.md)
+ - [SubjectSummary](doc/SubjectSummary.md)
 
 
 ## Documentation For Authorization

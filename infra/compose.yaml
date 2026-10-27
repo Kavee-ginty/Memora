@@ -6,23 +6,63 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-memora}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
     ports:
-      - "127.0.0.1:5432:5432"
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 10
+      start_period: 10s
     volumes:
       - memora_postgres:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
 
   api:
     build:
       context: ../backend
+    init: true
     environment:
       MEMORA_ENVIRONMENT: local
+      MEMORA_LOG_LEVEL: ${MEMORA_LOG_LEVEL:-INFO}
       MEMORA_DATABASE_URL: ${MEMORA_DATABASE_URL:?Set MEMORA_DATABASE_URL in .env}
+      MEMORA_SUPABASE_URL: ${MEMORA_SUPABASE_URL:?Set MEMORA_SUPABASE_URL in .env}
+      MEMORA_SUPABASE_PUBLISHABLE_KEY: ${MEMORA_SUPABASE_PUBLISHABLE_KEY:?Set MEMORA_SUPABASE_PUBLISHABLE_KEY in .env}
+      MEMORA_RECENT_AUTH_WINDOW_SECONDS: ${MEMORA_RECENT_AUTH_WINDOW_SECONDS:-600}
+      MEMORA_DEVICE_ENCRYPTION_KEY: ${MEMORA_DEVICE_ENCRYPTION_KEY:?Set MEMORA_DEVICE_ENCRYPTION_KEY in .env}
+      MEMORA_DEVICE_FINGERPRINT_KEY: ${MEMORA_DEVICE_FINGERPRINT_KEY:?Set MEMORA_DEVICE_FINGERPRINT_KEY in .env}
+      MEMORA_CONSENT_TERMS_VERSION: ${MEMORA_CONSENT_TERMS_VERSION:?Set MEMORA_CONSENT_TERMS_VERSION in .env}
+      MEMORA_CONSENT_PRIVACY_VERSION: ${MEMORA_CONSENT_PRIVACY_VERSION:?Set MEMORA_CONSENT_PRIVACY_VERSION in .env}
+      MEMORA_CONSENT_MATERIAL_PROCESSING_VERSION: ${MEMORA_CONSENT_MATERIAL_PROCESSING_VERSION:?Set MEMORA_CONSENT_MATERIAL_PROCESSING_VERSION in .env}
+      MEMORA_CONSENT_MODEL_PROCESSING_VERSION: ${MEMORA_CONSENT_MODEL_PROCESSING_VERSION:?Set MEMORA_CONSENT_MODEL_PROCESSING_VERSION in .env}
+      MEMORA_CONSENT_NOTIFICATIONS_VERSION: ${MEMORA_CONSENT_NOTIFICATIONS_VERSION:?Set MEMORA_CONSENT_NOTIFICATIONS_VERSION in .env}
     ports:
       - "127.0.0.1:${MEMORA_API_PORT:-8000}:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready', timeout=2)"
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+  # Opt-in placeholder. T09 and T20 add job consumers; this profile only
+  # validates the shared image entry point and exits after logging.
+  worker:
+    profiles: ["worker"]
+    build:
+      context: ../backend
+    init: true
+    command: ["python", "-m", "memora.worker.main"]
+    environment:
+      MEMORA_ENVIRONMENT: local
+      MEMORA_LOG_LEVEL: ${MEMORA_LOG_LEVEL:-INFO}
+      MEMORA_DATABASE_URL: ${MEMORA_DATABASE_URL:?Set MEMORA_DATABASE_URL in .env}
     depends_on:
       postgres:
         condition: service_healthy
