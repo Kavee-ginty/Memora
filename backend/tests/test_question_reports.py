@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import base64
+import json
 from datetime import UTC, datetime, timedelta
 from typing import Any
 from uuid import UUID, uuid4
@@ -142,6 +143,12 @@ def test_cursor_round_trip_and_invalid_cursor_are_safe() -> None:
     submitted_at = datetime.now(UTC).replace(microsecond=123456)
     report_id = uuid4()
 
+    def cursor_for(payload: object) -> str:
+        encoded = json.dumps(payload).encode("utf-8")
+        return base64.urlsafe_b64encode(encoded).decode("ascii").rstrip("=")
+
+    nested = base64.urlsafe_b64encode(b"[" * 5000 + b"]" * 5000).decode("ascii").rstrip("=")
+
     cursor = _encode_report_cursor(submitted_at, report_id)
 
     assert "=" not in cursor
@@ -149,7 +156,21 @@ def test_cursor_round_trip_and_invalid_cursor_are_safe() -> None:
     assert decoded_at == submitted_at
     assert decoded_id == report_id
 
-    for invalid in ("not-a-cursor", "e30", cursor[:-4]):
+    for invalid in (
+        "not-a-cursor",
+        "e30",
+        cursor[:-4],
+        cursor_for([]),
+        cursor_for("value"),
+        nested,
+        cursor_for(
+            {
+                "v": 1,
+                "t": "0001-01-01T00:00:00+14:00",
+                "id": str(report_id),
+            }
+        ),
+    ):
         with pytest.raises(ApiError) as captured:
             _decode_report_cursor(invalid)
         assert captured.value.status_code == 400

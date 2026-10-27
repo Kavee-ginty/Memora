@@ -101,6 +101,7 @@ def numeric_snapshot(
     tolerance_mode: str = "absolute",
     partial_tolerance: str | None = None,
     significant_figures: int | None = None,
+    allow_negative: bool = True,
     evidence_ceiling: Decimal = Decimal("1"),
 ) -> QuestionSnapshot:
     payload = {
@@ -114,6 +115,7 @@ def numeric_snapshot(
             else None
         ),
         "significant_figures": significant_figures,
+        "allow_negative": allow_negative,
     }
     return snapshot(
         "numeric",
@@ -203,6 +205,17 @@ def test_numeric_answer_within_absolute_tolerance() -> None:
     assert outcome.evidence["unit_status"] == "matches"
 
 
+def test_malformed_raw_answer_is_ungradable_and_influence_limited() -> None:
+    outcome = grade_answer(mcq_snapshot(), {"type": "unsupported"})
+
+    assert outcome.classification == "ungradable"
+    assert outcome.public_outcome == "uncertain"
+    assert outcome.confidence == Decimal("0.00000")
+    assert outcome.influence_limited is True
+    assert outcome.feedback_code == "answer_invalid"
+    assert outcome.repair_action == "confirm_or_appeal"
+
+
 def test_numeric_answer_outside_tolerance_is_incorrect() -> None:
     outcome = grade_answer(
         numeric_snapshot(), {"type": "numeric", "value": "10.2", "unit": "m/s^2"}
@@ -211,6 +224,34 @@ def test_numeric_answer_outside_tolerance_is_incorrect() -> None:
     assert outcome.classification == "incorrect"
     assert outcome.score == Decimal("0.00000")
     assert outcome.evidence["reason_code"] == "outside_tolerance"
+
+
+def test_numeric_negative_answer_is_rejected_when_disallowed() -> None:
+    outcome = grade_answer(
+        numeric_snapshot(
+            expected="1",
+            expected_unit=None,
+            unit_rule="ignored",
+            tolerance="5",
+            allow_negative=False,
+        ),
+        {"type": "numeric", "value": "-1"},
+    )
+
+    assert outcome.classification == "incorrect"
+    assert outcome.score == Decimal("0.00000")
+    assert outcome.evidence["reason_code"] == "negative_not_allowed"
+
+
+def test_numeric_blank_optional_unit_is_treated_as_absent() -> None:
+    outcome = grade_answer(
+        numeric_snapshot(unit_rule="optional"),
+        {"type": "numeric", "value": "9.81", "unit": "   "},
+    )
+
+    assert outcome.classification == "correct"
+    assert outcome.score == Decimal("1.00000")
+    assert outcome.evidence["unit_status"] == "absent_optional"
 
 
 def test_numeric_partial_tolerance_returns_bounded_partial_credit() -> None:

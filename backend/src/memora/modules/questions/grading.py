@@ -89,7 +89,10 @@ def grade_answer(
 ) -> GradeOutcome:
     """Grade one already-validated answer against its pinned version."""
 
-    parsed = answer if _is_answer_model(answer) else parse_answer_payload(answer)
+    try:
+        parsed = answer if _is_answer_model(answer) else parse_answer_payload(answer)
+    except QuestionValidationError as exc:
+        return _ungradable_outcome(snapshot, "answer_invalid", exc.message)
     try:
         validate_answer_against_question(
             snapshot.question_type,
@@ -218,6 +221,25 @@ def _grade_numeric(
 
     value = answer.value
     expected = rubric.expected_value
+    if not rubric.allow_negative and value < 0:
+        return _outcome(
+            snapshot,
+            score=ZERO,
+            classification="incorrect",
+            confidence=_cap(snapshot.rubric.evidence_ceiling, ONE),
+            grader_type="numeric",
+            grader_version=GRADER_VERSION_NUMERIC,
+            public_outcome="weak",
+            feedback_code="negative_not_allowed",
+            feedback="This question expects a non-negative value.",
+            repair_action="review_concept",
+            evidence={
+                "schema_version": "1",
+                "reason_code": "negative_not_allowed",
+                "unit_status": unit_status,
+                "significant_figures": rubric.significant_figures,
+            },
+        )
     if rubric.significant_figures is not None:
         value = _round_significant(value, rubric.significant_figures)
         expected = _round_significant(expected, rubric.significant_figures)
@@ -459,7 +481,7 @@ def _within_tolerance(value: Decimal, expected: Decimal, tolerance: NumericToler
 def _unit_status(unit: str | None, rubric: NumericRubricPayload) -> str:
     if rubric.unit_rule == "ignored":
         return "ignored"
-    if unit is None:
+    if unit is None or not unit.strip():
         return "absent_optional" if rubric.unit_rule == "optional" else "missing"
     if rubric.expected_unit is None or _normalize_unit(unit) != _normalize_unit(
         rubric.expected_unit

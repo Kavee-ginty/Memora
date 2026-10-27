@@ -254,6 +254,8 @@ def _decode_report_cursor(cursor: str) -> tuple[datetime, UUID]:
     try:
         padded = cursor + "=" * (-len(cursor) % 4)
         payload = json.loads(base64.urlsafe_b64decode(padded.encode("ascii")))
+        if not isinstance(payload, dict):
+            raise ValueError("cursor payload must be an object")
         if payload.get("v") != REPORT_CURSOR_VERSION:
             raise ValueError("unsupported cursor version")
         submitted_at = datetime.fromisoformat(str(payload["t"]))
@@ -261,7 +263,15 @@ def _decode_report_cursor(cursor: str) -> tuple[datetime, UUID]:
             raise ValueError("cursor timestamp must include a timezone")
         report_id = UUID(str(payload["id"]))
         return submitted_at.astimezone(UTC), report_id
-    except (ValueError, TypeError, KeyError, json.JSONDecodeError, binascii.Error) as exc:
+    except (
+        ValueError,
+        TypeError,
+        KeyError,
+        OverflowError,
+        RecursionError,
+        json.JSONDecodeError,
+        binascii.Error,
+    ) as exc:
         raise ApiError(
             400,
             "invalid_cursor",

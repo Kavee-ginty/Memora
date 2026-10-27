@@ -449,12 +449,12 @@ def _validate_generated_metadata(bundle: QuestionImportBundle) -> None:
     if bundle.source_class != "ai_generated":
         return
     missing = (
-        bundle.model_key is None
-        or bundle.prompt_version is None
+        not bundle.model_key
+        or not bundle.prompt_version
         or not bundle.grounding_evidence_ids
-        or bundle.validator_version is None
+        or not bundle.validator_version
         or bundle.validation_score is None
-        or bundle.generation_trace_ref is None
+        or not bundle.generation_trace_ref
     )
     if missing:
         raise QuestionValidationError(

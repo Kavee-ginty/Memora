@@ -96,8 +96,9 @@ An approved version requires:
 - complete AI grounding metadata when applicable.
 
 The pure validator fails before rows are written. The database publication guard
-repeats the important checks as a deferred constraint trigger, so a direct SQL
-publication cannot bypass the contract.
+repeats the structural checks as a deferred constraint trigger, so a direct SQL
+publication cannot bypass them. AI metadata truthiness and the `0.9` evidence
+ceiling remain enforced by the Python import validator rather than the trigger.
 
 ### Why approved imports are staged as draft
 
@@ -156,8 +157,10 @@ Numeric rules are per question version; there is no universal tolerance.
   removal, middle-dot normalization). There is no unit conversion in the MVP.
 - `required` with no unit, or a wrong unit, is incorrect and explains the unit
   problem.
-- `optional` accepts an absent unit, but a present unit must match.
+- `optional` accepts an absent or blank unit, but a present unit must match.
 - `ignored` does not inspect the unit.
+- `allow_negative` defaults to true; when false, a negative answer is incorrect
+  with reason code `negative_not_allowed` before tolerance is applied.
 - Significant-figure rounding is applied to both the answer and expected value
   before tolerance.
 - `tolerance` defines full credit. An optional wider `partial_tolerance` yields

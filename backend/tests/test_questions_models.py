@@ -125,6 +125,55 @@ def test_import_rejects_ai_content_without_grounding_evidence() -> None:
     assert captured.value.code == "ai_metadata_missing"
 
 
+def generated_bundle(**overrides: object) -> QuestionImportBundle:
+    metadata: dict[str, object] = {
+        "source_class": "ai_generated",
+        "trust_label": "AI generated",
+        "model_key": "synthetic-model",
+        "prompt_version": "synthetic-prompt-v1",
+        "grounding_evidence_ids": [CONCEPT_ID],
+        "validator_version": "synthetic-validator-v1",
+        "validation_score": Decimal("0.9"),
+        "generation_trace_ref": "synthetic-trace",
+        "rubric": {
+            "rubric_type": "exact",
+            "max_score": Decimal("1"),
+            "evidence_ceiling": Decimal("0.9"),
+            "status": "approved",
+            "payload": {"schema_version": "1"},
+        },
+    }
+    metadata.update(overrides)
+    return bundle(**metadata)
+
+
+def test_import_accepts_complete_generated_metadata() -> None:
+    imported = validate_question_import(generated_bundle())
+
+    assert imported.trust_label == "AI generated"
+
+
+@pytest.mark.parametrize(
+    "field",
+    ["model_key", "prompt_version", "validator_version", "generation_trace_ref"],
+)
+def test_import_rejects_empty_generated_metadata(field: str) -> None:
+    with pytest.raises(QuestionValidationError) as captured:
+        validate_question_import(generated_bundle(**{field: ""}))
+
+    assert captured.value.code == "ai_metadata_missing"
+
+
+def test_import_rejects_generated_content_above_evidence_ceiling() -> None:
+    payload = generated_bundle()
+    rubric = payload.rubric.model_copy(update={"evidence_ceiling": Decimal("0.95")})
+
+    with pytest.raises(QuestionValidationError) as captured:
+        validate_question_import(payload.model_copy(update={"rubric": rubric}))
+
+    assert captured.value.code == "rubric_invalid"
+
+
 def test_import_rejects_publication_without_primary_mapping() -> None:
     with pytest.raises(QuestionValidationError) as captured:
         validate_question_import(bundle(concept_mappings=[]))
