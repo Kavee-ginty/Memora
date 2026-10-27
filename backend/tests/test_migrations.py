@@ -795,22 +795,37 @@ def test_grading_authority_can_move_without_rewriting_evidence(
                     max_score, evidence_ceiling, status
                   ) SELECT id, 'exact', 1, '{"schema_version":"1"}', 1, 1, 'draft'
                   FROM new_question_version RETURNING id
-                ), new_mission AS (
+                )
+                SELECT u.id AS user_id, c.id AS concept_id,
+                       qv.id AS question_version_id, r.id AS rubric_id
+                FROM new_user u, new_concept c, new_question_version qv, new_rubric r
+                """
+                )
+            )
+            .mappings()
+            .one()
+        )
+        attempt = (
+            connection.execute(
+                text(
+                    """
+                WITH new_mission AS (
                   INSERT INTO missions(
                     user_id, subject_id, mission_date, mission_timezone, status,
                     engine_version, candidate_snapshot_hash, estimated_minutes,
                     planned_item_count, expires_at
-                  ) SELECT id, '10000000-0000-0000-0000-000000000001', CURRENT_DATE,
+                  ) VALUES (
+                    :user_id, '10000000-0000-0000-0000-000000000001', CURRENT_DATE,
                     'Asia/Colombo', 'started', 'test', gen_random_uuid()::text, 1, 1,
                     now() + interval '1 day'
-                  FROM new_user RETURNING id, user_id
+                  ) RETURNING id, user_id
                 ), new_item AS (
                   INSERT INTO mission_items(
                     mission_id, user_id, position, mission_type, question_version_id,
                     primary_concept_id, selection_reason_codes, priority_snapshot, status
-                  ) SELECT m.id, m.user_id, 0, 'protect', q.id, c.id, ARRAY['test'],
-                    '{"schema_version":"1"}', 'answered'
-                  FROM new_mission m, new_question_version q, new_concept c
+                  ) SELECT m.id, m.user_id, 0, 'protect', :question_version_id, :concept_id,
+                    ARRAY['test'], '{"schema_version":"1"}', 'answered'
+                  FROM new_mission m
                   RETURNING id, user_id
                 ), new_attempt AS (
                   INSERT INTO attempts(
@@ -820,14 +835,15 @@ def test_grading_authority_can_move_without_rewriting_evidence(
                     now(), 'test'
                   FROM new_item RETURNING id
                 )
-                SELECT a.id AS attempt_id, r.id AS rubric_id
-                FROM new_attempt a, new_rubric r
+                SELECT id AS attempt_id FROM new_attempt
                 """
-                )
+                ),
+                fixture,
             )
             .mappings()
             .one()
         )
+        fixture = {**fixture, **attempt}
         first_result_id = connection.scalar(
             text(
                 """

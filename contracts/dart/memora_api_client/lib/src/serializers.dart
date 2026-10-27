@@ -34,8 +34,12 @@ import 'package:memora_api_client/src/model/health_status.dart';
 import 'package:memora_api_client/src/model/idempotency_headers.dart';
 import 'package:memora_api_client/src/model/page_meta.dart';
 import 'package:memora_api_client/src/model/page_params.dart';
+import 'package:memora_api_client/src/model/page_question_report_summary.dart';
 import 'package:memora_api_client/src/model/pending_resource_summary.dart';
 import 'package:memora_api_client/src/model/profile_summary.dart';
+import 'package:memora_api_client/src/model/question_report_create_request.dart';
+import 'package:memora_api_client/src/model/question_report_response.dart';
+import 'package:memora_api_client/src/model/question_report_summary.dart';
 import 'package:memora_api_client/src/model/request_headers.dart';
 import 'package:memora_api_client/src/model/session_bootstrap_response.dart';
 import 'package:memora_api_client/src/model/session_revocation_scope.dart';
@@ -65,8 +69,12 @@ part 'serializers.g.dart';
   IdempotencyHeaders,
   PageMeta,
   PageParams,
+  PageQuestionReportSummary,
   PendingResourceSummary,
   ProfileSummary,
+  QuestionReportCreateRequest,
+  QuestionReportResponse,
+  QuestionReportSummary,
   RequestHeaders,
   SessionBootstrapResponse,
   SessionRevocationScope,
@@ -89,6 +97,10 @@ Serializers serializers = (_$serializers.toBuilder()
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(PendingResourceSummary)]),
         () => ListBuilder<PendingResourceSummary>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(QuestionReportSummary)]),
+        () => ListBuilder<QuestionReportSummary>(),
       )
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(String)]),

@@ -44,7 +44,7 @@ If two sources appear inconsistent, stop implementation and resolve the conflict
 | T09 | Learning ingestion backend | **Ready** | - | 7 | T05, T06, T08 | `task/T09-ingestion-backend` | API and worker |
 | T10 | Learning ingestion mobile | Blocked | - | 6 | T07, T09 | `task/T10-ingestion-mobile` | Mobile feature |
 | T11 | Memory engine v1 | **Ready** | - | 7 | T08 | `task/T11-memory-engine` | Learning engine |
-| T12 | Question bank and grading backend | **Done** | - | 7 | T08, T05 | `task/T12-questions-grading` | Backend learning |
+| T12 | Question bank and grading backend | **Done** | Neleesha Peiris | 7 | T08, T05 | `task/T12-questions-grading` | Backend learning |
 | T13 | Mission assembly and completion backend | Blocked | - | 7 | T06, T11, T12 | `task/T13-mission-backend` | Backend learning |
 | T14 | Mission mobile experience | Blocked | - | 7 | T07, T13 | `task/T14-mission-mobile` | Mobile feature |
 | T15 | Progress XP streak and reef backend | Blocked | - | 5 | T11, T13 | `task/T15-progress-backend` | Backend engagement |
@@ -234,5 +234,5 @@ Every task pull request must contain:
 
 ## 7 Current next action
 
-T01, T02, T03, T04, T05, T06 and T08 are merged and Done. T07, T09, T11, T12, T17 and T20 are Ready. T11 and T12 remain the next zero-float critical-path tasks and may proceed in parallel.
+T01, T02, T03, T04, T05, T06, T08 and T12 are merged and Done. T07, T09, T11, T17, T20 and T24 are Ready. T11 remains the next zero-float critical-path task; T13 remains Blocked until T11 is Done.
 

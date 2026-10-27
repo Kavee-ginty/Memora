@@ -30,8 +30,19 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(IdempotencyHeaders.serializer)
       ..add(PageMeta.serializer)
       ..add(PageParams.serializer)
+      ..add(PageQuestionReportSummary.serializer)
       ..add(PendingResourceSummary.serializer)
       ..add(ProfileSummary.serializer)
+      ..add(QuestionReportCreateRequest.serializer)
+      ..add(QuestionReportCreateRequestReportTypeEnum.serializer)
+      ..add(QuestionReportResponse.serializer)
+      ..add(QuestionReportResponseEvidenceStateEnum.serializer)
+      ..add(QuestionReportResponseReportTypeEnum.serializer)
+      ..add(QuestionReportResponseStatusEnum.serializer)
+      ..add(QuestionReportSummary.serializer)
+      ..add(QuestionReportSummaryEvidenceStateEnum.serializer)
+      ..add(QuestionReportSummaryReportTypeEnum.serializer)
+      ..add(QuestionReportSummaryStatusEnum.serializer)
       ..add(RequestHeaders.serializer)
       ..add(RequestHeadersXPlatformEnum.serializer)
       ..add(SessionBootstrapResponse.serializer)
@@ -58,6 +69,10 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(FieldError)]),
           () => ListBuilder<FieldError>())
+      ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(QuestionReportSummary)]),
+          () => ListBuilder<QuestionReportSummary>())
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(String)]),
           () => ListBuilder<String>())
