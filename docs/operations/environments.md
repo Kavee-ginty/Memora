@@ -19,6 +19,10 @@ The data rules follow TRD 18.2. Production data must never be copied into local,
 
 - `.env` is local-only, ignored by Git and must never be committed.
 - `.env.example` is committed and contains synthetic local placeholders only.
+- Host tools (Alembic, seed) read `MEMORA_DATABASE_URL` from the process environment
+  first, then fall back to the repository `.env` (override with `MEMORA_ENV_FILE`).
+  Compose builds the API and worker database URL from `POSTGRES_*` and the service
+  host `postgres`, so the loopback URL in `.env` is for host commands only.
 - Development, staging and production receive configuration from the platform's environment or secret manager. The deployment image contains no repository `.env` file.
 - `MEMORA_DATABASE_URL` contains credentials and is treated as a secret. It is excluded from configuration representations and must not be logged.
 - The API database login must be permitted to `SET ROLE memora_api`; migrations use the owning migration login separately. Runtime identity transactions explicitly select the restricted role before setting the authenticated user RLS context.

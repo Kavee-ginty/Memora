@@ -5,13 +5,15 @@ from alembic import context
 from sqlalchemy import engine_from_config, pool
 from sqlalchemy.engine import make_url
 
+from memora.db.env_file import database_url_from_env_file
+
 DEFAULT_CONNECT_TIMEOUT_SECONDS = 10
 
 config = context.config
 if config.config_file_name:
     fileConfig(config.config_file_name)
 
-database_url = os.getenv("MEMORA_DATABASE_URL")
+database_url = os.getenv("MEMORA_DATABASE_URL") or database_url_from_env_file()
 if not database_url:
     raise RuntimeError("MEMORA_DATABASE_URL is required to run database migrations")
 config.set_main_option("sqlalchemy.url", database_url.replace("%", "%%"))

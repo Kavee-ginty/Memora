@@ -13,17 +13,18 @@ uvicorn memora.main:app --reload
 
 Create or update the local database and apply foundational seeds:
 
-Set `MEMORA_DATABASE_URL` in the process environment first; Alembic has no committed
-credential fallback. Host commands must use the loopback host `127.0.0.1`; the Compose
-service name `postgres` resolves only inside the Compose network.
+Alembic reads `MEMORA_DATABASE_URL` from the process environment first. When that
+variable is absent it falls back to the repository `.env` file (override the path with
+`MEMORA_ENV_FILE`). Deployed jobs must still set the variable explicitly. Host commands
+must use the loopback host `127.0.0.1`; the Compose service name `postgres` resolves only
+inside the Compose network.
 
 ```powershell
-$env:MEMORA_DATABASE_URL = 'postgresql+psycopg://memora:<local-password>@127.0.0.1:5432/memora'
 alembic upgrade head
 python -m memora.db.seed
 ```
 
-The placeholder password is the synthetic `POSTGRES_PASSWORD` from your untracked `.env`.
+The `.env` value is the synthetic `POSTGRES_PASSWORD` from your untracked `.env`.
 
 Alembic waits at most 10 seconds for a database connection; set
 `MEMORA_DB_CONNECT_TIMEOUT_SECONDS` to change that bound. The seed command uses the same

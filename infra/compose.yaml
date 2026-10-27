@@ -24,7 +24,9 @@ services:
     environment:
       MEMORA_ENVIRONMENT: local
       MEMORA_LOG_LEVEL: ${MEMORA_LOG_LEVEL:-INFO}
-      MEMORA_DATABASE_URL: ${MEMORA_DATABASE_URL:?Set MEMORA_DATABASE_URL in .env}
+      # Host commands use 127.0.0.1; inside the Compose network the service name
+      # postgres is the only reachable host.
+      MEMORA_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-memora}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@postgres:5432/${POSTGRES_DB:-memora}
       MEMORA_SUPABASE_URL: ${MEMORA_SUPABASE_URL:?Set MEMORA_SUPABASE_URL in .env}
       MEMORA_SUPABASE_PUBLISHABLE_KEY: ${MEMORA_SUPABASE_PUBLISHABLE_KEY:?Set MEMORA_SUPABASE_PUBLISHABLE_KEY in .env}
       MEMORA_RECENT_AUTH_WINDOW_SECONDS: ${MEMORA_RECENT_AUTH_WINDOW_SECONDS:-600}
@@ -62,7 +64,7 @@ services:
     environment:
       MEMORA_ENVIRONMENT: local
       MEMORA_LOG_LEVEL: ${MEMORA_LOG_LEVEL:-INFO}
-      MEMORA_DATABASE_URL: ${MEMORA_DATABASE_URL:?Set MEMORA_DATABASE_URL in .env}
+      MEMORA_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-memora}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@postgres:5432/${POSTGRES_DB:-memora}
     depends_on:
       postgres:
         condition: service_healthy

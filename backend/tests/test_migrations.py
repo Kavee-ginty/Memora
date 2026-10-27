@@ -222,8 +222,10 @@ def create_test_engine(database_url: str) -> Engine:
     )
 
 
-def test_alembic_requires_database_url(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_alembic_requires_database_url(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     monkeypatch.delenv("MEMORA_DATABASE_URL", raising=False)
+    # A developer .env must not make this negative test pass by accident.
+    monkeypatch.setenv("MEMORA_ENV_FILE", str(tmp_path / "missing.env"))
     with pytest.raises(RuntimeError, match="MEMORA_DATABASE_URL is required"):
         command.current(Config(BACKEND_ROOT / "alembic.ini"))
 
