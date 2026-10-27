@@ -26,13 +26,13 @@ Idempotently records a bounded report without changing historical content or gra
 import 'package:memora_api_client/api.dart';
 
 final api = MemoraApiClient().getReportsApi();
-final String questionVersionId = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String |
-final String xCorrelationID = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String |
-final String xClientVersion = xClientVersion_example; // String |
-final String xPlatform = xPlatform_example; // String |
-final String idempotencyKey = idempotencyKey_example; // String |
-final QuestionReportCreateRequest questionReportCreateRequest = ; // QuestionReportCreateRequest |
-final String acceptLanguage = acceptLanguage_example; // String |
+final String questionVersionId = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+final String xCorrelationID = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+final String xClientVersion = xClientVersion_example; // String | 
+final String xPlatform = xPlatform_example; // String | 
+final String idempotencyKey = idempotencyKey_example; // String | 
+final QuestionReportCreateRequest questionReportCreateRequest = ; // QuestionReportCreateRequest | 
+final String acceptLanguage = acceptLanguage_example; // String | 
 
 try {
     final response = api.createQuestionReport(questionVersionId, xCorrelationID, xClientVersion, xPlatform, idempotencyKey, questionReportCreateRequest, acceptLanguage);
@@ -46,13 +46,13 @@ try {
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **questionVersionId** | **String**|  |
- **xCorrelationID** | **String**|  |
- **xClientVersion** | **String**|  |
- **xPlatform** | **String**|  |
- **idempotencyKey** | **String**|  |
- **questionReportCreateRequest** | [**QuestionReportCreateRequest**](QuestionReportCreateRequest.md)|  |
- **acceptLanguage** | **String**|  | [optional]
+ **questionVersionId** | **String**|  | 
+ **xCorrelationID** | **String**|  | 
+ **xClientVersion** | **String**|  | 
+ **xPlatform** | **String**|  | 
+ **idempotencyKey** | **String**|  | 
+ **questionReportCreateRequest** | [**QuestionReportCreateRequest**](QuestionReportCreateRequest.md)|  | 
+ **acceptLanguage** | **String**|  | [optional] 
 
 ### Return type
 
@@ -81,11 +81,11 @@ Returns only the authenticated owner's report, status and safe resolution code. 
 import 'package:memora_api_client/api.dart';
 
 final api = MemoraApiClient().getReportsApi();
-final String reportId = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String |
-final String xCorrelationID = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String |
-final String xClientVersion = xClientVersion_example; // String |
-final String xPlatform = xPlatform_example; // String |
-final String acceptLanguage = acceptLanguage_example; // String |
+final String reportId = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+final String xCorrelationID = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+final String xClientVersion = xClientVersion_example; // String | 
+final String xPlatform = xPlatform_example; // String | 
+final String acceptLanguage = acceptLanguage_example; // String | 
 
 try {
     final response = api.getQuestionReport(reportId, xCorrelationID, xClientVersion, xPlatform, acceptLanguage);
@@ -99,11 +99,11 @@ try {
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **reportId** | **String**|  |
- **xCorrelationID** | **String**|  |
- **xClientVersion** | **String**|  |
- **xPlatform** | **String**|  |
- **acceptLanguage** | **String**|  | [optional]
+ **reportId** | **String**|  | 
+ **xCorrelationID** | **String**|  | 
+ **xClientVersion** | **String**|  | 
+ **xPlatform** | **String**|  | 
+ **acceptLanguage** | **String**|  | [optional] 
 
 ### Return type
 
@@ -132,12 +132,12 @@ Returns owner-scoped reports in stable reverse submission order.
 import 'package:memora_api_client/api.dart';
 
 final api = MemoraApiClient().getReportsApi();
-final String xCorrelationID = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String |
-final String xClientVersion = xClientVersion_example; // String |
-final String xPlatform = xPlatform_example; // String |
-final int limit = 56; // int |
-final String cursor = cursor_example; // String |
-final String acceptLanguage = acceptLanguage_example; // String |
+final String xCorrelationID = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+final String xClientVersion = xClientVersion_example; // String | 
+final String xPlatform = xPlatform_example; // String | 
+final int limit = 56; // int | 
+final String cursor = cursor_example; // String | 
+final String acceptLanguage = acceptLanguage_example; // String | 
 
 try {
     final response = api.listQuestionReports(xCorrelationID, xClientVersion, xPlatform, limit, cursor, acceptLanguage);
@@ -151,12 +151,12 @@ try {
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **xCorrelationID** | **String**|  |
- **xClientVersion** | **String**|  |
- **xPlatform** | **String**|  |
+ **xCorrelationID** | **String**|  | 
+ **xClientVersion** | **String**|  | 
+ **xPlatform** | **String**|  | 
  **limit** | **int**|  | [optional] [default to 20]
- **cursor** | **String**|  | [optional]
- **acceptLanguage** | **String**|  | [optional]
+ **cursor** | **String**|  | [optional] 
+ **acceptLanguage** | **String**|  | [optional] 
 
 ### Return type
 
