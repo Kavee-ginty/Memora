@@ -10,6 +10,7 @@ import 'src/features/auth/application/session_controller.dart';
 import 'src/features/auth/data/auth_repository.dart';
 import 'src/features/auth/data/secure_auth_storage.dart';
 import 'src/features/auth/data/session_repository.dart';
+import 'src/features/auth/domain/app_session_state.dart';
 import 'src/features/consent/application/consent_controller.dart';
 import 'src/features/consent/data/consent_repository.dart';
 
@@ -55,8 +56,11 @@ void main() async {
       configuration: config,
     );
   } else {
-    // Default safe local baseline when environment define is not provided
-    authRepository = MockAuthRepository();
+    authRepository = MockAuthRepository()
+      ..shouldFailSignIn = true
+      ..configuredFailure = AuthFailure.unknown(
+        'Memora is not configured. Rebuild the app with the required environment values.',
+      );
     sessionRepository = MockSessionRepository();
   }
 
