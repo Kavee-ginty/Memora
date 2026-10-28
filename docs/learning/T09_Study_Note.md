@@ -81,7 +81,7 @@ The ingestion worker operates under restricted privileges:
 ## Verification Evidence
 
 - Formatting and linting: `ruff check backend`, `ruff format --check backend` passed with 0 errors.
-- Unit and integration tests: 248 tests passed in `backend/tests`, covering upload validation, presigned grants, S3 SigV4 presigning, AES-256-GCM encryption, worker lease handling, extraction deduplication, verification decisions, path preview, atomic commit, outbox emission, deletion proofs, and owner isolation.
+- Unit and integration tests: 256 tests passed in `backend/tests`, covering upload validation, presigned grants, S3 SigV4 presigning, AES-256-GCM encryption, worker lease handling, extraction deduplication, verification decisions, path preview, atomic commit, outbox emission, deletion proofs, owner isolation, and the 8 dedicated bug-hunt regression tests in `test_ingestion_bug_hunt.py`.
 - Contract drift check: `generate_contracts.py --check` passed cleanly with 0 drift.
 - Dart client test suite: `dart test` passed all 16 contract tests.
 

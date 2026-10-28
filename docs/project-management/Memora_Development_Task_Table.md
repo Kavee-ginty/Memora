@@ -41,7 +41,7 @@ If two sources appear inconsistent, stop implementation and resolve the conflict
 | T06 | Identity and session backend | **Done** | Codex | 4 | T02, T04, T05 | `task/T06-identity-session` | Backend API |
 | T07 | Auth bootstrap mobile and guarded routes | **Ready** | - | 5 | T03, T05, T06 | `task/T07-mobile-auth-routes` | Mobile navigation |
 | T08 | Curriculum and knowledge graph seed | **Done** | Antigravity | 5 | T04, T05 | `task/T08-curriculum-graph` | Data and knowledge |
-| T09 | Learning ingestion backend | **Ready** | - | 7 | T05, T06, T08 | `task/T09-ingestion-backend` | API and worker |
+| T09 | Learning ingestion backend | **Review** | Dasun Jayasanka | 7 | T05, T06, T08 | `task/T09-ingestion-backend` | API and worker |
 | T10 | Learning ingestion mobile | Blocked | - | 6 | T07, T09 | `task/T10-ingestion-mobile` | Mobile feature |
 | T11 | Memory engine v1 | **Ready** | - | 7 | T08 | `task/T11-memory-engine` | Learning engine |
 | T12 | Question bank and grading backend | **Ready** | - | 7 | T08, T05 | `task/T12-questions-grading` | Backend learning |
@@ -234,5 +234,5 @@ Every task pull request must contain:
 
 ## 7 Current next action
 
-T01, T02, T03, T04, T05, T06 and T08 are merged and Done. T07, T09, T11, T12, T17 and T20 are Ready. T11 and T12 remain the next zero-float critical-path tasks and may proceed in parallel.
+T01, T02, T03, T04, T05, T06 and T08 are merged and Done. T09 is in Review. T07, T11, T12, T17 and T20 are Ready. T11 and T12 remain the next zero-float critical-path tasks and may proceed in parallel.
 
