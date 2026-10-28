@@ -10,8 +10,10 @@ import 'package:memora_api_client/src/auth/basic_auth.dart';
 import 'package:memora_api_client/src/auth/bearer_auth.dart';
 import 'package:memora_api_client/src/auth/oauth.dart';
 import 'package:memora_api_client/src/api/health_api.dart';
+import 'package:memora_api_client/src/api/learning_updates_api.dart';
 import 'package:memora_api_client/src/api/profile_api.dart';
 import 'package:memora_api_client/src/api/session_api.dart';
+import 'package:memora_api_client/src/api/verification_api.dart';
 
 class MemoraApiClient {
   static const String basePath = r'http://localhost';
@@ -139,6 +141,12 @@ class MemoraApiClient {
     return HealthApi(dio, serializers);
   }
 
+  /// Get LearningUpdatesApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  LearningUpdatesApi getLearningUpdatesApi() {
+    return LearningUpdatesApi(dio, serializers);
+  }
+
   /// Get ProfileApi instance, base route and serializer can be overridden by a given but be careful,
   /// by doing that all interceptors will not be executed
   ProfileApi getProfileApi() {
@@ -149,5 +157,11 @@ class MemoraApiClient {
   /// by doing that all interceptors will not be executed
   SessionApi getSessionApi() {
     return SessionApi(dio, serializers);
+  }
+
+  /// Get VerificationApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  VerificationApi getVerificationApi() {
+    return VerificationApi(dio, serializers);
   }
 }

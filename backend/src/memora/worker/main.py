@@ -1,10 +1,14 @@
 import logging
 
+from memora.core.config import get_settings
+from memora.worker.ingestion import build_worker
+
 
 def main() -> None:
-    """Worker placeholder; queue consumers are introduced by their owning tasks."""
-    logging.basicConfig(level=logging.INFO)
-    logging.getLogger(__name__).info("No worker jobs are registered in the T01 baseline.")
+    settings = get_settings()
+    logging.basicConfig(level=settings.log_level)
+    worker = build_worker(settings)
+    worker.run_forever()
 
 
 if __name__ == "__main__":

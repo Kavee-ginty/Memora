@@ -52,6 +52,23 @@ class Settings(BaseSettings):
     consent_model_processing_version: str | None = None
     consent_notifications_version: str | None = None
 
+    ingestion_encryption_key: SecretStr | None = Field(default=None, repr=False)
+    extraction_provider: Literal["deterministic", "openrouter"] = "deterministic"
+    openrouter_api_key: SecretStr | None = Field(default=None, repr=False)
+    openrouter_model: str | None = None
+    openrouter_timeout_seconds: int = Field(default=60, ge=5, le=300)
+    upload_max_files: int = Field(default=5, ge=1, le=20)
+    upload_max_bytes: int = Field(default=25 * 1024 * 1024, ge=1024)
+    upload_grant_ttl_seconds: int = Field(default=900, ge=60, le=86400)
+    ingestion_expiry_hours: int = Field(default=72, ge=1, le=720)
+    verification_expiry_hours: int = Field(default=72, ge=1, le=720)
+    object_storage_provider: Literal["memory", "s3"] = "memory"
+    object_storage_endpoint: str | None = None
+    object_storage_region: str = "us-east-1"
+    object_storage_bucket: str | None = None
+    object_storage_access_key: SecretStr | None = Field(default=None, repr=False)
+    object_storage_secret_key: SecretStr | None = Field(default=None, repr=False)
+
     @model_validator(mode="after")
     def validate_environment_boundaries(self) -> Self:
         database_url = (self.database_url or "").strip()

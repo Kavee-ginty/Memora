@@ -48,6 +48,15 @@ def test_artifact_is_canonical_and_environment_free() -> None:
         "/v1/devices/{device_id}",
         "/v1/session/bootstrap",
         "/v1/session/revoke",
+        "/v1/learning-updates",
+        "/v1/learning-updates/{update_id}",
+        "/v1/learning-updates/{update_id}/candidates",
+        "/v1/learning-updates/{update_id}/commit",
+        "/v1/learning-updates/{update_id}/preview",
+        "/v1/learning-updates/{update_id}/retry",
+        "/v1/learning-updates/{update_id}/uploads",
+        "/v1/learning-updates/{update_id}/uploads/{upload_id}/finalize",
+        "/v1/learning-updates/{update_id}/verification-decisions",
     }
     assert "bearerAuth" in schema["components"]["securitySchemes"]
     assert {
