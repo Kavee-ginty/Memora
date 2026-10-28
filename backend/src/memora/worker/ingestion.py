@@ -103,8 +103,10 @@ class IngestionWorker:
                     text("""
                         WITH next_job AS (
                             SELECT id FROM background_jobs
-                            WHERE status IN ('queued','retry_wait')
-                              AND available_at <= now()
+                            WHERE (
+                                (status IN ('queued','retry_wait') AND available_at <= now())
+                                OR (status = 'leased' AND lease_expires_at <= now())
+                            )
                             ORDER BY available_at
                             FOR UPDATE SKIP LOCKED
                             LIMIT 1
@@ -282,7 +284,13 @@ class IngestionWorker:
             expires_at = datetime.now(UTC) + timedelta(
                 hours=self.settings.verification_expiry_hours
             )
+            seen_keys: set[tuple[str, str]] = set()
             for candidate in candidates:
+                payload_identity = json.dumps(candidate.payload, sort_keys=True, default=str)
+                candidate_key = (candidate.candidate_type, payload_identity)
+                if candidate_key in seen_keys:
+                    continue
+                seen_keys.add(candidate_key)
                 candidate_id = uuid4()
                 needs_verification = requires_verification(candidate.confidence)
                 connection.execute(

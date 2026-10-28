@@ -243,7 +243,14 @@ class OpenRouterExtractionProvider:
             )
             raw = response["choices"][0]["message"]["content"]
             parsed = json.loads(raw)
-        except (KeyError, IndexError, TypeError, json.JSONDecodeError) as exc:
+        except (
+            KeyError,
+            IndexError,
+            TypeError,
+            json.JSONDecodeError,
+            TimeoutError,
+            OSError,
+        ) as exc:
             raise ExtractionUnavailable(
                 "The extraction provider returned an invalid result."
             ) from exc
