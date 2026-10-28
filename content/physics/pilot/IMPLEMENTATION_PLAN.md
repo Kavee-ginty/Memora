@@ -318,12 +318,12 @@ Stage 1 has no reviewer, author or principal. Do not use a synthetic UUID in a r
 
 ```powershell
 $env:PYTHONPATH="$PWD\backend\src"
-.\.venv\Scripts\python.exe -m pytest backend/tests/test_pilot_content_validation.py backend/tests/test_questions_models.py backend/tests/test_curriculum_seed.py backend/tests/test_questions_grading.py -q
+.\.venv\Scripts\python.exe -m pytest backend/tests/test_pilot_content_validation.py backend/tests/test_pilot_mapping_report.py backend/tests/test_questions_models.py backend/tests/test_curriculum_seed.py backend/tests/test_questions_grading.py -q
 ```
 
-Result: **82 passed**.
+Result: **93 passed**.
 
-These are non-PostgreSQL tests. They cover T24 draft/approval gates, T12 model/hash/validation behavior and T08 seed integrity.
+These are non-PostgreSQL tests. They cover T24 draft/approval gates, the read-only candidate mapping report, T12 model/hash/validation behavior and T08 seed integrity.
 
 ### 8.2 Synthetic import smoke test
 
@@ -414,7 +414,7 @@ Do not combine C3-C6 into one commit. Content additions, import bundles and vali
 - [x] Suggested commit boundaries written.
 - [x] `.gitignore` rules for source PDFs and the local review pack are present in the working tree; not committed.
 - [x] No T08 seed, T12 model, migration, API or question data changed; the pilot validator and tests were added.
-- [x] Safe non-PostgreSQL tests run: 82 passed.
+- [x] Safe non-PostgreSQL tests run: 93 passed.
 - [ ] Reviewer, author and approval identities supplied by the project.
 - [ ] Reproduction/licence route decided.
 - [ ] Disposable PostgreSQL environment available for Stage 2 verification.
@@ -443,6 +443,8 @@ The draft-only implementation stops here. Approval, graph expansion, real-princi
 | `examples/synthetic_draft.json` | Synthetic draft example used by the validator tests. |
 | `backend/src/memora/modules/questions/pilot_validation.py` | Draft/approval gates and approved-envelope conversion. |
 | `backend/tests/test_pilot_content_validation.py` | T24 validator and schema tests. |
+| `candidate_mappings.json` | Read-only eight-candidate mapping report; not a T12 import or syllabus coverage claim. |
+| `backend/tests/test_pilot_mapping_report.py` | Validates candidate IDs, summary-status consistency and referenced T08 codes. |
 | `local_review/` | Ignored local verbatim review pack; never tracked or imported. |
 | `REVIEW_CHECKLIST.md` | Per-item review gates, status matrix and sign-off table. |
 | `T08_T12_CONTRACT_GAPS.md` | Evidence-backed gap analysis and required/optional fixes. |

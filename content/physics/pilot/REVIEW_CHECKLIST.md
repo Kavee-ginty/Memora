@@ -207,10 +207,10 @@ Non-database checks:
 
 ```powershell
 $env:PYTHONPATH="$PWD\backend\src"
-.\.venv\Scripts\python.exe -m pytest backend/tests/test_pilot_content_validation.py backend/tests/test_questions_models.py backend/tests/test_curriculum_seed.py backend/tests/test_questions_grading.py -q
+.\.venv\Scripts\python.exe -m pytest backend/tests/test_pilot_content_validation.py backend/tests/test_pilot_mapping_report.py backend/tests/test_questions_models.py backend/tests/test_curriculum_seed.py backend/tests/test_questions_grading.py -q
 ```
 
-The T24 test validates the synthetic draft, rejects misleading draft trust classes and proves the approved gates, including reviewer independence and content-hash/source binding. It does not touch a database and is not an import.
+The T24 test validates the synthetic draft, rejects misleading draft trust classes and proves the approved gates, including reviewer independence and content-hash/source binding. The mapping report test checks the eight candidate IDs against `PILOT_QUESTIONS.md` and verifies every referenced T08 code resolves in the seed. Neither test touches a database or performs an import.
 
 PostgreSQL-dependent checks, only with a disposable database and `MEMORA_TEST_DATABASE_URL` set:
 

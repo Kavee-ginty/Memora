@@ -158,7 +158,7 @@ Severity is about the T24 acceptance gate, not about T12 runtime safety.
 | G7 | No import CLI | Low | No | `T12_Study_Note.md:21-23`; `repository.py:524` | A CLI is convenient but unnecessary; the offline call path already exists. |
 | G8 | `content` cannot carry source metadata | Medium | Yes, as part of G1 | `ChoiceContent` `extra="forbid"`; probe `content_invalid` | A source reference cannot be smuggled into the question payload. |
 | G9 | No real author or reviewer principal | Blocker | Yes | Stage 1 has no identity record; probe `reviewer_required` | Every candidate is limited to draft. |
-| G10 | Not every publication branch has an isolated unit test | Medium | Yes, for T24 evidence | `test_questions_models.py` has no `reviewer_required`/`author_required`/empty-explanation test; DB test `test_publication_guard_validates_the_complete_content_set` covers reviewer at DB level | T24 tests should cover the branches it relies on. |
+| G10 | Not every publication branch has an isolated unit test | Medium | Yes, for T24 evidence | T24 pilot tests now cover missing author/reviewer, review identity, approval-state and publication branches. `test_questions_models.py` still has no isolated `reviewer_required`/`author_required`/empty-explanation test; the DB test `test_publication_guard_validates_the_complete_content_set` covers reviewer at DB level. | T24-side gates are covered; T12-only unit gaps remain. |
 | G11 | No official MCQ key | Blocker | Yes | Marking-scheme page-2 layouts are not MCQ keys; none found | Derived answers cannot be presented as official keys. Independent review is mandatory. |
 | G12 | Reproduction/licence route unresolved | Blocker | Yes | No policy or approval record found in the repository | Source text cannot be committed or published without a decision. |
 | G13 | Source PDFs and the local verbatim pack are untracked | Low operational | Yes, before commit | The working-tree `.gitignore` now contains `/content/physics/source_documents/` and `/content/physics/pilot/local_review/`; the local index had no `.pdf`/`source_documents` entries at inspection | A broad `git add` no longer stages the source PDFs or the local verbatim pack, but the rules must remain present and be verified before commit. |
@@ -287,10 +287,10 @@ A review queue, qualification registry and approval dashboard. Outside the MVP; 
 
 ```powershell
 $env:PYTHONPATH="$PWD\backend\src"
-.\.venv\Scripts\python.exe -m pytest backend/tests/test_pilot_content_validation.py backend/tests/test_questions_models.py backend/tests/test_curriculum_seed.py backend/tests/test_questions_grading.py -q
+.\.venv\Scripts\python.exe -m pytest backend/tests/test_pilot_content_validation.py backend/tests/test_pilot_mapping_report.py backend/tests/test_questions_models.py backend/tests/test_curriculum_seed.py backend/tests/test_questions_grading.py -q
 ```
 
-Result: **82 passed** (65 existing tests plus 17 T24 pilot-validator tests). These are non-PostgreSQL tests.
+Result: **93 passed** (65 existing tests plus 25 T24 validator tests and 3 mapping-report tests). These are non-PostgreSQL tests.
 
 ### 8.2 Not run
 
@@ -313,7 +313,7 @@ These require a disposable PostgreSQL/pgvector database and `MEMORA_TEST_DATABAS
 | T12 RLS and pinned history | `test_pinned_question_history_stays_readable_only_to_its_owner` |
 | T12 reference validation | `test_import_rejects_foreign_or_unapproved_concept_mapping` and related tests |
 
-The T24 pilot validator is covered by `backend/tests/test_pilot_content_validation.py` (17 tests). It does not replace the PostgreSQL import, RLS and immutability tests.
+The T24 pilot validator is covered by `backend/tests/test_pilot_content_validation.py` (25 tests). The read-only mapping report is covered by `backend/tests/test_pilot_mapping_report.py` (3 tests). Neither replaces the PostgreSQL import, RLS and immutability tests.
 
 ## 9. Decisions needed before Stage 2
 

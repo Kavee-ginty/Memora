@@ -309,7 +309,20 @@ The pilot does not cover waves, electricity, magnetism, thermal physics, modern 
 | 2025 Paper I Q3 | Held back for ambiguity review of the spring-length/spring-constant wording. |
 | Diagram-dependent items, including 2022 Q6, 2025 Q11 and 2025 Q41 | Deferred. The pilot is text-only; diagram accessibility and alt-text review are not yet designed. |
 
-## 6. What this file does not claim
+## 6. Read-only mapping report
+
+`candidate_mappings.json` is a machine-readable report for the eight candidates in this file. It lists the existing T08 concept codes each candidate references, whether a primary existing concept is present, and the topic areas that have no T08 concept yet. It is not a T12 import bundle and does not claim syllabus coverage.
+
+An **invalid mapping** is a referenced T08 code that does not resolve in `backend/src/memora/modules/curriculum/seed_data.py`; the report test fails on one. A **missing mapping** is a topic with no existing T08 code and is listed in `missing_topics`. The report contains no invalid code as of this checkpoint.
+
+Run the report check with the focused tests:
+
+```powershell
+$env:PYTHONPATH="$PWD\backend\src"
+.\.venv\Scripts\python.exe -m pytest backend/tests/test_pilot_mapping_report.py -q
+```
+
+## 7. What this file does not claim
 
 - It does not claim that any derived answer is the official answer.
 - It does not claim that any item has been independently verified.
