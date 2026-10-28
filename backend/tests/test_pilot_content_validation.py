@@ -58,6 +58,24 @@ def approved() -> dict[str, object]:
     return envelope
 
 
+def past_paper_source() -> dict[str, object]:
+    return {
+        "source_id": "SL-DOE-AL-PHYS-2025-P1",
+        "source_type": "past_paper",
+        "document_filename": "AL_Physics_2025_Combined_Paper_English.pdf",
+        "document_sha256": "a" * 64,
+        "exam_year": 2025,
+        "exam_label": "2025",
+        "paper": "Paper I",
+        "question_number": 1,
+        "pdf_page": 1,
+        "official_key_status": "not_found",
+        "reproduction_status": "unapproved",
+        "reproduction_approval_ref": None,
+        "transcription_verified": False,
+    }
+
+
 def failure_code(envelope: dict[str, object]) -> str:
     with pytest.raises(PilotEnvelopeError) as exc_info:
         validate_pilot_envelope(envelope)
@@ -97,6 +115,13 @@ def test_draft_may_record_a_partial_mapping_without_primary() -> None:
     validated = validate_pilot_envelope(envelope)
 
     assert validated["question"]["validation_status"] == "draft"
+
+
+def test_approved_item_requires_a_primary_mapping() -> None:
+    envelope = approved()
+    envelope["question"]["concept_mappings"][0]["mapping_role"] = "supporting"
+
+    assert failure_code(envelope) == "pilot_mapping_invalid"
 
 
 def test_approved_envelope_requires_reviewed_mapping_provenance() -> None:
@@ -167,6 +192,72 @@ def test_approved_envelope_converts_with_bound_hash() -> None:
     assert validated.trust_label == "Expert verified"
 
 
+def test_approved_envelope_requires_author_and_reviewer_principals() -> None:
+    missing_author = approved()
+    missing_author["question"]["author_principal"] = None
+
+    missing_reviewer = approved()
+    missing_reviewer["question"]["reviewer_principal"] = None
+
+    assert failure_code(missing_author) == "pilot_principals_required"
+    assert failure_code(missing_reviewer) == "pilot_principals_required"
+
+
+def test_review_identity_must_match_question_reviewer() -> None:
+    mismatch = approved()
+    mismatch["review"]["reviewer_principal"] = AUTHOR_ID
+
+    missing = approved()
+    missing["review"]["reviewer_principal"] = None
+
+    assert failure_code(mismatch) == "pilot_reviewer_mismatch"
+    assert failure_code(missing) == "pilot_reviewer_required"
+
+
+def test_approved_item_requires_approved_review_answer_and_rubric() -> None:
+    review = approved()
+    review["review"]["academic_review_status"] = "pending"
+
+    answer = approved()
+    answer["answer_verification"]["independent_review_status"] = "pending"
+
+    rubric = approved()
+    rubric["question"]["rubric"]["status"] = "draft"
+
+    assert failure_code(review) == "pilot_review_not_approved"
+    assert failure_code(answer) == "pilot_answer_not_verified"
+    assert failure_code(rubric) == "pilot_rubric_not_approved"
+
+
+def test_approved_item_requires_cleared_ambiguity_and_duplicate() -> None:
+    ambiguity = approved()
+    ambiguity["review"]["ambiguity_status"] = "pending"
+
+    duplicate = approved()
+    duplicate["review"]["duplicate_status"] = "duplicate"
+
+    assert failure_code(ambiguity) == "pilot_ambiguity_not_cleared"
+    assert failure_code(duplicate) == "pilot_duplicate_not_cleared"
+
+
+def test_approved_item_requires_publication_approval_and_source_ref() -> None:
+    no_approver = approved()
+    no_approver["review"]["content_hash"] = compute_pilot_content_hash(no_approver)
+    no_approver["publication"]["approved_by"] = None
+
+    not_marked = approved()
+    not_marked["review"]["content_hash"] = compute_pilot_content_hash(not_marked)
+    not_marked["publication"]["approved_for_import"] = False
+
+    no_source = approved()
+    no_source["review"]["content_hash"] = compute_pilot_content_hash(no_source)
+    no_source["review"]["source_ref"] = None
+
+    assert failure_code(no_approver) == "pilot_approval_required"
+    assert failure_code(not_marked) == "pilot_publication_mismatch"
+    assert failure_code(no_source) == "pilot_source_ref_required"
+
+
 def test_approved_envelope_requires_reviewer_independence() -> None:
     envelope = approved()
     envelope["question"]["author_principal"] = REVIEWER_ID
@@ -227,6 +318,29 @@ def test_approved_envelope_requires_qualification_and_scope() -> None:
 
     assert failure_code(no_qualification) == "pilot_qualification_required"
     assert failure_code(missing_scope) == "pilot_review_scope_incomplete"
+
+
+def test_pilot_scope_is_paper_one_only() -> None:
+    pilot_two = draft()
+    pilot_two["pilot_id"] = "PILOT-PHYS-2025-P2-Q01"
+
+    source_two = draft()
+    source = past_paper_source()
+    source["source_id"] = "SL-DOE-AL-PHYS-2025-P2"
+    source_two["source"].update(source)
+
+    assert failure_code(pilot_two) == "pilot_envelope_invalid"
+    assert failure_code(source_two) == "pilot_source_invalid"
+
+
+def test_past_paper_source_year_must_match_source_id() -> None:
+    envelope = draft()
+    source = past_paper_source()
+    source["exam_year"] = 2022
+    source["exam_label"] = "2022"
+    envelope["source"].update(source)
+
+    assert failure_code(envelope) == "pilot_source_invalid"
 
 
 def test_synthetic_schema_is_parseable_and_draft_only() -> None:

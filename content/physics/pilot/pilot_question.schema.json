@@ -20,7 +20,7 @@
     },
     "pilot_id": {
       "type": "string",
-      "pattern": "^PILOT-PHYS-[0-9]{4}-P[12]-Q[0-9]{1,2}$"
+      "pattern": "^PILOT-PHYS-[0-9]{4}-P1-Q[0-9]{1,2}$"
     },
     "source": {
       "$ref": "#/$defs/source"

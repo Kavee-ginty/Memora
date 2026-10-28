@@ -30,12 +30,12 @@ PILOT_DRAFT_PROVENANCE_TYPES = frozenset({"analyst_mapping", "source_analysis"})
 PILOT_REVIEW_SCOPES = frozenset({"derivation", "ambiguity", "curriculum_mapping"})
 PILOT_PAST_PAPER_REVIEW_SCOPES = PILOT_REVIEW_SCOPES | {"transcription"}
 
-_PILOT_ID_PATTERN = re.compile(r"^PILOT-PHYS-[0-9]{4}-P[12]-Q[0-9]{1,2}$")
+_PILOT_ID_PATTERN = re.compile(r"^PILOT-PHYS-[0-9]{4}-P1-Q[0-9]{1,2}$")
 _QUESTION_CODE_PATTERN = re.compile(r"^[a-z0-9][a-z0-9._-]*$")
 _OPTION_KEY_PATTERN = re.compile(r"^[a-z0-9][a-z0-9_-]*$")
 _SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 _SOURCE_ID_PATTERNS = {
-    "past_paper": re.compile(r"^SL-DOE-AL-PHYS-[0-9]{4}-P[12]$"),
+    "past_paper": re.compile(r"^SL-DOE-AL-PHYS-[0-9]{4}-P1$"),
     "synthetic": re.compile(r"^SYNTHETIC-[A-Z0-9-]+$"),
 }
 
@@ -183,7 +183,14 @@ def _validate_source(source: Mapping[str, Any], *, approved: bool) -> None:
             "source.document_sha256",
             pattern=_SHA256_PATTERN,
         )
-        _int(source.get("exam_year"), "source.exam_year", minimum=2017, maximum=2025)
+        exam_year = _int(source.get("exam_year"), "source.exam_year", minimum=2017, maximum=2025)
+        source_year = int(str(source_id).rsplit("-", 2)[1])
+        if source_year != exam_year:
+            _fail(
+                "pilot_source_invalid",
+                "The source identifier year must match exam_year.",
+                "source.source_id",
+            )
         _text(source.get("exam_label"), "source.exam_label", max_length=40)
         if source.get("paper") != "Paper I":
             _fail(
