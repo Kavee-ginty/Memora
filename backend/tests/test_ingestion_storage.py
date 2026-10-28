@@ -4,11 +4,14 @@ import hashlib
 from datetime import UTC, datetime, timedelta
 
 import pytest
+from pydantic import SecretStr
 
+from memora.core.config import Settings
 from memora.modules.ingestion.storage import (
     MemoryObjectStorage,
     S3ObjectStorage,
     StorageUnavailable,
+    build_object_storage,
 )
 
 PNG = b"\x89PNG\r\n\x1a\nsynthetic-image-bytes"
@@ -108,3 +111,72 @@ def test_s3_object_key_is_path_encoded_and_not_a_prefix_match() -> None:
 
     assert path == "/memora/notes/a%20b.pdf"
     assert storage._object_path("notes/a b.pdf.bak") != path
+
+
+def test_build_object_storage_memory_provider() -> None:
+    settings = Settings(
+        _env_file=None,
+        environment="local",
+        database_url="postgresql+psycopg://memora:memora@127.0.0.1:5432/memora",
+        object_storage_provider="memory",
+    )
+    storage = build_object_storage(settings)
+    assert storage.provider_name == "memory"
+    assert isinstance(storage, MemoryObjectStorage)
+
+
+def test_build_object_storage_s3_provider_requires_configuration() -> None:
+    # Missing endpoint and bucket
+    settings = Settings(
+        _env_file=None,
+        environment="local",
+        database_url="postgresql+psycopg://memora:memora@127.0.0.1:5432/memora",
+        object_storage_provider="s3",
+    )
+    with pytest.raises(RuntimeError, match="ENDPOINT and MEMORA_OBJECT_STORAGE_BUCKET"):
+        build_object_storage(settings)
+
+    # Missing keys
+    settings_with_endpoint = Settings(
+        _env_file=None,
+        environment="local",
+        database_url="postgresql+psycopg://memora:memora@127.0.0.1:5432/memora",
+        object_storage_provider="s3",
+        object_storage_endpoint="https://s3.example.com",
+        object_storage_bucket="bucket",
+    )
+    with pytest.raises(RuntimeError, match="ACCESS_KEY and MEMORA_OBJECT_STORAGE_SECRET_KEY"):
+        build_object_storage(settings_with_endpoint)
+
+    # Valid S3 configuration
+    valid_s3_settings = Settings(
+        _env_file=None,
+        environment="local",
+        database_url="postgresql+psycopg://memora:memora@127.0.0.1:5432/memora",
+        object_storage_provider="s3",
+        object_storage_endpoint="https://s3.example.com",
+        object_storage_bucket="bucket",
+        object_storage_access_key=SecretStr("access-key"),
+        object_storage_secret_key=SecretStr("secret-key"),
+    )
+    storage = build_object_storage(valid_s3_settings)
+    assert storage.provider_name == "s3"
+    assert isinstance(storage, S3ObjectStorage)
+
+
+def test_s3_secrets_not_leaked_in_exceptions_or_repr() -> None:
+    secret = "SUPER_SECRET_S3_KEY"
+    storage = S3ObjectStorage(
+        endpoint="https://s3.example.com",
+        region="us-east-1",
+        bucket="memora",
+        access_key="access-id",
+        secret_key=secret,
+    )
+    grant = storage.create_upload_grant(
+        object_key="test/file.pdf",
+        expires_in=60,
+        content_type="application/pdf",
+    )
+    assert secret not in grant.url
+    assert secret not in repr(storage)

@@ -271,6 +271,3 @@ def build_object_storage(settings: Settings) -> ObjectStorage:
             secret_key=settings.object_storage_secret_key.get_secret_value(),
         )
     return MemoryObjectStorage()
-
-
-# WARNING: Decompyle incomplete

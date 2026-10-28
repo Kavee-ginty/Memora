@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import pytest
-from pydantic import ValidationError
+from pydantic import SecretStr, ValidationError
 
 from memora.core.config import LOCAL_DATABASE_URL, Settings
 
@@ -263,3 +263,48 @@ def test_app_docs_follow_environment_boundary(
 
     assert app.docs_url == expected_docs_url
     assert app.redoc_url is None
+
+
+def test_storage_and_ingestion_secrets_are_not_exposed_in_repr() -> None:
+    settings = Settings(
+        _env_file=None,
+        environment="local",
+        database_url=LOCAL_DATABASE_URL,
+        ingestion_encryption_key=SecretStr("super-secret-ingestion-key"),
+        openrouter_api_key=SecretStr("super-secret-openrouter-key"),
+        object_storage_access_key=SecretStr("super-secret-s3-access"),
+        object_storage_secret_key=SecretStr("super-secret-s3-secret"),
+    )
+
+    text_repr = repr(settings)
+    assert "super-secret-ingestion-key" not in text_repr
+    assert "super-secret-openrouter-key" not in text_repr
+    assert "super-secret-s3-access" not in text_repr
+    assert "super-secret-s3-secret" not in text_repr
+
+
+def test_upload_and_storage_bounds() -> None:
+    # Valid bounds
+    settings = Settings(
+        _env_file=None,
+        environment="local",
+        database_url=LOCAL_DATABASE_URL,
+        upload_max_files=10,
+        upload_max_bytes=50 * 1024 * 1024,
+        upload_grant_ttl_seconds=1800,
+        object_storage_provider="memory",
+    )
+    assert settings.upload_max_files == 10
+    assert settings.upload_max_bytes == 50 * 1024 * 1024
+    assert settings.upload_grant_ttl_seconds == 1800
+    assert settings.object_storage_provider == "memory"
+
+    # Out of bounds
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None, database_url=LOCAL_DATABASE_URL, upload_max_files=0)
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None, database_url=LOCAL_DATABASE_URL, upload_max_files=25)
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None, database_url=LOCAL_DATABASE_URL, upload_max_bytes=500)
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None, database_url=LOCAL_DATABASE_URL, upload_grant_ttl_seconds=30)
