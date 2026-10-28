@@ -1,102 +1,309 @@
 {
-  "schema_version": "1.0",
-  "scope": "T24 pilot candidate mapping report only. It is not syllabus coverage, approval or a T12 import bundle.",
+  "schema_version": "1.1",
+  "scope": "T24 pilot candidate mapping report only. It is not syllabus coverage, approval or a T12 import bundle. Every existing mapping below is an analyst proposal, not a reviewed mapping.",
   "seed_source": "backend/src/memora/modules/curriculum/seed_data.py",
   "candidate_source": "content/physics/pilot/PILOT_QUESTIONS.md",
+  "candidate_count": 8,
+  "status_counts": {
+    "complete": 1,
+    "partial": 2,
+    "missing": 5
+  },
   "candidates": [
     {
       "pilot_id": "PILOT-PHYS-2025-P1-Q01",
+      "source_topic": "Units of energy",
       "mapping_status": "complete",
-      "referenced_existing_concepts": [
-        "PHYS-MEA-SI-UNITS",
-        "PHYS-MEA-DIMENSIONS"
+      "status_reason": "The SI-units concept is a primary anchor and the dimensions concept supports the printed-expression comparison; both resolve in T08.",
+      "existing_concept_mappings": [
+        {
+          "stable_code": "PHYS-MEA-SI-UNITS",
+          "concept_version_id": "50000000-0000-0000-0000-000000000001",
+          "objective_code": "LO-PHYS-01-01-UNITS",
+          "learning_objective_id": "30000000-0000-0000-0000-000000000002",
+          "mapping_role": "primary",
+          "proposed_weight": 0.7,
+          "mapping_basis": "Defines the coherent SI system and its seven fundamental base units.",
+          "claim_ids": [
+            "70000000-0000-0000-0000-000000000001"
+          ]
+        },
+        {
+          "stable_code": "PHYS-MEA-DIMENSIONS",
+          "concept_version_id": "50000000-0000-0000-0000-000000000002",
+          "objective_code": "LO-PHYS-01-02-DIMS",
+          "learning_objective_id": "30000000-0000-0000-0000-000000000003",
+          "mapping_role": "supporting",
+          "proposed_weight": 0.3,
+          "mapping_basis": "Supplies the dimensional-homogeneity condition used to compare the printed expressions.",
+          "claim_ids": [
+            "70000000-0000-0000-0000-000000000002"
+          ]
+        }
       ],
       "has_primary_existing_concept": true,
-      "missing_topics": []
+      "missing_topics": [],
+      "required_evidence": []
     },
     {
       "pilot_id": "PILOT-PHYS-2025-P1-Q02",
+      "source_topic": "Percentage error of a period",
       "mapping_status": "missing",
-      "referenced_existing_concepts": [
-        "PHYS-MEA-DIMENSIONS"
-      ],
+      "status_reason": "No T08 concept covers measurement uncertainty or percentage error. Dimensional analysis is not an error-propagation concept, so it is not recorded as a mapping.",
+      "existing_concept_mappings": [],
       "has_primary_existing_concept": false,
       "missing_topics": [
         "measurement uncertainty and percentage error"
+      ],
+      "required_evidence": [
+        "A reviewed T08 concept and objective for measurement uncertainty and percentage error, including the assumed least-count error model. No identifier is assigned in this report."
       ]
     },
     {
       "pilot_id": "PILOT-PHYS-2025-P1-Q05",
+      "source_topic": "Projectile statements",
       "mapping_status": "missing",
-      "referenced_existing_concepts": [
-        "PHYS-MEC-ACCELERATION"
+      "status_reason": "Only the acceleration concept resolves. No T08 concept covers projectile trajectories, velocity components at the apex or the independence of horizontal and vertical motion.",
+      "existing_concept_mappings": [
+        {
+          "stable_code": "PHYS-MEC-ACCELERATION",
+          "concept_version_id": "50000000-0000-0000-0000-000000000005",
+          "objective_code": "LO-PHYS-02-01-KINEMATICS",
+          "learning_objective_id": "30000000-0000-0000-0000-000000000005",
+          "mapping_role": "supporting",
+          "proposed_weight": 0.2,
+          "mapping_basis": "Defines acceleration as the time derivative of velocity and supports the constant-gravitational-acceleration statement only.",
+          "claim_ids": [
+            "70000000-0000-0000-0000-000000000005"
+          ]
+        }
       ],
       "has_primary_existing_concept": false,
       "missing_topics": [
-        "projectile motion"
+        "projectile motion (trajectory, apex velocity and constant acceleration)"
+      ],
+      "required_evidence": [
+        "A reviewed projectile-motion concept and objective covering two-dimensional motion, velocity components and the launch-angle assumption. No identifier is assigned in this report."
       ]
     },
     {
       "pilot_id": "PILOT-PHYS-2025-P1-Q12",
+      "source_topic": "Static friction, four-wheel drive",
       "mapping_status": "missing",
-      "referenced_existing_concepts": [
-        "PHYS-MEC-NEWTON2"
+      "status_reason": "Only Newton's second law resolves. No T08 concept covers static friction or the friction limit.",
+      "existing_concept_mappings": [
+        {
+          "stable_code": "PHYS-MEC-NEWTON2",
+          "concept_version_id": "50000000-0000-0000-0000-000000000008",
+          "objective_code": "LO-PHYS-02-02-NEWTON-LAWS",
+          "learning_objective_id": "30000000-0000-0000-0000-000000000006",
+          "mapping_role": "supporting",
+          "proposed_weight": 0.3,
+          "mapping_basis": "States F = dp/dt and F = ma for constant mass, supporting the acceleration step but not the static-friction limit.",
+          "claim_ids": [
+            "70000000-0000-0000-0000-000000000009"
+          ]
+        }
       ],
       "has_primary_existing_concept": false,
       "missing_topics": [
         "static friction and the friction limit"
+      ],
+      "required_evidence": [
+        "A reviewed static-friction concept under Newton's laws covering the limiting condition and the four-wheel-drive normal-reaction assumption. No identifier is assigned in this report."
       ]
     },
     {
       "pilot_id": "PILOT-PHYS-2025-P1-Q14",
+      "source_topic": "Independence of horizontal and vertical motion",
       "mapping_status": "missing",
-      "referenced_existing_concepts": [
-        "PHYS-MEC-ACCELERATION"
+      "status_reason": "Only the acceleration concept resolves. The item tests the independence of horizontal and vertical motion, which T08 does not represent as a projectile-motion concept.",
+      "existing_concept_mappings": [
+        {
+          "stable_code": "PHYS-MEC-ACCELERATION",
+          "concept_version_id": "50000000-0000-0000-0000-000000000005",
+          "objective_code": "LO-PHYS-02-01-KINEMATICS",
+          "learning_objective_id": "30000000-0000-0000-0000-000000000005",
+          "mapping_role": "supporting",
+          "proposed_weight": 0.25,
+          "mapping_basis": "Supports the shared vertical acceleration of the dropped and horizontally thrown bodies only.",
+          "claim_ids": [
+            "70000000-0000-0000-0000-000000000005"
+          ]
+        }
       ],
       "has_primary_existing_concept": false,
       "missing_topics": [
-        "independence of horizontal and vertical motion"
+        "projectile motion and independence of horizontal and vertical components"
+      ],
+      "required_evidence": [
+        "A reviewed projectile-motion concept covering the independence of horizontal and vertical motion and the time-of-flight reading used by the item. No identifier is assigned in this report."
       ]
     },
     {
       "pilot_id": "PILOT-PHYS-2025-P1-Q45",
+      "source_topic": "Collisions and momentum",
       "mapping_status": "partial",
-      "referenced_existing_concepts": [
-        "PHYS-MEC-MOMENTUM",
-        "PHYS-MEC-NEWTON3",
-        "PHYS-MEC-KINETIC-ENERGY"
+      "status_reason": "Momentum, Newton's third law and kinetic energy resolve, but T08 has no conservation-of-momentum principle and no elastic/inelastic collision concept.",
+      "existing_concept_mappings": [
+        {
+          "stable_code": "PHYS-MEC-MOMENTUM",
+          "concept_version_id": "50000000-0000-0000-0000-000000000006",
+          "objective_code": "LO-PHYS-02-02-NEWTON-LAWS",
+          "learning_objective_id": "30000000-0000-0000-0000-000000000006",
+          "mapping_role": "primary",
+          "proposed_weight": 0.5,
+          "mapping_basis": "Defines linear momentum as the vector p = mv; it is the best existing anchor, but it is a variable rather than the conservation law.",
+          "claim_ids": [
+            "70000000-0000-0000-0000-000000000006"
+          ]
+        },
+        {
+          "stable_code": "PHYS-MEC-NEWTON3",
+          "concept_version_id": "50000000-0000-0000-0000-000000000009",
+          "objective_code": "LO-PHYS-02-02-NEWTON-LAWS",
+          "learning_objective_id": "30000000-0000-0000-0000-000000000006",
+          "mapping_role": "supporting",
+          "proposed_weight": 0.25,
+          "mapping_basis": "States the equal-and-opposite interaction of two bodies during a collision.",
+          "claim_ids": [
+            "70000000-0000-0000-0000-000000000010"
+          ]
+        },
+        {
+          "stable_code": "PHYS-MEC-KINETIC-ENERGY",
+          "concept_version_id": "50000000-0000-0000-0000-000000000011",
+          "objective_code": "LO-PHYS-02-03-WORK-ENERGY",
+          "learning_objective_id": "30000000-0000-0000-0000-000000000007",
+          "mapping_role": "supporting",
+          "proposed_weight": 0.25,
+          "mapping_basis": "Defines kinetic energy as a scalar function of mass and speed, supporting the elastic/inelastic distinction but not the collision classification.",
+          "claim_ids": [
+            "70000000-0000-0000-0000-000000000012"
+          ]
+        }
       ],
       "has_primary_existing_concept": true,
       "missing_topics": [
         "conservation of linear momentum",
         "elastic and inelastic collisions"
+      ],
+      "required_evidence": [
+        "A reviewed conservation-of-linear-momentum principle and a reviewed elastic/inelastic collision concept with objective parentage. The existing momentum node is a variable, not the conservation law. No identifier is assigned in this report."
       ]
     },
     {
       "pilot_id": "PILOT-PHYS-2022-P1-Q01",
+      "source_topic": "Vector and scalar quantities",
       "mapping_status": "missing",
-      "referenced_existing_concepts": [
-        "PHYS-MEC-DISPLACEMENT",
-        "PHYS-MEC-VELOCITY",
-        "PHYS-MEC-MOMENTUM",
-        "PHYS-MEC-WORK",
-        "PHYS-MEC-KINETIC-ENERGY",
-        "PHYS-MEC-GRAV-POT-ENERGY"
+      "status_reason": "The six quantities resolve individually, but no T08 concept teaches scalar/vector classification itself.",
+      "existing_concept_mappings": [
+        {
+          "stable_code": "PHYS-MEC-DISPLACEMENT",
+          "concept_version_id": "50000000-0000-0000-0000-000000000003",
+          "objective_code": "LO-PHYS-02-01-KINEMATICS",
+          "learning_objective_id": "30000000-0000-0000-0000-000000000005",
+          "mapping_role": "supporting",
+          "proposed_weight": 0.15,
+          "mapping_basis": "Defines displacement as a vector quantity with magnitude and direction.",
+          "claim_ids": [
+            "70000000-0000-0000-0000-000000000003"
+          ]
+        },
+        {
+          "stable_code": "PHYS-MEC-VELOCITY",
+          "concept_version_id": "50000000-0000-0000-0000-000000000004",
+          "objective_code": "LO-PHYS-02-01-KINEMATICS",
+          "learning_objective_id": "30000000-0000-0000-0000-000000000005",
+          "mapping_role": "supporting",
+          "proposed_weight": 0.15,
+          "mapping_basis": "Defines velocity as the time derivative of displacement, a vector quantity.",
+          "claim_ids": [
+            "70000000-0000-0000-0000-000000000004"
+          ]
+        },
+        {
+          "stable_code": "PHYS-MEC-MOMENTUM",
+          "concept_version_id": "50000000-0000-0000-0000-000000000006",
+          "objective_code": "LO-PHYS-02-02-NEWTON-LAWS",
+          "learning_objective_id": "30000000-0000-0000-0000-000000000006",
+          "mapping_role": "supporting",
+          "proposed_weight": 0.15,
+          "mapping_basis": "Defines linear momentum as a vector quantity pointing in the direction of velocity.",
+          "claim_ids": [
+            "70000000-0000-0000-0000-000000000006"
+          ]
+        },
+        {
+          "stable_code": "PHYS-MEC-WORK",
+          "concept_version_id": "50000000-0000-0000-0000-000000000010",
+          "objective_code": "LO-PHYS-02-03-WORK-ENERGY",
+          "learning_objective_id": "30000000-0000-0000-0000-000000000007",
+          "mapping_role": "supporting",
+          "proposed_weight": 0.15,
+          "mapping_basis": "Defines work as the scalar product of force and displacement; the concept does not state the scalar/vector classification explicitly.",
+          "claim_ids": [
+            "70000000-0000-0000-0000-000000000011"
+          ]
+        },
+        {
+          "stable_code": "PHYS-MEC-KINETIC-ENERGY",
+          "concept_version_id": "50000000-0000-0000-0000-000000000011",
+          "objective_code": "LO-PHYS-02-03-WORK-ENERGY",
+          "learning_objective_id": "30000000-0000-0000-0000-000000000007",
+          "mapping_role": "supporting",
+          "proposed_weight": 0.15,
+          "mapping_basis": "Defines kinetic energy as a scalar function of mass and speed; the concept does not state the classification explicitly.",
+          "claim_ids": [
+            "70000000-0000-0000-0000-000000000012"
+          ]
+        },
+        {
+          "stable_code": "PHYS-MEC-GRAV-POT-ENERGY",
+          "concept_version_id": "50000000-0000-0000-0000-000000000012",
+          "objective_code": "LO-PHYS-02-03-WORK-ENERGY",
+          "learning_objective_id": "30000000-0000-0000-0000-000000000007",
+          "mapping_role": "supporting",
+          "proposed_weight": 0.15,
+          "mapping_basis": "Defines gravitational potential energy as a scalar; the concept does not state the classification explicitly.",
+          "claim_ids": [
+            "70000000-0000-0000-0000-000000000013"
+          ]
+        }
       ],
       "has_primary_existing_concept": false,
       "missing_topics": [
         "scalar and vector quantities"
+      ],
+      "required_evidence": [
+        "A reviewed scalar-and-vector classification concept and objective covering magnitude, direction and the A/L torque convention. No identifier is assigned in this report."
       ]
     },
     {
       "pilot_id": "PILOT-PHYS-2022-P1-Q17",
+      "source_topic": "Simple pendulum in an accelerating elevator",
       "mapping_status": "partial",
-      "referenced_existing_concepts": [
-        "PHYS-WAV-SHM"
+      "status_reason": "General SHM resolves, but T08 has no simple-pendulum concept and no effective-gravity concept.",
+      "existing_concept_mappings": [
+        {
+          "stable_code": "PHYS-WAV-SHM",
+          "concept_version_id": "50000000-0000-0000-0000-000000000014",
+          "objective_code": "LO-PHYS-03-01-SHM",
+          "learning_objective_id": "30000000-0000-0000-0000-000000000009",
+          "mapping_role": "supporting",
+          "proposed_weight": 0.3,
+          "mapping_basis": "Defines simple harmonic motion by acceleration proportional and opposite to displacement; it does not provide the pendulum period or effective gravity.",
+          "claim_ids": [
+            "70000000-0000-0000-0000-000000000015"
+          ]
+        }
       ],
       "has_primary_existing_concept": false,
       "missing_topics": [
         "simple pendulum and effective gravity"
+      ],
+      "required_evidence": [
+        "A reviewed simple-pendulum concept covering the period formula, the effective-gravity treatment in an accelerating frame and the constant-acceleration assumption. No identifier is assigned in this report."
       ]
     }
   ]
