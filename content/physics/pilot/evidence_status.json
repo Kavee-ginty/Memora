@@ -1,0 +1,417 @@
+{
+  "schema_version": "1.0",
+  "scope": "Read-only per-candidate evidence status for the eight T24 pilot candidates. It does not approve, import or publish any item. A verified source-file hash is not evidence of official publication authentication, an official answer key or reproduction permission.",
+  "generated_at": "2026-10-28",
+  "candidate_source": "content/physics/pilot/PILOT_QUESTIONS.md",
+  "source_manifest": "content/physics/pilot/source_manifest.json",
+  "status_values": [
+    "verified",
+    "missing",
+    "pending_human_review",
+    "blocked"
+  ],
+  "global_blockers": [
+    {
+      "id": "B1",
+      "title": "No real author, reviewer, qualification, independence or approval record",
+      "owner": "Academic content lead",
+      "status": "blocked",
+      "action": "Supply real author and reviewer principals, qualification references, independence declarations and approval records. Placeholder UUIDs or invented credentials are not acceptable."
+    },
+    {
+      "id": "B2",
+      "title": "No official MCQ answer key and no independent answer/rubric verification",
+      "owner": "Independent Physics reviewer",
+      "status": "blocked",
+      "action": "Locate an official MCQ key or independently verify every derived answer and rubric. Record the reviewer, method, date and result."
+    },
+    {
+      "id": "B3",
+      "title": "No reproduction or distribution permission",
+      "owner": "Project or legal owner",
+      "status": "blocked",
+      "action": "Decide the reproduction/licence route and record an approval reference before any verbatim question text is committed, published or redistributed."
+    },
+    {
+      "id": "B4",
+      "title": "Six topic areas are absent from the T08 graph",
+      "owner": "Curriculum lead",
+      "status": "blocked",
+      "action": "Review and add measurement uncertainty, projectile motion, static friction, conservation of momentum/elastic collisions, scalar-vector classification and simple pendulum/effective gravity with reviewed IDs, objectives, claims and provenance."
+    },
+    {
+      "id": "B5",
+      "title": "T12 has no question-level source-provenance field",
+      "owner": "T12 owner",
+      "status": "pending_human_review",
+      "action": "Confirm whether the repo-side source envelope is acceptable for the pilot or add a durable question-provenance table/column with migration and API review."
+    },
+    {
+      "id": "B6",
+      "title": "PostgreSQL import, RLS and migration checks are not yet accepted in CI",
+      "owner": "Backend owner",
+      "status": "pending_human_review",
+      "action": "Run the existing PostgreSQL/pgvector test suites in CI against a disposable database and record the result. A local disposable run is evidence, not a staging or production acceptance."
+    },
+    {
+      "id": "B7",
+      "title": "Ambiguity and semantic duplicate clearance is pending",
+      "owner": "Independent reviewer",
+      "status": "blocked",
+      "action": "Clear every documented ambiguity flag, confirm the exact-text duplicate result and run a documented near-duplicate/semantic check over the eight candidates."
+    }
+  ],
+  "candidates": [
+    {
+      "pilot_id": "PILOT-PHYS-2025-P1-Q01",
+      "source": {
+        "source_id": "SL-DOE-AL-PHYS-2025-P1",
+        "document_filename": "AL_Physics_2025_Combined_Paper_English.pdf",
+        "document_sha256": "6572aead08a0cc5fd9feed0db0a3e56fc2c125fca8fccb7e178a2c59729bae49",
+        "exam_year": 2025,
+        "paper": "Paper I",
+        "question_number": 1,
+        "pdf_page": 1
+      },
+      "marking_scheme": {
+        "document_filename": "AL_Physics_2025_Combined_Marking_Scheme_English.pdf",
+        "document_sha256": "39d58f8f5a272614b984f78156663e0fe1bb9afc0461013989e7e50df18fceb3",
+        "mcq_key_present": false,
+        "note": "Page 2 is a question-to-marks allocation table, not an MCQ answer grid."
+      },
+      "derived_option_key": "5",
+      "evidence_status": {
+        "source_file_identity": "verified",
+        "source_authenticity": "pending_human_review",
+        "official_answer_key": "missing",
+        "marking_scheme_or_rubric": "pending_human_review",
+        "reproduction_rights": "blocked",
+        "attribution_provenance": "pending_human_review",
+        "author_identity": "missing",
+        "reviewer_identity_and_qualification": "missing",
+        "independence_declaration": "missing",
+        "independent_answer_review": "missing",
+        "ambiguity_review": "pending_human_review",
+        "duplicate_review": "pending_human_review",
+        "approval_record": "missing"
+      },
+      "overall_status": "blocked",
+      "blocker_ids": [
+        "B1",
+        "B2",
+        "B3",
+        "B5",
+        "B6",
+        "B7"
+      ]
+    },
+    {
+      "pilot_id": "PILOT-PHYS-2025-P1-Q02",
+      "source": {
+        "source_id": "SL-DOE-AL-PHYS-2025-P1",
+        "document_filename": "AL_Physics_2025_Combined_Paper_English.pdf",
+        "document_sha256": "6572aead08a0cc5fd9feed0db0a3e56fc2c125fca8fccb7e178a2c59729bae49",
+        "exam_year": 2025,
+        "paper": "Paper I",
+        "question_number": 2,
+        "pdf_page": 1
+      },
+      "marking_scheme": {
+        "document_filename": "AL_Physics_2025_Combined_Marking_Scheme_English.pdf",
+        "document_sha256": "39d58f8f5a272614b984f78156663e0fe1bb9afc0461013989e7e50df18fceb3",
+        "mcq_key_present": false,
+        "note": "Page 2 is a question-to-marks allocation table, not an MCQ answer grid."
+      },
+      "derived_option_key": "3",
+      "evidence_status": {
+        "source_file_identity": "verified",
+        "source_authenticity": "pending_human_review",
+        "official_answer_key": "missing",
+        "marking_scheme_or_rubric": "pending_human_review",
+        "reproduction_rights": "blocked",
+        "attribution_provenance": "pending_human_review",
+        "author_identity": "missing",
+        "reviewer_identity_and_qualification": "missing",
+        "independence_declaration": "missing",
+        "independent_answer_review": "missing",
+        "ambiguity_review": "pending_human_review",
+        "duplicate_review": "pending_human_review",
+        "approval_record": "missing"
+      },
+      "overall_status": "blocked",
+      "blocker_ids": [
+        "B1",
+        "B2",
+        "B3",
+        "B4",
+        "B5",
+        "B6",
+        "B7"
+      ]
+    },
+    {
+      "pilot_id": "PILOT-PHYS-2025-P1-Q05",
+      "source": {
+        "source_id": "SL-DOE-AL-PHYS-2025-P1",
+        "document_filename": "AL_Physics_2025_Combined_Paper_English.pdf",
+        "document_sha256": "6572aead08a0cc5fd9feed0db0a3e56fc2c125fca8fccb7e178a2c59729bae49",
+        "exam_year": 2025,
+        "paper": "Paper I",
+        "question_number": 5,
+        "pdf_page": 1
+      },
+      "marking_scheme": {
+        "document_filename": "AL_Physics_2025_Combined_Marking_Scheme_English.pdf",
+        "document_sha256": "39d58f8f5a272614b984f78156663e0fe1bb9afc0461013989e7e50df18fceb3",
+        "mcq_key_present": false,
+        "note": "Page 2 is a question-to-marks allocation table, not an MCQ answer grid."
+      },
+      "derived_option_key": "3",
+      "evidence_status": {
+        "source_file_identity": "verified",
+        "source_authenticity": "pending_human_review",
+        "official_answer_key": "missing",
+        "marking_scheme_or_rubric": "pending_human_review",
+        "reproduction_rights": "blocked",
+        "attribution_provenance": "pending_human_review",
+        "author_identity": "missing",
+        "reviewer_identity_and_qualification": "missing",
+        "independence_declaration": "missing",
+        "independent_answer_review": "missing",
+        "ambiguity_review": "pending_human_review",
+        "duplicate_review": "pending_human_review",
+        "approval_record": "missing"
+      },
+      "overall_status": "blocked",
+      "blocker_ids": [
+        "B1",
+        "B2",
+        "B3",
+        "B4",
+        "B5",
+        "B6",
+        "B7"
+      ]
+    },
+    {
+      "pilot_id": "PILOT-PHYS-2025-P1-Q12",
+      "source": {
+        "source_id": "SL-DOE-AL-PHYS-2025-P1",
+        "document_filename": "AL_Physics_2025_Combined_Paper_English.pdf",
+        "document_sha256": "6572aead08a0cc5fd9feed0db0a3e56fc2c125fca8fccb7e178a2c59729bae49",
+        "exam_year": 2025,
+        "paper": "Paper I",
+        "question_number": 12,
+        "pdf_page": 2
+      },
+      "marking_scheme": {
+        "document_filename": "AL_Physics_2025_Combined_Marking_Scheme_English.pdf",
+        "document_sha256": "39d58f8f5a272614b984f78156663e0fe1bb9afc0461013989e7e50df18fceb3",
+        "mcq_key_present": false,
+        "note": "Page 2 is a question-to-marks allocation table, not an MCQ answer grid."
+      },
+      "derived_option_key": "2",
+      "evidence_status": {
+        "source_file_identity": "verified",
+        "source_authenticity": "pending_human_review",
+        "official_answer_key": "missing",
+        "marking_scheme_or_rubric": "pending_human_review",
+        "reproduction_rights": "blocked",
+        "attribution_provenance": "pending_human_review",
+        "author_identity": "missing",
+        "reviewer_identity_and_qualification": "missing",
+        "independence_declaration": "missing",
+        "independent_answer_review": "missing",
+        "ambiguity_review": "pending_human_review",
+        "duplicate_review": "pending_human_review",
+        "approval_record": "missing"
+      },
+      "overall_status": "blocked",
+      "blocker_ids": [
+        "B1",
+        "B2",
+        "B3",
+        "B4",
+        "B5",
+        "B6",
+        "B7"
+      ]
+    },
+    {
+      "pilot_id": "PILOT-PHYS-2025-P1-Q14",
+      "source": {
+        "source_id": "SL-DOE-AL-PHYS-2025-P1",
+        "document_filename": "AL_Physics_2025_Combined_Paper_English.pdf",
+        "document_sha256": "6572aead08a0cc5fd9feed0db0a3e56fc2c125fca8fccb7e178a2c59729bae49",
+        "exam_year": 2025,
+        "paper": "Paper I",
+        "question_number": 14,
+        "pdf_page": 2
+      },
+      "marking_scheme": {
+        "document_filename": "AL_Physics_2025_Combined_Marking_Scheme_English.pdf",
+        "document_sha256": "39d58f8f5a272614b984f78156663e0fe1bb9afc0461013989e7e50df18fceb3",
+        "mcq_key_present": false,
+        "note": "Page 2 is a question-to-marks allocation table, not an MCQ answer grid."
+      },
+      "derived_option_key": "5",
+      "evidence_status": {
+        "source_file_identity": "verified",
+        "source_authenticity": "pending_human_review",
+        "official_answer_key": "missing",
+        "marking_scheme_or_rubric": "pending_human_review",
+        "reproduction_rights": "blocked",
+        "attribution_provenance": "pending_human_review",
+        "author_identity": "missing",
+        "reviewer_identity_and_qualification": "missing",
+        "independence_declaration": "missing",
+        "independent_answer_review": "missing",
+        "ambiguity_review": "pending_human_review",
+        "duplicate_review": "pending_human_review",
+        "approval_record": "missing"
+      },
+      "overall_status": "blocked",
+      "blocker_ids": [
+        "B1",
+        "B2",
+        "B3",
+        "B4",
+        "B5",
+        "B6",
+        "B7"
+      ]
+    },
+    {
+      "pilot_id": "PILOT-PHYS-2025-P1-Q45",
+      "source": {
+        "source_id": "SL-DOE-AL-PHYS-2025-P1",
+        "document_filename": "AL_Physics_2025_Combined_Paper_English.pdf",
+        "document_sha256": "6572aead08a0cc5fd9feed0db0a3e56fc2c125fca8fccb7e178a2c59729bae49",
+        "exam_year": 2025,
+        "paper": "Paper I",
+        "question_number": 45,
+        "pdf_page": 8
+      },
+      "marking_scheme": {
+        "document_filename": "AL_Physics_2025_Combined_Marking_Scheme_English.pdf",
+        "document_sha256": "39d58f8f5a272614b984f78156663e0fe1bb9afc0461013989e7e50df18fceb3",
+        "mcq_key_present": false,
+        "note": "Page 2 is a question-to-marks allocation table, not an MCQ answer grid."
+      },
+      "derived_option_key": "5",
+      "evidence_status": {
+        "source_file_identity": "verified",
+        "source_authenticity": "pending_human_review",
+        "official_answer_key": "missing",
+        "marking_scheme_or_rubric": "pending_human_review",
+        "reproduction_rights": "blocked",
+        "attribution_provenance": "pending_human_review",
+        "author_identity": "missing",
+        "reviewer_identity_and_qualification": "missing",
+        "independence_declaration": "missing",
+        "independent_answer_review": "missing",
+        "ambiguity_review": "pending_human_review",
+        "duplicate_review": "pending_human_review",
+        "approval_record": "missing"
+      },
+      "overall_status": "blocked",
+      "blocker_ids": [
+        "B1",
+        "B2",
+        "B3",
+        "B4",
+        "B5",
+        "B6",
+        "B7"
+      ]
+    },
+    {
+      "pilot_id": "PILOT-PHYS-2022-P1-Q01",
+      "source": {
+        "source_id": "SL-DOE-AL-PHYS-2022-P1",
+        "document_filename": "AL_Physics_2022_Combined_Paper_English.pdf",
+        "document_sha256": "931347c30d9c96068ae3df9e6d0db62f05c903f1a2abdb268a9a0e6bdb9956dc",
+        "exam_year": 2022,
+        "paper": "Paper I",
+        "question_number": 1,
+        "pdf_page": 1
+      },
+      "marking_scheme": {
+        "document_filename": "AL_Physics_2022_Combined_Marking_Scheme_English.pdf",
+        "document_sha256": "52b42bcdf22ce9f6cc8c071d0cd6ba3c6f9082183d455d4fe43ef29143ee2ca7",
+        "mcq_key_present": false,
+        "note": "Page 2 is a question-to-marks allocation table, not an MCQ answer grid. Handwritten marks are not an official key."
+      },
+      "derived_option_key": "4",
+      "evidence_status": {
+        "source_file_identity": "verified",
+        "source_authenticity": "pending_human_review",
+        "official_answer_key": "missing",
+        "marking_scheme_or_rubric": "pending_human_review",
+        "reproduction_rights": "blocked",
+        "attribution_provenance": "pending_human_review",
+        "author_identity": "missing",
+        "reviewer_identity_and_qualification": "missing",
+        "independence_declaration": "missing",
+        "independent_answer_review": "missing",
+        "ambiguity_review": "pending_human_review",
+        "duplicate_review": "pending_human_review",
+        "approval_record": "missing"
+      },
+      "overall_status": "blocked",
+      "blocker_ids": [
+        "B1",
+        "B2",
+        "B3",
+        "B4",
+        "B5",
+        "B6",
+        "B7"
+      ]
+    },
+    {
+      "pilot_id": "PILOT-PHYS-2022-P1-Q17",
+      "source": {
+        "source_id": "SL-DOE-AL-PHYS-2022-P1",
+        "document_filename": "AL_Physics_2022_Combined_Paper_English.pdf",
+        "document_sha256": "931347c30d9c96068ae3df9e6d0db62f05c903f1a2abdb268a9a0e6bdb9956dc",
+        "exam_year": 2022,
+        "paper": "Paper I",
+        "question_number": 17,
+        "pdf_page": 3
+      },
+      "marking_scheme": {
+        "document_filename": "AL_Physics_2022_Combined_Marking_Scheme_English.pdf",
+        "document_sha256": "52b42bcdf22ce9f6cc8c071d0cd6ba3c6f9082183d455d4fe43ef29143ee2ca7",
+        "mcq_key_present": false,
+        "note": "Page 2 is a question-to-marks allocation table, not an MCQ answer grid. Handwritten marks are not an official key."
+      },
+      "derived_option_key": "4",
+      "evidence_status": {
+        "source_file_identity": "verified",
+        "source_authenticity": "pending_human_review",
+        "official_answer_key": "missing",
+        "marking_scheme_or_rubric": "pending_human_review",
+        "reproduction_rights": "blocked",
+        "attribution_provenance": "pending_human_review",
+        "author_identity": "missing",
+        "reviewer_identity_and_qualification": "missing",
+        "independence_declaration": "missing",
+        "independent_answer_review": "missing",
+        "ambiguity_review": "pending_human_review",
+        "duplicate_review": "pending_human_review",
+        "approval_record": "missing"
+      },
+      "overall_status": "blocked",
+      "blocker_ids": [
+        "B1",
+        "B2",
+        "B3",
+        "B4",
+        "B5",
+        "B6",
+        "B7"
+      ]
+    }
+  ]
+}
