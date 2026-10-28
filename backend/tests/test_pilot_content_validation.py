@@ -124,6 +124,42 @@ def test_approved_item_requires_a_primary_mapping() -> None:
     assert failure_code(envelope) == "pilot_mapping_invalid"
 
 
+def test_mapping_concept_must_exist_in_the_t08_seed() -> None:
+    envelope = draft()
+    envelope["question"]["concept_mappings"][0]["concept_version_id"] = (
+        "50000000-0000-0000-0000-000000009999"
+    )
+
+    assert failure_code(envelope) == "pilot_mapping_unknown_concept"
+
+
+def test_mapping_objective_must_match_the_t08_concept_objective() -> None:
+    envelope = draft()
+    envelope["question"]["concept_mappings"][0]["learning_objective_id"] = (
+        "30000000-0000-0000-0000-000000000001"
+    )
+
+    assert failure_code(envelope) == "pilot_mapping_objective_mismatch"
+
+
+def test_mapping_pairs_must_be_unique_per_concept_and_role() -> None:
+    envelope = draft()
+    envelope["question"]["concept_mappings"].append(
+        copy.deepcopy(envelope["question"]["concept_mappings"][0])
+    )
+
+    assert failure_code(envelope) == "pilot_mapping_invalid"
+
+
+def test_draft_mapping_may_omit_the_objective_id() -> None:
+    envelope = draft()
+    envelope["question"]["concept_mappings"][0]["learning_objective_id"] = None
+
+    validated = validate_pilot_envelope(envelope)
+
+    assert validated["question"]["concept_mappings"][0]["learning_objective_id"] is None
+
+
 def test_approved_envelope_requires_reviewed_mapping_provenance() -> None:
     envelope = approved()
     envelope["question"]["concept_mappings"][0]["provenance_type"] = "analyst_mapping"
@@ -277,6 +313,38 @@ def test_approved_envelope_requires_review_hash_and_source_ref() -> None:
     wrong_source["review"]["content_hash"] = compute_pilot_content_hash(wrong_source)
     wrong_source["review"]["source_ref"] = "SL-DOE-AL-PHYS-2025-P1|" + "0" * 64 + "|1|1"
     assert failure_code(wrong_source) == "pilot_source_ref_mismatch"
+
+
+def test_approved_item_requires_review_and_approval_dates() -> None:
+    no_review_date = approved()
+    no_review_date["review"]["content_hash"] = compute_pilot_content_hash(no_review_date)
+    no_review_date["review"]["reviewed_at"] = None
+
+    no_approval_date = approved()
+    no_approval_date["review"]["content_hash"] = compute_pilot_content_hash(no_approval_date)
+    no_approval_date["publication"]["approved_at"] = None
+
+    assert failure_code(no_review_date) == "pilot_review_date_required"
+    assert failure_code(no_approval_date) == "pilot_approval_date_required"
+
+
+def test_approval_cannot_precede_review() -> None:
+    envelope = approved()
+    envelope["review"]["content_hash"] = compute_pilot_content_hash(envelope)
+    envelope["publication"]["approved_at"] = "2026-10-27T12:00:00+00:00"
+
+    assert failure_code(envelope) == "pilot_approval_before_review"
+
+
+def test_approved_item_rejects_rejected_review_or_answer() -> None:
+    rejected_review = approved()
+    rejected_review["review"]["academic_review_status"] = "rejected"
+
+    rejected_answer = approved()
+    rejected_answer["answer_verification"]["independent_review_status"] = "rejected"
+
+    assert failure_code(rejected_review) == "pilot_review_not_approved"
+    assert failure_code(rejected_answer) == "pilot_answer_not_verified"
 
 
 def test_approved_past_paper_requires_reproduction_and_transcription_gates() -> None:

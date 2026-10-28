@@ -19,6 +19,7 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
+from memora.modules.curriculum.seed_data import CONCEPTS_DATA, LEARNING_OBJECTIVES
 from memora.modules.questions.models import QuestionImportBundle, ValidatedQuestionImport
 from memora.modules.questions.validation import validate_question_import
 
@@ -37,6 +38,15 @@ _SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 _SOURCE_ID_PATTERNS = {
     "past_paper": re.compile(r"^SL-DOE-AL-PHYS-[0-9]{4}-P1$"),
     "synthetic": re.compile(r"^SYNTHETIC-[A-Z0-9-]+$"),
+}
+
+_OBJECTIVE_IDS_BY_CODE = {
+    str(objective["objective_code"]): UUID(str(objective["id"]))
+    for objective in LEARNING_OBJECTIVES
+}
+_CONCEPT_OBJECTIVE_IDS = {
+    UUID(str(concept["version_id"])): _OBJECTIVE_IDS_BY_CODE[str(concept["objective_code"])]
+    for concept in CONCEPTS_DATA
 }
 
 
@@ -127,6 +137,18 @@ def _datetime_text(value: Any, field: str) -> str:
     except ValueError:
         _fail("pilot_envelope_invalid", "Expected an ISO-8601 date-time.", field)
     return text
+
+
+def _datetime_value(value: Any, field: str) -> datetime:
+    text = _datetime_text(value, field)
+    parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
+    if parsed.tzinfo is None:
+        _fail(
+            "pilot_envelope_invalid",
+            "Expected a timezone-aware ISO-8601 date-time.",
+            field,
+        )
+    return parsed
 
 
 def _list(value: Any, field: str, *, minimum: int = 0, maximum: int | None = None) -> list[Any]:
@@ -456,18 +478,42 @@ def _validate_question(
         question.get("concept_mappings"), "question.concept_mappings", minimum=1, maximum=12
     )
     primary_count = 0
+    seen_pairs: set[tuple[str, str]] = set()
     for index, raw in enumerate(mappings):
         field = f"question.concept_mappings[{index}]"
         mapping = _mapping(raw, field)
-        _uuid_text(mapping.get("concept_version_id"), f"{field}.concept_version_id")
-        _uuid_text(
+        concept_version_id = _uuid_text(
+            mapping.get("concept_version_id"), f"{field}.concept_version_id"
+        )
+        known_objective = _CONCEPT_OBJECTIVE_IDS.get(UUID(concept_version_id))
+        if known_objective is None:
+            _fail(
+                "pilot_mapping_unknown_concept",
+                "Concept version is not part of the reviewed T08 seed.",
+                f"{field}.concept_version_id",
+            )
+        learning_objective_id = _uuid_text(
             mapping.get("learning_objective_id"),
             f"{field}.learning_objective_id",
             allow_none=True,
         )
+        if learning_objective_id is not None and UUID(learning_objective_id) != known_objective:
+            _fail(
+                "pilot_mapping_objective_mismatch",
+                "Learning objective does not match the T08 concept's objective.",
+                f"{field}.learning_objective_id",
+            )
         role = mapping.get("mapping_role")
         if role not in {"primary", "supporting", "prerequisite", "misconception"}:
             _fail("pilot_mapping_invalid", "Invalid mapping role.", f"{field}.mapping_role")
+        pair = (concept_version_id, str(role))
+        if pair in seen_pairs:
+            _fail(
+                "pilot_mapping_invalid",
+                "Concept mappings must be unique per concept and role.",
+                "question.concept_mappings",
+            )
+        seen_pairs.add(pair)
         weight = _number(mapping.get("weight"), f"{field}.weight")
         if not 0 <= weight <= 1:
             _fail("pilot_mapping_invalid", "Mapping weight is out of bounds.", f"{field}.weight")
@@ -589,7 +635,7 @@ def _validate_review(
     approved: bool,
     check_content_hash: bool,
     computed_hash: str,
-) -> None:
+) -> datetime | None:
     status = review.get("academic_review_status")
     if status not in {"pending", "approved", "rejected"}:
         _fail(
@@ -669,8 +715,15 @@ def _validate_review(
         )
 
     reviewed_at = review.get("reviewed_at")
-    if approved or reviewed_at is not None:
-        _datetime_text(reviewed_at, "review.reviewed_at")
+    if approved and reviewed_at is None:
+        _fail(
+            "pilot_review_date_required",
+            "An approved item needs a review date.",
+            "review.reviewed_at",
+        )
+    reviewed_at_value = (
+        _datetime_value(reviewed_at, "review.reviewed_at") if reviewed_at is not None else None
+    )
 
     if review.get("ambiguity_status") not in {"pending", "cleared", "flagged"}:
         _fail("pilot_review_invalid", "Invalid ambiguity status.", "review.ambiguity_status")
@@ -735,13 +788,14 @@ def _validate_review(
             "The reviewed source reference does not match the source block.",
             "review.source_ref",
         )
+    return reviewed_at_value
 
 
 def _validate_publication(
     publication: Mapping[str, Any],
     *,
     approved: bool,
-) -> None:
+) -> datetime | None:
     approved_for_import = _bool(
         publication.get("approved_for_import"), "publication.approved_for_import"
     )
@@ -761,15 +815,7 @@ def _validate_publication(
         allow_none=True,
         max_length=200,
     )
-    if approved_for_import:
-        if approved_by is None:
-            _fail(
-                "pilot_approval_required",
-                "An approved item needs an approval record reference.",
-                "publication.approved_by",
-            )
-        _datetime_text(approved_at, "publication.approved_at")
-    else:
+    if not approved_for_import:
         if approved_by is not None or approved_at is not None:
             _fail(
                 "pilot_publication_mismatch",
@@ -782,6 +828,20 @@ def _validate_publication(
                 "A draft must not carry an import batch.",
                 "publication.import_batch_id",
             )
+        return None
+    if approved_by is None:
+        _fail(
+            "pilot_approval_required",
+            "An approved item needs an approval record reference.",
+            "publication.approved_by",
+        )
+    if approved_at is None:
+        _fail(
+            "pilot_approval_date_required",
+            "An approved item needs an approval date.",
+            "publication.approved_at",
+        )
+    return _datetime_value(approved_at, "publication.approved_at")
 
 
 def _build_bundle(envelope: Mapping[str, Any], *, for_hash: bool) -> QuestionImportBundle:
@@ -845,7 +905,7 @@ def validate_pilot_envelope(
     _validate_question(question, approved=approved)
     _validate_answer(answer, question, approved=approved)
     validated = validate_question_import(_build_bundle(envelope, for_hash=True))
-    _validate_review(
+    reviewed_at = _validate_review(
         review,
         question,
         source,
@@ -853,7 +913,18 @@ def validate_pilot_envelope(
         check_content_hash=check_content_hash,
         computed_hash=validated.content_hash,
     )
-    _validate_publication(publication, approved=approved)
+    approved_at = _validate_publication(publication, approved=approved)
+    if (
+        approved
+        and reviewed_at is not None
+        and approved_at is not None
+        and approved_at < reviewed_at
+    ):
+        _fail(
+            "pilot_approval_before_review",
+            "The approval date cannot precede the review date.",
+            "publication.approved_at",
+        )
     return dict(envelope)
 
 
