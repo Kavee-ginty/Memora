@@ -15,20 +15,21 @@ T12 does not need a new route for the pilot. T24 needs one owner decision on sou
 | Draft envelope cannot convert to an import bundle | `test_to_validated_import_refuses_drafts` in `backend/tests/test_pilot_content_validation.py` |
 | Approved envelope requires real review/approval fields | `test_approved_envelope_requires_author_and_reviewer_principals`, `test_approved_item_requires_publication_approval_and_source_ref`, `test_approved_item_requires_review_and_approval_dates`, `test_approval_cannot_precede_review` in the same file |
 | Reviewer and author must differ | `test_approved_envelope_requires_reviewer_independence` |
-| Reviewer qualification and review scope are required | `test_approved_envelope_requires_qualification_and_scope` |
+| Author and reviewer qualification and review scope are required | `test_approved_envelope_requires_qualification_and_scope`, `test_author_qualification_matches_approval_state` |
 | Past-paper approval requires reproduction approval and verified transcription | `test_approved_past_paper_requires_reproduction_and_transcription_gates` |
 | Unknown T08 concept UUIDs, objective mismatches and duplicate mappings are rejected | `test_mapping_concept_must_exist_in_the_t08_seed`, `test_mapping_objective_must_match_the_t08_concept_objective`, `test_mapping_pairs_must_be_unique_per_concept_and_role` |
 | Source metadata cannot be placed in question `content` | `test_source_metadata_cannot_be_smuggled_into_question_content` in `backend/tests/test_questions_models.py`; `test_source_metadata_cannot_be_smuggled_into_content` in `backend/tests/test_pilot_schema_jsonschema.py` |
 | Approved questions need reviewer, author, explanation, approved rubric, positive evidence ceiling and a primary mapping | `test_import_rejects_approved_question_without_required_principals`, `test_import_rejects_approved_question_without_explanation`, `test_import_rejects_approved_question_with_draft_rubric`, `test_import_rejects_approved_question_with_zero_evidence_ceiling`, `test_import_rejects_supporting_only_mapping_for_publication` in `backend/tests/test_questions_models.py` |
+| Pilot-only fields are removed before T12 validation | `test_pilot_only_author_qualification_is_not_sent_to_t12` |
 | Local disposable PostgreSQL migration, import, immutability, publication-guard and RLS suites | 27 passed, 0 failed on `memora_t24_test`; see section 5 |
 
 ## 3. What remains unverified
 
 - No T12 owner has confirmed that the repo-side envelope is an acceptable provenance record for the pilot.
 - No CI or staging run has accepted the PostgreSQL/RLS suites; the local run is not release evidence.
-- T12 has no question-level field for source paper, year, question number, page, licence, reviewer qualification or approval timestamp.
+- T12 has no question-level field for source paper, year, question number, page, licence, author qualification, reviewer qualification or approval timestamp. T24 records both qualification references in its envelope only.
 - T12 does not enforce reviewer/author independence. Only the T24 envelope does.
-- No real reviewer, qualification record, approval record or reproduction permission exists.
+- No real author or reviewer, author or reviewer qualification record, approval record or reproduction permission exists.
 
 ## 4. Decisions needed from the T12 owner
 
@@ -54,7 +55,7 @@ $env:PYTHONPATH="$PWD\backend\src"
   backend/tests/test_questions_grading.py -q
 ```
 
-Result: **123 passed, 0 failed**.
+Result: **138 passed, 0 failed**.
 
 Disposable PostgreSQL/pgvector suite, using a database whose name ends in `_test`:
 

@@ -34,6 +34,7 @@ def approved() -> dict[str, object]:
     question["validation_status"] = "approved"
     question["source_class"] = "expert_verified"
     question["author_principal"] = AUTHOR_ID
+    question["author_qualification_ref"] = "author-qualification-record-synthetic-001"
     question["reviewer_principal"] = REVIEWER_ID
     question["rubric"]["status"] = "approved"
     for mapping in question["concept_mappings"]:
@@ -250,6 +251,29 @@ def test_review_identity_must_match_question_reviewer() -> None:
     assert failure_code(missing) == "pilot_reviewer_required"
 
 
+def test_author_qualification_matches_approval_state() -> None:
+    missing = approved()
+    missing["question"]["author_qualification_ref"] = None
+
+    asserted_in_draft = draft()
+    asserted_in_draft["question"]["author_qualification_ref"] = (
+        "author-qualification-record-synthetic-001"
+    )
+
+    assert failure_code(missing) == "pilot_author_qualification_required"
+    assert failure_code(asserted_in_draft) == "pilot_draft_author_qualification"
+
+
+def test_pilot_only_author_qualification_is_not_sent_to_t12() -> None:
+    envelope = approved()
+    envelope["review"]["content_hash"] = compute_pilot_content_hash(envelope)
+
+    validated = to_validated_import(envelope)
+
+    assert "author_qualification_ref" not in validated.bundle.model_dump()
+    assert "target_source_class" not in validated.bundle.model_dump()
+
+
 def test_approved_item_requires_approved_review_answer_and_rubric() -> None:
     review = approved()
     review["review"]["academic_review_status"] = "pending"
@@ -420,6 +444,7 @@ def test_synthetic_schema_is_parseable_and_draft_only() -> None:
     source = schema["$defs"]["source"]
 
     assert "target_source_class" in question["required"]
+    assert "author_qualification_ref" in question["required"]
     assert "content_hash" in review["required"]
     assert "source_ref" in review["required"]
     assert "independence_declaration_ref" in review["required"]
@@ -452,3 +477,71 @@ def test_schema_references_and_required_fields_resolve() -> None:
         required = node.get("required")
         if isinstance(properties, dict) and isinstance(required, list):
             assert set(required) <= set(properties)
+
+
+def test_official_key_claim_is_unsupported() -> None:
+    envelope = draft()
+    envelope["answer_verification"]["official_key_claimed"] = True
+
+    assert failure_code(envelope) == "pilot_official_key_unsupported"
+
+
+def test_derived_answer_must_match_correct_option() -> None:
+    envelope = draft()
+    envelope["answer_verification"]["derived_option_keys"] = ["a"]
+
+    assert failure_code(envelope) == "pilot_answer_mismatch"
+
+
+def test_pilot_content_payload_must_not_contain_extra_fields() -> None:
+    envelope = draft()
+    envelope["question"]["content"]["source_class"] = "expert_verified"
+
+    assert failure_code(envelope) == "pilot_content_invalid"
+
+
+def test_approved_envelope_requires_independence_declaration() -> None:
+    envelope = approved()
+    envelope["review"]["content_hash"] = compute_pilot_content_hash(envelope)
+    envelope["review"]["independence_declaration_ref"] = None
+
+    assert failure_code(envelope) == "pilot_independence_required"
+
+
+def test_unsupported_schema_version_is_rejected() -> None:
+    envelope = draft()
+    envelope["schema_version"] = "2.0"
+
+    assert failure_code(envelope) == "pilot_schema_version"
+
+
+def test_target_and_approved_source_class_must_be_expert_verified() -> None:
+    invalid_target = draft()
+    invalid_target["question"]["target_source_class"] = "teacher_authored"
+    assert failure_code(invalid_target) == "pilot_source_class_invalid"
+
+    invalid_approved = approved()
+    invalid_approved["review"]["content_hash"] = compute_pilot_content_hash(invalid_approved)
+    invalid_approved["question"]["source_class"] = "teacher_authored"
+    assert failure_code(invalid_approved) == "pilot_source_class_invalid"
+
+
+def test_invalid_academic_review_status_is_rejected() -> None:
+    envelope = draft()
+    envelope["review"]["academic_review_status"] = "unknown_status"
+
+    assert failure_code(envelope) == "pilot_review_invalid"
+
+
+def test_question_type_must_be_mcq() -> None:
+    envelope = draft()
+    envelope["question"]["question_type"] = "numeric"
+
+    assert failure_code(envelope) == "pilot_question_invalid"
+
+
+def test_non_english_medium_is_rejected_by_validator() -> None:
+    envelope = draft()
+    envelope["source"]["medium"] = "Tamil"
+
+    assert failure_code(envelope) == "pilot_source_invalid"

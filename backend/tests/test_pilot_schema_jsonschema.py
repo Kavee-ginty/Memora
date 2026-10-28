@@ -47,6 +47,7 @@ def approved_payload() -> dict[str, object]:
     question["validation_status"] = "approved"
     question["source_class"] = "expert_verified"
     question["author_principal"] = AUTHOR_ID
+    question["author_qualification_ref"] = "author-qualification-record-synthetic-001"
     question["reviewer_principal"] = REVIEWER_ID
     question["rubric"]["status"] = "approved"
     for mapping in question["concept_mappings"]:
@@ -122,6 +123,9 @@ def test_approved_payload_rejects_missing_evidence() -> None:
     no_author = approved_payload()
     no_author["question"]["author_principal"] = None
 
+    no_author_qualification = approved_payload()
+    no_author_qualification["question"]["author_qualification_ref"] = None
+
     no_reviewer = approved_payload()
     no_reviewer["question"]["reviewer_principal"] = None
 
@@ -145,6 +149,7 @@ def test_approved_payload_rejects_missing_evidence() -> None:
 
     for payload in (
         no_author,
+        no_author_qualification,
         no_reviewer,
         no_qualification,
         no_independence,
@@ -154,6 +159,16 @@ def test_approved_payload_rejects_missing_evidence() -> None:
         no_approval_date,
     ):
         assert_invalid(payload)
+
+
+def test_author_qualification_is_approval_only() -> None:
+    draft_with_qualification = load(EXAMPLE)
+    draft_with_qualification["question"]["author_qualification_ref"] = (
+        "author-qualification-record-synthetic-001"
+    )
+
+    assert_invalid(draft_with_qualification)
+    assert_valid(approved_payload())
 
 
 def test_approved_payload_rejects_unapproved_or_contradictory_states() -> None:
@@ -234,5 +249,12 @@ def test_source_metadata_cannot_be_smuggled_into_content() -> None:
 def test_unknown_top_level_properties_are_rejected() -> None:
     payload = approved_payload()
     payload["source_licence"] = "claimed-in-the-wrong-place"
+
+    assert_invalid(payload)
+
+
+def test_non_english_medium_is_rejected() -> None:
+    payload = approved_payload()
+    payload["source"]["medium"] = "Sinhala"
 
     assert_invalid(payload)
