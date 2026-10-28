@@ -36,17 +36,18 @@ Future<void> _loadEvidenceFonts() async {
     }
     flutterCache = parent;
   }
-  final materialIcons = <File>[
-    File(
-      '${flutterCache.path}/artifacts/material_fonts/materialicons-regular.otf',
-    ),
-    File(
-      '${flutterCache.path}/artifacts/material_fonts/MaterialIcons-Regular.otf',
-    ),
-  ].firstWhere(
-    (file) => file.existsSync(),
-    orElse: () => throw StateError('Material Icons font not found.'),
-  );
+  final materialIcons =
+      <File>[
+        File(
+          '${flutterCache.path}/artifacts/material_fonts/materialicons-regular.otf',
+        ),
+        File(
+          '${flutterCache.path}/artifacts/material_fonts/MaterialIcons-Regular.otf',
+        ),
+      ].firstWhere(
+        (file) => file.existsSync(),
+        orElse: () => throw StateError('Material Icons font not found.'),
+      );
   final iconBytes = await materialIcons.readAsBytes();
   await (FontLoader(
     'MaterialIcons',
