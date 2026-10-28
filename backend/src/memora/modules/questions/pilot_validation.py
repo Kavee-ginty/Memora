@@ -6,9 +6,10 @@ The pilot envelope is deliberately not a T12 import bundle. A draft has
 Only an approved envelope with a completed review, a content hash, and every
 source/review gate may be converted to a T12 ``QuestionImportBundle``.
 
-This module checks the recorded fields, not whether a reviewer exists or is
-qualified. A real principal, qualification record, reproduction decision and
-approval remain project responsibilities.
+This module checks the recorded fields, not whether an author or reviewer exists,
+holds the claimed qualification, or is independent. A real principal,
+qualification record, reproduction decision and approval remain project
+responsibilities.
 """
 
 from __future__ import annotations
@@ -401,6 +402,12 @@ def _validate_question(
     author = _uuid_text(
         question.get("author_principal"), "question.author_principal", allow_none=True
     )
+    author_qualification = _text(
+        question.get("author_qualification_ref"),
+        "question.author_qualification_ref",
+        allow_none=True,
+        max_length=300,
+    )
     reviewer = _uuid_text(
         question.get("reviewer_principal"), "question.reviewer_principal", allow_none=True
     )
@@ -409,6 +416,18 @@ def _validate_question(
             "pilot_principals_required",
             "An approved item needs author and reviewer principals.",
             "question.author_principal",
+        )
+    if approved and author_qualification is None:
+        _fail(
+            "pilot_author_qualification_required",
+            "An approved item needs author qualification evidence.",
+            "question.author_qualification_ref",
+        )
+    if not approved and author_qualification is not None:
+        _fail(
+            "pilot_draft_author_qualification",
+            "A draft must not carry author qualification evidence before approval.",
+            "question.author_qualification_ref",
         )
     if author is not None and reviewer is not None and author == reviewer:
         _fail(
@@ -847,6 +866,7 @@ def _validate_publication(
 def _build_bundle(envelope: Mapping[str, Any], *, for_hash: bool) -> QuestionImportBundle:
     question = dict(_mapping(envelope.get("question"), "question"))
     question.pop("target_source_class", None)
+    question.pop("author_qualification_ref", None)
     if question.get("source_class") is None:
         question["source_class"] = PILOT_TARGET_SOURCE_CLASS
     if for_hash:
@@ -878,7 +898,8 @@ def validate_pilot_envelope(
     Drafts are valid only when ``source_class`` is null, the review and answer
     are pending, and ``publication.approved_for_import`` is false. Approved
     envelopes must satisfy every gate. The function does not contact a database
-    and does not prove that a reviewer or approval record exists.
+    and does not prove that an author identity, a reviewer identity or either
+    qualification record exists.
     """
 
     envelope = _mapping(envelope, "envelope")

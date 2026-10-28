@@ -107,6 +107,7 @@ Do not write a name, principal UUID, qualification or date into a record until t
 - [ ] `official_key_claimed` is false unless a real key is referenced.
 - [ ] `review.academic_review_status` is `approved`.
 - [ ] `review.reviewer_principal` is a real principal.
+- [ ] `question.author_qualification_ref` points to real evidence for the author.
 - [ ] `review.reviewer_qualification_ref` points to real evidence.
 - [ ] `review.reviewed_at` is a real timestamp.
 - [ ] `review.ambiguity_status` is `cleared`.
@@ -164,7 +165,7 @@ All rows are Stage 1 status. `P` means pending; `F` means flagged.
 
 `blocked` means no existing T08 concept can serve as a credible primary mapping (`mapping_status = "missing"` in `candidate_mappings.json`). `weak` means an existing concept is only a partial fit (`mapping_status = "partial"`). Neither state is approval. Only 2025 Q1 has a complete existing mapping; seven of the eight candidates do not.
 
-The machine-readable counts are 1 complete, 2 partial and 5 missing. Every candidate is also `blocked` in `evidence_status.json` because no answer key, reviewer, qualification, independence declaration, approval or reproduction permission exists. The human evidence checklist is `EVIDENCE_REQUIRED.md`.
+The machine-readable counts are 1 complete, 2 partial and 5 missing. Every candidate is also `blocked` in `evidence_status.json` because no answer key, author or reviewer qualification, independence declaration, approval or reproduction permission exists. The human evidence checklist is `EVIDENCE_REQUIRED.md`.
 
 ## 4. Sign-off record
 
@@ -186,27 +187,28 @@ This table is intentionally blank. Do not fill it with placeholders.
 An item may not be imported as `approved` if any of the following is true:
 
 1. No real reviewer principal.
-2. No qualification evidence for that reviewer.
-3. Reviewer and author are the same person.
-4. No primary concept mapping.
-5. Ambiguity status is `pending` or `flagged`.
-6. Duplicate status is `pending` or `duplicate`.
-7. Explanation is empty.
-8. Rubric is not approved.
-9. Evidence ceiling is zero or missing.
-10. Reproduction status is `unapproved`.
-11. Transcription has not been checked against the page image.
-12. The item depends on a diagram that has not passed accessibility review.
-13. The review content hash is missing or does not match the current content.
-14. The review source reference is missing or does not match the source block.
-15. The reviewer/author independence declaration is missing.
-16. The item is a draft carrying a non-null `source_class` or `pilot_review` provenance.
-17. An approved item has a mapping whose provenance is not `pilot_review`.
-18. The review date or approval date is missing, or the approval date precedes the review date.
-19. The reviewer qualification reference is missing or does not resolve to a real record.
-20. An official answer key is claimed without an official key.
-21. A past-paper transcription has not been checked against the page image.
-22. T08 concept version UUIDs, objective IDs or claim IDs do not resolve in the reviewed seed.
+2. No author qualification evidence for that author.
+3. No qualification evidence for that reviewer.
+4. Reviewer and author are the same person.
+5. No primary concept mapping.
+6. Ambiguity status is `pending` or `flagged`.
+7. Duplicate status is `pending` or `duplicate`.
+8. Explanation is empty.
+9. Rubric is not approved.
+10. Evidence ceiling is zero or missing.
+11. Reproduction status is `unapproved`.
+12. Transcription has not been checked against the page image.
+13. The item depends on a diagram that has not passed accessibility review.
+14. The review content hash is missing or does not match the current content.
+15. The review source reference is missing or does not match the source block.
+16. The reviewer/author independence declaration is missing.
+17. The item is a draft carrying a non-null `source_class`, `author_qualification_ref` or `pilot_review` provenance.
+18. An approved item has a mapping whose provenance is not `pilot_review`.
+19. The review date or approval date is missing, or the approval date precedes the review date.
+20. The author or reviewer qualification reference is missing or does not resolve to a real record.
+21. An official answer key is claimed without an official key.
+22. A past-paper transcription has not been checked against the page image.
+23. T08 concept version UUIDs, objective IDs or claim IDs do not resolve in the reviewed seed.
 
 ## 6. Commands for Stage 2
 
@@ -224,7 +226,7 @@ $env:PYTHONPATH="$PWD\backend\src"
   backend/tests/test_questions_grading.py -q
 ```
 
-Result: **123 passed, 0 failed**. The T24 tests validate the synthetic draft, reject misleading draft trust classes, enforce reviewer identity/qualification/independence, review and approval dates, content-hash/source binding and T08 concept/objective resolution. The mapping and evidence reports check the eight candidate IDs against `PILOT_QUESTIONS.md` and the source manifest. The JSON Schema tests use `jsonschema` against Draft 2020-12.
+Result: **128 passed, 0 failed**. The T24 tests validate the synthetic draft, reject misleading draft trust classes, enforce author and reviewer identity/qualification/independence, review and approval dates, content-hash/source binding and T08 concept/objective resolution. The mapping and evidence reports check the eight candidate IDs against `PILOT_QUESTIONS.md` and the source manifest, and cross-check their schema versions and the B4 concept-gap blocker. The JSON Schema tests use `jsonschema` against Draft 2020-12.
 
 PostgreSQL-dependent checks, only with a disposable database and `MEMORA_TEST_DATABASE_URL` set:
 
@@ -244,7 +246,7 @@ The review is complete only when:
 - every candidate has a real source, physics, mapping and ambiguity decision;
 - every `flagged` item is either fixed or excluded;
 - every `blocked` mapping has a reviewed concept or the item is excluded;
-- every item has a real reviewer principal, qualification reference and date;
+- every item has a real author and reviewer principal, a real author qualification reference, a real reviewer qualification reference and a date;
 - reproduction status is resolved for every item that will be tracked or published;
 - the duplicate and coverage reports are attached;
 - the approved-envelope conversion and the PostgreSQL import test pass in the approved environment (drafts are not imported);

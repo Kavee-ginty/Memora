@@ -90,7 +90,7 @@ QuestionImportBundle -> validate_question_import() -> QuestionImportRepository.i
 
 No CLI is required. T12 publication requires a non-empty explanation, a real reviewer principal, a real author principal for non-AI content, an approved rubric, a positive evidence ceiling and at least one primary concept mapping.
 
-T12 has no question-level source provenance field, no reviewer qualification record and no licence/reproduction field. Its only provenance surface is per-mapping `provenance_type` / `provenance_ref`.
+T12 has no question-level source provenance field, no author or reviewer qualification record and no licence/reproduction field. Its only provenance surface is per-mapping `provenance_type` / `provenance_ref`. The T24 envelope records both qualification references outside T12.
 
 A read-only probe confirmed:
 
@@ -188,7 +188,7 @@ Work:
 
 Work:
 
-1. Define the review record: reviewer reference, qualification reference, independence declaration, scope, decision, date and content hash.
+1. Define the review record: author and reviewer references, separate author and reviewer qualification references, independence declaration, scope, decision, date and content hash.
 2. Define the reproduction/licence record.
 3. Obtain real reviewer and approval decisions. Do not invent them.
 4. Link the review record to the content hash and the source record.
@@ -196,7 +196,7 @@ Work:
 
 **Exit criteria:**
 
-- every approved item has a real reviewer and qualification reference;
+- every approved item has a real author and reviewer principal, plus separate author and reviewer qualification references;
 - every approved item has a resolved reproduction status;
 - the review record is linked to the exact content hash;
 - no placeholder principal or approval exists.
@@ -269,7 +269,7 @@ Work:
 | ID | Fix | Why |
 | --- | --- | --- |
 | R1 | Question-level source provenance record | T12 has no source field; T24 requires provenance. |
-| R2 | Reviewer qualification and approval record | A principal UUID is not qualification evidence. |
+| R2 | Author/reviewer qualification and approval record | A principal UUID is not qualification evidence; the T24 envelope records both qualification references but cannot verify them. |
 | R3 | Missing concepts, claims, formulas and units | Seven of eight candidates lack a complete mapping; only 2025 Q1 has a clean existing mapping. T24 requires formulas and units. |
 | R4 | Duplicate, ambiguity and coverage checks | T24 explicitly requires them. |
 | R5 | `reviewed_by` decision for new T24 concepts/claims | The T08 seed writes `reviewed_at` but not `reviewed_by`. |
@@ -299,7 +299,7 @@ An item becomes `approved` only when:
 
 - a real reviewer principal exists;
 - the reviewer is independent of the author;
-- the reviewer's qualification is recorded;
+- the author's and reviewer's qualifications are recorded;
 - the review decision and date are recorded;
 - the content hash matches the reviewed content;
 - the rubric is approved with a positive evidence ceiling;
@@ -328,7 +328,7 @@ $env:PYTHONPATH="$PWD\backend\src"
   backend/tests/test_questions_grading.py -q
 ```
 
-Result: **123 passed, 0 failed, 0 skipped**.
+Result: **128 passed, 0 failed, 0 skipped**.
 
 These are non-PostgreSQL tests. They cover T24 draft/approval gates, the structured mapping report, the evidence-status report, real JSON Schema validation, T12 model/hash/validation behavior, T12 publication branches and T08 seed integrity.
 
@@ -340,7 +340,7 @@ A read-only smoke test called `validate_question_import()` with the synthetic dr
 - approved without principals: rejected `reviewer_required`;
 - source metadata in `content`: rejected `content_invalid`.
 
-This is an import smoke test only. The T24 envelope, independence, qualification, review-date, hash/source and reproduction gates are covered by `backend/tests/test_pilot_content_validation.py`. The smoke test is described in `CONTENT_SCHEMA.md` section 5.1 and `T08_T12_CONTRACT_GAPS.md` section 4.
+This is an import smoke test only. The T24 envelope, independence, author/reviewer qualification, review-date, hash/source and reproduction gates are covered by `backend/tests/test_pilot_content_validation.py`. The smoke test is described in `CONTENT_SCHEMA.md` section 5.1 and `T08_T12_CONTRACT_GAPS.md` section 4.
 
 ### 8.3 Disposable PostgreSQL/pgvector checks run locally
 
@@ -370,7 +370,7 @@ This is local evidence, not CI or staging acceptance. The migration test uses fi
 - [ ] Exact/normalized and semantic duplicate clearance.
 - [ ] Ambiguity and coverage sign-off.
 - [ ] CI or approved staging database acceptance.
-- [ ] Real reviewer, qualification, independence and approval records.
+- [ ] Real author and reviewer principals, separate qualification references, independence and approval records.
 - [ ] Reproduction/licence decision.
 
 ## 9. Suggested commit boundaries
@@ -434,13 +434,13 @@ Do not combine C3-C6 into one commit. Content additions, import bundles and vali
 - [x] Suggested commit boundaries written.
 - [x] `.gitignore` rules for source PDFs and the local review pack are present in the working tree; not committed.
 - [x] No T08 seed, T12 production model, migration, API or question data changed; the pilot validator, reports and tests were added.
-- [x] Safe non-PostgreSQL tests run: 123 passed.
+- [x] Safe non-PostgreSQL tests run: 128 passed.
 - [x] JSON Schema validated against the Draft 2020-12 metaschema.
 - [x] Structured mapping report resolves every existing concept, objective and claim.
 - [x] Evidence-status report records every candidate as blocked.
 - [x] Local disposable PostgreSQL/pgvector suite run: 27 passed.
 - [ ] Reviewer, author and approval identities supplied by the project.
-- [ ] Reviewer qualification and independence evidence supplied.
+- [ ] Author and reviewer qualification and independence evidence supplied.
 - [ ] Official answer key or independent answer/rubric verification supplied.
 - [ ] Reproduction/licence route decided.
 - [ ] CI or approved staging database acceptance recorded.

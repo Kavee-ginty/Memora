@@ -8,7 +8,7 @@ This checklist is the human counterpart to `evidence_status.json`. The machine-r
 
 `source_file_identity = verified` means the tracked filename and SHA-256 match `source_manifest.json`. It does **not** mean the PDF is authenticated, that an official key exists or that reproduction is permitted.
 
-| Candidate | Source file identity | Official answer key | Marking scheme / rubric | Reproduction rights | Attribution / provenance | Independent answer review | Reviewer identity / qualification | Independence declaration | Approval record | Overall |
+| Candidate | Source file identity | Official answer key | Marking scheme / rubric | Reproduction rights | Attribution / provenance | Independent answer review | Author / reviewer identity and qualification | Independence declaration | Approval record | Overall |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `PILOT-PHYS-2025-P1-Q01` | verified | missing | pending human review | blocked | pending human review | missing | missing | missing | missing | blocked |
 | `PILOT-PHYS-2025-P1-Q02` | verified | missing | pending human review | blocked | pending human review | missing | missing | missing | missing | blocked |
@@ -19,7 +19,7 @@ This checklist is the human counterpart to `evidence_status.json`. The machine-r
 | `PILOT-PHYS-2022-P1-Q01` | verified | missing | pending human review | blocked | pending human review | missing | missing | missing | missing | blocked |
 | `PILOT-PHYS-2022-P1-Q17` | verified | missing | pending human review | blocked | pending human review | missing | missing | missing | missing | blocked |
 
-No official MCQ answer grid was found in either marking-scheme PDF. Page 2 of each is a question-to-marks allocation table. The 2022 file also contains handwritten annotations, which are not an official key. Every answer in `PILOT_QUESTIONS.md` is an analyst derivation.
+No official MCQ answer grid was found in either marking-scheme PDF. Page 2 of each is a question-to-marks allocation table. The 2022 file also contains handwritten annotations, which are not an official key. Every answer in `PILOT_QUESTIONS.md` is an analyst derivation. In `evidence_status.json`, author identity, author qualification, and reviewer identity/qualification are recorded separately; all three are `missing` for every candidate.
 
 ## 2. Evidence checklist
 
@@ -28,8 +28,8 @@ No official MCQ answer grid was found in either marking-scheme PDF. Page 2 of ea
 - [ ] A real author principal UUID for every non-AI item, recorded in `question.author_principal`.
 - [ ] A real reviewer principal UUID for every item, recorded in both `question.reviewer_principal` and `review.reviewer_principal`.
 - [ ] The author and reviewer are different people; the principal UUIDs differ.
-- [ ] An author qualification record. The current T24 envelope has no author-qualification field. Either add one through an approved contract change or record the author qualification externally and reference the decision in the review record.
-- [ ] A reviewer qualification record referenced by `review.reviewer_qualification_ref`. The reference must resolve to a real, auditable record, not a self-asserted string.
+- [ ] A real author qualification record referenced by `question.author_qualification_ref`. The reference must resolve to a real, auditable record for the person named by `question.author_principal`, not a self-asserted string.
+- [ ] A real reviewer qualification record referenced by `review.reviewer_qualification_ref`. The reference must resolve to a real, auditable record for the person named by `review.reviewer_principal`, not a self-asserted string.
 
 ### B. Independence and review decision
 
@@ -83,7 +83,8 @@ No official MCQ answer grid was found in either marking-scheme PDF. Page 2 of ea
 ## 3. What the repository already verifies locally
 
 - The T24 envelope rejects unknown T08 concept version UUIDs, objective/concept mismatches and duplicate mappings.
-- An approved envelope requires an author, a reviewer, a reviewer qualification reference, an independence declaration, an approved review, a verified answer review, a content hash, a source reference, reproduction approval and transcription verification for past papers.
+- An approved envelope requires an author, a reviewer, separate author and reviewer qualification references, an independence declaration, an approved review, a verified answer review, a content hash, a source reference, reproduction approval and transcription verification for past papers.
+- The T24-only author qualification reference is removed before the T12 bundle is validated, so it cannot be mistaken for a T12 database field.
 - Approval cannot precede review, and drafts cannot carry approval or review identity metadata.
 - The JSON Schema is valid against the Draft 2020-12 metaschema and rejects missing approval evidence and source metadata smuggled into `content`.
 - The T12 import path rejects source metadata in `content`, missing publication evidence and supporting-only mappings.

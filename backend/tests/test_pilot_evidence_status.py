@@ -6,6 +6,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 REPORT = ROOT / "content/physics/pilot/evidence_status.json"
+MAPPINGS = ROOT / "content/physics/pilot/candidate_mappings.json"
 MANIFEST = ROOT / "content/physics/pilot/source_manifest.json"
 QUESTIONS = ROOT / "content/physics/pilot/PILOT_QUESTIONS.md"
 SUMMARY_ROW = re.compile(r"^\| `(PILOT-PHYS-[0-9]{4}-P1-Q[0-9]{1,2})` \|", re.MULTILINE)
@@ -35,6 +36,31 @@ def candidates(report: dict[str, object]) -> list[dict[str, object]]:
     value = report["candidates"]
     assert isinstance(value, list)
     return value
+
+
+def mapping_candidates() -> dict[str, dict[str, object]]:
+    report = load(MAPPINGS)
+    entries = candidates(report)
+    return {str(entry["pilot_id"]): entry for entry in entries}
+
+
+def test_report_schema_versions_are_declared() -> None:
+    assert load(REPORT)["schema_version"] == "1.0"
+    assert load(MAPPINGS)["schema_version"] == "1.1"
+
+
+def test_reports_agree_on_candidate_ids_and_concept_gap_blocker() -> None:
+    evidence = candidates(load(REPORT))
+    mappings = mapping_candidates()
+
+    assert len(evidence) == len(mappings)
+    assert {str(entry["pilot_id"]) for entry in evidence} == set(mappings)
+    assert set(mappings) == candidate_ids()
+
+    for entry in evidence:
+        mapping = mappings[str(entry["pilot_id"])]
+        requires_concept_gap = mapping["mapping_status"] != "complete"
+        assert ("B4" in entry["blocker_ids"]) is requires_concept_gap
 
 
 def test_report_covers_every_candidate() -> None:
@@ -85,6 +111,9 @@ def test_evidence_statuses_are_truthful_and_every_candidate_is_blocked() -> None
         assert statuses["source_authenticity"] != "verified"
         assert statuses["official_answer_key"] == "missing"
         assert statuses["reproduction_rights"] == "blocked"
+        assert statuses["author_identity"] == "missing"
+        assert statuses["author_qualification"] == "missing"
+        assert statuses["reviewer_identity_and_qualification"] == "missing"
         assert statuses["independent_answer_review"] == "missing"
         assert statuses["approval_record"] == "missing"
         assert entry["derived_option_key"]

@@ -96,7 +96,7 @@ For `validation_status = "approved"`, `validate_question_import()` requires (`va
 
 T12 validation and the database publication trigger check that the reviewer and author principals are non-null; they do **not** compare the two values. Reviewer/author independence is enforced only by `pilot_validation.py`. Do not claim database enforcement of independence.
 
-The publication branches above now have direct T12 regression tests in `backend/tests/test_questions_models.py`: missing reviewer, missing author, blank explanation, draft rubric, zero evidence ceiling, supporting-only mapping and source metadata inside `content`. The pilot envelope separately enforces reviewer qualification, independence, answer review, review/approval dates and content-hash/source binding.
+The publication branches above now have direct T12 regression tests in `backend/tests/test_questions_models.py`: missing reviewer, missing author, blank explanation, draft rubric, zero evidence ceiling, supporting-only mapping and source metadata inside `content`. The pilot envelope separately enforces author and reviewer qualification, independence, answer review, review/approval dates and content-hash/source binding.
 
 ### 3.3 Provenance surface
 
@@ -109,7 +109,7 @@ T12 has **no** question-level field for:
 - question number;
 - PDF page;
 - licence or reproduction approval;
-- reviewer qualification;
+- author or reviewer qualification;
 - review decision or approval timestamp beyond the principal UUID.
 
 `questions` stores `source_class`, `author_principal` and `reviewer_principal` (`Schema 9.1`). `question_versions` stores prompt, explanation, content, trust label, curriculum, validation status and generation metadata. Neither is a source-provenance record.
@@ -155,10 +155,10 @@ This confirms that the blockers are provenance, review identity and content cove
 | Synthetic draft payload against the schema | 0 errors |
 | Approved synthetic payload against the schema | valid |
 | Draft contradictions, missing approval evidence and source metadata in `content` | rejected |
-| Pilot envelope validator tests | 32 passed |
+| Pilot envelope validator tests | 34 passed |
 | Candidate mapping report tests | 5 passed |
-| Evidence-status report tests | 4 passed |
-| JSON Schema payload/metaschema tests | 10 passed |
+| Evidence-status report tests | 6 passed |
+| JSON Schema payload/metaschema tests | 11 passed |
 | T12 model, publication-branch and content-smuggling tests | 32 passed |
 
 The schema is a structural contract only. `pilot_validation.py` and T12 `validate_question_import()` remain the semantic authorities. The schema and validator are kept consistent for the fields exercised by the tests.
@@ -170,7 +170,7 @@ Severity is about the T24 acceptance gate, not about T12 runtime safety.
 | ID | Gap | Severity | Required for T24? | Evidence | Impact |
 | --- | --- | --- | --- | --- | --- |
 | G1 | No question-level source provenance in T12 | High | Yes | `models.py:297-331`; `Schema 9.1`; `Schema 9.4` | A question can be traced to a concept mapping but not to a paper/year/question number. The T24 provenance gate cannot be met by T12 alone. |
-| G2 | No reviewer qualification or approval record | High | Yes | `questions.reviewer_principal` is a bare UUID (`Schema 9.1`); T08 writes `reviewed_at` without `reviewed_by` (`seed.py:85-91`, `116-123`) | "Qualified review is recorded" is not demonstrated by a principal UUID. |
+| G2 | No author or reviewer qualification or approval record | High | Yes | `questions.reviewer_principal` is a bare UUID (`Schema 9.1`); T24 records author and reviewer qualification references only in its envelope; T08 writes `reviewed_at` without `reviewed_by` (`seed.py:85-91`, `116-123`) | "Qualified review is recorded" is not demonstrated by a principal UUID, and the T24 references must resolve to real records. |
 | G3 | Seed uses only 4 of 9 concept kinds | High | Yes | `seed_data.py` counts: 6/4/3/1; `Schema 7.3` allows 9 kinds | T24 requires formulas and units as typed content; current nodes do not represent them as `formula` or `unit`. |
 | G4 | Candidate topics absent from the graph | High | Yes | 14-concept inventory; candidate mapping table in `PILOT_QUESTIONS.md` | Seven of eight items lack a complete mapping; only 2025 Q1 has a clean existing primary/supporting mapping. |
 | G5 | No duplicate, ambiguity or coverage report | High | Yes | Search found no such tooling in `backend/src/memora/modules/questions` or `curriculum`; only `coverage_weight` in a mapping | T24 explicitly requires ambiguity, duplicate and coverage evidence. |
@@ -204,8 +204,10 @@ These are the minimum changes or decisions needed before a T24 `approved` import
 
 **Minimum path:** a versioned review record with:
 
+- author reference (real principal or external author ID);
 - reviewer reference (real principal or external reviewer ID);
-- qualification evidence reference;
+- author qualification evidence reference;
+- reviewer qualification evidence reference;
 - independence declaration;
 - review scope;
 - decision and date;
@@ -214,7 +216,7 @@ These are the minimum changes or decisions needed before a T24 `approved` import
 
 **Durable path:** a reviewer/approval table or an auditable review artifact with a stable ID. A principal UUID alone is not enough.
 
-**Acceptance evidence:** an approval gate that rejects `approved` content with no review record or no qualification reference.
+**Acceptance evidence:** an approval gate that rejects `approved` content with no review record, no author qualification reference or no reviewer qualification reference.
 
 ### R3. Add the missing concepts and claims
 
@@ -328,9 +330,9 @@ $env:PYTHONPATH="$PWD\backend\src"
   backend/tests/test_questions_grading.py -q
 ```
 
-Result: **123 passed, 0 failed, 0 skipped**.
+Result: **128 passed, 0 failed, 0 skipped**.
 
-Breakdown: 32 pilot-envelope tests, 5 mapping-report tests, 4 evidence-status tests, 10 JSON Schema tests, 32 T12 model/publication tests, 13 curriculum-seed tests and 27 grading tests.
+Breakdown: 34 pilot-envelope tests, 5 mapping-report tests, 6 evidence-status tests, 11 JSON Schema tests, 32 T12 model/publication tests, 13 curriculum-seed tests and 27 grading tests.
 
 ### 8.2 Disposable PostgreSQL/pgvector tests
 
@@ -374,12 +376,12 @@ The run proves local behaviour only. It is not CI or staging acceptance.
 | Pilot T08 concept/objective resolution | `test_mapping_concept_must_exist_in_the_t08_seed`, `test_mapping_objective_must_match_the_t08_concept_objective`; mapping-report tests |
 | Pilot schema | `backend/tests/test_pilot_schema_jsonschema.py` |
 
-The T24 pilot validator is covered by 32 tests. The mapping report is covered by 5 tests, the evidence report by 4, and real JSON Schema validation by 10. These do not replace the PostgreSQL import, RLS and immutability tests.
+The T24 pilot validator is covered by 34 tests. The mapping report is covered by 5 tests, the evidence report by 6, and real JSON Schema validation by 11. These do not replace the PostgreSQL import, RLS and immutability tests.
 
 ## 9. Decisions needed before Stage 2
 
 1. Is the repo-side provenance envelope acceptable for the pilot, or must T12 gain a durable question-provenance field before import? **Open; T12 owner decision.**
-2. Who is qualified to review A/L Physics content, and what qualification evidence will be recorded? **Open; academic content lead.**
+2. Who is qualified to author and review A/L Physics content, and what qualification evidence will be recorded? **Open; academic content lead.**
 3. Will T24 add concepts/claims through the T08 seed writer, or through a separate reviewed-content path? **Open; curriculum lead.**
 4. What is the reproduction/licence route for past-paper text? **Open; project/legal owner.**
 5. Are the six missing topic areas in scope for T24, or should the candidate set be reduced to items already covered by T08? **Open; curriculum lead.**

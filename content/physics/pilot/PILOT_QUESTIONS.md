@@ -32,7 +32,7 @@ No reviewer name, principal UUID, qualification or approval record has been inve
 
 Only 2025 Q1 has a complete existing T08 primary/supporting mapping. **Seven of the eight candidates lack a complete mapping.** Six topic areas are absent from T08: measurement uncertainty, projectile motion, static friction, conservation of momentum/elastic collision, scalar/vector classification, and simple pendulum/effective gravity.
 
-The machine-readable counts are `complete: 1`, `partial: 2` and `missing: 5` in `candidate_mappings.json` (schema 1.1). Every candidate is `blocked` in `evidence_status.json`; no official answer key, reviewer identity, qualification, independence declaration, approval or reproduction permission exists.
+The machine-readable counts are `complete: 1`, `partial: 2` and `missing: 5` in `candidate_mappings.json` (schema 1.1). Every candidate is `blocked` in `evidence_status.json`; no official answer key, author or reviewer identity/qualification, independence declaration, approval or reproduction permission exists.
 
 The source files, hashes and page counts are in `source_manifest.json`. The 2025 paper is an image scan with no text layer; rendered page 2 carries a `Past Papers Wiki` watermark. The 2022 paper is an annotated CamScanner scan. The local verbatim transcriptions must be checked against the page image by an independent reviewer. They are not tracked content.
 
@@ -300,7 +300,7 @@ The pilot does not cover waves, electricity, magnetism, thermal physics, modern 
 5. A scalar/vector concept for 2022 Q1.
 6. A simple-pendulum/effective-gravity concept for 2022 Q17.
 7. A question-level source provenance record. T12 has no such field; see `T08_T12_CONTRACT_GAPS.md`.
-8. A qualified reviewer and a review record with a real principal, qualification reference and date.
+8. A qualified author and reviewer, plus a review record with real principals, author and reviewer qualification references, and a date.
 9. A reproduction decision for every past-paper item. Until then, only the ignored local review pack may hold verbatim text.
 
 ## 5. Excluded items
@@ -322,7 +322,7 @@ The pilot does not cover waves, electricity, magnetism, thermal physics, modern 
 
 An **invalid mapping** is a referenced T08 code, concept version UUID, objective UUID or claim ID that does not resolve in `backend/src/memora/modules/curriculum/seed_data.py`; the report test fails on one. A **missing mapping** is a topic with no existing T08 code and is listed in `missing_topics`. The report contains no invalid mapping as of this checkpoint. Every existing mapping remains an analyst proposal, not a reviewed mapping.
 
-`evidence_status.json` is the per-candidate evidence report. It records source-file identity, source authenticity, official answer-key status, marking-scheme/rubric status, reproduction rights, attribution, author/reviewer identity and qualification, independence, independent answer review, ambiguity/duplicate review and approval. Every candidate is `overall_status = "blocked"`. A verified SHA-256 match proves file identity only; it is not proof of official publication, an official answer key or reproduction permission.
+`evidence_status.json` is the per-candidate evidence report. It records source-file identity, source authenticity, official answer-key status, marking-scheme/rubric status, reproduction rights, attribution, author identity, author qualification, reviewer identity/qualification, independence, independent answer review, ambiguity/duplicate review and approval. Every candidate is `overall_status = "blocked"`. A verified SHA-256 match proves file identity only; it is not proof of official publication, an official answer key or reproduction permission.
 
 `EVIDENCE_REQUIRED.md` lists the evidence the human team must supply. `T12_OWNER_ACCEPTANCE.md` records the decisions still needed from the T12 owner.
 

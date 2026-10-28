@@ -18,7 +18,7 @@ T12's `QuestionImportBundle` is the import contract. It carries:
 - author and reviewer principals;
 - concept mappings with `provenance_type` and `provenance_ref`.
 
-It does **not** carry a question-level source paper, year, question number, PDF page, licence state, reproduction approval, reviewer qualification or reviewed content hash. The `ChoiceContent` payload is strict (`extra="forbid"`), so source metadata cannot be hidden inside `content`. A read-only probe confirmed that adding a source field there is rejected as `content_invalid`.
+It does **not** carry a question-level source paper, year, question number, PDF page, licence state, reproduction approval, author or reviewer qualification or reviewed content hash. The `ChoiceContent` payload is strict (`extra="forbid"`), so source metadata cannot be hidden inside `content`. A read-only probe confirmed that adding a source field there is rejected as `content_invalid`.
 
 The envelope separates two concerns:
 
@@ -84,15 +84,17 @@ A past-paper envelope cannot claim approval while reproduction is `unapproved` o
 
 ### 3.2 `question`
 
-This object mirrors `backend/src/memora/modules/questions/models.py::QuestionImportBundle`. The schema restricts the pilot to `question_type = mcq`, `content.kind = choice`, `selection_mode = single` and `rubric_type = exact`.
+This object contains the T12 `QuestionImportBundle` fields plus the T24-only fields `target_source_class` and `author_qualification_ref`. The T24 bridge removes both before T12 validation, so pilot-only metadata never enters a T12 bundle. The schema restricts the pilot to `question_type = mcq`, `content.kind = choice`, `selection_mode = single` and `rubric_type = exact`.
 
-The following T12 fields are represented:
+The following fields are represented:
 
-`question_code`, `subject_id`, `curriculum_version_id`, `source_class`, `target_source_class`, `question_type`, `prompt`, `explanation`, `validation_status`, `author_principal`, `reviewer_principal`, `content`, `options`, `rubric`, `concept_mappings`.
+`question_code`, `subject_id`, `curriculum_version_id`, `source_class`, `target_source_class`, `question_type`, `prompt`, `explanation`, `validation_status`, `author_principal`, `author_qualification_ref`, `reviewer_principal`, `content`, `options`, `rubric`, `concept_mappings`.
+
+`author_qualification_ref` and `target_source_class` are T24 envelope metadata. They are required by the pilot schema and are not T12 database fields.
 
 T12's own bounds still apply. Examples: 2-10 options, contiguous `display_order`, one correct option for single choice, unique option keys, at least one primary mapping for publication, and an approved rubric with a positive evidence ceiling.
 
-For a draft, `source_class` must be null and `reviewer_principal` must be null. The author may be null. For approval, T12's publication gates apply and the pilot validator additionally requires reviewer independence.
+For a draft, `source_class` must be null, `reviewer_principal` must be null and `author_qualification_ref` must be null. The author may be null. For approval, T12's publication gates apply, and the pilot validator additionally requires an author qualification reference, reviewer independence and a reviewer qualification reference.
 
 ### 3.3 `answer_verification`
 
@@ -123,7 +125,7 @@ The pilot validator requires the derived key to match the option marked `is_corr
 | `source_ref` | string or null | Canonical source reference; required for approval. |
 | `independence_declaration_ref` | string or null | Evidence that reviewer and author are independent. |
 
-A bare UUID is not qualification evidence. The review record must be backed by a separate qualification/approval reference. The pilot validator enforces reviewer principal != author principal; it does not claim that T12 or the database enforces this.
+A bare UUID is not qualification evidence. The review record must be backed by separate author and reviewer qualification references. The author qualification is recorded in `question.author_qualification_ref`; the reviewer qualification is recorded in `review.reviewer_qualification_ref`. The pilot validator enforces reviewer principal != author principal; it does not claim that T12 or the database enforces this.
 
 For a past-paper approval, `review_scope` must include `transcription`, `derivation`, `ambiguity` and `curriculum_mapping`. Synthetic content does not need a transcription scope.
 
@@ -198,6 +200,7 @@ Key fields:
     "question_type": "mcq",
     "validation_status": "draft",
     "author_principal": null,
+    "author_qualification_ref": null,
     "reviewer_principal": null,
     "rubric": {
       "rubric_type": "exact",
@@ -248,7 +251,7 @@ These are contract observations, not approval evidence. The synthetic example is
 - The JSON Schema file is syntactically valid JSON and is checked for parseability, internal `$ref` resolution and `required`/`properties` consistency in tests.
 - `jsonschema 4.26.0` is installed locally and declared as a constrained development dependency (`jsonschema>=4.23,<5`) in `backend/pyproject.toml`. The schema passes `Draft202012Validator.check_schema()`, and the synthetic draft and approved synthetic payload validate with zero errors. Negative tests cover missing approval evidence, contradictory draft/approved states, source metadata in `content` and Paper II IDs. This is real metaschema and payload validation, not a JSON parse check.
 - The Python validator is the semantic authority for draft/approval gates. T12 validation remains authoritative for its own import contract.
-- The schema does not validate academic truth, transcription accuracy, reviewer qualification, licence status or reproduction permission.
+- The schema does not validate academic truth, transcription accuracy, author or reviewer qualification, licence status or reproduction permission.
 - The schema does not create a database column, migration or API field.
 - The schema cannot enforce reviewer != author; the Python validator does.
 
@@ -258,6 +261,6 @@ These are contract observations, not approval evidence. The synthetic example is
 2. Add one JSON record per candidate, all `validation_status = "draft"` with `source_class = null`.
 3. Run the Draft 2020-12 metaschema/payload tests and `validate_pilot_envelope()` in CI without a database.
 4. Run the duplicate, ambiguity and coverage checks.
-5. Record real reviewer and author principals only after those identities exist.
+5. Record real reviewer and author principals and qualification references only after those identities and records exist.
 6. Flip to `approved` only after every gate in `REVIEW_CHECKLIST.md` passes and the content hash is recorded.
 7. Import through `to_validated_import()` and `QuestionImportRepository` only after approval and reproduction clearance.

@@ -64,6 +64,9 @@
               "source_class": {
                 "type": "null"
               },
+              "author_qualification_ref": {
+                "type": "null"
+              },
               "reviewer_principal": {
                 "type": "null"
               },
@@ -92,6 +95,7 @@
             },
             "required": [
               "source_class",
+              "author_qualification_ref",
               "reviewer_principal",
               "rubric",
               "concept_mappings"
@@ -198,6 +202,11 @@
               "author_principal": {
                 "$ref": "#/$defs/uuid"
               },
+              "author_qualification_ref": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 300
+              },
               "reviewer_principal": {
                 "$ref": "#/$defs/uuid"
               },
@@ -240,6 +249,7 @@
             "required": [
               "source_class",
               "author_principal",
+              "author_qualification_ref",
               "reviewer_principal",
               "rubric",
               "concept_mappings"
@@ -667,6 +677,7 @@
         "explanation",
         "validation_status",
         "author_principal",
+        "author_qualification_ref",
         "reviewer_principal",
         "content",
         "options",
@@ -720,6 +731,18 @@
         },
         "author_principal": {
           "$ref": "#/$defs/nullableUuid"
+        },
+        "author_qualification_ref": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 300
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "reviewer_principal": {
           "$ref": "#/$defs/nullableUuid"
