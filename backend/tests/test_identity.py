@@ -53,6 +53,7 @@ def make_token(
     signing_key: rsa.RSAPrivateKey,
     *,
     expires_at: datetime | None = None,
+    issued_at: datetime | None = None,
     audience: str = "authenticated",
     authenticated_at: datetime | None = None,
 ) -> str:
@@ -62,7 +63,7 @@ def make_token(
             "iss": ISSUER,
             "aud": audience,
             "exp": expires_at or now + timedelta(minutes=5),
-            "iat": now,
+            "iat": issued_at or now,
             "sub": SUBJECT,
             "role": "authenticated",
             "session_id": str(SESSION_ID),
@@ -106,6 +107,32 @@ def test_expired_token_fails_with_safe_code(signing_key: rsa.RSAPrivateKey) -> N
 
     assert captured.value.status_code == 401
     assert captured.value.code == "token_expired"
+    assert token not in repr(captured.value)
+
+
+def test_token_validation_allows_bounded_issuer_clock_skew(
+    signing_key: rsa.RSAPrivateKey,
+) -> None:
+    token = make_token(
+        signing_key,
+        issued_at=datetime.now(UTC) + timedelta(seconds=5),
+    )
+
+    assert validator(signing_key).validate(token).subject == SUBJECT
+
+
+def test_token_validation_rejects_excessive_issuer_clock_skew(
+    signing_key: rsa.RSAPrivateKey,
+) -> None:
+    token = make_token(
+        signing_key,
+        issued_at=datetime.now(UTC) + timedelta(minutes=1),
+    )
+
+    with pytest.raises(ApiError, match="token_invalid") as captured:
+        validator(signing_key).validate(token)
+
+    assert captured.value.status_code == 401
     assert token not in repr(captured.value)
 
 
