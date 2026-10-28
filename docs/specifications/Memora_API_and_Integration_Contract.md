@@ -340,7 +340,7 @@ Statistics use an explicit period and timezone context. Charts receive accessibl
 | `GET /v1/question-reports` | List the student's reports | 200 |
 | `GET /v1/question-reports/{report_id}` | Read status and safe resolution | 200 |
 
-Create accepts report type, bounded student description, related attempt ID when applicable and client operation ID. It never edits the historical question or grading result in place. The response confirms submission and explains whether the disputed evidence is limited pending review. Reviewer identity and internal notes are not exposed.
+Create accepts report type, bounded student description, related attempt ID when applicable and the `Idempotency-Key` header. It never edits the historical question or grading result in place. The response confirms submission and explains whether the disputed evidence is limited pending review. Reviewer identity and internal notes are not exposed.
 
 ## 16 Notification integration
 

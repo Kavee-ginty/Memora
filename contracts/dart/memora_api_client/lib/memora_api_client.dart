@@ -13,6 +13,7 @@ export 'package:memora_api_client/src/model/date.dart';
 
 export 'package:memora_api_client/src/api/health_api.dart';
 export 'package:memora_api_client/src/api/profile_api.dart';
+export 'package:memora_api_client/src/api/reports_api.dart';
 export 'package:memora_api_client/src/api/session_api.dart';
 
 export 'package:memora_api_client/src/model/account_status.dart';
@@ -35,8 +36,12 @@ export 'package:memora_api_client/src/model/health_status.dart';
 export 'package:memora_api_client/src/model/idempotency_headers.dart';
 export 'package:memora_api_client/src/model/page_meta.dart';
 export 'package:memora_api_client/src/model/page_params.dart';
+export 'package:memora_api_client/src/model/page_question_report_summary.dart';
 export 'package:memora_api_client/src/model/pending_resource_summary.dart';
 export 'package:memora_api_client/src/model/profile_summary.dart';
+export 'package:memora_api_client/src/model/question_report_create_request.dart';
+export 'package:memora_api_client/src/model/question_report_response.dart';
+export 'package:memora_api_client/src/model/question_report_summary.dart';
 export 'package:memora_api_client/src/model/request_headers.dart';
 export 'package:memora_api_client/src/model/session_bootstrap_response.dart';
 export 'package:memora_api_client/src/model/session_revocation_scope.dart';
