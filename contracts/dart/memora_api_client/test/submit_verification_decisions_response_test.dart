@@ -7,13 +7,13 @@ void main() {
   // TODO add properties to the builder and call build()
 
   group(SubmitVerificationDecisionsResponse, () {
-    // BuiltList<VerificationDecisionResult> results
-    test('to test the property `results`', () async {
+    // LearningUpdateResponse learningUpdate
+    test('to test the property `learningUpdate`', () async {
       // TODO
     });
 
-    // LearningUpdateResponse update
-    test('to test the property `update`', () async {
+    // BuiltList<VerificationDecisionResult> results
+    test('to test the property `results`', () async {
       // TODO
     });
 

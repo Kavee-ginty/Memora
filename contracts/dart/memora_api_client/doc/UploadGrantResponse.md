@@ -11,8 +11,8 @@ Name | Type | Description | Notes
 **checksumRule** | **String** |  | 
 **expiresAt** | **String** |  | 
 **maxBytes** | **int** |  | 
-**method** | **Optional&lt;String?&gt;** |  | [optional] [default to 'PUT']
-**requiredHeaders** | **Optional&lt;BuiltMap&lt;String, String&gt;?&gt;** |  | [optional] 
+**method** | **String** |  | [default to 'PUT']
+**requiredHeaders** | **BuiltMap&lt;String, String&gt;** |  | 
 **uploadId** | **String** |  | 
 **url** | **String** |  | 
 

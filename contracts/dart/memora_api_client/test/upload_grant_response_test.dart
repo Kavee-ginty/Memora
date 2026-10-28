@@ -22,12 +22,12 @@ void main() {
       // TODO
     });
 
-    // Optional<String?> method (default value: 'PUT')
+    // String method (default value: 'PUT')
     test('to test the property `method`', () async {
       // TODO
     });
 
-    // Optional<BuiltMap<String, String>?> requiredHeaders
+    // BuiltMap<String, String> requiredHeaders
     test('to test the property `requiredHeaders`', () async {
       // TODO
     });

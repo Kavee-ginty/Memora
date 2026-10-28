@@ -109,3 +109,48 @@ Supabase logout revokes refresh material; an already issued access token remains
 valid until its short expiry. Keep the provider access-token lifetime short. Session
 revocation requires interactive authentication within the configured ten-minute
 window and records a safe audit event without the token.
+
+## Learning ingestion and background workers
+
+T09 provides the learning ingestion pipeline, extraction worker and temporary upload
+reconciler. Ingestion endpoints live under `/v1/learning-updates`:
+
+- Lifecycle: create, list, read, edit and discard learning updates.
+- Source uploads: generate single-use presigned PUT upload grants, validate uploaded
+  content bounds and SHA-256 digests, and finalize uploads for processing.
+- Extraction & candidates: worker executes text/document extraction (deterministic or
+  OpenRouter LLM), storing candidate concepts, questions and facts with confidence bands.
+- Verification: inspect candidates, accept/edit/reject/merge decisions, and preview the
+  learning path impact.
+- Knowledge commit & deletion: atomic commit transaction into retained knowledge tables,
+  outbox event creation, and background raw file deletion with cryptographic deletion proofs.
+
+### Background worker runners
+
+Ingestion and deletion jobs run asynchronously through the worker entry points:
+
+```powershell
+# Run extraction and source deletion background worker
+python -m memora.worker.ingestion
+
+# Run temporary source upload and expired update reconciler
+python -m memora.worker.reconciler
+```
+
+### Ingestion configuration
+
+Ingestion configuration keys in `.env` or the platform environment:
+
+- `MEMORA_INGESTION_ENCRYPTION_KEY`: Base64-encoded 32-byte AES-256-GCM key for manual text encryption.
+- `MEMORA_EXTRACTION_PROVIDER`: `deterministic` (default) or `openrouter`.
+- `MEMORA_OPENROUTER_API_KEY`: API key for OpenRouter model extraction.
+- `MEMORA_OPENROUTER_MODEL`: Model identifier for LLM extraction.
+- `MEMORA_OBJECT_STORAGE_PROVIDER`: `memory` (test/local default) or `s3`.
+- `MEMORA_OBJECT_STORAGE_BUCKET`: Target S3 bucket name for temporary source uploads.
+- `MEMORA_OBJECT_STORAGE_ENDPOINT`: S3 endpoint URL (when using MinIO, Cloudflare R2, etc.).
+- `MEMORA_OBJECT_STORAGE_REGION`: AWS region (defaults to `us-east-1`).
+- `MEMORA_OBJECT_STORAGE_ACCESS_KEY` & `MEMORA_OBJECT_STORAGE_SECRET_KEY`: S3 SigV4 credentials.
+- `MEMORA_UPLOAD_MAX_FILES`: Maximum files declared per update (defaults to 5, max 20).
+- `MEMORA_UPLOAD_MAX_BYTES`: Maximum byte size per upload (defaults to 25 MiB).
+- `MEMORA_UPLOAD_GRANT_TTL_SECONDS`: Presigned PUT grant validity window (defaults to 900s).
+- `MEMORA_INGESTION_EXPIRY_HOURS`: TTL before uncommitted updates expire (defaults to 72h).

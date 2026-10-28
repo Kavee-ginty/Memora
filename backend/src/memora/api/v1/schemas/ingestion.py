@@ -19,6 +19,25 @@ from memora.modules.ingestion.constants import (
 )
 
 
+def _require_files(schema: dict[str, Any]) -> None:
+    req = schema.setdefault("required", [])
+    if "files" not in req:
+        req.append("files")
+
+
+def _require_upload_grant_fields(schema: dict[str, Any]) -> None:
+    req = schema.setdefault("required", [])
+    for field in ("required_headers", "method"):
+        if field not in req:
+            req.append(field)
+
+
+def _require_corrected_payload(schema: dict[str, Any]) -> None:
+    req = schema.setdefault("required", [])
+    if "corrected_payload" not in req:
+        req.append("corrected_payload")
+
+
 class DeclaredFile(BaseModel):
     model_config = ConfigDict(extra="forbid")
     declared_name: Annotated[str, Field(min_length=1, max_length=MAX_FILENAME_CHARS)]
@@ -28,7 +47,7 @@ class DeclaredFile(BaseModel):
 
 
 class CreateLearningUpdateRequest(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", json_schema_extra=_require_files)
     subject_id: UUID
     input_type: InputType
     learned_at: UtcDatetime
@@ -109,6 +128,7 @@ class UploadGrantRequest(BaseModel):
 
 
 class UploadGrantResponse(BaseModel):
+    model_config = ConfigDict(json_schema_extra=_require_upload_grant_fields)
     upload_id: UUID
     url: Annotated[str, Field(repr=False)]
     method: Literal["PUT"] = "PUT"
@@ -143,7 +163,7 @@ class CandidateListResponse(Page[CandidateResponse]):
 
 
 class VerificationDecision(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", json_schema_extra=_require_corrected_payload)
     candidate_id: UUID
     candidate_version: Version
     decision: VerificationDecisionValue
@@ -179,7 +199,7 @@ class VerificationDecisionResult(BaseModel):
 
 
 class SubmitVerificationDecisionsResponse(BaseModel):
-    update: LearningUpdateResponse
+    learning_update: LearningUpdateResponse
     results: list[VerificationDecisionResult]
 
 

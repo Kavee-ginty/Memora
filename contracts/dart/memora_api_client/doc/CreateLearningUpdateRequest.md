@@ -9,7 +9,7 @@ import 'package:memora_api_client/api.dart';
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **clientOperationId** | **String** |  | 
-**files** | [**Optional&lt;BuiltList&lt;DeclaredFile&gt;?&gt;**](DeclaredFile.md) |  | [optional] [default to ListBuilder()]
+**files** | [**BuiltList&lt;DeclaredFile&gt;**](DeclaredFile.md) |  | [default to ListBuilder()]
 **inputType** | [**InputType**](InputType.md) |  | 
 **learnedAt** | [**DateTime**](DateTime.md) |  | 
 **manualText** | **Optional&lt;String?&gt;** |  | [optional] 

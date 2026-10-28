@@ -425,7 +425,9 @@ class IngestionService:
             )
             for decision in body.decisions
         ]
-        return SubmitVerificationDecisionsResponse(update=self._update(record), results=results)
+        return SubmitVerificationDecisionsResponse(
+            learning_update=self._update(record), results=results
+        )
 
     def preview(self, auth: AuthenticatedRequest, update_id: UUID) -> LearningPathPreviewResponse:
         data = self.repository.preview(auth.context, update_id)

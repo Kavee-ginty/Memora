@@ -17,7 +17,7 @@ void main() {
       // TODO
     });
 
-    // Optional<BuiltMap<String, JsonObject>?> correctedPayload
+    // BuiltMap<String, JsonObject> correctedPayload
     test('to test the property `correctedPayload`', () async {
       // TODO
     });

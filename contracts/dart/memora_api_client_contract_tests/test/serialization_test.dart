@@ -216,4 +216,229 @@ void main() {
       expect(headers.xPlatform, RequestHeadersXPlatformEnum.android);
     });
   });
+
+  group('Ingestion Models', () {
+    Map<String, dynamic> sampleLearningUpdate() => <String, dynamic>{
+          'id': '00000000-0000-4000-8000-000000000001',
+          'subject_id': '00000000-0000-4000-8000-000000000002',
+          'curriculum_version_id': '00000000-0000-4000-8000-000000000003',
+          'input_type': 'pdf',
+          'status': 'draft',
+          'learned_at': '2026-03-30T10:00:00Z',
+          'failure_code': null,
+          'expires_at': null,
+          'has_manual_text': false,
+          'created_at': '2026-03-30T10:00:00Z',
+          'updated_at': '2026-03-30T10:00:00Z',
+          'row_version': 1,
+          'source_deletion_status': 'not_required',
+          'uploads': <dynamic>[
+            <String, dynamic>{
+              'id': '00000000-0000-4000-8000-000000000004',
+              'declared_name': 'test.pdf',
+              'declared_media_type': 'application/pdf',
+              'detected_media_type': 'application/pdf',
+              'byte_size': 1234,
+              'status': 'pending',
+              'expires_at': '2026-03-30T10:15:00Z',
+              'deleted_at': null,
+              'deletion_status': 'not_required',
+            },
+          ],
+        };
+
+    test('CreateLearningUpdateRequest serializes and deserializes', () {
+      final json = <String, dynamic>{
+        'client_operation_id': '00000000-0000-4000-8000-000000000001',
+        'files': <dynamic>[
+          <String, dynamic>{
+            'byte_size': 1234,
+            'content_sha256':
+                'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+            'declared_media_type': 'application/pdf',
+            'declared_name': 'notes.pdf',
+          },
+        ],
+        'input_type': 'pdf',
+        'learned_at': '2026-03-30T10:00:00Z',
+        'manual_text': null,
+        'subject_id': '00000000-0000-4000-8000-000000000002',
+      };
+
+      final req = standardSerializers.deserializeWith(
+        CreateLearningUpdateRequest.serializer,
+        json,
+      )!;
+
+      expect(req.inputType, InputType.pdf);
+      expect(req.files, hasLength(1));
+      expect(req.files.first.declaredName, 'notes.pdf');
+      expect(req.files.first.byteSize, 1234);
+
+      final encoded = _encode(standardSerializers.serializeWith(
+        CreateLearningUpdateRequest.serializer,
+        req,
+      ));
+      expect(encoded['client_operation_id'], json['client_operation_id']);
+      expect(encoded['input_type'], 'pdf');
+      expect(encoded['files'], hasLength(1));
+    });
+
+    test('UploadGrantResponse serializes and deserializes', () {
+      final json = <String, dynamic>{
+        'checksum_rule': 'sha256',
+        'expires_at': '2026-03-30T10:15:00Z',
+        'max_bytes': 10485760,
+        'method': 'PUT',
+        'required_headers': <String, dynamic>{'x-amz-checksum-sha256': 'abc'},
+        'upload_id': '00000000-0000-4000-8000-000000000001',
+        'url': 'https://storage.example.com/uploads/object-key',
+      };
+
+      final grant = standardSerializers.deserializeWith(
+        UploadGrantResponse.serializer,
+        json,
+      )!;
+
+      expect(grant.method, UploadGrantResponseMethodEnum.PUT);
+      expect(grant.maxBytes, 10485760);
+      expect(grant.requiredHeaders['x-amz-checksum-sha256'], 'abc');
+
+      final encoded = _encode(standardSerializers.serializeWith(
+        UploadGrantResponse.serializer,
+        grant,
+      ));
+      expect(encoded['method'], 'PUT');
+      expect(encoded['upload_id'], json['upload_id']);
+    });
+
+    test('CandidateResponse serializes and deserializes', () {
+      final json = <String, dynamic>{
+        'candidate_type': 'concept',
+        'candidate_version': 1,
+        'confidence': 0.95,
+        'confidence_band': 'high',
+        'display_summary': 'Powerhouse of the cell',
+        'display_title': 'Mitochondria',
+        'id': '00000000-0000-4000-8000-000000000001',
+        'requires_verification': false,
+        'source_locator': <String, dynamic>{'page': 1},
+        'status': 'candidate',
+      };
+
+      final candidate = standardSerializers.deserializeWith(
+        CandidateResponse.serializer,
+        json,
+      )!;
+
+      expect(candidate.confidenceBand, CandidateResponseConfidenceBandEnum.high);
+      expect(candidate.status, CandidateStatus.candidate);
+      expect(candidate.requiresVerification, isFalse);
+
+      final encoded = _encode(standardSerializers.serializeWith(
+        CandidateResponse.serializer,
+        candidate,
+      ));
+      expect(encoded['confidence_band'], 'high');
+      expect(encoded['display_title'], 'Mitochondria');
+    });
+
+    test('SubmitVerificationDecisionsRequest and Response round-trip', () {
+      final reqJson = <String, dynamic>{
+        'decisions': <dynamic>[
+          <String, dynamic>{
+            'candidate_id': '00000000-0000-4000-8000-000000000001',
+            'candidate_version': 1,
+            'corrected_payload': <String, dynamic>{},
+            'decision': 'accept',
+          },
+        ],
+      };
+
+      final req = standardSerializers.deserializeWith(
+        SubmitVerificationDecisionsRequest.serializer,
+        reqJson,
+      )!;
+      expect(req.decisions, hasLength(1));
+      expect(req.decisions.first.decision, VerificationDecisionValue.accept);
+
+      final respJson = <String, dynamic>{
+        'learning_update': sampleLearningUpdate(),
+        'results': <dynamic>[
+          <String, dynamic>{
+            'candidate_id': '00000000-0000-4000-8000-000000000001',
+            'candidate_status': 'accepted',
+            'requires_verification': false,
+          },
+        ],
+      };
+
+      final resp = standardSerializers.deserializeWith(
+        SubmitVerificationDecisionsResponse.serializer,
+        respJson,
+      )!;
+      expect(resp.results, hasLength(1));
+      expect(resp.results.first.candidateStatus, CandidateStatus.accepted);
+      expect(resp.learningUpdate.id, '00000000-0000-4000-8000-000000000001');
+    });
+
+    test('LearningPathPreviewResponse serializes and deserializes', () {
+      final json = <String, dynamic>{
+        'blocked_reason': null,
+        'can_commit': true,
+        'concept_count': 1,
+        'estimated_first_mission_minutes': 5,
+        'first_concepts': <dynamic>[
+          <String, dynamic>{
+            'candidate_id': '00000000-0000-4000-8000-000000000001',
+            'candidate_type': 'concept',
+            'concept_id': null,
+            'concept_version_id': null,
+            'title': 'Cellular Respiration',
+          },
+        ],
+        'status': 'processing',
+        'update_id': '00000000-0000-4000-8000-000000000002',
+      };
+
+      final preview = standardSerializers.deserializeWith(
+        LearningPathPreviewResponse.serializer,
+        json,
+      )!;
+      expect(preview.canCommit, isTrue);
+      expect(preview.conceptCount, 1);
+      expect(preview.firstConcepts, hasLength(1));
+      expect(preview.firstConcepts.first.title, 'Cellular Respiration');
+    });
+
+    test('KnowledgeCommitResponse serializes and deserializes', () {
+      final json = <String, dynamic>{
+        'commit_version': 1,
+        'committed_counts': <String, dynamic>{'concepts': 1},
+        'concept_mappings': <dynamic>[
+          <String, dynamic>{
+            'candidate_id': '00000000-0000-4000-8000-000000000001',
+            'candidate_type': 'concept',
+            'concept_id': '00000000-0000-4000-8000-000000000005',
+            'concept_version_id': '00000000-0000-4000-8000-000000000006',
+            'title': 'Cellular Respiration',
+          },
+        ],
+        'first_mission': null,
+        'knowledge_commit_id': '00000000-0000-4000-8000-000000000010',
+        'learning_update': sampleLearningUpdate(),
+        'private_knowledge_count': 0,
+        'source_deletion_status': 'deleted',
+      };
+
+      final commitResp = standardSerializers.deserializeWith(
+        KnowledgeCommitResponse.serializer,
+        json,
+      )!;
+      expect(commitResp.commitVersion, 1);
+      expect(commitResp.committedCounts['concepts'], 1);
+      expect(commitResp.sourceDeletionStatus, DeletionStatus.deleted);
+      expect(commitResp.conceptMappings, hasLength(1));
+    });
+  });
 }

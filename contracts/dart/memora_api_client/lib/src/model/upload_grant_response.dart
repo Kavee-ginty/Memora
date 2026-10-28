@@ -6,7 +6,6 @@
 import 'package:built_collection/built_collection.dart';
 import 'package:built_value/built_value.dart';
 import 'package:built_value/serializer.dart';
-import 'package:memora_api_client/src/optional.dart';
 
 part 'upload_grant_response.g.dart';
 
@@ -33,7 +32,7 @@ abstract class UploadGrantResponse
   int get maxBytes;
 
   @BuiltValueField(wireName: r'method')
-  Optional<UploadGrantResponseMethodEnum?> get method;
+  UploadGrantResponseMethodEnum get method;
   // enum methodEnum {  PUT,  };
 
   @BuiltValueField(wireName: r'required_headers')
@@ -51,9 +50,8 @@ abstract class UploadGrantResponse
       _$UploadGrantResponse;
 
   @BuiltValueHook(initializeBuilder: true)
-  static void _defaults(UploadGrantResponseBuilder b) => b
-    ..method = Optional.absent()
-    ..requiredHeaders = Optional.absent();
+  static void _defaults(UploadGrantResponseBuilder b) =>
+      b..method = UploadGrantResponseMethodEnum.valueOf('PUT');
 
   @BuiltValueSerializer(custom: true)
   static Serializer<UploadGrantResponse> get serializer =>
@@ -91,31 +89,17 @@ class _$UploadGrantResponseSerializer
       object.maxBytes,
       specifiedType: const FullType(int),
     );
-    if (object.method.isPresent) {
-      yield r'method';
-      final optionalValue = object.method.value;
-      if (optionalValue == null) {
-        yield null;
-      } else {
-        yield serializers.serialize(
-          optionalValue,
-          specifiedType: const FullType.nullable(String),
-        );
-      }
-    }
-    if (object.requiredHeaders.isPresent) {
-      yield r'required_headers';
-      final optionalValue = object.requiredHeaders.value;
-      if (optionalValue == null) {
-        yield null;
-      } else {
-        yield serializers.serialize(
-          optionalValue,
-          specifiedType:
-              const FullType(BuiltMap, [FullType(String), FullType(String)]),
-        );
-      }
-    }
+    yield r'method';
+    yield serializers.serialize(
+      object.method,
+      specifiedType: const FullType(UploadGrantResponseMethodEnum),
+    );
+    yield r'required_headers';
+    yield serializers.serialize(
+      object.requiredHeaders,
+      specifiedType:
+          const FullType(BuiltMap, [FullType(String), FullType(String)]),
+    );
     yield r'upload_id';
     yield serializers.serialize(
       object.uploadId,
@@ -175,17 +159,17 @@ class _$UploadGrantResponseSerializer
         case r'method':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType.nullable(String),
-          ) as String?;
-          result.method = Optional.present(valueDes);
+            specifiedType: const FullType(UploadGrantResponseMethodEnum),
+          ) as UploadGrantResponseMethodEnum;
+          result.method = valueDes;
           break;
         case r'required_headers':
           final valueDes = serializers.deserialize(
             value,
             specifiedType:
                 const FullType(BuiltMap, [FullType(String), FullType(String)]),
-          ) as BuiltMap<String, String>?;
-          result.requiredHeaders = Optional.present(valueDes);
+          ) as BuiltMap<String, String>;
+          result.requiredHeaders.replace(valueDes);
           break;
         case r'upload_id':
           final valueDes = serializers.deserialize(

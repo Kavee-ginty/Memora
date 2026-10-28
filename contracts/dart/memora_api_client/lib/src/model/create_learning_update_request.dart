@@ -52,7 +52,7 @@ abstract class CreateLearningUpdateRequest
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(CreateLearningUpdateRequestBuilder b) => b
-    ..files = Optional.absent()
+    ..files = ListBuilder()
     ..manualText = Optional.absent();
 
   @BuiltValueSerializer(custom: true)
@@ -81,18 +81,11 @@ class _$CreateLearningUpdateRequestSerializer
       object.clientOperationId,
       specifiedType: const FullType(String),
     );
-    if (object.files.isPresent) {
-      yield r'files';
-      final optionalValue = object.files.value;
-      if (optionalValue == null) {
-        yield null;
-      } else {
-        yield serializers.serialize(
-          optionalValue,
-          specifiedType: const FullType(BuiltList, [FullType(DeclaredFile)]),
-        );
-      }
-    }
+    yield r'files';
+    yield serializers.serialize(
+      object.files,
+      specifiedType: const FullType(BuiltList, [FullType(DeclaredFile)]),
+    );
     yield r'input_type';
     yield serializers.serialize(
       object.inputType,
@@ -156,8 +149,8 @@ class _$CreateLearningUpdateRequestSerializer
           final valueDes = serializers.deserialize(
             value,
             specifiedType: const FullType(BuiltList, [FullType(DeclaredFile)]),
-          ) as BuiltList<DeclaredFile>?;
-          result.files = Optional.present(valueDes);
+          ) as BuiltList<DeclaredFile>;
+          result.files.replace(valueDes);
           break;
         case r'input_type':
           final valueDes = serializers.deserialize(

@@ -14,18 +14,18 @@ part 'submit_verification_decisions_response.g.dart';
 /// SubmitVerificationDecisionsResponse
 ///
 /// Properties:
+/// * [learningUpdate]
 /// * [results]
-/// * [update]
 @BuiltValue()
 abstract class SubmitVerificationDecisionsResponse
     implements
         Built<SubmitVerificationDecisionsResponse,
             SubmitVerificationDecisionsResponseBuilder> {
+  @BuiltValueField(wireName: r'learning_update')
+  LearningUpdateResponse get learningUpdate;
+
   @BuiltValueField(wireName: r'results')
   BuiltList<VerificationDecisionResult> get results;
-
-  @BuiltValueField(wireName: r'update')
-  LearningUpdateResponse get update;
 
   SubmitVerificationDecisionsResponse._();
 
@@ -57,16 +57,16 @@ class _$SubmitVerificationDecisionsResponseSerializer
     SubmitVerificationDecisionsResponse object, {
     FullType specifiedType = FullType.unspecified,
   }) sync* {
+    yield r'learning_update';
+    yield serializers.serialize(
+      object.learningUpdate,
+      specifiedType: const FullType(LearningUpdateResponse),
+    );
     yield r'results';
     yield serializers.serialize(
       object.results,
       specifiedType:
           const FullType(BuiltList, [FullType(VerificationDecisionResult)]),
-    );
-    yield r'update';
-    yield serializers.serialize(
-      object.update,
-      specifiedType: const FullType(LearningUpdateResponse),
     );
   }
 
@@ -93,6 +93,13 @@ class _$SubmitVerificationDecisionsResponseSerializer
       final key = serializedList[i] as String;
       final value = serializedList[i + 1];
       switch (key) {
+        case r'learning_update':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(LearningUpdateResponse),
+          ) as LearningUpdateResponse;
+          result.learningUpdate.replace(valueDes);
+          break;
         case r'results':
           final valueDes = serializers.deserialize(
             value,
@@ -100,13 +107,6 @@ class _$SubmitVerificationDecisionsResponseSerializer
                 BuiltList, [FullType(VerificationDecisionResult)]),
           ) as BuiltList<VerificationDecisionResult>;
           result.results.replace(valueDes);
-          break;
-        case r'update':
-          final valueDes = serializers.deserialize(
-            value,
-            specifiedType: const FullType(LearningUpdateResponse),
-          ) as LearningUpdateResponse;
-          result.update.replace(valueDes);
           break;
         default:
           unhandled.add(key);

@@ -73,7 +73,7 @@ class _$UploadGrantResponse extends UploadGrantResponse {
   @override
   final int maxBytes;
   @override
-  final Optional<UploadGrantResponseMethodEnum?> method;
+  final UploadGrantResponseMethodEnum method;
   @override
   final BuiltMap<String, String> requiredHeaders;
   @override
@@ -160,10 +160,9 @@ class UploadGrantResponseBuilder
   int? get maxBytes => _$this._maxBytes;
   set maxBytes(int? maxBytes) => _$this._maxBytes = maxBytes;
 
-  Optional<UploadGrantResponseMethodEnum?>? _method;
-  Optional<UploadGrantResponseMethodEnum?>? get method => _$this._method;
-  set method(Optional<UploadGrantResponseMethodEnum?>? method) =>
-      _$this._method = method;
+  UploadGrantResponseMethodEnum? _method;
+  UploadGrantResponseMethodEnum? get method => _$this._method;
+  set method(UploadGrantResponseMethodEnum? method) => _$this._method = method;
 
   MapBuilder<String, String>? _requiredHeaders;
   MapBuilder<String, String> get requiredHeaders =>

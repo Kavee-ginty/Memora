@@ -42,6 +42,21 @@ The data rules follow TRD 18.2. Production data must never be copied into local,
 | `MEMORA_DEVICE_ENCRYPTION_KEY` | Yes in staging and production | Secret-manager value containing a base64-encoded 32-byte AES-256-GCM key |
 | `MEMORA_DEVICE_FINGERPRINT_KEY` | Yes in staging and production | Independent secret-manager value containing a base64-encoded 32-byte HMAC key |
 | `MEMORA_CONSENT_*_VERSION` | Yes in staging and production | Approved current policy versions; `unapproved-*` placeholders are rejected |
+| `MEMORA_INGESTION_ENCRYPTION_KEY` | No (defaults to deterministic local fallback) | Base64-encoded 32-byte AES-256-GCM key for manual text encryption |
+| `MEMORA_EXTRACTION_PROVIDER` | No | One of `deterministic` or `openrouter`; defaults to `deterministic` |
+| `MEMORA_OPENROUTER_API_KEY` | When provider is `openrouter` | Secret-manager token for LLM candidate extraction |
+| `MEMORA_OPENROUTER_MODEL` | No | Model identifier on OpenRouter; e.g. `google/gemini-2.5-flash` |
+| `MEMORA_OBJECT_STORAGE_PROVIDER` | No | One of `memory` or `s3`; defaults to `memory` |
+| `MEMORA_OBJECT_STORAGE_BUCKET` | When provider is `s3` | S3 bucket name for temporary source uploads |
+| `MEMORA_OBJECT_STORAGE_ENDPOINT` | No | Custom S3 endpoint URL for MinIO, Cloudflare R2, etc. |
+| `MEMORA_OBJECT_STORAGE_REGION` | No | S3 region; defaults to `us-east-1` |
+| `MEMORA_OBJECT_STORAGE_ACCESS_KEY` | When provider is `s3` | S3 access key ID for presigning and verification |
+| `MEMORA_OBJECT_STORAGE_SECRET_KEY` | When provider is `s3` | S3 secret access key for presigning and verification |
+| `MEMORA_UPLOAD_MAX_FILES` | No | File upload count bound per update; defaults to 5 |
+| `MEMORA_UPLOAD_MAX_BYTES` | No | Max upload byte size; defaults to 26,214,400 (25 MiB) |
+| `MEMORA_UPLOAD_GRANT_TTL_SECONDS` | No | Presigned PUT grant validity duration; defaults to 900 seconds |
+| `MEMORA_INGESTION_EXPIRY_HOURS` | No | Inactive draft/uploading update TTL; defaults to 72 hours |
+| `MEMORA_VERIFICATION_EXPIRY_HOURS` | No | Verification candidate decision window; defaults to 72 hours |
 
 Local development falls back to a loopback PostgreSQL URL when `MEMORA_DATABASE_URL` is omitted. That fallback is not a deployed-environment default.
 

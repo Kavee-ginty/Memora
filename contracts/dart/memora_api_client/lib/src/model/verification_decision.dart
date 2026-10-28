@@ -8,7 +8,6 @@ import 'package:built_collection/built_collection.dart';
 import 'package:built_value/json_object.dart';
 import 'package:built_value/built_value.dart';
 import 'package:built_value/serializer.dart';
-import 'package:memora_api_client/src/optional.dart';
 
 part 'verification_decision.g.dart';
 
@@ -41,8 +40,7 @@ abstract class VerificationDecision
       _$VerificationDecision;
 
   @BuiltValueHook(initializeBuilder: true)
-  static void _defaults(VerificationDecisionBuilder b) =>
-      b..correctedPayload = Optional.absent();
+  static void _defaults(VerificationDecisionBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
   static Serializer<VerificationDecision> get serializer =>
@@ -75,19 +73,12 @@ class _$VerificationDecisionSerializer
       object.candidateVersion,
       specifiedType: const FullType(int),
     );
-    if (object.correctedPayload.isPresent) {
-      yield r'corrected_payload';
-      final optionalValue = object.correctedPayload.value;
-      if (optionalValue == null) {
-        yield null;
-      } else {
-        yield serializers.serialize(
-          optionalValue,
-          specifiedType: const FullType(
-              BuiltMap, [FullType(String), FullType.nullable(JsonObject)]),
-        );
-      }
-    }
+    yield r'corrected_payload';
+    yield serializers.serialize(
+      object.correctedPayload,
+      specifiedType: const FullType(
+          BuiltMap, [FullType(String), FullType.nullable(JsonObject)]),
+    );
     yield r'decision';
     yield serializers.serialize(
       object.decision,
@@ -137,8 +128,8 @@ class _$VerificationDecisionSerializer
             value,
             specifiedType: const FullType(
                 BuiltMap, [FullType(String), FullType.nullable(JsonObject)]),
-          ) as BuiltMap<String, JsonObject>?;
-          result.correctedPayload = Optional.present(valueDes);
+          ) as BuiltMap<String, JsonObject?>;
+          result.correctedPayload.replace(valueDes);
           break;
         case r'decision':
           final valueDes = serializers.deserialize(

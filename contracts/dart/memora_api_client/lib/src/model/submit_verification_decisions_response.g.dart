@@ -9,9 +9,9 @@ part of 'submit_verification_decisions_response.dart';
 class _$SubmitVerificationDecisionsResponse
     extends SubmitVerificationDecisionsResponse {
   @override
-  final BuiltList<VerificationDecisionResult> results;
+  final LearningUpdateResponse learningUpdate;
   @override
-  final LearningUpdateResponse update;
+  final BuiltList<VerificationDecisionResult> results;
 
   factory _$SubmitVerificationDecisionsResponse(
           [void Function(SubmitVerificationDecisionsResponseBuilder)?
@@ -19,7 +19,7 @@ class _$SubmitVerificationDecisionsResponse
       (SubmitVerificationDecisionsResponseBuilder()..update(updates))._build();
 
   _$SubmitVerificationDecisionsResponse._(
-      {required this.results, required this.update})
+      {required this.learningUpdate, required this.results})
       : super._();
   @override
   SubmitVerificationDecisionsResponse rebuild(
@@ -34,15 +34,15 @@ class _$SubmitVerificationDecisionsResponse
   bool operator ==(Object other) {
     if (identical(other, this)) return true;
     return other is SubmitVerificationDecisionsResponse &&
-        results == other.results &&
-        update == other.update;
+        learningUpdate == other.learningUpdate &&
+        results == other.results;
   }
 
   @override
   int get hashCode {
     var _$hash = 0;
+    _$hash = $jc(_$hash, learningUpdate.hashCode);
     _$hash = $jc(_$hash, results.hashCode);
-    _$hash = $jc(_$hash, update.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -50,8 +50,8 @@ class _$SubmitVerificationDecisionsResponse
   @override
   String toString() {
     return (newBuiltValueToStringHelper(r'SubmitVerificationDecisionsResponse')
-          ..add('results', results)
-          ..add('update', update))
+          ..add('learningUpdate', learningUpdate)
+          ..add('results', results))
         .toString();
   }
 }
@@ -62,16 +62,17 @@ class SubmitVerificationDecisionsResponseBuilder
             SubmitVerificationDecisionsResponseBuilder> {
   _$SubmitVerificationDecisionsResponse? _$v;
 
+  LearningUpdateResponseBuilder? _learningUpdate;
+  LearningUpdateResponseBuilder get learningUpdate =>
+      _$this._learningUpdate ??= LearningUpdateResponseBuilder();
+  set learningUpdate(LearningUpdateResponseBuilder? learningUpdate) =>
+      _$this._learningUpdate = learningUpdate;
+
   ListBuilder<VerificationDecisionResult>? _results;
   ListBuilder<VerificationDecisionResult> get results =>
       _$this._results ??= ListBuilder<VerificationDecisionResult>();
   set results(ListBuilder<VerificationDecisionResult>? results) =>
       _$this._results = results;
-
-  LearningUpdateResponseBuilder? _update;
-  LearningUpdateResponseBuilder get update =>
-      _$this._update ??= LearningUpdateResponseBuilder();
-  set update(LearningUpdateResponseBuilder? update) => _$this._update = update;
 
   SubmitVerificationDecisionsResponseBuilder() {
     SubmitVerificationDecisionsResponse._defaults(this);
@@ -80,8 +81,8 @@ class SubmitVerificationDecisionsResponseBuilder
   SubmitVerificationDecisionsResponseBuilder get _$this {
     final $v = _$v;
     if ($v != null) {
+      _learningUpdate = $v.learningUpdate.toBuilder();
       _results = $v.results.toBuilder();
-      _update = $v.update.toBuilder();
       _$v = null;
     }
     return this;
@@ -106,16 +107,16 @@ class SubmitVerificationDecisionsResponseBuilder
     try {
       _$result = _$v ??
           _$SubmitVerificationDecisionsResponse._(
+            learningUpdate: learningUpdate.build(),
             results: results.build(),
-            update: update.build(),
           );
     } catch (_) {
       late String _$failedField;
       try {
+        _$failedField = 'learningUpdate';
+        learningUpdate.build();
         _$failedField = 'results';
         results.build();
-        _$failedField = 'update';
-        update.build();
       } catch (e) {
         throw BuiltValueNestedFieldError(r'SubmitVerificationDecisionsResponse',
             _$failedField, e.toString());

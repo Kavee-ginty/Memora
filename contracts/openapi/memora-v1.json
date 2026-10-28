@@ -474,7 +474,8 @@
           "subject_id",
           "input_type",
           "learned_at",
-          "client_operation_id"
+          "client_operation_id",
+          "files"
         ],
         "title": "CreateLearningUpdateRequest",
         "type": "object"
@@ -1556,19 +1557,19 @@
       },
       "SubmitVerificationDecisionsResponse": {
         "properties": {
+          "learning_update": {
+            "$ref": "#/components/schemas/LearningUpdateResponse"
+          },
           "results": {
             "items": {
               "$ref": "#/components/schemas/VerificationDecisionResult"
             },
             "title": "Results",
             "type": "array"
-          },
-          "update": {
-            "$ref": "#/components/schemas/LearningUpdateResponse"
           }
         },
         "required": [
-          "update",
+          "learning_update",
           "results"
         ],
         "title": "SubmitVerificationDecisionsResponse",
@@ -1692,7 +1693,9 @@
           "url",
           "max_bytes",
           "expires_at",
-          "checksum_rule"
+          "checksum_rule",
+          "required_headers",
+          "method"
         ],
         "title": "UploadGrantResponse",
         "type": "object"
@@ -1736,7 +1739,8 @@
         "required": [
           "candidate_id",
           "candidate_version",
-          "decision"
+          "decision",
+          "corrected_payload"
         ],
         "title": "VerificationDecision",
         "type": "object"

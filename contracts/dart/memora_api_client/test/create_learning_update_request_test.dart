@@ -12,7 +12,7 @@ void main() {
       // TODO
     });
 
-    // Optional<BuiltList<DeclaredFile>?> files (default value: ListBuilder())
+    // BuiltList<DeclaredFile> files (default value: ListBuilder())
     test('to test the property `files`', () async {
       // TODO
     });
