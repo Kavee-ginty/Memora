@@ -1,0 +1,124 @@
+{
+  "schema_version": "1.0",
+  "pilot_id": "PILOT-PHYS-2099-P1-Q01",
+  "source": {
+    "source_id": "SYNTHETIC-T24-KINEMATICS-001",
+    "source_type": "synthetic",
+    "document_filename": null,
+    "document_sha256": null,
+    "exam_year": null,
+    "exam_label": "synthetic",
+    "paper": null,
+    "question_number": null,
+    "pdf_page": null,
+    "medium": "English",
+    "official_key_status": "not_applicable",
+    "reproduction_status": "not_applicable",
+    "reproduction_approval_ref": null,
+    "licence_note": "Synthetic example for the T24 draft workflow. No third-party source or reproduction right is claimed.",
+    "transcription_verified": false
+  },
+  "question": {
+    "question_code": "synthetic-phys-kinematics-mcq-001",
+    "subject_id": "10000000-0000-0000-0000-000000000001",
+    "curriculum_version_id": "20000000-0000-0000-0000-000000000001",
+    "source_class": null,
+    "target_source_class": "expert_verified",
+    "question_type": "mcq",
+    "prompt": "A cyclist starts from rest and accelerates uniformly at 2.0 m s^-2 for 3.0 s. What is the cyclist's displacement during this interval?",
+    "explanation": "Using s = ut + (1/2)at^2 with u = 0 gives s = 0.5 x 2.0 x 3.0^2 = 9.0 m.",
+    "validation_status": "draft",
+    "author_principal": null,
+    "reviewer_principal": null,
+    "content": {
+      "kind": "choice",
+      "schema_version": "1",
+      "selection_mode": "single"
+    },
+    "options": [
+      {
+        "option_key": "a",
+        "display_text": "3.0 m",
+        "is_correct": false,
+        "display_order": 0
+      },
+      {
+        "option_key": "b",
+        "display_text": "6.0 m",
+        "is_correct": false,
+        "display_order": 1
+      },
+      {
+        "option_key": "c",
+        "display_text": "9.0 m",
+        "is_correct": true,
+        "display_order": 2
+      },
+      {
+        "option_key": "d",
+        "display_text": "18.0 m",
+        "is_correct": false,
+        "display_order": 3
+      },
+      {
+        "option_key": "e",
+        "display_text": "36.0 m",
+        "is_correct": false,
+        "display_order": 4
+      }
+    ],
+    "rubric": {
+      "rubric_type": "exact",
+      "max_score": 1,
+      "evidence_ceiling": 0.9,
+      "status": "draft",
+      "payload": {
+        "kind": "exact",
+        "schema_version": "1"
+      }
+    },
+    "concept_mappings": [
+      {
+        "concept_version_id": "50000000-0000-0000-0000-000000000003",
+        "learning_objective_id": "30000000-0000-0000-0000-000000000005",
+        "mapping_role": "primary",
+        "weight": 1.0,
+        "provenance_type": "analyst_mapping",
+        "provenance_ref": "SYNTHETIC-T24-KINEMATICS-001:displacement"
+      }
+    ]
+  },
+  "answer_verification": {
+    "derived_option_keys": [
+      "c"
+    ],
+    "derivation": "The cyclist starts from rest, so u = 0. With a = 2.0 m s^-2 and t = 3.0 s, s = ut + (1/2)at^2 = 0 + 0.5 x 2.0 x 9.0 = 9.0 m.",
+    "independent_review_status": "pending",
+    "reviewer_ref": null,
+    "official_key_claimed": false,
+    "notes": "This is a synthetic example, not an examination question. The answer is an analyst derivation and is not independently verified."
+  },
+  "review": {
+    "academic_review_status": "pending",
+    "reviewer_principal": null,
+    "reviewer_qualification_ref": null,
+    "review_scope": [
+      "derivation",
+      "ambiguity",
+      "curriculum_mapping"
+    ],
+    "reviewed_at": null,
+    "ambiguity_status": "pending",
+    "duplicate_status": "pending",
+    "coverage_note": "Synthetic example covering displacement and one-dimensional kinematics only. It does not add syllabus coverage.",
+    "content_hash": null,
+    "source_ref": "SYNTHETIC-T24-KINEMATICS-001",
+    "independence_declaration_ref": null
+  },
+  "publication": {
+    "approved_for_import": false,
+    "approved_by": null,
+    "approved_at": null,
+    "import_batch_id": null
+  }
+}

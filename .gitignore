@@ -21,6 +21,12 @@ plan_assets/
 # Local task implementation guides
 /docs/learning/*_Implementation_Guide.md
 
+# T24 academic source PDFs: local only pending reproduction/licence approval
+/content/physics/source_documents/
+
+# T24 local verbatim review pack: never track or redistribute source text
+/content/physics/pilot/local_review/
+
 # Python
 __pycache__/
 *.py[cod]
