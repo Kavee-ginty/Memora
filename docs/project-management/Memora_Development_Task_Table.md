@@ -39,7 +39,7 @@ If two sources appear inconsistent, stop implementation and resolve the conflict
 | T04 | PostgreSQL migrations and seed framework | **Done** | Codex | 6 | T01 | `task/T04-database-schema` | Backend database |
 | T05 | OpenAPI models and generated client pipeline | **Done** | Dasun Jayasanka | 4 | T01 | `task/T05-openapi-pipeline` | API contracts |
 | T06 | Identity and session backend | **Done** | Codex | 4 | T02, T04, T05 | `task/T06-identity-session` | Backend API |
-| T07 | Auth bootstrap mobile and guarded routes | **Ready** | - | 5 | T03, T05, T06 | `task/T07-mobile-auth-routes` | Mobile navigation |
+| T07 | Auth bootstrap mobile and guarded routes | **Done** | Codex | 5 | T03, T05, T06 | `task/T07-mobile-auth-routes` | Mobile navigation |
 | T08 | Curriculum and knowledge graph seed | **Done** | Antigravity | 5 | T04, T05 | `task/T08-curriculum-graph` | Data and knowledge |
 | T09 | Learning ingestion backend | **Ready** | - | 7 | T05, T06, T08 | `task/T09-ingestion-backend` | API and worker |
 | T10 | Learning ingestion mobile | Blocked | - | 6 | T07, T09 | `task/T10-ingestion-mobile` | Mobile feature |
