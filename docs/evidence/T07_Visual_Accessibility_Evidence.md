@@ -20,6 +20,10 @@ only synthetic test data.
 
 Regenerate and compare the implementation captures from `mobile/`:
 
+These checked-in evidence captures are compared on Windows because Flutter
+text rasterization is platform-specific; behavior and accessibility tests
+remain platform-independent and run in CI.
+
 ```powershell
 flutter test --update-goldens test/auth/t07_visual_evidence_test.dart
 flutter test test/auth/t07_visual_evidence_test.dart
