@@ -46,8 +46,19 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(LearningUpdateStatus.serializer)
       ..add(PageMeta.serializer)
       ..add(PageParams.serializer)
+      ..add(PageQuestionReportSummary.serializer)
       ..add(PendingResourceSummary.serializer)
       ..add(ProfileSummary.serializer)
+      ..add(QuestionReportCreateRequest.serializer)
+      ..add(QuestionReportCreateRequestReportTypeEnum.serializer)
+      ..add(QuestionReportResponse.serializer)
+      ..add(QuestionReportResponseEvidenceStateEnum.serializer)
+      ..add(QuestionReportResponseReportTypeEnum.serializer)
+      ..add(QuestionReportResponseStatusEnum.serializer)
+      ..add(QuestionReportSummary.serializer)
+      ..add(QuestionReportSummaryEvidenceStateEnum.serializer)
+      ..add(QuestionReportSummaryReportTypeEnum.serializer)
+      ..add(QuestionReportSummaryStatusEnum.serializer)
       ..add(RequestHeaders.serializer)
       ..add(RequestHeadersXPlatformEnum.serializer)
       ..add(RetryLearningUpdateRequest.serializer)
@@ -101,6 +112,10 @@ Serializers _$serializers = (Serializers().toBuilder()
           const FullType(
               BuiltList, const [const FullType(LearningUpdateResponse)]),
           () => ListBuilder<LearningUpdateResponse>())
+      ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(QuestionReportSummary)]),
+          () => ListBuilder<QuestionReportSummary>())
       ..addBuilderFactory(
           const FullType(
               BuiltList, const [const FullType(SourceUploadSummary)]),
