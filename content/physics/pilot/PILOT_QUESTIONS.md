@@ -32,6 +32,8 @@ No reviewer name, principal UUID, qualification or approval record has been inve
 
 Only 2025 Q1 has a complete existing T08 primary/supporting mapping. **Seven of the eight candidates lack a complete mapping.** Six topic areas are absent from T08: measurement uncertainty, projectile motion, static friction, conservation of momentum/elastic collision, scalar/vector classification, and simple pendulum/effective gravity.
 
+The machine-readable counts are `complete: 1`, `partial: 2` and `missing: 5` in `candidate_mappings.json` (schema 1.1). Every candidate is `blocked` in `evidence_status.json`; no official answer key, reviewer identity, qualification, independence declaration, approval or reproduction permission exists.
+
 The source files, hashes and page counts are in `source_manifest.json`. The 2025 paper is an image scan with no text layer; rendered page 2 carries a `Past Papers Wiki` watermark. The 2022 paper is an annotated CamScanner scan. The local verbatim transcriptions must be checked against the page image by an independent reviewer. They are not tracked content.
 
 ## 3. Question records
@@ -311,15 +313,24 @@ The pilot does not cover waves, electricity, magnetism, thermal physics, modern 
 
 ## 6. Read-only mapping report
 
-`candidate_mappings.json` is a machine-readable report for the eight candidates in this file. It lists the existing T08 concept codes each candidate references, whether a primary existing concept is present, and the topic areas that have no T08 concept yet. It is not a T12 import bundle and does not claim syllabus coverage.
+`candidate_mappings.json` is the machine-readable report for the eight candidates in this file. Schema 1.1 records, for every candidate:
 
-An **invalid mapping** is a referenced T08 code that does not resolve in `backend/src/memora/modules/curriculum/seed_data.py`; the report test fails on one. A **missing mapping** is a topic with no existing T08 code and is listed in `missing_topics`. The report contains no invalid code as of this checkpoint.
+- the source topic and mapping status (`complete`, `partial` or `missing`);
+- each existing T08 concept mapping with `stable_code`, `concept_version_id`, `objective_code`, `learning_objective_id`, `mapping_role`, `proposed_weight`, `mapping_basis` and `claim_ids`;
+- the topics that have no T08 concept yet, with the evidence required to resolve them;
+- counts that must match this file: 1 complete, 2 partial and 5 missing.
 
-Run the report check with the focused tests:
+An **invalid mapping** is a referenced T08 code, concept version UUID, objective UUID or claim ID that does not resolve in `backend/src/memora/modules/curriculum/seed_data.py`; the report test fails on one. A **missing mapping** is a topic with no existing T08 code and is listed in `missing_topics`. The report contains no invalid mapping as of this checkpoint. Every existing mapping remains an analyst proposal, not a reviewed mapping.
+
+`evidence_status.json` is the per-candidate evidence report. It records source-file identity, source authenticity, official answer-key status, marking-scheme/rubric status, reproduction rights, attribution, author/reviewer identity and qualification, independence, independent answer review, ambiguity/duplicate review and approval. Every candidate is `overall_status = "blocked"`. A verified SHA-256 match proves file identity only; it is not proof of official publication, an official answer key or reproduction permission.
+
+`EVIDENCE_REQUIRED.md` lists the evidence the human team must supply. `T12_OWNER_ACCEPTANCE.md` records the decisions still needed from the T12 owner.
+
+Run the report checks with the focused tests:
 
 ```powershell
 $env:PYTHONPATH="$PWD\backend\src"
-.\.venv\Scripts\python.exe -m pytest backend/tests/test_pilot_mapping_report.py -q
+.\.venv\Scripts\python.exe -m pytest backend/tests/test_pilot_mapping_report.py backend/tests/test_pilot_evidence_status.py -q
 ```
 
 ## 7. What this file does not claim

@@ -162,7 +162,9 @@ All rows are Stage 1 status. `P` means pending; `F` means flagged.
 | 2022 Q1 | P | P | **blocked** | **F** | P | P | not approved |
 | 2022 Q17 | P | P | **weak** | P | P | P | not approved |
 
-`blocked` means no existing T08 concept can serve as a credible primary mapping. `weak` means an existing concept is only a partial fit. Neither state is approval. Only 2025 Q1 has a complete existing mapping; seven of the eight candidates do not.
+`blocked` means no existing T08 concept can serve as a credible primary mapping (`mapping_status = "missing"` in `candidate_mappings.json`). `weak` means an existing concept is only a partial fit (`mapping_status = "partial"`). Neither state is approval. Only 2025 Q1 has a complete existing mapping; seven of the eight candidates do not.
+
+The machine-readable counts are 1 complete, 2 partial and 5 missing. Every candidate is also `blocked` in `evidence_status.json` because no answer key, reviewer, qualification, independence declaration, approval or reproduction permission exists. The human evidence checklist is `EVIDENCE_REQUIRED.md`.
 
 ## 4. Sign-off record
 
@@ -200,6 +202,11 @@ An item may not be imported as `approved` if any of the following is true:
 15. The reviewer/author independence declaration is missing.
 16. The item is a draft carrying a non-null `source_class` or `pilot_review` provenance.
 17. An approved item has a mapping whose provenance is not `pilot_review`.
+18. The review date or approval date is missing, or the approval date precedes the review date.
+19. The reviewer qualification reference is missing or does not resolve to a real record.
+20. An official answer key is claimed without an official key.
+21. A past-paper transcription has not been checked against the page image.
+22. T08 concept version UUIDs, objective IDs or claim IDs do not resolve in the reviewed seed.
 
 ## 6. Commands for Stage 2
 
@@ -207,18 +214,28 @@ Non-database checks:
 
 ```powershell
 $env:PYTHONPATH="$PWD\backend\src"
-.\.venv\Scripts\python.exe -m pytest backend/tests/test_pilot_content_validation.py backend/tests/test_pilot_mapping_report.py backend/tests/test_questions_models.py backend/tests/test_curriculum_seed.py backend/tests/test_questions_grading.py -q
+.\.venv\Scripts\python.exe -m pytest `
+  backend/tests/test_pilot_content_validation.py `
+  backend/tests/test_pilot_mapping_report.py `
+  backend/tests/test_pilot_evidence_status.py `
+  backend/tests/test_pilot_schema_jsonschema.py `
+  backend/tests/test_questions_models.py `
+  backend/tests/test_curriculum_seed.py `
+  backend/tests/test_questions_grading.py -q
 ```
 
-The T24 test validates the synthetic draft, rejects misleading draft trust classes and proves the approved gates, including reviewer independence and content-hash/source binding. The mapping report test checks the eight candidate IDs against `PILOT_QUESTIONS.md` and verifies every referenced T08 code resolves in the seed. Neither test touches a database or performs an import.
+Result: **123 passed, 0 failed**. The T24 tests validate the synthetic draft, reject misleading draft trust classes, enforce reviewer identity/qualification/independence, review and approval dates, content-hash/source binding and T08 concept/objective resolution. The mapping and evidence reports check the eight candidate IDs against `PILOT_QUESTIONS.md` and the source manifest. The JSON Schema tests use `jsonschema` against Draft 2020-12.
 
 PostgreSQL-dependent checks, only with a disposable database and `MEMORA_TEST_DATABASE_URL` set:
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest backend/tests/test_question_db_contracts.py backend/tests/test_migrations.py -q
+$dbPassword = docker compose --env-file .env -f infra/compose.yaml exec -T postgres printenv POSTGRES_PASSWORD
+$encoded = [uri]::EscapeDataString($dbPassword.Trim())
+$env:MEMORA_TEST_DATABASE_URL = "postgresql+psycopg://memora:$encoded@127.0.0.1:5432/memora_t24_test"
+.\.venv\Scripts\python.exe -m pytest backend\tests\test_migrations.py backend\tests\test_question_db_contracts.py -q
 ```
 
-These PostgreSQL tests were **not** run in Stage 1. They require a disposable PostgreSQL/pgvector environment and must not be pointed at a shared or production database.
+Result on the fresh local `memora_t24_test` database: **27 passed, 0 failed, 0 skipped**. These are local results, not CI or staging acceptance. The migration tests downgrade to base and must never be pointed at a shared or production database. Recreate the `_test` database before a repeat run because the RLS test uses fixed OIDC subjects.
 
 ## 7. Exit criteria for the review
 
@@ -231,6 +248,8 @@ The review is complete only when:
 - reproduction status is resolved for every item that will be tracked or published;
 - the duplicate and coverage reports are attached;
 - the approved-envelope conversion and the PostgreSQL import test pass in the approved environment (drafts are not imported);
+- a CI or approved staging run of the PostgreSQL migration, import, immutability and RLS suites is recorded; a local disposable run is not release acceptance;
+- the T12 owner has answered the provenance and independence-boundary questions in `T12_OWNER_ACCEPTANCE.md`;
 - the pull request records the exact commands and results.
 
 Until then, the correct state is **draft**, not **approved**.

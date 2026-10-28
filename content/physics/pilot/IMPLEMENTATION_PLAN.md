@@ -314,16 +314,23 @@ Stage 1 has no reviewer, author or principal. Do not use a synthetic UUID in a r
 
 ## 8. Validation strategy
 
-### 8.1 Stage 1 checks already run
+### 8.1 Focused non-database checks run
 
 ```powershell
 $env:PYTHONPATH="$PWD\backend\src"
-.\.venv\Scripts\python.exe -m pytest backend/tests/test_pilot_content_validation.py backend/tests/test_pilot_mapping_report.py backend/tests/test_questions_models.py backend/tests/test_curriculum_seed.py backend/tests/test_questions_grading.py -q
+.\.venv\Scripts\python.exe -m pytest `
+  backend/tests/test_pilot_content_validation.py `
+  backend/tests/test_pilot_mapping_report.py `
+  backend/tests/test_pilot_evidence_status.py `
+  backend/tests/test_pilot_schema_jsonschema.py `
+  backend/tests/test_questions_models.py `
+  backend/tests/test_curriculum_seed.py `
+  backend/tests/test_questions_grading.py -q
 ```
 
-Result: **93 passed**.
+Result: **123 passed, 0 failed, 0 skipped**.
 
-These are non-PostgreSQL tests. They cover T24 draft/approval gates, the read-only candidate mapping report, T12 model/hash/validation behavior and T08 seed integrity.
+These are non-PostgreSQL tests. They cover T24 draft/approval gates, the structured mapping report, the evidence-status report, real JSON Schema validation, T12 model/hash/validation behavior, T12 publication branches and T08 seed integrity.
 
 ### 8.2 Synthetic import smoke test
 
@@ -333,25 +340,38 @@ A read-only smoke test called `validate_question_import()` with the synthetic dr
 - approved without principals: rejected `reviewer_required`;
 - source metadata in `content`: rejected `content_invalid`.
 
-This is an import smoke test only. The T24 envelope, independence and hash/source gates are covered by `backend/tests/test_pilot_content_validation.py`. The smoke test is described in `CONTENT_SCHEMA.md` section 5.1 and `T08_T12_CONTRACT_GAPS.md` section 4.
+This is an import smoke test only. The T24 envelope, independence, qualification, review-date, hash/source and reproduction gates are covered by `backend/tests/test_pilot_content_validation.py`. The smoke test is described in `CONTENT_SCHEMA.md` section 5.1 and `T08_T12_CONTRACT_GAPS.md` section 4.
 
-### 8.3 Not run
+### 8.3 Disposable PostgreSQL/pgvector checks run locally
+
+The local Compose `infra-postgres-1` container was used only through a dedicated `memora_t24_test` database. The development database was not touched.
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest backend/tests/test_question_db_contracts.py backend/tests/test_migrations.py -q
+$dbPassword = docker compose --env-file .env -f infra/compose.yaml exec -T postgres printenv POSTGRES_PASSWORD
+$encoded = [uri]::EscapeDataString($dbPassword.Trim())
+$env:MEMORA_TEST_DATABASE_URL = "postgresql+psycopg://memora:$encoded@127.0.0.1:5432/memora_t24_test"
+$env:PYTHONPATH="$PWD\backend\src"
+.\.venv\Scripts\python.exe -m pytest backend/tests/test_migrations.py backend/tests/test_question_db_contracts.py -q
 ```
 
-Not run: no disposable PostgreSQL/pgvector environment and no `MEMORA_TEST_DATABASE_URL`. These tests are required before merge and must not use a shared or production database.
+Result: **27 passed, 0 failed, 0 skipped** (9 migration tests, 18 question-database contract tests). This includes upgrade/downgrade/upgrade, RLS owner isolation, append-only guards, role grants, import idempotency, version immutability, publication guards, owner-scoped history and curriculum/concept/objective reference rejection.
+
+This is local evidence, not CI or staging acceptance. The migration test uses fixed OIDC subjects and is not idempotent against a non-reset database; recreate the `_test` database before a repeat run.
 
 ### 8.4 Stage 2 checks
 
-- JSON Schema validation of every envelope.
-- T12 draft validation of every bundle.
-- Exact/normalized duplicate checks.
-- Ambiguity and coverage report.
-- Negative publication tests.
-- PostgreSQL import, idempotency, immutability, reference and RLS tests.
-- Migration check only if a migration is added.
+- [x] JSON Schema validation of every envelope against the Draft 2020-12 metaschema.
+- [x] Synthetic draft and approved synthetic payload validation.
+- [x] Negative schema tests for missing approval evidence and source metadata.
+- [x] T12 draft validation of the synthetic bundle.
+- [x] Negative T12 publication-branch tests.
+- [x] T08 concept version and objective resolution in the pilot validator.
+- [x] Local PostgreSQL import, idempotency, immutability, reference and RLS tests.
+- [ ] Exact/normalized and semantic duplicate clearance.
+- [ ] Ambiguity and coverage sign-off.
+- [ ] CI or approved staging database acceptance.
+- [ ] Real reviewer, qualification, independence and approval records.
+- [ ] Reproduction/licence decision.
 
 ## 9. Suggested commit boundaries
 
@@ -413,22 +433,31 @@ Do not combine C3-C6 into one commit. Content additions, import bundles and vali
 - [x] Required versus optional integration fixes separated.
 - [x] Suggested commit boundaries written.
 - [x] `.gitignore` rules for source PDFs and the local review pack are present in the working tree; not committed.
-- [x] No T08 seed, T12 model, migration, API or question data changed; the pilot validator and tests were added.
-- [x] Safe non-PostgreSQL tests run: 93 passed.
+- [x] No T08 seed, T12 production model, migration, API or question data changed; the pilot validator, reports and tests were added.
+- [x] Safe non-PostgreSQL tests run: 123 passed.
+- [x] JSON Schema validated against the Draft 2020-12 metaschema.
+- [x] Structured mapping report resolves every existing concept, objective and claim.
+- [x] Evidence-status report records every candidate as blocked.
+- [x] Local disposable PostgreSQL/pgvector suite run: 27 passed.
 - [ ] Reviewer, author and approval identities supplied by the project.
+- [ ] Reviewer qualification and independence evidence supplied.
+- [ ] Official answer key or independent answer/rubric verification supplied.
 - [ ] Reproduction/licence route decided.
-- [ ] Disposable PostgreSQL environment available for Stage 2 verification.
+- [ ] CI or approved staging database acceptance recorded.
+- [ ] Ambiguity and semantic duplicate clearance completed.
 - [ ] Stage 1 artifacts approved for commit.
 
 ## 13. Stop point
 
-The draft-only implementation stops here. Approval, graph expansion, real-principal assignment, import and database verification must not begin until the open decisions are answered and the review gates are real. In particular, do not:
+The draft-only implementation stops here. Approval, graph expansion, real-principal assignment and import must not begin until the open decisions are answered and the review gates are real. In particular, do not:
 
-- add the missing concepts to the seed;
+- add the missing concepts to the seed without a reviewed curriculum decision;
 - create question bundles with real principals;
 - import any question;
-- claim PostgreSQL/RLS verification;
+- claim CI or staging acceptance from the local disposable run;
 - mark T24 Done.
+
+The local disposable PostgreSQL run is complete evidence for migration, import, immutability, reference and RLS behavior. It does not replace CI/staging acceptance and it does not supply any academic, identity or licensing evidence.
 
 ## 14. Artifact map
 
@@ -439,12 +468,17 @@ The draft-only implementation stops here. Approval, graph expansion, real-princi
 | `source_manifest.json` | Machine-readable inventory with full hashes. |
 | `PILOT_QUESTIONS.md` | Eight candidate records, non-verbatim derivations, mappings, ambiguity and coverage notes. |
 | `CONTENT_SCHEMA.md` | Draft envelope, T12 mapping and synthetic worked example. |
-| `pilot_question.schema.json` | Draft JSON Schema. |
+| `pilot_question.schema.json` | Draft JSON Schema, valid against Draft 2020-12. |
 | `examples/synthetic_draft.json` | Synthetic draft example used by the validator tests. |
 | `backend/src/memora/modules/questions/pilot_validation.py` | Draft/approval gates and approved-envelope conversion. |
-| `backend/tests/test_pilot_content_validation.py` | T24 validator and schema tests. |
-| `candidate_mappings.json` | Read-only eight-candidate mapping report; not a T12 import or syllabus coverage claim. |
-| `backend/tests/test_pilot_mapping_report.py` | Validates candidate IDs, summary-status consistency and referenced T08 codes. |
+| `backend/tests/test_pilot_content_validation.py` | T24 validator, approval-gate and date tests. |
+| `backend/tests/test_pilot_schema_jsonschema.py` | Draft 2020-12 metaschema and payload tests. |
+| `candidate_mappings.json` | Structured eight-candidate mapping report; not a T12 import or syllabus coverage claim. |
+| `backend/tests/test_pilot_mapping_report.py` | Validates candidate IDs, counts, T08 concept/objective/claim resolution and gap descriptions. |
+| `evidence_status.json` | Per-candidate evidence status and global blockers; all candidates blocked. |
+| `backend/tests/test_pilot_evidence_status.py` | Verifies candidate coverage, manifest hashes and truthful blocker states. |
+| `EVIDENCE_REQUIRED.md` | Human evidence checklist for authors, reviewers, curriculum, legal and database acceptance. |
+| `T12_OWNER_ACCEPTANCE.md` | T12 owner decisions, local evidence and acceptance checklist. |
 | `local_review/` | Ignored local verbatim review pack; never tracked or imported. |
 | `REVIEW_CHECKLIST.md` | Per-item review gates, status matrix and sign-off table. |
 | `T08_T12_CONTRACT_GAPS.md` | Evidence-backed gap analysis and required/optional fixes. |

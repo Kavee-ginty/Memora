@@ -246,7 +246,7 @@ These are contract observations, not approval evidence. The synthetic example is
 ## 6. Validation limits
 
 - The JSON Schema file is syntactically valid JSON and is checked for parseability, internal `$ref` resolution and `required`/`properties` consistency in tests.
-- No JSON Schema validator is installed in the local environment, so the schema has not been checked against the Draft 2020-12 metaschema or used to validate the example against every keyword. That check belongs in CI with a pinned dependency.
+- `jsonschema 4.26.0` is installed locally and declared as a constrained development dependency (`jsonschema>=4.23,<5`) in `backend/pyproject.toml`. The schema passes `Draft202012Validator.check_schema()`, and the synthetic draft and approved synthetic payload validate with zero errors. Negative tests cover missing approval evidence, contradictory draft/approved states, source metadata in `content` and Paper II IDs. This is real metaschema and payload validation, not a JSON parse check.
 - The Python validator is the semantic authority for draft/approval gates. T12 validation remains authoritative for its own import contract.
 - The schema does not validate academic truth, transcription accuracy, reviewer qualification, licence status or reproduction permission.
 - The schema does not create a database column, migration or API field.
@@ -256,7 +256,7 @@ These are contract observations, not approval evidence. The synthetic example is
 
 1. Keep past-paper text in the ignored local review pack until reproduction is approved.
 2. Add one JSON record per candidate, all `validation_status = "draft"` with `source_class = null`.
-3. Run the schema parse test and `validate_pilot_envelope()` in CI without a database.
+3. Run the Draft 2020-12 metaschema/payload tests and `validate_pilot_envelope()` in CI without a database.
 4. Run the duplicate, ambiguity and coverage checks.
 5. Record real reviewer and author principals only after those identities exist.
 6. Flip to `approved` only after every gate in `REVIEW_CHECKLIST.md` passes and the content hash is recorded.

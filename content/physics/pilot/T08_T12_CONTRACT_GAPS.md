@@ -1,6 +1,6 @@
 # T08 / T12 Contract Gaps for T24
 
-**Status:** Stage 1 analysis plus T24-only draft validation. No T08 or T12 code, migration, API, table or seed data was changed. The new `pilot_validation.py` and its tests are T24-only and are not wired into T12.
+**Status:** Stage 1 analysis plus T24-only draft validation and a local disposable PostgreSQL check. No T08 or T12 production code, migration, API, table or seed data was changed. The new `pilot_validation.py` and its tests are T24-only and are not wired into T12.
 
 ## 1. Purpose and method
 
@@ -96,6 +96,8 @@ For `validation_status = "approved"`, `validate_question_import()` requires (`va
 
 T12 validation and the database publication trigger check that the reviewer and author principals are non-null; they do **not** compare the two values. Reviewer/author independence is enforced only by `pilot_validation.py`. Do not claim database enforcement of independence.
 
+The publication branches above now have direct T12 regression tests in `backend/tests/test_questions_models.py`: missing reviewer, missing author, blank explanation, draft rubric, zero evidence ceiling, supporting-only mapping and source metadata inside `content`. The pilot envelope separately enforces reviewer qualification, independence, answer review, review/approval dates and content-hash/source binding.
+
 ### 3.3 Provenance surface
 
 T12 has exactly one provenance surface on a question: `ConceptMappingImport.provenance_type` and `provenance_ref` (`models.py:286-294`). The repository copies those fields into `question_concept_maps` (`repository.py:743-748`). The canonical content hash covers them; `backend/tests/test_questions_models.py:183` is `test_hash_covers_mapping_provenance`.
@@ -112,7 +114,9 @@ T12 has **no** question-level field for:
 
 `questions` stores `source_class`, `author_principal` and `reviewer_principal` (`Schema 9.1`). `question_versions` stores prompt, explanation, content, trust label, curriculum, validation status and generation metadata. Neither is a source-provenance record.
 
-The `ChoiceContent` model is strict (`extra="forbid"`; `models.py:69-80`). Source metadata cannot be added to `content` without changing the shared T12 contract.
+The `ChoiceContent` model is strict (`extra="forbid"`; `models.py:69-80`). Source metadata cannot be added to `content` without changing the shared T12 contract. T12 tests now assert `content_invalid` when `source_ref` or `licence` is placed inside `content`, and the pilot JSON Schema rejects the same payload.
+
+For the pilot, source provenance lives only in the T24 envelope (`source`, `answer_verification`, `review`, `publication`). That envelope is validated offline and is not persisted by T12. The T12 owner must decide whether this is acceptable or whether a durable question-provenance field is required; see `T12_OWNER_ACCEPTANCE.md`.
 
 ### 3.4 Storage and immutability
 
@@ -143,6 +147,22 @@ Interpretation:
 
 This confirms that the blockers are provenance, review identity and content coverage, not MCQ schema compatibility.
 
+### 4.1 Schema, validator and publication-branch checks run locally
+
+| Check | Result |
+| --- | --- |
+| `pilot_question.schema.json` against the Draft 2020-12 metaschema with `jsonschema 4.26.0` | valid |
+| Synthetic draft payload against the schema | 0 errors |
+| Approved synthetic payload against the schema | valid |
+| Draft contradictions, missing approval evidence and source metadata in `content` | rejected |
+| Pilot envelope validator tests | 32 passed |
+| Candidate mapping report tests | 5 passed |
+| Evidence-status report tests | 4 passed |
+| JSON Schema payload/metaschema tests | 10 passed |
+| T12 model, publication-branch and content-smuggling tests | 32 passed |
+
+The schema is a structural contract only. `pilot_validation.py` and T12 `validate_question_import()` remain the semantic authorities. The schema and validator are kept consistent for the fields exercised by the tests.
+
 ## 5. Gap matrix
 
 Severity is about the T24 acceptance gate, not about T12 runtime safety.
@@ -158,11 +178,11 @@ Severity is about the T24 acceptance gate, not about T12 runtime safety.
 | G7 | No import CLI | Low | No | `T12_Study_Note.md:21-23`; `repository.py:524` | A CLI is convenient but unnecessary; the offline call path already exists. |
 | G8 | `content` cannot carry source metadata | Medium | Yes, as part of G1 | `ChoiceContent` `extra="forbid"`; probe `content_invalid` | A source reference cannot be smuggled into the question payload. |
 | G9 | No real author or reviewer principal | Blocker | Yes | Stage 1 has no identity record; probe `reviewer_required` | Every candidate is limited to draft. |
-| G10 | Not every publication branch has an isolated unit test | Medium | Yes, for T24 evidence | T24 pilot tests now cover missing author/reviewer, review identity, approval-state and publication branches. `test_questions_models.py` still has no isolated `reviewer_required`/`author_required`/empty-explanation test; the DB test `test_publication_guard_validates_the_complete_content_set` covers reviewer at DB level. | T24-side gates are covered; T12-only unit gaps remain. |
+| G10 | Not every publication branch has an isolated unit test | Closed for T12 | Yes, for T24 evidence | `test_questions_models.py` now covers `reviewer_required`, `author_required`, blank explanation, draft rubric, zero evidence ceiling, empty and supporting-only mappings, and source metadata in `content`. The DB test remains additional coverage. | T12 publication branches have direct regression tests; the T24 envelope has separate approval-gate tests. |
 | G11 | No official MCQ key | Blocker | Yes | Marking-scheme page-2 layouts are not MCQ keys; none found | Derived answers cannot be presented as official keys. Independent review is mandatory. |
 | G12 | Reproduction/licence route unresolved | Blocker | Yes | No policy or approval record found in the repository | Source text cannot be committed or published without a decision. |
 | G13 | Source PDFs and the local verbatim pack are untracked | Low operational | Yes, before commit | The working-tree `.gitignore` now contains `/content/physics/source_documents/` and `/content/physics/pilot/local_review/`; the local index had no `.pdf`/`source_documents` entries at inspection | A broad `git add` no longer stages the source PDFs or the local verbatim pack, but the rules must remain present and be verified before commit. |
-| G14 | PostgreSQL-dependent tests unavailable locally | Test gap | Yes, before merge | `test_question_db_contracts.py` requires `MEMORA_TEST_DATABASE_URL` | Import, RLS and immutability are not verified in Stage 1. |
+| G14 | PostgreSQL-dependent tests need CI acceptance | Locally closed; CI open | Yes, before merge | A disposable `memora_t24_test` database ran 27 tests: 9 migration and 18 question-database contracts, 0 failed. No CI/staging acceptance exists. | Local import, RLS and immutability behaviour is verified; release acceptance still needs a CI or approved staging run. |
 
 ## 6. Required integration fixes
 
@@ -257,6 +277,17 @@ At minimum:
 
 The existing DB test covers the reviewer branch at database level, but T24 should not rely on one indirect test.
 
+**Implemented in T24.** `backend/tests/test_questions_models.py` now covers all six branches plus supporting-only mapping and source metadata in `content`:
+
+- `test_import_rejects_approved_question_without_required_principals` (`reviewer_required`, `author_required`);
+- `test_import_rejects_approved_question_without_explanation`;
+- `test_import_rejects_approved_question_with_draft_rubric`;
+- `test_import_rejects_approved_question_with_zero_evidence_ceiling`;
+- `test_import_rejects_publication_without_primary_mapping` and `test_import_rejects_supporting_only_mapping_for_publication`;
+- `test_source_metadata_cannot_be_smuggled_into_question_content`.
+
+These are T12 tests, not T24-envelope tests. They do not weaken or replace the PostgreSQL checks.
+
 ## 7. Optional architecture improvements
 
 These are useful but not required to close the pilot.
@@ -283,22 +314,49 @@ A review queue, qualification registry and approval dashboard. Outside the MVP; 
 
 ## 8. Test coverage and environment
 
-### 8.1 Run in Stage 1
+### 8.1 Non-database tests
 
 ```powershell
 $env:PYTHONPATH="$PWD\backend\src"
-.\.venv\Scripts\python.exe -m pytest backend/tests/test_pilot_content_validation.py backend/tests/test_pilot_mapping_report.py backend/tests/test_questions_models.py backend/tests/test_curriculum_seed.py backend/tests/test_questions_grading.py -q
+.\.venv\Scripts\python.exe -m pytest `
+  backend/tests/test_pilot_content_validation.py `
+  backend/tests/test_pilot_mapping_report.py `
+  backend/tests/test_pilot_evidence_status.py `
+  backend/tests/test_pilot_schema_jsonschema.py `
+  backend/tests/test_questions_models.py `
+  backend/tests/test_curriculum_seed.py `
+  backend/tests/test_questions_grading.py -q
 ```
 
-Result: **93 passed** (65 existing tests plus 25 T24 validator tests and 3 mapping-report tests). These are non-PostgreSQL tests.
+Result: **123 passed, 0 failed, 0 skipped**.
 
-### 8.2 Not run
+Breakdown: 32 pilot-envelope tests, 5 mapping-report tests, 4 evidence-status tests, 10 JSON Schema tests, 32 T12 model/publication tests, 13 curriculum-seed tests and 27 grading tests.
+
+### 8.2 Disposable PostgreSQL/pgvector tests
+
+A dedicated `memora_t24_test` database was created inside the local Compose `infra-postgres-1` container. It is not the development database. The migration tests downgrade to base, so they must never run against a shared database.
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest backend/tests/test_question_db_contracts.py backend/tests/test_migrations.py -q
+$dbPassword = docker compose --env-file .env -f infra/compose.yaml exec -T postgres printenv POSTGRES_PASSWORD
+$encoded = [uri]::EscapeDataString($dbPassword.Trim())
+$env:MEMORA_TEST_DATABASE_URL = "postgresql+psycopg://memora:$encoded@127.0.0.1:5432/memora_t24_test"
+$env:PYTHONPATH="$PWD\backend\src"
+.\.venv\Scripts\python.exe -m pytest backend/tests/test_migrations.py backend/tests/test_question_db_contracts.py -q
 ```
 
-These require a disposable PostgreSQL/pgvector database and `MEMORA_TEST_DATABASE_URL`. They were not run because no disposable database or Docker environment is available. Do not point them at a shared or production database.
+Result: **27 passed, 0 failed, 0 skipped** (9 migration tests, 18 question-database contract tests). This includes:
+
+- upgrade to head, downgrade to base and upgrade again;
+- RLS owner isolation and append-only guards;
+- API-role grants and protected-table coverage;
+- import idempotency, version immutability and publication guards;
+- owner-scoped pinned question history;
+- foreign/draft curriculum, concept and objective rejection;
+- generated-content grounding checks.
+
+The run proves local behaviour only. It is not CI or staging acceptance.
+
+**Repeat-run caveat:** the RLS migration test uses fixed OIDC subjects (`test` / `one` and `test` / `two`) and inserts users with `ON CONFLICT DO NOTHING`. Re-running it against the same non-reset database can resolve a pre-existing user row and fail the user-ID assertion. Recreate the `_test` database before a repeat run. This is a test-harness idempotence limitation, not an RLS policy failure; the fresh-database run and the targeted rerun both passed.
 
 ### 8.3 Existing coverage that matters
 
@@ -306,35 +364,38 @@ These require a disposable PostgreSQL/pgvector database and `MEMORA_TEST_DATABAS
 | --- | --- |
 | T08 ontology and cycles | `backend/tests/test_curriculum_seed.py` |
 | T08 provenance | `test_seed_data_provenance_is_populated`, `test_curriculum_mapping_provenance_in_seed` |
-| T12 content hash | `backend/tests/test_questions_models.py:85-269` |
-| T12 publication without primary mapping | `test_import_rejects_publication_without_primary_mapping` |
+| T12 content hash | `backend/tests/test_questions_models.py` |
+| T12 publication branches | reviewer, author, explanation, rubric, evidence-ceiling and mapping tests in `test_questions_models.py` |
+| T12 source-metadata rejection | `test_source_metadata_cannot_be_smuggled_into_question_content` |
 | T12 idempotency and immutability | `test_import_is_idempotent_and_versions_are_immutable` |
 | T12 DB publication guard | `test_publication_guard_validates_the_complete_content_set` |
-| T12 RLS and pinned history | `test_pinned_question_history_stays_readable_only_to_its_owner` |
+| T12 RLS and pinned history | `test_pinned_question_history_stays_readable_only_to_its_owner`; migration RLS tests |
 | T12 reference validation | `test_import_rejects_foreign_or_unapproved_concept_mapping` and related tests |
+| Pilot T08 concept/objective resolution | `test_mapping_concept_must_exist_in_the_t08_seed`, `test_mapping_objective_must_match_the_t08_concept_objective`; mapping-report tests |
+| Pilot schema | `backend/tests/test_pilot_schema_jsonschema.py` |
 
-The T24 pilot validator is covered by `backend/tests/test_pilot_content_validation.py` (25 tests). The read-only mapping report is covered by `backend/tests/test_pilot_mapping_report.py` (3 tests). Neither replaces the PostgreSQL import, RLS and immutability tests.
+The T24 pilot validator is covered by 32 tests. The mapping report is covered by 5 tests, the evidence report by 4, and real JSON Schema validation by 10. These do not replace the PostgreSQL import, RLS and immutability tests.
 
 ## 9. Decisions needed before Stage 2
 
-1. Is the repo-side provenance envelope acceptable for the pilot, or must T12 gain a durable question-provenance field before import?
-2. Who is qualified to review A/L Physics content, and what qualification evidence will be recorded?
-3. Will T24 add concepts/claims through the T08 seed writer, or through a separate reviewed-content path?
-4. What is the reproduction/licence route for past-paper text?
-5. Are the six missing topic areas in scope for T24, or should the candidate set be reduced to items already covered by T08?
-6. Is deterministic duplicate/ambiguity checking sufficient for eight items, or is semantic checking required before approval?
-7. Which environment will run the PostgreSQL import, RLS and migration tests?
+1. Is the repo-side provenance envelope acceptable for the pilot, or must T12 gain a durable question-provenance field before import? **Open; T12 owner decision.**
+2. Who is qualified to review A/L Physics content, and what qualification evidence will be recorded? **Open; academic content lead.**
+3. Will T24 add concepts/claims through the T08 seed writer, or through a separate reviewed-content path? **Open; curriculum lead.**
+4. What is the reproduction/licence route for past-paper text? **Open; project/legal owner.**
+5. Are the six missing topic areas in scope for T24, or should the candidate set be reduced to items already covered by T08? **Open; curriculum lead.**
+6. Is deterministic duplicate/ambiguity checking sufficient for eight items, or is semantic checking required before approval? **Open; independent reviewer.**
+7. Which environment will run the PostgreSQL import, RLS and migration tests for acceptance? **Locally answered with `memora_t24_test`; CI/staging acceptance still open.**
 
-The working tree now contains a draft-only validator, synthetic example and focused tests. It does not contain an approved question, a real reviewer, a reproduction decision or a database import. Approval remains blocked until these decisions are answered.
+The working tree now contains a draft-only validator, synthetic example, real JSON Schema validation, structured mapping/evidence reports and focused T12 regression tests. It does not contain an approved question, a real reviewer, a reproduction decision or an imported pilot question. Approval remains blocked until these decisions are answered.
 
-## 10. What Stage 1 did not change
+## 10. What this checkpoint did not change
 
 - No T08 seed data or seed logic.
-- No T12 model, validation, repository, route or test. The new `pilot_validation.py` and its tests are T24-only and are not wired into T12.
+- No T12 production model, validation, repository, route or migration. The new `pilot_validation.py` and its tests are T24-only and are not wired into T12.
 - No migration.
 - No table or column.
 - No API contract or generated client.
 - No past-paper question data or import; one synthetic draft example was added.
 - The source-PDF and local-review-pack ignore rules are present in the working tree; no Git command was run.
 - No commit, branch, push or merge.
-- No database service.
+- No production or shared database was touched. The local Compose PostgreSQL container was used only through the disposable `memora_t24_test` database.
