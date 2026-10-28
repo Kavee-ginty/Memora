@@ -1,0 +1,103 @@
+{
+  "schema_version": "1.0",
+  "scope": "T24 pilot candidate mapping report only. It is not syllabus coverage, approval or a T12 import bundle.",
+  "seed_source": "backend/src/memora/modules/curriculum/seed_data.py",
+  "candidate_source": "content/physics/pilot/PILOT_QUESTIONS.md",
+  "candidates": [
+    {
+      "pilot_id": "PILOT-PHYS-2025-P1-Q01",
+      "mapping_status": "complete",
+      "referenced_existing_concepts": [
+        "PHYS-MEA-SI-UNITS",
+        "PHYS-MEA-DIMENSIONS"
+      ],
+      "has_primary_existing_concept": true,
+      "missing_topics": []
+    },
+    {
+      "pilot_id": "PILOT-PHYS-2025-P1-Q02",
+      "mapping_status": "missing",
+      "referenced_existing_concepts": [
+        "PHYS-MEA-DIMENSIONS"
+      ],
+      "has_primary_existing_concept": false,
+      "missing_topics": [
+        "measurement uncertainty and percentage error"
+      ]
+    },
+    {
+      "pilot_id": "PILOT-PHYS-2025-P1-Q05",
+      "mapping_status": "missing",
+      "referenced_existing_concepts": [
+        "PHYS-MEC-ACCELERATION"
+      ],
+      "has_primary_existing_concept": false,
+      "missing_topics": [
+        "projectile motion"
+      ]
+    },
+    {
+      "pilot_id": "PILOT-PHYS-2025-P1-Q12",
+      "mapping_status": "missing",
+      "referenced_existing_concepts": [
+        "PHYS-MEC-NEWTON2"
+      ],
+      "has_primary_existing_concept": false,
+      "missing_topics": [
+        "static friction and the friction limit"
+      ]
+    },
+    {
+      "pilot_id": "PILOT-PHYS-2025-P1-Q14",
+      "mapping_status": "missing",
+      "referenced_existing_concepts": [
+        "PHYS-MEC-ACCELERATION"
+      ],
+      "has_primary_existing_concept": false,
+      "missing_topics": [
+        "independence of horizontal and vertical motion"
+      ]
+    },
+    {
+      "pilot_id": "PILOT-PHYS-2025-P1-Q45",
+      "mapping_status": "partial",
+      "referenced_existing_concepts": [
+        "PHYS-MEC-MOMENTUM",
+        "PHYS-MEC-NEWTON3",
+        "PHYS-MEC-KINETIC-ENERGY"
+      ],
+      "has_primary_existing_concept": true,
+      "missing_topics": [
+        "conservation of linear momentum",
+        "elastic and inelastic collisions"
+      ]
+    },
+    {
+      "pilot_id": "PILOT-PHYS-2022-P1-Q01",
+      "mapping_status": "missing",
+      "referenced_existing_concepts": [
+        "PHYS-MEC-DISPLACEMENT",
+        "PHYS-MEC-VELOCITY",
+        "PHYS-MEC-MOMENTUM",
+        "PHYS-MEC-WORK",
+        "PHYS-MEC-KINETIC-ENERGY",
+        "PHYS-MEC-GRAV-POT-ENERGY"
+      ],
+      "has_primary_existing_concept": false,
+      "missing_topics": [
+        "scalar and vector quantities"
+      ]
+    },
+    {
+      "pilot_id": "PILOT-PHYS-2022-P1-Q17",
+      "mapping_status": "partial",
+      "referenced_existing_concepts": [
+        "PHYS-WAV-SHM"
+      ],
+      "has_primary_existing_concept": false,
+      "missing_topics": [
+        "simple pendulum and effective gravity"
+      ]
+    }
+  ]
+}
