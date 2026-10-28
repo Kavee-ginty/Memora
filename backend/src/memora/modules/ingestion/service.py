@@ -455,10 +455,10 @@ class IngestionService:
             and not data["pending"]
         )
         blocked_reason = None
-        if not accepted:
-            blocked_reason = "no_valid_concept"
-        elif data["pending"]:
+        if data["pending"]:
             blocked_reason = "verification_pending"
+        elif not accepted:
+            blocked_reason = "no_valid_concept"
         elif data["update"]["status"] not in {"committed", "verification_required"}:
             blocked_reason = "invalid_state"
         return LearningPathPreviewResponse(
