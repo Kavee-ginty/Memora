@@ -131,25 +131,17 @@ def _decide_bootstrap(
             evidence_confidence=confidence,
             first_exposed_at=first_exposed_at,
             last_reviewed_at=None,
-            next_review_at=_schedule(now, stability, config),
+            next_review_at=schedule_next_review(now, stability, config),
             exposure_count=1,
         )
         reason_codes.extend([REASON_EXPOSURE_RECORDED, REASON_REVIEW_SCHEDULED])
         template_key = TEMPLATE_STATE_INITIALIZED
     else:
         grade = fsrs.map_score_to_grade(_require_score(event), config=config)
-        # Without a prior review the elapsed retrievability is derived from
-        # the probe stability so the first attempt still sits on the curve.
-        retrievability_at_decision = fsrs.retrievability(
-            config.stability_probe_days, first_exposed_at, first_exposed_at, config=config
-        )
-        stability = _transition_stability(
-            config.stability_probe_days,
-            config.difficulty_default,
-            grade,
-            retrievability_at_decision,
-            config=config,
-        )
+        # Without prior history there is no curve position to sit on; the
+        # first rating seeds stability directly from the grade (FSRS S0).
+        retrievability_at_decision = 1.0
+        stability = fsrs.initial_stability(grade, config=config)
         difficulty = fsrs.initial_difficulty(grade, config=config)
         is_lapse = not grade.is_recall
         result = LearnerConceptState(
@@ -159,7 +151,7 @@ def _decide_bootstrap(
             evidence_confidence=confidence,
             first_exposed_at=first_exposed_at,
             last_reviewed_at=event.observed_at,
-            next_review_at=_schedule(now, stability, config),
+            next_review_at=schedule_next_review(now, stability, config),
             eligible_review_count=1,
             lapse_count=1 if is_lapse else 0,
         )
@@ -252,7 +244,7 @@ def _decide_scored(
         last_retrievability=retrievability_at_review,
         evidence_confidence=confidence,
         last_reviewed_at=event.observed_at,
-        next_review_at=_schedule(now, stability, config),
+        next_review_at=schedule_next_review(now, stability, config),
     ).with_counts(
         review_delta=1,
         lapse_delta=0 if grade.is_recall else 1,
@@ -296,7 +288,8 @@ def _transition_stability(
     )
 
 
-def _schedule(now: datetime, stability_days: float, config: EngineConfig) -> datetime:
+def schedule_next_review(now: datetime, stability_days: float, config: EngineConfig) -> datetime:
+    """Anchor ``now + interval(stability)``; shared by engine and policy."""
     interval_seconds = fsrs.interval_for_retention(stability_days, config=config) * 86400.0
     return datetime.fromtimestamp(now.timestamp() + interval_seconds, tz=now.tzinfo)
 

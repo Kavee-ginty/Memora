@@ -94,6 +94,36 @@ class EngineConfig:
     # yet); the first scheduled review follows the first-review policy.
     exposure_initial_stability_days: float = 0.5
 
+    # --- initial stability after a first scored review (FSRS S0) ----------
+    # S0(G) = initial_stability_base * exp(initial_stability_grade_weight
+    # * (G - 3)); a strong first attempt starts far out, a weak one near in.
+    initial_stability_base: float = 1.0
+    initial_stability_grade_weight: float = 1.0
+
+    # --- expert policy layer (TRD §9.3, versioned with POLICY_VERSION) ----
+    # First retrieval lands inside this window unless first-attempt evidence
+    # is strong enough to justify a later start (PRD 012).
+    first_review_min_hours: float = 16.0
+    first_review_max_hours: float = 48.0
+    strong_evidence_score: float = 0.8
+    # Events below the confidence floor have proportionally damped influence
+    # on stability and difficulty; at the floor the influence is full (D4).
+    confidence_floor: float = 0.35
+    # An absence longer than this is a comeback: actual elapsed time is used,
+    # but the next review is capped to a welcoming, manageable interval
+    # (PRD 015).
+    comeback_threshold_days: float = 7.0
+    comeback_interval_max_days: float = 3.0
+    # A failure explained by weak prerequisites pulls the next review earlier
+    # so Recover work can follow (TRD §9.3).
+    recover_interval_max_days: float = 7.0
+    # A failure on a concept whose prerequisite is currently below this
+    # retrievability counts as weak-prerequisite evidence.
+    weak_prerequisite_retrievability_floor: float = 0.5
+    # No scheduled interval may exceed this cap, so overdue work never
+    # compounds into an unmanageable backlog (TRD §9.5).
+    interval_max_days: float = 180.0
+
     def validate(self) -> None:
         """Fail fast on configuration that would break the engine contract."""
         checks = (
@@ -107,6 +137,16 @@ class EngineConfig:
             self.factor > 0.0,
             0.0 <= self.confidence_blend <= 1.0,
             0.0 < self.exposure_initial_stability_days < self.stability_max_days,
+            self.initial_stability_base > 0.0,
+            self.initial_stability_grade_weight >= 0.0,
+            0.0 < self.confidence_floor <= 1.0,
+            0.0 <= self.strong_evidence_score <= 1.0,
+            0.0 < self.first_review_min_hours < self.first_review_max_hours,
+            self.comeback_threshold_days > 0.0,
+            0.0 < self.comeback_interval_max_days <= self.interval_max_days,
+            0.0 < self.recover_interval_max_days <= self.interval_max_days,
+            self.interval_max_days > 0.0,
+            0.0 < self.weak_prerequisite_retrievability_floor <= 1.0,
             all(
                 weight >= 0.0
                 for weight in (

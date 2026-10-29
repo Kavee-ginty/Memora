@@ -100,6 +100,22 @@ def initial_difficulty(
     return clamp(raw, config.difficulty_min, config.difficulty_max)
 
 
+def initial_stability(
+    grade: Grade,
+    *,
+    config: EngineConfig = DEFAULT_ENGINE_CONFIG,
+) -> float:
+    """Stability after the first scored review of a concept (FSRS S0).
+
+    Follows the FSRS family convention that the first rating seeds stability
+    directly from the grade instead of transitioning from a probe value.
+    """
+    raw = config.initial_stability_base * math.exp(
+        config.initial_stability_grade_weight * (grade.value - 3.0)
+    )
+    return clamp(raw, config.stability_min_days, config.stability_max_days)
+
+
 def next_difficulty(
     difficulty: float,
     grade: Grade,
