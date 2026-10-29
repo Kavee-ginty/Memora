@@ -22,7 +22,7 @@ done
 
 install -d -m 700 "$deploy_root"
 install -m 600 "$bundle_directory/compose.yaml" "$compose_file"
-install -m 600 "$bundle_directory/Caddyfile" "$deploy_root/Caddyfile"
+install -m 644 "$bundle_directory/Caddyfile" "$deploy_root/Caddyfile"
 
 gzip -dc "$image_archive" | docker load
 

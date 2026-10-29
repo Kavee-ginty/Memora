@@ -21,12 +21,12 @@ jobs:
     environment: development
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           persist-credentials: false
 
       - name: Install Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
           cache: pip
@@ -89,4 +89,12 @@ jobs:
         run: |
           ssh "$VPS_USER@$VPS_HOST" \
             "chmod 700 '$REMOTE_BUNDLE/deploy.sh' && '$REMOTE_BUNDLE/deploy.sh' '$REMOTE_BUNDLE' '$REMOTE_BUNDLE/memora-backend.tar.gz' '$IMAGE_TAG'"
+
+      - name: Clean up remote bundle
+        if: always()
+        env:
+          VPS_HOST: ${{ secrets.DEV_VPS_HOST }}
+          VPS_USER: ${{ secrets.DEV_VPS_USER }}
+          REMOTE_BUNDLE: /tmp/memora-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
           ssh "$VPS_USER@$VPS_HOST" "rm -rf -- '$REMOTE_BUNDLE'"
