@@ -473,6 +473,16 @@ def test_identity_repository_bootstrap_idempotency_and_ownership(
     assert bootstrap["account"]["status"] == "active"
     assert bootstrap["subjects"][0]["code"] == "physics"
 
+    email_confirmation_context = AuthContext(
+        issuer=user_one.issuer,
+        subject=user_one.subject,
+        session_id=uuid4(),
+        role="authenticated",
+        authenticated_at=None,
+        expires_at=now + timedelta(minutes=5),
+    )
+    assert repository.consent_records(email_confirmation_context) == []
+
     consent_key = str(uuid4())
     consent = repository.accept_consent(
         user_one,
