@@ -64,6 +64,12 @@ class AuthFailure {
     retryable: false,
   );
 
+  factory AuthFailure.invalidEmail([String? message]) => AuthFailure(
+    code: 'invalid_email',
+    message: message ?? 'Enter a valid email address.',
+    retryable: false,
+  );
+
   factory AuthFailure.weakPassword([String? message]) => AuthFailure(
     code: 'weak_password',
     message: message ?? 'Password must be at least 8 characters long.',
@@ -85,6 +91,12 @@ class AuthFailure {
   factory AuthFailure.networkError([String? message]) => AuthFailure(
     code: 'network_error',
     message: message ?? 'Unable to connect to Memora. Please check your connection and try again.',
+    retryable: true,
+  );
+
+  factory AuthFailure.rateLimited([String? message]) => AuthFailure(
+    code: 'rate_limited',
+    message: message ?? 'Too many attempts. Please wait and try again.',
     retryable: true,
   );
 

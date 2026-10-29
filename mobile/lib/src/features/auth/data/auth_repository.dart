@@ -61,7 +61,7 @@ class SupabaseAuthRepository implements AuthRepository {
       }
       return _mapSession(session);
     } on AuthException catch (e) {
-      throw _mapAuthException(e);
+      throw mapSupabaseAuthException(e);
     } catch (e) {
       if (e is AuthFailure) rethrow;
       throw AuthFailure.networkError();
@@ -90,7 +90,7 @@ class SupabaseAuthRepository implements AuthRepository {
       }
       return _mapSession(session);
     } on AuthException catch (e) {
-      throw _mapAuthException(e);
+      throw mapSupabaseAuthException(e);
     } catch (e) {
       if (e is AuthFailure) rethrow;
       throw AuthFailure.networkError();
@@ -105,7 +105,7 @@ class SupabaseAuthRepository implements AuthRepository {
         redirectTo: redirectUri,
       );
     } on AuthException catch (e) {
-      throw _mapAuthException(e);
+      throw mapSupabaseAuthException(e);
     } catch (e) {
       throw AuthFailure.networkError();
     }
@@ -119,10 +119,7 @@ class SupabaseAuthRepository implements AuthRepository {
       // In accordance with security specifications, do not expose whether
       // an account exists; allow request to complete safely unless rate limited.
       if (e.statusCode == '429') {
-        throw const AuthFailure(
-          code: 'rate_limited',
-          message: 'Too many requests. Please wait before trying again.',
-        );
+        throw AuthFailure.rateLimited();
       }
     } catch (_) {
       throw AuthFailure.networkError();
@@ -158,37 +155,49 @@ class SupabaseAuthRepository implements AuthRepository {
       email: session.user.email,
     );
   }
+}
 
-  AuthFailure _mapAuthException(AuthException exception) {
-    final msg = exception.message.toLowerCase();
-    if (msg.contains('invalid login credentials') ||
-        msg.contains('invalid_grant')) {
-      return AuthFailure.invalidCredentials();
-    }
-    if (msg.contains('user not found') || msg.contains('not found')) {
-      return AuthFailure.userNotFound();
-    }
-    if (msg.contains('already registered') ||
-        msg.contains('already in use') ||
-        msg.contains('user already exists')) {
+AuthFailure mapSupabaseAuthException(AuthException exception) {
+  switch (exception.code) {
+    case 'email_address_invalid':
+      return AuthFailure.invalidEmail();
+    case 'email_exists':
+    case 'user_already_exists':
       return AuthFailure.emailAlreadyInUse();
-    }
-    if (msg.contains('password') &&
-        (msg.contains('weak') || msg.contains('least'))) {
+    case 'weak_password':
       return AuthFailure.weakPassword();
-    }
-    if (msg.contains('email not confirmed') ||
-        msg.contains('confirm your email')) {
+    case 'email_not_confirmed':
       return AuthFailure.unconfirmedEmail();
-    }
-    if (exception.statusCode == '429') {
-      return const AuthFailure(
-        code: 'rate_limited',
-        message: 'Too many attempts. Please try again in a few minutes.',
-      );
-    }
-    return AuthFailure.unknown();
+    case 'over_email_send_rate_limit':
+    case 'over_request_rate_limit':
+      return AuthFailure.rateLimited();
   }
+
+  final msg = exception.message.toLowerCase();
+  if (msg.contains('invalid login credentials') ||
+      msg.contains('invalid_grant')) {
+    return AuthFailure.invalidCredentials();
+  }
+  if (msg.contains('user not found') || msg.contains('not found')) {
+    return AuthFailure.userNotFound();
+  }
+  if (msg.contains('already registered') ||
+      msg.contains('already in use') ||
+      msg.contains('user already exists')) {
+    return AuthFailure.emailAlreadyInUse();
+  }
+  if (msg.contains('password') &&
+      (msg.contains('weak') || msg.contains('least'))) {
+    return AuthFailure.weakPassword();
+  }
+  if (msg.contains('email not confirmed') ||
+      msg.contains('confirm your email')) {
+    return AuthFailure.unconfirmedEmail();
+  }
+  if (exception.statusCode == '429') {
+    return AuthFailure.rateLimited();
+  }
+  return AuthFailure.unknown();
 }
 
 /// In-memory mock [AuthRepository] for deterministic testing.
