@@ -6,6 +6,10 @@ from memora.api.v1.schemas.identity import (
     ConsentResponse,
     DeviceRegistrationRequest,
     DeviceRegistrationResponse,
+    ProfilePreferencesResponse,
+    ProfilePreferencesUpdateRequest,
+    ProfileResponse,
+    ProfileUpdateRequest,
     SessionBootstrapResponse,
     SessionRevokeRequest,
 )
@@ -16,6 +20,10 @@ __all__ = [
     "ConsentResponse",
     "DeviceRegistrationRequest",
     "DeviceRegistrationResponse",
+    "ProfilePreferencesResponse",
+    "ProfilePreferencesUpdateRequest",
+    "ProfileResponse",
+    "ProfileUpdateRequest",
     "SessionBootstrapResponse",
     "SessionRevokeRequest",
 ]

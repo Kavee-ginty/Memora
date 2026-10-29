@@ -1,11 +1,17 @@
 from __future__ import annotations
 
-from datetime import date, datetime
+import re
+from datetime import date, datetime, time
 from enum import StrEnum
 from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, SecretStr, model_validator
+from pydantic import BaseModel, ConfigDict, Field, SecretStr, field_validator, model_validator
+
+from memora.api.v1.schemas.common import Version
+
+MAX_DAILY_REMINDERS = 3
+_DISPLAY_NAME_WHITESPACE = re.compile(r"\s+")
 
 
 class AccountStatus(StrEnum):
@@ -96,6 +102,8 @@ class SessionRevokeRequest(BaseModel):
 
 
 class DeviceRegistrationRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     installation_id: UUID
     platform: Literal["android", "ios"]
     push_token: SecretStr = Field(
@@ -116,6 +124,112 @@ class DeviceRegistrationResponse(BaseModel):
     timezone: str
     app_version: str
     last_seen_at: datetime
+
+
+class AccessibilityPreferences(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    schema_version: str = Field(default="1", pattern=r"^1$")
+    reduced_motion: bool = False
+    sound_enabled: bool = True
+    haptics_enabled: bool = True
+    timer_visible: bool = False
+    high_contrast: bool = False
+
+
+class ProfileResponse(BaseModel):
+    user_id: UUID
+    display_name: str
+    locale: str
+    timezone: str
+    active_subject_id: UUID | None
+    curriculum_version_id: UUID | None
+    version: Version
+
+
+class ProfileUpdateRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    version: Version
+    display_name: Annotated[str, Field(min_length=1, max_length=100)] | None = None
+    locale: Annotated[str, Field(min_length=2, max_length=35)] | None = None
+    timezone: Annotated[str, Field(min_length=1, max_length=100)] | None = None
+
+    @field_validator("display_name")
+    @classmethod
+    def normalize_display_name(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = _DISPLAY_NAME_WHITESPACE.sub(" ", value.strip())
+        if not normalized or any(ord(character) < 32 for character in normalized):
+            raise ValueError("display_name must contain visible characters")
+        return normalized
+
+    @model_validator(mode="after")
+    def includes_change(self) -> ProfileUpdateRequest:
+        if not ({"display_name", "locale", "timezone"} & self.model_fields_set):
+            raise ValueError("At least one profile field is required")
+        if any(getattr(self, field) is None for field in self.model_fields_set - {"version"}):
+            raise ValueError("Profile fields cannot be null")
+        return self
+
+
+class ProfilePreferencesResponse(BaseModel):
+    notifications_enabled: bool
+    mission_enabled: bool
+    reward_enabled: bool
+    streak_enabled: bool
+    quiet_start_local: time | None
+    quiet_end_local: time | None
+    preferred_window_start_local: time | None
+    preferred_window_end_local: time | None
+    timezone: str
+    lock_screen_detail: Literal["minimal", "subject", "detailed"]
+    max_daily_reminders: Annotated[int, Field(ge=0, le=MAX_DAILY_REMINDERS)]
+    accessibility: AccessibilityPreferences
+    version: Version
+
+
+class ProfilePreferencesUpdateRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    version: Version
+    notifications_enabled: bool | None = None
+    mission_enabled: bool | None = None
+    reward_enabled: bool | None = None
+    streak_enabled: bool | None = None
+    quiet_start_local: time | None = None
+    quiet_end_local: time | None = None
+    preferred_window_start_local: time | None = None
+    preferred_window_end_local: time | None = None
+    timezone: Annotated[str, Field(min_length=1, max_length=100)] | None = None
+    lock_screen_detail: str | None = Field(default=None, pattern=r"^(minimal|subject|detailed)$")
+    max_daily_reminders: Annotated[int, Field(ge=0, le=MAX_DAILY_REMINDERS)] | None = None
+    accessibility: AccessibilityPreferences | None = None
+
+    @model_validator(mode="after")
+    def validate_patch(self) -> ProfilePreferencesUpdateRequest:
+        changed = self.model_fields_set - {"version"}
+        if not changed:
+            raise ValueError("At least one preference field is required")
+        for first, second in (
+            ("quiet_start_local", "quiet_end_local"),
+            ("preferred_window_start_local", "preferred_window_end_local"),
+        ):
+            present = {first, second} & self.model_fields_set
+            if present and present != {first, second}:
+                raise ValueError(f"{first} and {second} must be supplied together")
+            if present and ((getattr(self, first) is None) != (getattr(self, second) is None)):
+                raise ValueError(f"{first} and {second} must both be set or both be null")
+        non_nullable = changed - {
+            "quiet_start_local",
+            "quiet_end_local",
+            "preferred_window_start_local",
+            "preferred_window_end_local",
+        }
+        if any(getattr(self, field) is None for field in non_nullable):
+            raise ValueError("Non-nullable preferences cannot be null")
+        return self
 
 
 class ConsentResponse(BaseModel):
