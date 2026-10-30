@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import hashlib
+import io
+import urllib.error
+import urllib.request
 from datetime import UTC, datetime, timedelta
 
 import pytest
@@ -180,3 +183,94 @@ def test_s3_secrets_not_leaked_in_exceptions_or_repr() -> None:
     )
     assert secret not in grant.url
     assert secret not in repr(storage)
+
+
+class _FakeS3Response:
+    def __init__(self, headers: dict[str, str] | None = None) -> None:
+        self.headers = headers or {}
+
+    def __enter__(self) -> _FakeS3Response:
+        return self
+
+    def __exit__(self, *args: object) -> bool:
+        return False
+
+
+def _http_error(code: int) -> urllib.error.HTTPError:
+    return urllib.error.HTTPError(
+        "https://s3.example.com/memora/user/update/file.pdf",
+        code,
+        "synthetic error",
+        None,
+        io.BytesIO(b""),
+    )
+
+
+def _s3_storage() -> S3ObjectStorage:
+    return S3ObjectStorage(
+        endpoint="https://s3.example.com",
+        region="eu-west-1",
+        bucket="memora",
+        access_key="synthetic-access",
+        secret_key="synthetic-secret",
+    )
+
+
+def test_s3_head_404_is_absent_but_any_other_error_fails_closed(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    storage = _s3_storage()
+
+    def absent(request: urllib.request.Request, timeout: int) -> _FakeS3Response:
+        raise _http_error(404)
+
+    monkeypatch.setattr(urllib.request, "urlopen", absent)
+    assert storage.head_object("user/update/file.pdf") is None
+
+    def denied(request: urllib.request.Request, timeout: int) -> _FakeS3Response:
+        raise _http_error(403)
+
+    monkeypatch.setattr(urllib.request, "urlopen", denied)
+    with pytest.raises(StorageUnavailable):
+        storage.head_object("user/update/file.pdf")
+
+    def server_error(request: urllib.request.Request, timeout: int) -> _FakeS3Response:
+        raise _http_error(500)
+
+    monkeypatch.setattr(urllib.request, "urlopen", server_error)
+    with pytest.raises(StorageUnavailable):
+        storage.head_object("user/update/file.pdf")
+
+
+def test_s3_head_returns_metadata_from_response_headers(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    storage = _s3_storage()
+    response = _FakeS3Response(
+        {"Content-Length": "24", "Content-Type": "image/png", "ETag": "etag-1"}
+    )
+    monkeypatch.setattr(urllib.request, "urlopen", lambda request, timeout: response)
+
+    metadata = storage.head_object("user/update/file.png")
+
+    assert metadata is not None
+    assert metadata.byte_size == 24
+    assert metadata.content_type == "image/png"
+    assert metadata.etag == "etag-1"
+
+
+def test_s3_delete_treats_only_404_as_proven_absence(monkeypatch: pytest.MonkeyPatch) -> None:
+    storage = _s3_storage()
+
+    def gone(request: urllib.request.Request, timeout: int) -> _FakeS3Response:
+        raise _http_error(404)
+
+    monkeypatch.setattr(urllib.request, "urlopen", gone)
+    assert storage.delete_object("user/update/file.pdf") is None
+
+    def denied(request: urllib.request.Request, timeout: int) -> _FakeS3Response:
+        raise _http_error(403)
+
+    monkeypatch.setattr(urllib.request, "urlopen", denied)
+    with pytest.raises(StorageUnavailable):
+        storage.delete_object("user/update/file.pdf")

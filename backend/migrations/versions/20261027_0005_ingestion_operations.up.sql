@@ -26,7 +26,9 @@ CREATE UNIQUE INDEX uq_deletion_proofs_source_scope
 
 -- The worker never reads or writes learning_updates directly. Table-level access
 -- stays denied; these owner-checked functions return only the fields one job needs
--- and enforce the owner in the function body.
+-- and enforce the owner in the function body. One update may carry several uploads,
+-- so the context returns every eligible upload and the extraction job processes all
+-- of them; a LIMIT 1 here would silently drop the remaining student material.
 CREATE OR REPLACE FUNCTION memora_ingestion_context(p_update_id uuid, p_user_id uuid)
 RETURNS jsonb
 LANGUAGE sql
@@ -41,20 +43,18 @@ AS $$
       'manual_text_ciphertext', encode(lu.manual_text_ciphertext, 'base64'),
       'curriculum_version_id', lu.curriculum_version_id
     ),
-    'upload', (
-      SELECT jsonb_build_object(
+    'uploads', COALESCE((
+      SELECT jsonb_agg(jsonb_build_object(
         'id', su.id, 'object_key', su.object_key,
         'declared_name', su.declared_name,
         'declared_media_type', su.declared_media_type,
         'byte_size', su.byte_size, 'content_sha256', su.content_sha256,
         'status', su.status
-      )
+      ) ORDER BY su.created_at, su.id)
       FROM source_uploads su
       WHERE su.learning_update_id = lu.id AND su.user_id = lu.user_id
         AND su.status IN ('processing','validated','uploaded')
-      ORDER BY su.created_at
-      LIMIT 1
-    )
+    ), '[]'::jsonb)
   )
   FROM learning_updates lu
   WHERE lu.id = p_update_id AND lu.user_id = p_user_id
@@ -100,11 +100,18 @@ BEGIN
   SET status = 'expired', updated_at = now(), row_version = row_version + 1
   WHERE status = 'pending' AND expires_at < p_now;
 
+  -- Finalized uploads keep status 'processing' while extraction runs, so they must
+  -- expire with the rest: otherwise a stale update expires without ever queueing
+  -- the deletion of its raw object.
   UPDATE source_uploads
   SET status = 'expired', updated_at = now(), row_version = row_version + 1
-  WHERE status IN ('authorized','uploaded','validated')
+  WHERE status IN ('authorized','uploaded','validated','processing')
     AND expires_at < p_now;
 
+  -- Every upload that still owes a raw-object deletion gets a queued job. Active
+  -- jobs (queued, leased, retry_wait) and finished successes are left alone; a
+  -- dead-lettered or failed job is reset with fresh attempts so a provider outage
+  -- cannot leave a raw file stuck permanently.
   INSERT INTO background_jobs(
     job_type, owner_user_id, resource_type, resource_id,
     dedupe_key, status, max_attempts, available_at, payload
@@ -112,8 +119,12 @@ BEGIN
   SELECT 'ingestion.delete_upload', user_id, 'source_upload', id,
          'delete_upload:' || id, 'queued', 5, now(), '{"schema_version":"1"}'::jsonb
   FROM source_uploads
-  WHERE status = 'expired' AND deleted_at IS NULL
-  ON CONFLICT (dedupe_key) DO NOTHING;
+  WHERE status IN ('deleting','expired','rejected') AND deleted_at IS NULL
+  ON CONFLICT (dedupe_key) DO UPDATE
+  SET status = 'queued', attempt_count = 0, available_at = now(),
+      lease_owner = NULL, lease_expires_at = NULL, last_error_code = NULL,
+      updated_at = now(), row_version = background_jobs.row_version + 1
+  WHERE background_jobs.status IN ('dead_lettered','failed');
 
   UPDATE learning_updates
   SET status = 'expired', updated_at = now(), row_version = row_version + 1

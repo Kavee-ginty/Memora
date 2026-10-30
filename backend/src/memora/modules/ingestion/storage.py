@@ -212,7 +212,11 @@ class S3ObjectStorage:
                 )
         except urllib.error.HTTPError as exc:
             if exc.code == 404:
-                pass
+                return None
+            # A non-404 error (for example 403 AccessDenied) must never be read
+            # as "object absent": deletion proof depends on an authoritative
+            # answer, so anything else fails closed and stays retryable.
+            raise StorageUnavailable("The temporary source could not be inspected.") from exc
         except (urllib.error.URLError, TimeoutError) as exc:
             raise StorageUnavailable("The temporary source is temporarily unavailable.") from exc
 
@@ -238,8 +242,12 @@ class S3ObjectStorage:
             with urllib.request.urlopen(request, timeout=self.timeout_seconds):
                 pass
         except urllib.error.HTTPError as exc:
+            # 404 means the object is already gone, which still proves absence.
+            # Any other provider error (for example 403 AccessDenied) must fail
+            # closed so a delete job retries instead of recording false proof.
             if exc.code == 404:
-                pass
+                return
+            raise StorageUnavailable("The temporary source could not be deleted.") from exc
         except (urllib.error.URLError, TimeoutError) as exc:
             raise StorageUnavailable("The temporary source is temporarily unavailable.") from exc
 

@@ -523,6 +523,125 @@ def test_retry_succeeds_for_failed_update(upload_context: dict[str, Any]) -> Non
     assert retried.failure_code is None
 
 
+def test_retry_deletion_revives_dead_lettered_job_for_committed_update(
+    upload_context: dict[str, Any],
+) -> None:
+    service = upload_context["service"]
+    auth = upload_context["auth"]
+    engine = upload_context["engine"]
+    created, digest = _create_pdf_update(upload_context)
+
+    grant = service.grant(
+        auth,
+        created.id,
+        UploadGrantRequest(
+            declared_name="physics_notes.pdf",
+            declared_media_type="application/pdf",
+            byte_size=len(PDF_CONTENT),
+            content_sha256=digest,
+        ),
+        idempotency_key=str(uuid4()),
+    )
+
+    with engine.begin() as connection:
+        user_id = connection.scalar(
+            text("SELECT user_id FROM learning_updates WHERE id = :id"),
+            {"id": created.id},
+        )
+        connection.execute(
+            text("UPDATE source_uploads SET status = 'deleting' WHERE id = :id"),
+            {"id": grant.upload_id},
+        )
+        connection.execute(
+            text("UPDATE learning_updates SET status = 'committed' WHERE id = :id"),
+            {"id": created.id},
+        )
+        connection.execute(
+            text("""
+                INSERT INTO background_jobs(
+                    job_type, owner_user_id, resource_type, resource_id,
+                    dedupe_key, status, attempt_count, max_attempts, available_at,
+                    last_error_code, payload
+                ) VALUES (
+                    'ingestion.delete_upload', :user_id, 'source_upload', :upload_id,
+                    :dedupe_key, 'dead_lettered', 5, 5, now() - interval '1 hour',
+                    'deletion_failed', '{"schema_version":"1"}'::jsonb
+                )
+                """),
+            {
+                "user_id": user_id,
+                "upload_id": grant.upload_id,
+                "dedupe_key": f"delete_upload:{grant.upload_id}",
+            },
+        )
+
+    retried = service.retry(
+        auth,
+        created.id,
+        stage="deletion",
+        idempotency_key=str(uuid4()),
+    )
+    assert retried.status == "committed"
+
+    with engine.connect() as connection:
+        job = (
+            connection.execute(
+                text(
+                    "SELECT status, attempt_count, last_error_code FROM background_jobs "
+                    "WHERE dedupe_key = :key"
+                ),
+                {"key": f"delete_upload:{grant.upload_id}"},
+            )
+            .mappings()
+            .first()
+        )
+        assert job is not None
+        assert job["status"] == "queued"
+        assert job["attempt_count"] == 0
+        assert job["last_error_code"] is None
+
+
+def test_retry_deletion_without_pending_source_rejected(
+    upload_context: dict[str, Any],
+) -> None:
+    service = upload_context["service"]
+    auth = upload_context["auth"]
+    engine = upload_context["engine"]
+    created, digest = _create_pdf_update(upload_context)
+
+    grant = service.grant(
+        auth,
+        created.id,
+        UploadGrantRequest(
+            declared_name="physics_notes.pdf",
+            declared_media_type="application/pdf",
+            byte_size=len(PDF_CONTENT),
+            content_sha256=digest,
+        ),
+        idempotency_key=str(uuid4()),
+    )
+
+    with engine.begin() as connection:
+        connection.execute(
+            text("UPDATE source_uploads SET status = 'deleted', deleted_at = now() WHERE id = :id"),
+            {"id": grant.upload_id},
+        )
+        connection.execute(
+            text("UPDATE learning_updates SET status = 'committed' WHERE id = :id"),
+            {"id": created.id},
+        )
+
+    with pytest.raises(ApiError) as captured:
+        service.retry(
+            auth,
+            created.id,
+            stage="deletion",
+            idempotency_key=str(uuid4()),
+        )
+    assert captured.value.status_code == 409
+    assert captured.value.code == "invalid_state"
+
+
 def test_storage_outage_mapped_to_503(upload_context: dict[str, Any]) -> None:
     outage_storage = OutageObjectStorage(fail_on_get=True)
     outage_service = IngestionService(

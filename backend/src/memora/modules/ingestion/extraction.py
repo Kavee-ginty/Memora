@@ -69,6 +69,7 @@ class DeterministicExtractionProvider:
 
     model_key = DETERMINISTIC_MODEL_KEY
     prompt_version = EXTRACTION_PROMPT_VERSION
+    supports_files = False
 
     def extract(
         self,
@@ -168,6 +169,7 @@ class OpenRouterExtractionProvider:
 
     model_key = "openrouter"
     prompt_version = EXTRACTION_PROMPT_VERSION
+    supports_files = True
 
     def __init__(
         self,

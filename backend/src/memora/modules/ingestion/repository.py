@@ -379,14 +379,7 @@ class IngestionRepository:
                 {"update_id": update_id},
             )
             for upload_id in uploads:
-                self._enqueue_job(
-                    connection,
-                    job_type="ingestion.delete_upload",
-                    owner_user_id=user_id,
-                    resource_type="source_upload",
-                    resource_id=upload_id,
-                    dedupe_key=f"delete_upload:{upload_id}",
-                )
+                self._enqueue_deletion_job(connection, owner_user_id=user_id, resource_id=upload_id)
             self._complete_idempotency(
                 connection, user_id, "deleteLearningUpdate", idempotency_key, str(update_id)
             )
@@ -588,29 +581,40 @@ class IngestionRepository:
             if replay is not None:
                 return self._load_update(connection, user_id, UUID(replay))
             update = self._lock_update(connection, user_id, update_id)
-            if update["status"] != "failed":
-                raise ApiError(
-                    409, "invalid_state", "Only a failed update can be retried.", "refresh_state"
-                )
             if stage == "deletion":
-                uploads = connection.execute(
-                    text("""
-                        SELECT id FROM source_uploads
-                        WHERE learning_update_id = :update_id AND user_id = :user_id
-                          AND status IN ('deleting','expired','rejected')
-                        """),
-                    {"update_id": update_id, "user_id": user_id},
-                ).scalars()
+                # Source deletion status is separate from the retained update's
+                # state, so recovery must also work for a committed update whose
+                # deletion job died in a provider outage.
+                uploads = list(
+                    connection.execute(
+                        text("""
+                            SELECT id FROM source_uploads
+                            WHERE learning_update_id = :update_id AND user_id = :user_id
+                              AND status IN ('deleting','expired','rejected')
+                              AND deleted_at IS NULL
+                            """),
+                        {"update_id": update_id, "user_id": user_id},
+                    ).scalars()
+                )
+                if not uploads:
+                    raise ApiError(
+                        409,
+                        "invalid_state",
+                        "No source deletion is waiting to be retried.",
+                        "refresh_state",
+                    )
                 for upload_id in uploads:
-                    self._enqueue_job(
-                        connection,
-                        job_type="ingestion.delete_upload",
-                        owner_user_id=user_id,
-                        resource_type="source_upload",
-                        resource_id=upload_id,
-                        dedupe_key=f"delete_upload:{upload_id}",
+                    self._enqueue_deletion_job(
+                        connection, owner_user_id=user_id, resource_id=upload_id
                     )
             else:
+                if update["status"] != "failed":
+                    raise ApiError(
+                        409,
+                        "invalid_state",
+                        "Only a failed update can be retried.",
+                        "refresh_state",
+                    )
                 connection.execute(
                     text("""
                         UPDATE learning_updates
@@ -922,14 +926,7 @@ class IngestionRepository:
                 {"update_id": update_id, "user_id": user_id},
             ).scalars()
             for upload_id in deleting_uploads:
-                self._enqueue_job(
-                    connection,
-                    job_type="ingestion.delete_upload",
-                    owner_user_id=user_id,
-                    resource_type="source_upload",
-                    resource_id=upload_id,
-                    dedupe_key=f"delete_upload:{upload_id}",
-                )
+                self._enqueue_deletion_job(connection, owner_user_id=user_id, resource_id=upload_id)
             self._complete_idempotency(
                 connection, user_id, "commitLearningUpdate", idempotency_key, str(update_id)
             )
@@ -1106,14 +1103,7 @@ class IngestionRepository:
                     """),
                 {"failure_code": failure_code, "update_id": update_id, "user_id": user_id},
             )
-            self._enqueue_job(
-                connection,
-                job_type="ingestion.delete_upload",
-                owner_user_id=user_id,
-                resource_type="source_upload",
-                resource_id=upload_id,
-                dedupe_key=f"delete_upload:{upload_id}",
-            )
+            self._enqueue_deletion_job(connection, owner_user_id=user_id, resource_id=upload_id)
 
     def _load_update(
         self, connection: Connection, user_id: UUID, update_id: UUID
@@ -1231,6 +1221,40 @@ class IngestionRepository:
             )
         raise ApiError(
             409, "version_conflict", "Refresh this update and try again.", "refresh_state"
+        )
+
+    def _enqueue_deletion_job(
+        self, connection: Connection, *, owner_user_id: UUID, resource_id: UUID
+    ) -> None:
+        """Queue a raw-object deletion, reviving a dead deletion job.
+
+        A provider outage can dead-letter the original job while the raw file is
+        still stored. Reusing the dedupe key must requeue that job with fresh
+        attempts instead of being swallowed by the conflict guard; active and
+        already-succeeded jobs are left untouched.
+        """
+        connection.execute(
+            text("""
+                INSERT INTO background_jobs(
+                    job_type, owner_user_id, resource_type, resource_id,
+                    dedupe_key, status, max_attempts, available_at, payload
+                ) VALUES (
+                    :job_type, :owner_user_id, 'source_upload', :resource_id,
+                    :dedupe_key, 'queued', 5, now(), CAST(:payload AS jsonb)
+                )
+                ON CONFLICT (dedupe_key) DO UPDATE
+                SET status = 'queued', attempt_count = 0, available_at = now(),
+                    lease_owner = NULL, lease_expires_at = NULL, last_error_code = NULL,
+                    updated_at = now(), row_version = background_jobs.row_version + 1
+                WHERE background_jobs.status IN ('dead_lettered', 'failed')
+                """),
+            {
+                "job_type": "ingestion.delete_upload",
+                "owner_user_id": owner_user_id,
+                "resource_id": resource_id,
+                "dedupe_key": f"delete_upload:{resource_id}",
+                "payload": json.dumps({"schema_version": "1"}),
+            },
         )
 
     def _enqueue_job(

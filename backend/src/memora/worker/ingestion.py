@@ -180,7 +180,7 @@ class IngestionWorker:
             update["manual_text_ciphertext"] = (
                 base64.b64decode(ciphertext) if ciphertext is not None else None
             )
-            upload = dict(payload["upload"]) if payload["upload"] is not None else None
+            uploads = [dict(item) for item in payload["uploads"] or []]
             aliases = [
                 dict(row)
                 for row in connection.execute(
@@ -200,7 +200,7 @@ class IngestionWorker:
                     {"subject_id": update["subject_id"]},
                 ).mappings()
             ]
-        return {"update": update, "upload": dict(upload) if upload else None, "aliases": aliases}
+        return {"update": update, "uploads": uploads, "aliases": aliases}
 
     def _extract_candidates(self, context: dict[str, Any]) -> tuple[list[Any], str | None]:
         update = context["update"]
@@ -215,13 +215,8 @@ class IngestionWorker:
             except Exception:
                 logger.exception("manual text could not be decrypted")
                 return [], "extraction_failed"
-        file_bytes = None
-        media_type = None
-        declared_name = None
-        upload = context["upload"]
-        if upload is not None:
-            media_type = upload["declared_media_type"]
-            declared_name = upload["declared_name"]
+        sources: list[tuple[dict[str, Any], bytes]] = []
+        for upload in context["uploads"]:
             try:
                 observed = self.storage.head_object(upload["object_key"])
                 if observed is None:
@@ -240,14 +235,9 @@ class IngestionWorker:
                 return [], "source_unavailable"
             except ApiError as exc:
                 return [], exc.code
+            sources.append((upload, file_bytes))
         try:
-            candidates = self.extractor.extract(
-                manual_text=manual_text,
-                file_bytes=file_bytes,
-                media_type=media_type,
-                declared_name=declared_name,
-                aliases=context["aliases"],
-            )
+            candidates = self._extract_from_sources(context, sources, manual_text)
         except NoExtractableContent:
             return [], "no_extractable_content"
         except ExtractionUnavailable:
@@ -256,6 +246,70 @@ class IngestionWorker:
             logger.exception("extraction provider failed")
             return [], "extraction_failed"
         return candidates, None
+
+    def _extract_from_sources(
+        self,
+        context: dict[str, Any],
+        sources: list[tuple[dict[str, Any], bytes]],
+        manual_text: str | None,
+    ) -> list[Any]:
+        """Run one provider call per source so every upload contributes candidates.
+
+        A text-only provider cannot process file bytes at all, so file-only updates
+        still fail with extraction_unavailable and text is extracted on its own. A
+        file-capable provider keeps the text in the first call and handles the
+        remaining uploads one call each; a source that yields nothing is recorded,
+        and only an update with no candidates at all fails as no_extractable_content.
+        """
+        candidates: list[Any] = []
+        supports_files = getattr(self.extractor, "supports_files", True)
+        pending_text = manual_text
+        if not supports_files:
+            if pending_text is not None:
+                candidates.extend(
+                    self.extractor.extract(
+                        manual_text=pending_text,
+                        file_bytes=None,
+                        media_type=None,
+                        declared_name=None,
+                        aliases=context["aliases"],
+                    )
+                )
+                pending_text = None
+            if sources and not candidates:
+                raise ExtractionUnavailable("File extraction requires a configured model provider.")
+            return candidates
+        empty_source = False
+        for upload, file_bytes in sources:
+            call_text, pending_text = pending_text, None
+            try:
+                candidates.extend(
+                    self.extractor.extract(
+                        manual_text=call_text,
+                        file_bytes=file_bytes,
+                        media_type=upload["declared_media_type"],
+                        declared_name=upload["declared_name"],
+                        aliases=context["aliases"],
+                    )
+                )
+            except NoExtractableContent:
+                empty_source = True
+        if pending_text is not None:
+            try:
+                candidates.extend(
+                    self.extractor.extract(
+                        manual_text=pending_text,
+                        file_bytes=None,
+                        media_type=None,
+                        declared_name=None,
+                        aliases=context["aliases"],
+                    )
+                )
+            except NoExtractableContent:
+                empty_source = True
+        if empty_source and not candidates:
+            raise NoExtractableContent("No approved concept or formula was recognized.")
+        return candidates
 
     def _persist_candidates(
         self, job: dict[str, Any], context: dict[str, Any], candidates: list[Any]
@@ -350,7 +404,7 @@ class IngestionWorker:
                     },
                 )
                 continue
-            if context["upload"] is not None:
+            for upload in context["uploads"]:
                 connection.execute(
                     text("""
                         UPDATE source_uploads
@@ -358,7 +412,7 @@ class IngestionWorker:
                             row_version = row_version + 1
                         WHERE id = :upload_id AND status = 'processing'
                         """),
-                    {"upload_id": context["upload"]["id"]},
+                    {"upload_id": upload["id"]},
                 )
             connection.execute(
                 text(
