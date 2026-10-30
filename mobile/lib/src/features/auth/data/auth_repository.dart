@@ -16,9 +16,13 @@ abstract class AuthRepository {
     required String email,
     required String password,
     required String fullName,
+    required String redirectUri,
   });
   Future<void> signInWithGoogle({required String redirectUri});
-  Future<void> sendPasswordRecoveryEmail(String email);
+  Future<void> sendPasswordRecoveryEmail(
+    String email, {
+    required String redirectUri,
+  });
   Future<AuthSession?> refreshSession();
   Future<void> signOut();
 }
@@ -73,11 +77,13 @@ class SupabaseAuthRepository implements AuthRepository {
     required String email,
     required String password,
     required String fullName,
+    required String redirectUri,
   }) async {
     try {
       final response = await _client.auth.signUp(
         email: email.trim(),
         password: password,
+        emailRedirectTo: redirectUri,
         data: <String, dynamic>{'full_name': fullName.trim()},
       );
       final session = response.session;
@@ -112,9 +118,15 @@ class SupabaseAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<void> sendPasswordRecoveryEmail(String email) async {
+  Future<void> sendPasswordRecoveryEmail(
+    String email, {
+    required String redirectUri,
+  }) async {
     try {
-      await _client.auth.resetPasswordForEmail(email.trim());
+      await _client.auth.resetPasswordForEmail(
+        email.trim(),
+        redirectTo: redirectUri,
+      );
     } on AuthException catch (e) {
       // In accordance with security specifications, do not expose whether
       // an account exists; allow request to complete safely unless rate limited.
@@ -209,6 +221,8 @@ class MockAuthRepository implements AuthRepository {
   bool shouldFailRefresh = false;
   int signOutCallCount = 0;
   AuthFailure? configuredFailure;
+  String? lastCreateAccountRedirectUri;
+  String? lastRecoveryRedirectUri;
 
   MockAuthRepository({AuthSession? initialSession})
     : _currentSession = initialSession;
@@ -247,7 +261,9 @@ class MockAuthRepository implements AuthRepository {
     required String email,
     required String password,
     required String fullName,
+    required String redirectUri,
   }) async {
+    lastCreateAccountRedirectUri = redirectUri;
     if (shouldFailSignIn) {
       throw configuredFailure ?? AuthFailure.emailAlreadyInUse();
     }
@@ -276,7 +292,11 @@ class MockAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<void> sendPasswordRecoveryEmail(String email) async {
+  Future<void> sendPasswordRecoveryEmail(
+    String email, {
+    required String redirectUri,
+  }) async {
+    lastRecoveryRedirectUri = redirectUri;
     if (shouldFailSignIn) {
       throw configuredFailure ?? AuthFailure.networkError();
     }

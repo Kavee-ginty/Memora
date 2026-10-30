@@ -1,0 +1,104 @@
+name: Deploy shared development API
+
+on:
+  push:
+    branches:
+      - codex/shared-development-deployment
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: memora-shared-development
+  cancel-in-progress: false
+
+jobs:
+  verify-and-deploy:
+    name: Verify and deploy development
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: development
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Install Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements-dev.lock
+
+      - name: Verify backend
+        run: |
+          python -m pip install --require-hashes -r backend/requirements-dev.lock
+          python -m pip install --no-deps -e backend
+          python -m ruff format --check backend
+          python -m ruff check backend
+          python -m pytest backend/tests --ignore=backend/tests/test_migrations.py
+
+      - name: Validate deployment files
+        run: |
+          docker compose \
+            --env-file infra/development/development.env.example \
+            -f infra/development/compose.yaml \
+            config --quiet
+          bash -n infra/development/deploy.sh
+
+      - name: Build deployment image
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build --pull -t "memora-backend:${IMAGE_TAG}" backend
+          docker save "memora-backend:${IMAGE_TAG}" | gzip -1 >memora-backend.tar.gz
+
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.DEV_VPS_SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.DEV_VPS_KNOWN_HOSTS }}
+        run: |
+          test -n "$SSH_PRIVATE_KEY"
+          test -n "$SSH_KNOWN_HOSTS"
+          install -d -m 700 "$HOME/.ssh"
+          printf '%s\n' "$SSH_PRIVATE_KEY" >"$HOME/.ssh/id_ed25519"
+          printf '%s\n' "$SSH_KNOWN_HOSTS" >"$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/id_ed25519" "$HOME/.ssh/known_hosts"
+
+      - name: Upload deployment bundle
+        env:
+          VPS_HOST: ${{ secrets.DEV_VPS_HOST }}
+          VPS_USER: ${{ secrets.DEV_VPS_USER }}
+          REMOTE_BUNDLE: /tmp/memora-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          test -n "$VPS_HOST"
+          test -n "$VPS_USER"
+          ssh "$VPS_USER@$VPS_HOST" "install -d -m 700 '$REMOTE_BUNDLE'"
+          scp memora-backend.tar.gz infra/development/compose.yaml \
+            infra/development/Caddyfile infra/development/deploy.sh \
+            "$VPS_USER@$VPS_HOST:$REMOTE_BUNDLE/"
+
+      - name: Deploy and verify
+        env:
+          VPS_HOST: ${{ secrets.DEV_VPS_HOST }}
+          VPS_USER: ${{ secrets.DEV_VPS_USER }}
+          MEMORA_DEV_DOMAIN: ${{ vars.MEMORA_DEV_DOMAIN }}
+          REMOTE_BUNDLE: /tmp/memora-${{ github.run_id }}-${{ github.run_attempt }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          [[ "$MEMORA_DEV_DOMAIN" =~ ^[a-z0-9.-]+$ ]]
+          ssh "$VPS_USER@$VPS_HOST" \
+            "sed -i 's/^MEMORA_DEV_DOMAIN=.*/MEMORA_DEV_DOMAIN=$MEMORA_DEV_DOMAIN/' /home/kaveesha/.config/memora/development.env"
+          ssh "$VPS_USER@$VPS_HOST" \
+            "chmod 700 '$REMOTE_BUNDLE/deploy.sh' && '$REMOTE_BUNDLE/deploy.sh' '$REMOTE_BUNDLE' '$REMOTE_BUNDLE/memora-backend.tar.gz' '$IMAGE_TAG'"
+
+      - name: Clean up remote bundle
+        if: always()
+        env:
+          VPS_HOST: ${{ secrets.DEV_VPS_HOST }}
+          VPS_USER: ${{ secrets.DEV_VPS_USER }}
+          REMOTE_BUNDLE: /tmp/memora-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          ssh "$VPS_USER@$VPS_HOST" "rm -rf -- '$REMOTE_BUNDLE'"

@@ -56,9 +56,13 @@ class _RecoverAccountScreenState extends ConsumerState<RecoverAccountScreen> {
     });
 
     try {
+      final config = ref.read(appConfigurationProvider);
       await ref
           .read(sessionControllerProvider.notifier)
-          .sendPasswordRecoveryEmail(email);
+          .sendPasswordRecoveryEmail(
+            email,
+            redirectUri: config.oauthRedirectUri,
+          );
       if (mounted) {
         setState(() {
           _isLoading = false;
