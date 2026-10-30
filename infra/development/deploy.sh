@@ -39,7 +39,7 @@ docker compose --project-name memora-development --env-file "$environment_file" 
   python -m alembic -c alembic.ini upgrade head
 docker compose --project-name memora-development --env-file "$environment_file" -f "$compose_file" up -d --wait --remove-orphans
 
-curl --fail --silent --show-error --retry 6 --retry-delay 5 \
+curl --fail --silent --show-error --retry 12 --retry-delay 5 --retry-all-errors \
   "https://${MEMORA_DEV_DOMAIN}/health/ready" >/dev/null
 
 printf '%s\n' "$image_tag" >"$deploy_root/current-image"
