@@ -209,11 +209,13 @@ class SessionController extends StateNotifier<AppSessionState> {
     required String email,
     required String password,
     required String fullName,
+    required String redirectUri,
   }) async {
     final session = await authRepository.createAccount(
       email: email,
       password: password,
       fullName: fullName,
+      redirectUri: redirectUri,
     );
     await bootstrapWithSession(session);
   }
@@ -224,8 +226,14 @@ class SessionController extends StateNotifier<AppSessionState> {
   }
 
   /// Sends password recovery email.
-  Future<void> sendPasswordRecoveryEmail(String email) async {
-    await authRepository.sendPasswordRecoveryEmail(email);
+  Future<void> sendPasswordRecoveryEmail(
+    String email, {
+    required String redirectUri,
+  }) async {
+    await authRepository.sendPasswordRecoveryEmail(
+      email,
+      redirectUri: redirectUri,
+    );
   }
 
   /// Checks if sign-out requires confirmation due to unsynced work.

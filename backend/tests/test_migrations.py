@@ -475,6 +475,16 @@ def test_identity_repository_bootstrap_idempotency_and_ownership(
     assert bootstrap["account"]["status"] == "active"
     assert bootstrap["subjects"][0]["code"] == "physics"
 
+    email_confirmation_context = AuthContext(
+        issuer=user_one.issuer,
+        subject=user_one.subject,
+        session_id=uuid4(),
+        role="authenticated",
+        authenticated_at=None,
+        expires_at=now + timedelta(minutes=5),
+    )
+    assert repository.consent_records(email_confirmation_context) == []
+
     consent_key = str(uuid4())
     consent = repository.accept_consent(
         user_one,
@@ -588,6 +598,14 @@ def test_role_grants_rls_coverage_and_status_checks_against_postgres(
     command.upgrade(alembic_config(migration_database_url), "head")
     engine = create_test_engine(migration_database_url)
     with engine.connect() as connection:
+        assert connection.scalar(
+            text(
+                "SELECT am.set_option FROM pg_auth_members am "
+                "JOIN pg_roles role ON role.oid=am.roleid "
+                "JOIN pg_roles member ON member.oid=am.member "
+                "WHERE role.rolname='memora_api' AND member.rolname=current_user"
+            )
+        )
         assert connection.scalar(
             text("SELECT has_table_privilege('memora_api', 'subjects', 'SELECT')")
         )
