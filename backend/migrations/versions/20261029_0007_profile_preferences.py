@@ -1,15 +1,15 @@
 """Finalize profile and notification preference constraints.
 
-Revision ID: 20261029_0006
-Revises: 20261023_0005
+Revision ID: 20261029_0007
+Revises: 20261029_0006
 """
 
 from pathlib import Path
 
 from alembic import op
 
-revision = "20261029_0006"
-down_revision = "20261023_0005"
+revision = "20261029_0007"
+down_revision = "20261029_0006"
 branch_labels = None
 depends_on = None
 
@@ -20,8 +20,8 @@ def _run_script(name: str) -> None:
 
 
 def upgrade() -> None:
-    _run_script("20261029_0006_profile_preferences.up.sql")
+    _run_script("20261029_0007_profile_preferences.up.sql")
 
 
 def downgrade() -> None:
-    _run_script("20261029_0006_profile_preferences.down.sql")
+    _run_script("20261029_0007_profile_preferences.down.sql")

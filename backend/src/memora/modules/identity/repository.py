@@ -472,6 +472,10 @@ class IdentityRepository:
                 result.update({"locale": locale, "timezone": timezone})
                 return result, False
 
+            connection.execute(
+                text("SELECT memora_transfer_device_token(:fingerprint)"),
+                {"fingerprint": fingerprint},
+            )
             existing = connection.scalar(
                 text(
                     "SELECT id FROM device_registrations "
@@ -514,6 +518,13 @@ class IdentityRepository:
                     "app_version": app_version,
                     "last_seen_at": last_seen_at,
                 },
+            )
+            connection.execute(
+                text(
+                    "UPDATE user_profiles SET updated_at=now(), row_version=row_version+1 "
+                    "WHERE user_id=:user_id"
+                ),
+                {"user_id": user_id},
             )
             connection.execute(
                 text(

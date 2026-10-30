@@ -113,6 +113,30 @@ def test_profile_and_preferences_enforce_versions_idempotency_and_ownership(
             values={"locale": "en-US"},
         )
 
+    profile_before_device = repository.profile(owner)
+    repository.register_device(
+        owner,
+        idempotency_key=str(uuid4()),
+        body_hash="profile-version-device",
+        installation_id=uuid4(),
+        platform="android",
+        ciphertext=b"profile-version-ciphertext",
+        fingerprint=f"profile-version-{uuid4()}",
+        locale="en-GB",
+        timezone="Europe/London",
+        app_version="1.0.0",
+    )
+    profile_after_device = repository.profile(owner)
+    assert profile_after_device["version"] == profile_before_device["version"] + 1
+    assert profile_after_device["locale"] == "en-GB"
+    with pytest.raises(ApiError, match="version_conflict"):
+        repository.update_profile(
+            owner,
+            version=profile_before_device["version"],
+            idempotency_key=str(uuid4()),
+            values={"locale": "en-US"},
+        )
+
     defaults = repository.preferences(owner, default_reminders=1)
     assert defaults["notifications_enabled"] is False
     assert defaults["max_daily_reminders"] == 1
@@ -267,6 +291,54 @@ def test_device_refresh_revocation_and_prohibited_values_stay_protected(
         assert connection.scalar(
             text("SELECT revoked_at IS NULL FROM device_registrations WHERE id=:id"),
             {"id": first.id},
+        )
+
+    moved_installation, created = service.register_device(
+        request(owner),
+        DeviceRegistrationRequest(
+            installation_id=uuid4(),
+            platform="android",
+            push_token=second_token,
+            locale="en-LK",
+            timezone="Asia/Colombo",
+            app_version="1.1.0",
+        ),
+        idempotency_key=str(uuid4()),
+    )
+    assert created is True
+    assert moved_installation.id != first.id
+
+    transferred, created = service.register_device(
+        request(other),
+        DeviceRegistrationRequest(
+            installation_id=uuid4(),
+            platform="android",
+            push_token=second_token,
+            locale="en-LK",
+            timezone="Asia/Colombo",
+            app_version="1.1.0",
+        ),
+        idempotency_key=str(uuid4()),
+    )
+    assert created is True
+    assert transferred.id not in {first.id, moved_installation.id}
+    with engine.connect() as connection:
+        assert connection.scalar(
+            text(
+                "SELECT revoked_at IS NOT NULL AND push_token_ciphertext IS NULL "
+                "AND token_fingerprint IS NULL FROM device_registrations WHERE id=:id"
+            ),
+            {"id": moved_installation.id},
+        )
+        assert (
+            connection.scalar(
+                text(
+                    "SELECT count(*) FROM device_registrations "
+                    "WHERE id=:id AND revoked_at IS NULL AND token_fingerprint IS NOT NULL"
+                ),
+                {"id": transferred.id},
+            )
+            == 1
         )
     repository.delete_device(owner, first.id)
     repository.delete_device(owner, first.id)

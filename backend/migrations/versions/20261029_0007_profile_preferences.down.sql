@@ -1,3 +1,6 @@
+REVOKE ALL ON FUNCTION memora_transfer_device_token(text) FROM memora_api;
+DROP FUNCTION IF EXISTS memora_transfer_device_token(text);
+
 ALTER TABLE user_profiles
   DROP CONSTRAINT IF EXISTS user_profiles_accessibility_schema_chk;
 
