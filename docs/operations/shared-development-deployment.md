@@ -29,6 +29,10 @@ Create a GitHub environment named `development` and configure:
 | `DEV_VPS_SSH_PRIVATE_KEY` | Private key dedicated to this deployment |
 | `DEV_VPS_KNOWN_HOSTS` | Pinned SSH host-key entry produced by an independently verified scan |
 
+Set the non-secret `MEMORA_DEV_DOMAIN` environment variable to the development API hostname.
+The deployment workflow validates it and synchronizes only that setting into the protected VPS
+environment file before deployment.
+
 The workflow never stores application or database credentials in GitHub. Those values remain
 in the VPS environment file.
 
