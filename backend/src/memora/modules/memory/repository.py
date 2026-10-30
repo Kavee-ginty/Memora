@@ -92,33 +92,88 @@ class MemoryRepository:
         ineligibility_reason: str | None = None,
         event_payload: dict[str, Any] | None = None,
         prerequisite_signal: PrerequisiteSignal | None = None,
+        connection: Connection | None = None,
     ) -> tuple[RecordedMemoryEvent, PersistedDecision]:
-        """Record evidence and apply the policy decision in one transaction."""
-        with self.engine.begin() as connection:
-            recorded = self.record_event(
-                connection,
-                user_id=user_id,
-                concept_id=concept_id,
-                event=event,
-                source_type=source_type,
-                source_id=source_id,
-                is_eligible=is_eligible,
-                ineligibility_reason=ineligibility_reason,
-                event_payload=event_payload,
-            )
-            decision = self.decide_and_persist(
+        """Record evidence and apply the policy decision in one transaction.
+
+        Pass ``connection`` to join a caller-owned transaction (the worker
+        applies every concept of one producer event atomically); otherwise a
+        dedicated transaction is opened.
+        """
+        if connection is not None:
+            return self._apply_event(
                 connection,
                 user_id=user_id,
                 concept_id=concept_id,
                 active_concept_version_id=active_concept_version_id,
-                trigger_event_id=recorded.event_id,
                 event=event,
                 source_type=source_type,
                 source_id=source_id,
                 correlation_id=correlation_id,
                 now=now,
+                is_eligible=is_eligible,
+                ineligibility_reason=ineligibility_reason,
+                event_payload=event_payload,
                 prerequisite_signal=prerequisite_signal,
             )
+        with self.engine.begin() as owned_connection:
+            return self._apply_event(
+                owned_connection,
+                user_id=user_id,
+                concept_id=concept_id,
+                active_concept_version_id=active_concept_version_id,
+                event=event,
+                source_type=source_type,
+                source_id=source_id,
+                correlation_id=correlation_id,
+                now=now,
+                is_eligible=is_eligible,
+                ineligibility_reason=ineligibility_reason,
+                event_payload=event_payload,
+                prerequisite_signal=prerequisite_signal,
+            )
+
+    def _apply_event(
+        self,
+        connection: Connection,
+        *,
+        user_id: UUID,
+        concept_id: UUID,
+        active_concept_version_id: UUID,
+        event: EventFacts,
+        source_type: str,
+        source_id: UUID,
+        correlation_id: UUID,
+        now: datetime,
+        is_eligible: bool,
+        ineligibility_reason: str | None,
+        event_payload: dict[str, Any] | None,
+        prerequisite_signal: PrerequisiteSignal | None,
+    ) -> tuple[RecordedMemoryEvent, PersistedDecision]:
+        recorded = self.record_event(
+            connection,
+            user_id=user_id,
+            concept_id=concept_id,
+            event=event,
+            source_type=source_type,
+            source_id=source_id,
+            is_eligible=is_eligible,
+            ineligibility_reason=ineligibility_reason,
+            event_payload=event_payload,
+        )
+        decision = self.decide_and_persist(
+            connection,
+            user_id=user_id,
+            concept_id=concept_id,
+            active_concept_version_id=active_concept_version_id,
+            trigger_event_id=recorded.event_id,
+            event=event,
+            source_type=source_type,
+            source_id=source_id,
+            correlation_id=correlation_id,
+            now=now,
+            prerequisite_signal=prerequisite_signal,
+        )
         return recorded, decision
 
     def record_event(
