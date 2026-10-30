@@ -62,6 +62,7 @@ DecisionTemplateKey = Literal[
     "memory.explanation.comeback",
     "memory.explanation.low_confidence",
     "memory.explanation.weak_prerequisite",
+    "memory.explanation.evidence_recorded",
 ]
 
 

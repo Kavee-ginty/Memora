@@ -372,6 +372,34 @@ def _set_learner_context(connection: Connection, user_id: UUID) -> None:
     )
 
 
+def _validate_concept_version_pairs(
+    connection: Connection, evidence_list: list[ConceptEvidence]
+) -> None:
+    """Reject envelopes that pair a concept with another concept's version.
+
+    The composite foreign key added by migration ``20261030_0009`` enforces
+    the same pair for every write path; this check converts the violation
+    into a non-retryable dead-letter with a safe code so a malformed
+    producer event never blocks the queue.
+    """
+    for evidence in evidence_list:
+        found = connection.scalar(
+            text(
+                """
+                SELECT 1 FROM concept_versions
+                WHERE id = CAST(:version_id AS uuid)
+                  AND concept_id = CAST(:concept_id AS uuid)
+                """
+            ),
+            {
+                "version_id": str(evidence.concept_version_id),
+                "concept_id": str(evidence.concept_id),
+            },
+        )
+        if not found:
+            raise NonRetryableJobError(CODE_INVALID_EVENT_PAYLOAD)
+
+
 # ----------------------------------------------------------------------
 # job lifecycle
 # ----------------------------------------------------------------------
@@ -616,6 +644,10 @@ def handle_job(engine: Engine, job: dict[str, Any], *, now: datetime) -> int:
         return 0
     if len({evidence.user_id for evidence in evidence_list}) != 1:
         raise NonRetryableJobError(CODE_INVALID_EVENT_PAYLOAD)
+
+    with engine.begin() as connection:
+        _set_worker_role(connection)
+        _validate_concept_version_pairs(connection, evidence_list)
 
     correlation_id = UUID(str(event["correlation_id"])) if event["correlation_id"] else uuid4()
     # The producer event's commit time is the evidence observation time.

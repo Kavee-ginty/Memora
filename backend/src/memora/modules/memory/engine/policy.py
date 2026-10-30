@@ -38,6 +38,7 @@ from memora.modules.memory.constants import (
     REASON_FIRST_REVIEW_BOUNDED,
     REASON_INTERVAL_BOUNDED,
     REASON_LOW_CONFIDENCE_DAMPED,
+    REASON_OUT_OF_ORDER_EVIDENCE,
     REASON_RECALL_LAPSE,
     REASON_WEAK_PREREQUISITE_RECOVER,
     SCORED_MEMORY_EVENT_TYPES,
@@ -84,6 +85,11 @@ def decide_with_policy(
     """Produce the authoritative, policy-bounded decision for one event."""
     now_utc = require_utc(now, "now")
     core = decide(state, event, now=now_utc, config=config)
+    if REASON_OUT_OF_ORDER_EVIDENCE in core.reason_codes:
+        # Stale evidence is a strict no-op: every policy bound guards new
+        # schedules, and rescheduling from a stale event could only move a
+        # decision the newer evidence already owns.
+        return core
     result = core.result_state
     reason_codes = list(core.reason_codes)
     template_key = core.explanation_template_key

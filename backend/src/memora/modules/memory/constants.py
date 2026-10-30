@@ -79,6 +79,7 @@ TEMPLATE_FIRST_REVIEW: Final = "memory.explanation.first_review_scheduled"
 TEMPLATE_COMEBACK: Final = "memory.explanation.comeback"
 TEMPLATE_LOW_CONFIDENCE: Final = "memory.explanation.low_confidence"
 TEMPLATE_WEAK_PREREQUISITE: Final = "memory.explanation.weak_prerequisite"
+TEMPLATE_EVIDENCE_RECORDED: Final = "memory.explanation.evidence_recorded"
 
 MEMORY_EXPLANATION_TEMPLATE_KEYS: Final[tuple[str, ...]] = (
     TEMPLATE_STATE_INITIALIZED,
@@ -89,6 +90,7 @@ MEMORY_EXPLANATION_TEMPLATE_KEYS: Final[tuple[str, ...]] = (
     TEMPLATE_COMEBACK,
     TEMPLATE_LOW_CONFIDENCE,
     TEMPLATE_WEAK_PREREQUISITE,
+    TEMPLATE_EVIDENCE_RECORDED,
 )
 
 # Due-selection vocabulary (TRD §9.4, PRD 013). These are inputs to T13's

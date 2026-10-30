@@ -48,7 +48,7 @@ abstract class SchedulingExplanation
 
   @BuiltValueField(wireName: r'template_key')
   SchedulingExplanationTemplateKeyEnum get templateKey;
-  // enum templateKeyEnum {  memory.explanation.state_initialized,  memory.explanation.exposure_recorded,  memory.explanation.recall_success,  memory.explanation.recall_lapse,  memory.explanation.first_review_scheduled,  memory.explanation.comeback,  memory.explanation.low_confidence,  memory.explanation.weak_prerequisite,  };
+  // enum templateKeyEnum {  memory.explanation.state_initialized,  memory.explanation.exposure_recorded,  memory.explanation.recall_success,  memory.explanation.recall_lapse,  memory.explanation.first_review_scheduled,  memory.explanation.comeback,  memory.explanation.low_confidence,  memory.explanation.weak_prerequisite,  memory.explanation.evidence_recorded,  };
 
   @BuiltValueField(wireName: r'trigger_event_type')
   SchedulingExplanationTriggerEventTypeEnum get triggerEventType;
@@ -333,6 +333,10 @@ class SchedulingExplanationTemplateKeyEnum extends EnumClass {
   static const SchedulingExplanationTemplateKeyEnum
       memoryPeriodExplanationPeriodWeakPrerequisite =
       _$schedulingExplanationTemplateKeyEnum_memoryPeriodExplanationPeriodWeakPrerequisite;
+  @BuiltValueEnumConst(wireName: r'memory.explanation.evidence_recorded')
+  static const SchedulingExplanationTemplateKeyEnum
+      memoryPeriodExplanationPeriodEvidenceRecorded =
+      _$schedulingExplanationTemplateKeyEnum_memoryPeriodExplanationPeriodEvidenceRecorded;
   @BuiltValueEnumConst(wireName: r'unknown_default_open_api', fallback: true)
   static const SchedulingExplanationTemplateKeyEnum unknownDefaultOpenApi =
       _$schedulingExplanationTemplateKeyEnum_unknownDefaultOpenApi;

@@ -14,7 +14,7 @@ import json
 import os
 import threading
 from collections.abc import Iterator
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from uuid import UUID, uuid4
 
 import pytest
@@ -1120,3 +1120,114 @@ def test_migration_down_and_up_retains_evidence_and_functions(database: Engine) 
     assert not recorded.replayed
     assert not second.replayed
     assert second.state_row_version == 2
+
+
+# ---------------------------------------------------------------------------
+# review fix 2: stale evidence persists as a no-op decision
+# ---------------------------------------------------------------------------
+
+
+def test_stale_event_persists_without_moving_the_state(database: Engine) -> None:
+    user_id = create_user(database)
+    concept_id, version_id = seed_concept(database)
+    exposure_event, exposure_source = exposure()
+    apply(
+        database,
+        user_id=user_id,
+        concept_id=concept_id,
+        concept_version_id=version_id,
+        event=exposure_event,
+        source_id=exposure_source,
+    )
+    attempt_event, attempt_source = attempt(0.9)
+    _, newer = apply(
+        database,
+        user_id=user_id,
+        concept_id=concept_id,
+        concept_version_id=version_id,
+        event=attempt_event,
+        source_id=attempt_source,
+    )
+    before = state_row(database, user_id, concept_id)
+
+    stale_event, stale_source = attempt(0.4, observed_at=DAY_0 + timedelta(hours=1))
+    recorded, stale_decision = apply(
+        database,
+        user_id=user_id,
+        concept_id=concept_id,
+        concept_version_id=version_id,
+        event=stale_event,
+        source_id=stale_source,
+    )
+
+    assert not recorded.replayed
+    assert stale_decision.reason_codes == ("out_of_order_evidence",)
+    assert stale_decision.explanation_template_key == "memory.explanation.evidence_recorded"
+    assert stale_decision.next_review_at == newer.next_review_at
+
+    after = state_row(database, user_id, concept_id)
+    # The snapshot is untouched apart from the optimistic row_version bump.
+    for column in (
+        "difficulty",
+        "stability_days",
+        "last_retrievability",
+        "evidence_confidence",
+        "first_exposed_at",
+        "last_reviewed_at",
+        "next_review_at",
+        "exposure_count",
+        "eligible_review_count",
+        "lapse_count",
+        "engine_version",
+    ):
+        assert after[column] == before[column], column
+    assert after["row_version"] == before["row_version"] + 1
+
+    with database.begin() as connection:
+        decision_row = (
+            connection.execute(
+                text(
+                    "SELECT previous_state, result_state FROM memory_decisions"
+                    " WHERE id = CAST(:id AS uuid)"
+                ),
+                {"id": str(stale_decision.decision_id)},
+            )
+            .mappings()
+            .one()
+        )
+    assert dict(decision_row["result_state"]) == dict(decision_row["previous_state"])
+
+
+# ---------------------------------------------------------------------------
+# review fix 3: a concept can never be paired with another concept's version
+# ---------------------------------------------------------------------------
+
+
+def test_persistence_rejects_mismatched_concept_version_pair(database: Engine) -> None:
+    user_id = create_user(database)
+    concept_id, _version_id = seed_concept(database)
+    other_concept_id, other_version_id = seed_concept(database)
+    assert other_concept_id != concept_id
+
+    event, source_id = exposure()
+    with pytest.raises(DBAPIError):
+        apply(
+            database,
+            user_id=user_id,
+            concept_id=concept_id,
+            concept_version_id=other_version_id,
+            event=event,
+            source_id=source_id,
+        )
+
+    assert state_row(database, user_id, concept_id) == {}
+    with database.begin() as connection:
+        events = connection.execute(
+            text("SELECT count(*) FROM memory_events WHERE user_id = :u"),
+            {"u": str(user_id)},
+        ).scalar_one()
+        decisions = connection.execute(
+            text("SELECT count(*) FROM memory_decisions WHERE user_id = :u"),
+            {"u": str(user_id)},
+        ).scalar_one()
+    assert (events, decisions) == (0, 0)

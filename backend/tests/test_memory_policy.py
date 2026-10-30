@@ -24,8 +24,10 @@ from memora.modules.memory.constants import (
     REASON_FIRST_REVIEW_BOUNDED,
     REASON_INTERVAL_BOUNDED,
     REASON_LOW_CONFIDENCE_DAMPED,
+    REASON_OUT_OF_ORDER_EVIDENCE,
     REASON_WEAK_PREREQUISITE_RECOVER,
     TEMPLATE_COMEBACK,
+    TEMPLATE_EVIDENCE_RECORDED,
     TEMPLATE_FIRST_REVIEW,
     TEMPLATE_LOW_CONFIDENCE,
     TEMPLATE_WEAK_PREREQUISITE,
@@ -449,3 +451,104 @@ def test_collect_signal_requires_timezone_aware_now() -> None:
             concept_version_id=uuid4(),
             now=datetime(2026, 10, 29, 12, 0, 0),
         )
+
+
+# ---------------------------------------------------------------------------
+# stale evidence: late delivery never rewinds the review anchor (review fix 2)
+# ---------------------------------------------------------------------------
+
+
+def reviewed_state() -> object:
+    """Exposure followed by one successful review at REVIEWED_AT."""
+    state = bootstrapped_state()
+    return decide_with_policy(
+        state, attempt_event(0.9, observed_at=REVIEWED_AT), now=NOW
+    ).result_state
+
+
+def test_stale_event_is_a_strict_no_op() -> None:
+    state = reviewed_state()
+    stale = attempt_event(1.0, observed_at=EXPOSED_AT + timedelta(hours=1))
+
+    decision = decide_with_policy(state, stale, now=NOW)
+
+    assert decision.reason_codes == (REASON_OUT_OF_ORDER_EVIDENCE,)
+    assert decision.explanation_template_key == TEMPLATE_EVIDENCE_RECORDED
+    assert decision.result_state == state
+    assert decision.next_review_at == state.next_review_at
+    assert decision.result_state.last_reviewed_at == state.last_reviewed_at
+    assert decision.result_state.eligible_review_count == state.eligible_review_count
+
+
+def test_delivery_order_never_rewinds_the_anchor() -> None:
+    """The Codex review comparison: newer attempt first, older attempt late.
+
+    Chronological delivery applies both attempts; delayed delivery applies
+    only the newer one and records the older as stale. Either way the
+    stored anchor is the newer attempt's time and the schedule is the one
+    the newer evidence produced.
+    """
+    earlier = attempt_event(0.7, observed_at=REVIEWED_AT)
+    later = attempt_event(0.9, observed_at=REVIEWED_AT + timedelta(days=2))
+    base = bootstrapped_state()
+
+    chronological = base
+    for event in (earlier, later):
+        chronological = decide_with_policy(chronological, event, now=NOW).result_state
+
+    delayed_first = decide_with_policy(base, later, now=NOW).result_state
+    delayed_final = decide_with_policy(delayed_first, earlier, now=NOW)
+
+    assert delayed_final.reason_codes == (REASON_OUT_OF_ORDER_EVIDENCE,)
+    # The late older attempt rewinds nothing: the anchor stays at the newer
+    # review, the schedule keeps the newer evidence's decision.
+    assert delayed_final.result_state == delayed_first
+    assert delayed_final.result_state.last_reviewed_at == later.observed_at
+    assert delayed_final.result_state.last_reviewed_at > earlier.observed_at
+    assert delayed_final.next_review_at == delayed_first.next_review_at
+    # Chronological processing remains the richer path: both attempts
+    # applied, anchored on the newest.
+    assert chronological.last_reviewed_at == later.observed_at
+
+
+def test_stale_events_are_order_independent() -> None:
+    state = reviewed_state()
+    stale_a = attempt_event(0.6, observed_at=EXPOSED_AT + timedelta(hours=2))
+    stale_b = attempt_event(0.3, observed_at=EXPOSED_AT + timedelta(hours=4))
+
+    first_order = decide_with_policy(state, stale_a, now=NOW)
+    after_a = first_order.result_state
+    second = decide_with_policy(after_a, stale_b, now=NOW).result_state
+
+    reverse_first = decide_with_policy(state, stale_b, now=NOW)
+    reverse_second = decide_with_policy(reverse_first.result_state, stale_a, now=NOW).result_state
+
+    assert first_order.result_state == state
+    assert reverse_first.result_state == state
+    assert second == state == reverse_second
+
+
+def test_stale_event_with_low_confidence_keeps_the_schedule() -> None:
+    state = reviewed_state()
+    stale = attempt_event(0.2, observed_at=EXPOSED_AT + timedelta(hours=1), confidence=0.1)
+
+    decision = decide_with_policy(state, stale, now=NOW)
+
+    # Damping and interval bounds guard new schedules only; a no-op must
+    # not be pushed forward or flagged.
+    assert decision.next_review_at == state.next_review_at
+    assert REASON_LOW_CONFIDENCE_DAMPED not in decision.reason_codes
+    assert REASON_INTERVAL_BOUNDED not in decision.reason_codes
+
+
+def test_stale_exposure_still_records_evidence() -> None:
+    state = reviewed_state()
+    stale = exposure_event(observed_at=EXPOSED_AT, confidence=0.8)
+
+    decision = decide_with_policy(state, stale, now=NOW)
+
+    assert decision.result_state.next_review_at == state.next_review_at
+    assert decision.result_state.last_reviewed_at == state.last_reviewed_at
+    # Exposure is not an anchor-bearing transition; it is recorded, and the
+    # stale flag documents that it predates the last review.
+    assert REASON_OUT_OF_ORDER_EVIDENCE in decision.reason_codes

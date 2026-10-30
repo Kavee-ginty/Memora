@@ -28,6 +28,7 @@ from memora.modules.memory.constants import (
     REASON_REVIEW_SCHEDULED,
     REASON_STATE_INITIALIZED,
     SCORED_MEMORY_EVENT_TYPES,
+    TEMPLATE_EVIDENCE_RECORDED,
     TEMPLATE_EXPOSURE_RECORDED,
     TEMPLATE_RECALL_LAPSE,
     TEMPLATE_RECALL_SUCCESS,
@@ -235,11 +236,15 @@ def _decide_scored(
     now: datetime,
     config: EngineConfig,
 ) -> Decision:
-    grade = fsrs.map_score_to_grade(_require_score(event), config=config)
     anchor = state.last_reviewed_at or state.first_exposed_at
-    reason_codes: list[str] = []
     if event.observed_at < anchor:
-        reason_codes.append(REASON_OUT_OF_ORDER_EVIDENCE)
+        # Late-arriving evidence older than the current review anchor must
+        # never rewind the anchor or reorder the transition history: it is
+        # recorded as-is and the authoritative snapshot stays untouched.
+        return _decide_stale(state, event, now, config)
+
+    grade = fsrs.map_score_to_grade(_require_score(event), config=config)
+    reason_codes: list[str] = []
 
     retrievability_at_review = fsrs.retrievability(
         state.stability_days, anchor, event.observed_at, config=config
@@ -274,6 +279,36 @@ def _decide_scored(
         next_review_at=result.next_review_at,
         reason_codes=tuple(reason_codes),
         explanation_template_key=template_key,
+        engine_version=config.engine_version,
+        policy_version=config.policy_version,
+    )
+
+
+def _decide_stale(
+    state: LearnerConceptState,
+    event: EventFacts,
+    now: datetime,
+    config: EngineConfig,
+) -> Decision:
+    """Record evidence that predates the current review anchor.
+
+    The decision is a strict no-op: the result snapshot equals the previous
+    snapshot, the schedule is untouched and no counter moves. Whether the
+    late event is processed before or after the newer one, the stored state
+    and due date are the ones produced by the newer evidence alone, so
+    delivery order can never rewind the review anchor.
+    """
+    anchor = state.last_reviewed_at or state.first_exposed_at
+    retrievability_at_decision = fsrs.retrievability(
+        state.stability_days, anchor, now, config=config
+    )
+    return Decision(
+        previous_state=state,
+        result_state=state,
+        retrievability_at_decision=retrievability_at_decision,
+        next_review_at=state.next_review_at,
+        reason_codes=(REASON_OUT_OF_ORDER_EVIDENCE,),
+        explanation_template_key=TEMPLATE_EVIDENCE_RECORDED,
         engine_version=config.engine_version,
         policy_version=config.policy_version,
     )

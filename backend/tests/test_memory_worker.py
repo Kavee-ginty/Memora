@@ -878,3 +878,57 @@ def test_apply_transaction_uses_learner_scoped_role(
     assert seen["user"] == str(user_id)
     # RLS scopes the session to the envelope's learner.
     assert seen["visible_states"] == 0
+
+
+# ---------------------------------------------------------------------------
+# review fix 3: a concept can never be paired with another concept's version
+# ---------------------------------------------------------------------------
+
+
+def test_mismatched_concept_version_pair_dead_letters_and_queue_moves(
+    database: Engine,
+) -> None:
+    user_id = create_user(database)
+    concept_id, _version_id = seed_concept(database)
+    payload = exposure_payload(
+        user_id,
+        [
+            {
+                "concept_id": str(concept_id),
+                "concept_version_id": str(uuid4()),
+                "confidence": 0.9,
+            }
+        ],
+    )
+    broken_event = enqueue_producer_event(
+        database,
+        aggregate_type="learning_update",
+        event_type="learning_update.committed",
+        payload=payload,
+    )
+    broken_job = enqueue_job(database, outbox_event_id=broken_event)
+
+    assert run_one(database) == "dead_lettered"
+    status = job_status(database, broken_job)
+    assert status["status"] == "dead_lettered"
+    assert status["last_error_code"] == "invalid_event_payload"
+    assert counts(database, user_id) == (0, 0, 0)
+
+    good_event = enqueue_producer_event(
+        database,
+        aggregate_type="learning_update",
+        event_type="learning_update.committed",
+        payload=exposure_payload(
+            user_id,
+            [
+                {
+                    "concept_id": str(concept_id),
+                    "concept_version_id": str(seed_concept(database)[1]),
+                    "confidence": 0.9,
+                }
+            ],
+        ),
+    )
+    enqueue_job(database, outbox_event_id=good_event)
+    assert run_one(database) == "succeeded"
+    assert counts(database, user_id) == (1, 1, 1)

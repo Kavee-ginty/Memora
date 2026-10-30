@@ -131,6 +131,10 @@ const SchedulingExplanationTemplateKeyEnum
     const SchedulingExplanationTemplateKeyEnum._(
         'memoryPeriodExplanationPeriodWeakPrerequisite');
 const SchedulingExplanationTemplateKeyEnum
+    _$schedulingExplanationTemplateKeyEnum_memoryPeriodExplanationPeriodEvidenceRecorded =
+    const SchedulingExplanationTemplateKeyEnum._(
+        'memoryPeriodExplanationPeriodEvidenceRecorded');
+const SchedulingExplanationTemplateKeyEnum
     _$schedulingExplanationTemplateKeyEnum_unknownDefaultOpenApi =
     const SchedulingExplanationTemplateKeyEnum._('unknownDefaultOpenApi');
 
@@ -153,6 +157,8 @@ SchedulingExplanationTemplateKeyEnum
       return _$schedulingExplanationTemplateKeyEnum_memoryPeriodExplanationPeriodLowConfidence;
     case 'memoryPeriodExplanationPeriodWeakPrerequisite':
       return _$schedulingExplanationTemplateKeyEnum_memoryPeriodExplanationPeriodWeakPrerequisite;
+    case 'memoryPeriodExplanationPeriodEvidenceRecorded':
+      return _$schedulingExplanationTemplateKeyEnum_memoryPeriodExplanationPeriodEvidenceRecorded;
     case 'unknownDefaultOpenApi':
       return _$schedulingExplanationTemplateKeyEnum_unknownDefaultOpenApi;
     default:
@@ -171,6 +177,7 @@ final BuiltSet<SchedulingExplanationTemplateKeyEnum>
   _$schedulingExplanationTemplateKeyEnum_memoryPeriodExplanationPeriodComeback,
   _$schedulingExplanationTemplateKeyEnum_memoryPeriodExplanationPeriodLowConfidence,
   _$schedulingExplanationTemplateKeyEnum_memoryPeriodExplanationPeriodWeakPrerequisite,
+  _$schedulingExplanationTemplateKeyEnum_memoryPeriodExplanationPeriodEvidenceRecorded,
   _$schedulingExplanationTemplateKeyEnum_unknownDefaultOpenApi,
 ]);
 
@@ -312,6 +319,8 @@ class _$SchedulingExplanationTemplateKeyEnumSerializer
         'memory.explanation.low_confidence',
     'memoryPeriodExplanationPeriodWeakPrerequisite':
         'memory.explanation.weak_prerequisite',
+    'memoryPeriodExplanationPeriodEvidenceRecorded':
+        'memory.explanation.evidence_recorded',
     'unknownDefaultOpenApi': 'unknown_default_open_api',
   };
   static const Map<Object, String> _fromWire = const <Object, String>{
@@ -330,6 +339,8 @@ class _$SchedulingExplanationTemplateKeyEnumSerializer
         'memoryPeriodExplanationPeriodLowConfidence',
     'memory.explanation.weak_prerequisite':
         'memoryPeriodExplanationPeriodWeakPrerequisite',
+    'memory.explanation.evidence_recorded':
+        'memoryPeriodExplanationPeriodEvidenceRecorded',
     'unknown_default_open_api': 'unknownDefaultOpenApi',
   };
 

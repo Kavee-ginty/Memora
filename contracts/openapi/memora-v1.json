@@ -1422,7 +1422,8 @@
               "memory.explanation.first_review_scheduled",
               "memory.explanation.comeback",
               "memory.explanation.low_confidence",
-              "memory.explanation.weak_prerequisite"
+              "memory.explanation.weak_prerequisite",
+              "memory.explanation.evidence_recorded"
             ],
             "title": "Template Key",
             "type": "string"

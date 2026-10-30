@@ -33,6 +33,7 @@ from memora.modules.memory.constants import (
     TEMPLATE_DUE_OVERDUE,
     TEMPLATE_DUE_RETENTION,
     TEMPLATE_DUE_WEAK_PREREQUISITE,
+    TEMPLATE_EVIDENCE_RECORDED,
     TEMPLATE_EXPOSURE_RECORDED,
     TEMPLATE_FIRST_REVIEW,
     TEMPLATE_LOW_CONFIDENCE,
@@ -69,6 +70,9 @@ TEMPLATE_MESSAGES: Final[dict[str, str]] = {
     ),
     TEMPLATE_WEAK_PREREQUISITE: (
         "A prerequisite concept needs repair, so this review is planned sooner."
+    ),
+    TEMPLATE_EVIDENCE_RECORDED: (
+        "We saved this attempt, but a more recent review already set your plan."
     ),
     TEMPLATE_DUE_OVERDUE: "This review is overdue. A short review now brings it back on track.",
     TEMPLATE_DUE_RETENTION: "This review is due soon. A quick check keeps the memory strong.",
