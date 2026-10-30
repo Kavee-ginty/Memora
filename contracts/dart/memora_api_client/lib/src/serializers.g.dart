@@ -12,6 +12,12 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(ActiveMissionSummaryStatusEnum.serializer)
       ..add(AsyncOperation.serializer)
       ..add(CapabilityFlags.serializer)
+      ..add(ConceptHistoryResponse.serializer)
+      ..add(ConceptHistoryResponseStateBandEnum.serializer)
+      ..add(ConceptProgressItem.serializer)
+      ..add(ConceptProgressItemConfidenceBandEnum.serializer)
+      ..add(ConceptProgressItemReviewWindowEnum.serializer)
+      ..add(ConceptProgressItemStateBandEnum.serializer)
       ..add(ConsentAcceptanceRequest.serializer)
       ..add(ConsentAcceptanceResponse.serializer)
       ..add(ConsentDecision.serializer)
@@ -22,12 +28,18 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(DeviceRegistrationRequestPlatformEnum.serializer)
       ..add(DeviceRegistrationResponse.serializer)
       ..add(DeviceRegistrationResponsePlatformEnum.serializer)
+      ..add(DueReasonExplanation.serializer)
+      ..add(DueReasonExplanationReasonCodeEnum.serializer)
+      ..add(DueReasonExplanationTemplateKeyEnum.serializer)
       ..add(ErrorDetail.serializer)
       ..add(ErrorEnvelope.serializer)
+      ..add(EvidenceSummary.serializer)
+      ..add(EvidenceSummaryConfidenceBandEnum.serializer)
       ..add(FieldError.serializer)
       ..add(HealthResponse.serializer)
       ..add(HealthStatus.serializer)
       ..add(IdempotencyHeaders.serializer)
+      ..add(PageConceptProgressItem.serializer)
       ..add(PageMeta.serializer)
       ..add(PageParams.serializer)
       ..add(PageQuestionReportSummary.serializer)
@@ -45,10 +57,18 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(QuestionReportSummaryStatusEnum.serializer)
       ..add(RequestHeaders.serializer)
       ..add(RequestHeadersXPlatformEnum.serializer)
+      ..add(SchedulingExplanation.serializer)
+      ..add(SchedulingExplanationReasonCodesEnum.serializer)
+      ..add(SchedulingExplanationTemplateKeyEnum.serializer)
+      ..add(SchedulingExplanationTriggerEventTypeEnum.serializer)
       ..add(SessionBootstrapResponse.serializer)
       ..add(SessionRevocationScope.serializer)
       ..add(SessionRevokeRequest.serializer)
       ..add(SubjectSummary.serializer)
+      ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(ConceptProgressItem)]),
+          () => ListBuilder<ConceptProgressItem>())
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(ConsentStatus)]),
           () => ListBuilder<ConsentStatus>())
@@ -74,11 +94,23 @@ Serializers _$serializers = (Serializers().toBuilder()
               BuiltList, const [const FullType(QuestionReportSummary)]),
           () => ListBuilder<QuestionReportSummary>())
       ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(SchedulingExplanation)]),
+          () => ListBuilder<SchedulingExplanation>())
+      ..addBuilderFactory(
+          const FullType(BuiltList,
+              const [const FullType(SchedulingExplanationReasonCodesEnum)]),
+          () => ListBuilder<SchedulingExplanationReasonCodesEnum>())
+      ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(String)]),
           () => ListBuilder<String>())
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(String)]),
-          () => ListBuilder<String>()))
+          () => ListBuilder<String>())
+      ..addBuilderFactory(
+          const FullType(
+              BuiltMap, const [const FullType(String), const FullType(int)]),
+          () => MapBuilder<String, int>()))
     .build();
 
 // ignore_for_file: deprecated_member_use_from_same_package,type=lint

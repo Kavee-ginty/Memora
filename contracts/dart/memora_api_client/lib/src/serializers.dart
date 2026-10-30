@@ -18,6 +18,8 @@ import 'package:memora_api_client/src/model/account_status.dart';
 import 'package:memora_api_client/src/model/active_mission_summary.dart';
 import 'package:memora_api_client/src/model/async_operation.dart';
 import 'package:memora_api_client/src/model/capability_flags.dart';
+import 'package:memora_api_client/src/model/concept_history_response.dart';
+import 'package:memora_api_client/src/model/concept_progress_item.dart';
 import 'package:memora_api_client/src/model/consent_acceptance_request.dart';
 import 'package:memora_api_client/src/model/consent_acceptance_response.dart';
 import 'package:memora_api_client/src/model/consent_decision.dart';
@@ -26,12 +28,15 @@ import 'package:memora_api_client/src/model/consent_status.dart';
 import 'package:memora_api_client/src/model/consent_type.dart';
 import 'package:memora_api_client/src/model/device_registration_request.dart';
 import 'package:memora_api_client/src/model/device_registration_response.dart';
+import 'package:memora_api_client/src/model/due_reason_explanation.dart';
 import 'package:memora_api_client/src/model/error_detail.dart';
 import 'package:memora_api_client/src/model/error_envelope.dart';
+import 'package:memora_api_client/src/model/evidence_summary.dart';
 import 'package:memora_api_client/src/model/field_error.dart';
 import 'package:memora_api_client/src/model/health_response.dart';
 import 'package:memora_api_client/src/model/health_status.dart';
 import 'package:memora_api_client/src/model/idempotency_headers.dart';
+import 'package:memora_api_client/src/model/page_concept_progress_item.dart';
 import 'package:memora_api_client/src/model/page_meta.dart';
 import 'package:memora_api_client/src/model/page_params.dart';
 import 'package:memora_api_client/src/model/page_question_report_summary.dart';
@@ -41,6 +46,7 @@ import 'package:memora_api_client/src/model/question_report_create_request.dart'
 import 'package:memora_api_client/src/model/question_report_response.dart';
 import 'package:memora_api_client/src/model/question_report_summary.dart';
 import 'package:memora_api_client/src/model/request_headers.dart';
+import 'package:memora_api_client/src/model/scheduling_explanation.dart';
 import 'package:memora_api_client/src/model/session_bootstrap_response.dart';
 import 'package:memora_api_client/src/model/session_revocation_scope.dart';
 import 'package:memora_api_client/src/model/session_revoke_request.dart';
@@ -53,6 +59,8 @@ part 'serializers.g.dart';
   ActiveMissionSummary,
   AsyncOperation,
   CapabilityFlags,
+  ConceptHistoryResponse,
+  ConceptProgressItem,
   ConsentAcceptanceRequest,
   ConsentAcceptanceResponse,
   ConsentDecision,
@@ -61,12 +69,15 @@ part 'serializers.g.dart';
   ConsentType,
   DeviceRegistrationRequest,
   DeviceRegistrationResponse,
+  DueReasonExplanation,
   ErrorDetail,
   ErrorEnvelope,
+  EvidenceSummary,
   FieldError,
   HealthResponse,
   HealthStatus,
   IdempotencyHeaders,
+  PageConceptProgressItem,
   PageMeta,
   PageParams,
   PageQuestionReportSummary,
@@ -76,6 +87,7 @@ part 'serializers.g.dart';
   QuestionReportResponse,
   QuestionReportSummary,
   RequestHeaders,
+  SchedulingExplanation,
   SessionBootstrapResponse,
   SessionRevocationScope,
   SessionRevokeRequest,
@@ -103,8 +115,20 @@ Serializers serializers = (_$serializers.toBuilder()
         () => ListBuilder<QuestionReportSummary>(),
       )
       ..addBuilderFactory(
+        const FullType(BuiltMap, [FullType(String), FullType(int)]),
+        () => MapBuilder<String, int>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(SchedulingExplanation)]),
+        () => ListBuilder<SchedulingExplanation>(),
+      )
+      ..addBuilderFactory(
         const FullType(BuiltList, [FullType(String)]),
         () => ListBuilder<String>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(ConceptProgressItem)]),
+        () => ListBuilder<ConceptProgressItem>(),
       )
       ..add(const OneOfSerializer())
       ..add(const AnyOfSerializer())
