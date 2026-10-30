@@ -197,12 +197,13 @@ def _decide_exposure(
     config: EngineConfig,
 ) -> Decision:
     anchor = state.last_reviewed_at or state.first_exposed_at
+    if event.observed_at < anchor:
+        return _decide_stale(state, event, now, config)
+
     retrievability_at_decision = fsrs.retrievability(
         state.stability_days, anchor, event.observed_at, config=config
     )
     reason_codes: list[str] = [REASON_EXPOSURE_RECORDED]
-    if event.observed_at < anchor:
-        reason_codes.append(REASON_OUT_OF_ORDER_EVIDENCE)
 
     result = state.with_counts(exposure_delta=1)
     result = _replace(

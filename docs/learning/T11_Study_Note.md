@@ -150,16 +150,16 @@ carrying a score.
 handles three shapes:
 
 - no prior state → bootstrap (exposure) or first scored review;
-- exposure on an existing state → record evidence, keep the existing schedule,
-  blend confidence, increment the exposure counter;
+- current exposure on an existing state → record evidence, keep the existing
+  schedule, blend confidence, increment the exposure counter;
 - scored event on an existing state → the review transition above.
 
 `invalidation` is metadata about a prior event. `apply_event` appends it and
 returns no decision, `decide()` rejects it explicitly as a contract error, and
 the corrective state change arrives as a later `manual_review` event, so
 history is never rewritten. Out-of-order evidence (an `observed_at` earlier
-than the state anchor) still produces a decision but is tagged
-`out_of_order_evidence`.
+than the state anchor) is appended but produces a no-op decision tagged
+`out_of_order_evidence`; it cannot change the snapshot, counters or schedule.
 
 ## 3. The policy layer
 

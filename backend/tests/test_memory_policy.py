@@ -541,14 +541,12 @@ def test_stale_event_with_low_confidence_keeps_the_schedule() -> None:
     assert REASON_INTERVAL_BOUNDED not in decision.reason_codes
 
 
-def test_stale_exposure_still_records_evidence() -> None:
+def test_stale_exposure_is_a_strict_no_op() -> None:
     state = reviewed_state()
     stale = exposure_event(observed_at=EXPOSED_AT, confidence=0.8)
 
     decision = decide_with_policy(state, stale, now=NOW)
 
-    assert decision.result_state.next_review_at == state.next_review_at
-    assert decision.result_state.last_reviewed_at == state.last_reviewed_at
-    # Exposure is not an anchor-bearing transition; it is recorded, and the
-    # stale flag documents that it predates the last review.
-    assert REASON_OUT_OF_ORDER_EVIDENCE in decision.reason_codes
+    assert decision.result_state == state
+    assert decision.reason_codes == (REASON_OUT_OF_ORDER_EVIDENCE,)
+    assert decision.explanation_template_key == TEMPLATE_EVIDENCE_RECORDED
