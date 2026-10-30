@@ -248,6 +248,8 @@ class IdentityService:
         idempotency_key: str,
     ) -> tuple[DeviceRegistrationResponse, bool]:
         self._validate_timezone(body.timezone)
+        if not _LOCALE_PATTERN.fullmatch(body.locale):
+            raise ApiError(422, "validation_failed", "Enter a valid locale.", "correct_input")
         protector = self._protector()
         ciphertext, fingerprint = protector.protect(
             body.push_token.get_secret_value(),

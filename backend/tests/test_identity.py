@@ -20,6 +20,7 @@ from memora.api.security import (
 )
 from memora.api.v1.schemas.identity import (
     ConsentAcceptanceRequest,
+    DeviceRegistrationRequest,
     ProfilePreferencesUpdateRequest,
     ProfileUpdateRequest,
 )
@@ -417,6 +418,23 @@ def test_preference_models_reject_partial_pairs_unknown_keys_and_cap() -> None:
     for values in invalid_values:
         with pytest.raises(ValidationError):
             ProfilePreferencesUpdateRequest.model_validate(values)
+
+
+def test_device_registration_rejects_invalid_locale_before_protecting_token() -> None:
+    service = IdentityService(ProfileRepository(), Settings(_env_file=None))
+    with pytest.raises(ApiError, match="validation_failed"):
+        service.register_device(
+            authenticated_request(authenticated_at=datetime.now(UTC)),
+            DeviceRegistrationRequest(
+                installation_id=uuid4(),
+                platform="android",
+                push_token="synthetic-device-token",
+                locale="!!!!!!!!",
+                timezone="Asia/Colombo",
+                app_version="1.0.0",
+            ),
+            idempotency_key="invalid-device-locale",
+        )
 
 
 def test_notification_denial_and_accessibility_settings_are_supported() -> None:

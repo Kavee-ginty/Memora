@@ -160,6 +160,7 @@ jobs:
         run: |
           python -m pytest tests/test_migrations.py
           python -m pytest tests/test_question_db_contracts.py
+          python -m pytest tests/test_profile_preferences.py
 
   contracts:
     name: OpenAPI and Dart client
