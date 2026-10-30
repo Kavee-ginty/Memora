@@ -49,7 +49,10 @@ calibration fixture:
 `STATE_SNAPSHOT_SCHEMA_VERSION = "memora.memory_state/1"` versions the jsonb
 envelope written to `memory_decisions.previous_state` and `result_state`.
 `SELECTION_INPUT_VERSION = "memory-selection-inputs/1"` versions the contract
-T13 consumes.
+T13 consumes. The persistence layer passes the producing engine's version into
+`to_snapshot()`, so a runtime configuration bump never relabels an older
+snapshot: `result_state` carries the new version and `previous_state` keeps the
+version of the engine that actually wrote it.
 
 Every number the engine uses lives in the frozen `EngineConfig`. `validate()`
 runs at import time, so a nonsensical weight table fails at startup rather than
@@ -150,9 +153,10 @@ handles three shapes:
   blend confidence, increment the exposure counter;
 - scored event on an existing state → the review transition above.
 
-`invalidation` is metadata about a prior event. It is recorded without a
-decision; the corrective state change arrives as a later `manual_review` event,
-so history is never rewritten. Out-of-order evidence (an `observed_at` earlier
+`invalidation` is metadata about a prior event. `apply_event` appends it and
+returns no decision, `decide()` rejects it explicitly as a contract error, and
+the corrective state change arrives as a later `manual_review` event, so
+history is never rewritten. Out-of-order evidence (an `observed_at` earlier
 than the state anchor) still produces a decision but is tagged
 `out_of_order_evidence`.
 
@@ -490,8 +494,8 @@ dart test
 Results recorded for this branch:
 
 - Ruff lint and format checks pass across `backend` (91 files formatted).
-- Full backend suite with `MEMORA_TEST_DATABASE_URL` configured: **421 passed**,
-  one existing Starlette/httpx deprecation warning. Of those, **171** are the
+- Full backend suite with `MEMORA_TEST_DATABASE_URL` configured: **432 passed**,
+  one existing Starlette/httpx deprecation warning. Of those, **182** are the
   T11 suites below.
 - `generate_contracts.py --check` exits `0` after export, generation, formatting
   and comparison.
@@ -500,13 +504,13 @@ Results recorded for this branch:
 
 | Suite | Covers |
 | --- | --- |
-| `test_memory_engine.py` | determinism, clamps, monotonic sanity, snapshot round-trips, invalid inputs |
+| `test_memory_engine.py` | determinism, clamps, monotonic sanity, snapshot round-trips, seeded 200-event fuzz, invalid inputs, invalidation as metadata |
 | `test_memory_policy.py` | first-review window, confidence damping, comeback, weak prerequisite, interval cap |
-| `test_memory_persistence.py` | append-only evidence, duplicate delivery, per-concept and per-learner isolation, transaction atomicity, worker grant negative, RLS |
-| `test_memory_selection.py` | due inputs, urgency bands, reason precedence, caps, cursor scoping |
+| `test_memory_persistence.py` | append-only evidence, sequential and concurrent duplicate delivery, per-concept and per-learner isolation, transaction atomicity, invalidation without a decision, engine-version bumps, outbox key uniqueness, `SET LOCAL` isolation, worker grant negative, RLS |
+| `test_memory_selection.py` | due inputs, urgency bands, reason precedence, caps, cursor scoping, limit boundaries, prerequisite write isolation |
 | `test_memory_simulation.py` | versioned calibration fixture and 30-day calendar for the four gate scenarios |
 | `test_memory_worker.py` | envelope mapping, retry/backoff, dead-lettering, lease recovery, log safety |
-| `test_memory_endpoints.py` | explanation copy, service mapping, bounds, `no-store`, owner-negative matrix, pagination |
+| `test_memory_endpoints.py` | explanation copy, service mapping, bounds, `no-store`, owner-negative matrix, pagination, OpenAPI security and envelopes |
 
 The four acceptance scenarios are covered by
 `backend/tests/fixtures/memory/calibration_v1.json` (`memory-calibration/1`),
@@ -534,11 +538,6 @@ schedule stays inside the expert bounds at every step.
   follow-up migration should add the composite index once history volume is
   real; it was not added here because T11's migration is already scoped to the
   worker-access contract.
-- `invalidation` is only reachable through `record_event`, never through
-  `apply_event` or the worker envelope (the worker accepts only scored event
-  types). Calling `apply_event` with an invalidation event currently fails with
-  a generic "requires a score" error; an explicit guard with a regression test
-  belongs in the review-fix commit.
 - `migrations/env.py` calls `fileConfig(..., disable_existing_loggers=True)`,
   which disables `memora.worker.memory` for the rest of a process after the
   first migration runs. The worker log-safety test re-enables it, but the

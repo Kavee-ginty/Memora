@@ -19,6 +19,7 @@ from datetime import datetime
 
 from memora.modules.memory.constants import (
     EVENT_EXPOSURE,
+    EVENT_INVALIDATION,
     MEMORY_EVENT_TYPES,
     REASON_EXPOSURE_RECORDED,
     REASON_OUT_OF_ORDER_EVIDENCE,
@@ -60,6 +61,9 @@ class EventFacts:
         if self.event_type == EVENT_EXPOSURE:
             if self.score is not None:
                 raise ValueError("exposure events carry no score")
+        elif self.event_type == EVENT_INVALIDATION:
+            if self.score is not None:
+                raise ValueError("invalidation events carry no score")
         elif self.event_type in SCORED_MEMORY_EVENT_TYPES:
             if self.score is None:
                 raise ValueError(f"event type {self.event_type!r} requires a score")
@@ -97,7 +101,16 @@ def decide(
     Raises ``ValueError`` on inputs outside the engine contract. The result
     is a pure function of ``(state, event, now, config)``: same inputs and
     configuration versions reproduce the identical decision.
+
+    ``invalidation`` is metadata about a prior event, not a transition: it is
+    recorded by the persistence layer without a decision, and asking this
+    function to decide from it is a contract error.
     """
+    if event.event_type == EVENT_INVALIDATION:
+        raise ValueError(
+            "invalidation events are recorded without a decision; "
+            "the corrective state change arrives as a later manual_review event"
+        )
     now_utc = require_utc(now, "now")
     if state is None:
         return _decide_bootstrap(event, now_utc, config)

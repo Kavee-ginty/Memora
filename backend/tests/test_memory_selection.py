@@ -21,6 +21,7 @@ import pytest
 from sqlalchemy import Engine, text
 
 from memora.modules.memory.constants import (
+    REASON_WEAK_PREREQUISITE_RECOVER,
     RETRIEVABILITY_BAND_CRITICAL,
     RETRIEVABILITY_BAND_FADING,
     RETRIEVABILITY_BAND_FRESH,
@@ -37,6 +38,8 @@ from memora.modules.memory.constants import (
     URGENCY_OVERDUE,
 )
 from memora.modules.memory.engine.config import DEFAULT_ENGINE_CONFIG
+from memora.modules.memory.prerequisites import collect_prerequisite_signal
+from memora.modules.memory.repository import MemoryRepository
 from memora.modules.memory.selection import (
     MAX_HORIZON_DAYS,
     MAX_SELECTION_LIMIT,
@@ -51,6 +54,7 @@ from test_memory_persistence import (
     attempt,
     create_user,
     exposure,
+    state_row,
 )
 
 DAY = timedelta(days=1)
@@ -364,6 +368,60 @@ def test_weak_prerequisite_is_flagged_from_the_approved_graph(
     assert dependent.selection_reason == SELECTION_REASON_WEAK_PREREQUISITE
 
 
+def test_weak_prerequisite_signal_never_writes_the_prerequisite_state(
+    database: Engine, now: datetime
+) -> None:
+    user_id = create_user(database)
+    prerequisite_id, prerequisite_version = concept_by_code(database, "PHYS-MEC-DISPLACEMENT")
+    dependent_id, dependent_version = concept_by_code(database, "PHYS-MEC-VELOCITY")
+    expose(
+        database,
+        user_id=user_id,
+        concept_id=prerequisite_id,
+        version_id=prerequisite_version,
+        at=now - 40 * DAY,
+    )
+    expose(
+        database,
+        user_id=user_id,
+        concept_id=dependent_id,
+        version_id=dependent_version,
+        at=now - 2 * DAY,
+    )
+    before = state_row(database, user_id, prerequisite_id)
+
+    with database.begin() as connection:
+        signal = collect_prerequisite_signal(
+            connection,
+            user_id=user_id,
+            concept_version_id=dependent_version,
+            now=now,
+        )
+        event, source_id = attempt(score=0.1, observed_at=now - DAY)
+        _, decision = MemoryRepository(database).apply_event(
+            user_id=user_id,
+            concept_id=dependent_id,
+            active_concept_version_id=dependent_version,
+            event=event,
+            source_type="synthetic_source",
+            source_id=source_id,
+            correlation_id=uuid4(),
+            now=now,
+            prerequisite_signal=signal,
+            connection=connection,
+        )
+
+    assert signal.weak_prerequisite_concept_ids == (str(prerequisite_id),)
+    assert decision is not None
+    assert REASON_WEAK_PREREQUISITE_RECOVER in decision.reason_codes
+    # The signal influenced the dependent's decision only: the prerequisite
+    # row is byte-identical, including row_version and updated_at.
+    assert state_row(database, user_id, prerequisite_id) == before
+    dependent_state = state_row(database, user_id, dependent_id)
+    assert dependent_state["lapse_count"] == 1
+    assert dependent_state["row_version"] == 2
+
+
 def test_healthy_prerequisite_is_not_flagged(database: Engine, now: datetime) -> None:
     user_id = create_user(database)
     subject_id = physics_subject_id(database)
@@ -505,6 +563,72 @@ def test_page_cap_and_cursor_pagination_cover_the_pool_once(
     assert pages == (len(rows) + 4) // 5
     assert len(seen) == len(rows)
     assert len(set(seen)) == len(rows)
+
+
+def test_pagination_caps_hold_at_limit_one_and_max(database: Engine, now: datetime) -> None:
+    user_id = create_user(database)
+    subject_id = physics_subject_id(database)
+    with database.begin() as connection:
+        rows = (
+            connection.execute(
+                text(
+                    """
+                    SELECT DISTINCT ON (c.id) c.id AS concept_id, cv.id AS version_id
+                    FROM concepts c
+                    JOIN concept_versions cv ON cv.concept_id = c.id
+                    WHERE c.status = 'approved'
+                      AND cv.content_status = 'approved'
+                      AND c.subject_id = CAST(:subject_id AS uuid)
+                    ORDER BY c.id, cv.version_no
+                    LIMIT 3
+                    """
+                ),
+                {"subject_id": str(subject_id)},
+            )
+            .mappings()
+            .all()
+        )
+    for row in rows:
+        expose(
+            database,
+            user_id=user_id,
+            concept_id=UUID(str(row["concept_id"])),
+            version_id=UUID(str(row["version_id"])),
+            at=now - 5 * DAY,
+        )
+
+    seen: list[UUID] = []
+    cursor = None
+    pages = 0
+    while True:
+        result = page(
+            database,
+            user_id=user_id,
+            subject_id=subject_id,
+            as_of=now,
+            limit=1,
+            cursor=cursor,
+        )
+        assert len(result.candidates) == 1
+        seen.extend(candidate.concept_id for candidate in result.candidates)
+        pages += 1
+        cursor = result.next_cursor
+        if cursor is None:
+            break
+        assert pages <= len(rows)
+
+    assert pages == len(rows)
+    assert len(set(seen)) == len(rows)
+
+    full = page(
+        database,
+        user_id=user_id,
+        subject_id=subject_id,
+        as_of=now,
+        limit=MAX_SELECTION_LIMIT,
+    )
+    assert len(full.candidates) == len(rows)
+    assert full.next_cursor is None
 
 
 def test_cursor_round_trip_and_malformed_values() -> None:

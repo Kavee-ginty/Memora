@@ -9,8 +9,10 @@ disposable database.
 
 from __future__ import annotations
 
+import dataclasses
 import json
 import os
+import threading
 from collections.abc import Iterator
 from datetime import UTC, datetime
 from uuid import UUID, uuid4
@@ -22,9 +24,10 @@ from sqlalchemy import Engine, create_engine, text
 from sqlalchemy.engine import make_url
 from sqlalchemy.exc import DBAPIError, IntegrityError
 
-from memora.modules.memory.constants import EVENT_ATTEMPT, EVENT_EXPOSURE
+from memora.modules.memory.constants import EVENT_ATTEMPT, EVENT_EXPOSURE, EVENT_INVALIDATION
 from memora.modules.memory.engine.config import DEFAULT_ENGINE_CONFIG
 from memora.modules.memory.engine.decide import EventFacts
+from memora.modules.memory.engine.policy import decide_with_policy
 from memora.modules.memory.engine.state import LearnerConceptState
 from memora.modules.memory.repository import (
     BOOTSTRAP_PREVIOUS_STATE_SCHEMA,
@@ -368,6 +371,370 @@ def test_duplicate_delivery_replays_without_new_side_effects(database: Engine) -
     assert (events, decisions, outbox) == (1, 1, 1)
 
 
+def test_concurrent_duplicate_delivery_converges(database: Engine) -> None:
+    user_id = create_user(database)
+    concept_id, version_id = seed_concept(database)
+    event, source_id = exposure()
+
+    barrier = threading.Barrier(2)
+    results: list[tuple] = []
+    failures: list[BaseException] = []
+
+    def deliver() -> None:
+        try:
+            barrier.wait(timeout=15)
+            results.append(
+                apply(
+                    database,
+                    user_id=user_id,
+                    concept_id=concept_id,
+                    concept_version_id=version_id,
+                    event=event,
+                    source_id=source_id,
+                )
+            )
+        except BaseException as error:  # pragma: no cover - asserted below
+            failures.append(error)
+
+    threads = [threading.Thread(target=deliver) for _ in range(2)]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join(timeout=30)
+
+    assert not any(thread.is_alive() for thread in threads)
+    assert failures == []
+    assert len(results) == 2
+
+    recorded = [result[0] for result in results]
+    decisions = [result[1] for result in results]
+    assert sorted(item.replayed for item in recorded) == [False, True]
+    assert len({item.event_id for item in recorded}) == 1
+    assert decisions[0].decision_id == decisions[1].decision_id
+    assert sorted(item.replayed for item in decisions) == [False, True]
+    outbox_ids = [item.outbox_event_id for item in decisions]
+    assert sum(item is not None for item in outbox_ids) == 1
+
+    with database.begin() as connection:
+        counts = (
+            connection.execute(
+                text(
+                    """
+                    SELECT
+                      (SELECT count(*) FROM memory_events WHERE user_id = :user_id) AS events,
+                      (SELECT count(*) FROM memory_decisions WHERE user_id = :user_id) AS decisions,
+                      (SELECT count(*) FROM outbox_events
+                        WHERE event_type = :event_type
+                          AND payload->>'user_id' = CAST(:user_id AS text)) AS outbox
+                    """
+                ),
+                {"user_id": str(user_id), "event_type": OUTBOX_EVENT_TYPE},
+            )
+            .mappings()
+            .one()
+        )
+    assert (counts["events"], counts["decisions"], counts["outbox"]) == (1, 1, 1)
+    assert state_row(database, user_id, concept_id)["row_version"] == 1
+
+
+def test_schedule_changed_domain_event_key_is_unique(database: Engine) -> None:
+    user_id = create_user(database)
+    concept_id, version_id = seed_concept(database)
+    event, source_id = exposure()
+    _, decision = apply(
+        database,
+        user_id=user_id,
+        concept_id=concept_id,
+        concept_version_id=version_id,
+        event=event,
+        source_id=source_id,
+    )
+
+    with database.begin() as connection:
+        row = (
+            connection.execute(
+                text(
+                    """
+                    SELECT domain_event_key, aggregate_type, aggregate_id
+                    FROM outbox_events
+                    WHERE event_type = :event_type AND payload->>'user_id' = :user_id
+                    """
+                ),
+                {"event_type": OUTBOX_EVENT_TYPE, "user_id": str(user_id)},
+            )
+            .mappings()
+            .one()
+        )
+
+    assert row["domain_event_key"] == f"{OUTBOX_EVENT_TYPE}:{user_id}:{decision.decision_id}"
+    assert row["aggregate_type"] == "memory_decision"
+    assert UUID(str(row["aggregate_id"])) == decision.decision_id
+
+    # Re-publishing the same decision identity cannot create a second event.
+    with pytest.raises(IntegrityError), database.begin() as connection:
+        connection.execute(
+            text(
+                """
+                INSERT INTO outbox_events(
+                    domain_event_key, aggregate_type, aggregate_id, event_type,
+                    event_version, payload, correlation_id, publication_status
+                ) VALUES (
+                    :domain_event_key, 'memory_decision', :aggregate_id,
+                    :event_type, 1, '{}'::jsonb, :correlation_id, 'pending'
+                )
+                """
+            ),
+            {
+                "domain_event_key": row["domain_event_key"],
+                "aggregate_id": str(decision.decision_id),
+                "event_type": OUTBOX_EVENT_TYPE,
+                "correlation_id": str(uuid4()),
+            },
+        )
+
+
+# ---------------------------------------------------------------------------
+# invalidation is metadata, never a transition
+# ---------------------------------------------------------------------------
+
+
+def test_invalidation_appends_evidence_without_a_decision(database: Engine) -> None:
+    user_id = create_user(database)
+    concept_id, version_id = seed_concept(database)
+    event, source_id = exposure()
+    original, original_decision = apply(
+        database,
+        user_id=user_id,
+        concept_id=concept_id,
+        concept_version_id=version_id,
+        event=event,
+        source_id=source_id,
+    )
+    original_state = state_row(database, user_id, concept_id)
+    with database.begin() as connection:
+        original_event_row = dict(
+            connection.execute(
+                text("SELECT * FROM memory_events WHERE id = :id"),
+                {"id": str(original.event_id)},
+            )
+            .mappings()
+            .one()
+        )
+        original_decision_row = dict(
+            connection.execute(
+                text("SELECT * FROM memory_decisions WHERE id = :id"),
+                {"id": str(original_decision.decision_id)},
+            )
+            .mappings()
+            .one()
+        )
+
+    invalidating = EventFacts(
+        event_type=EVENT_INVALIDATION,
+        observed_at=DAY_1,
+        confidence=0.9,
+    )
+    invalidation_source = uuid4()
+    recorded, decision = apply(
+        database,
+        user_id=user_id,
+        concept_id=concept_id,
+        concept_version_id=version_id,
+        event=invalidating,
+        source_id=invalidation_source,
+    )
+
+    assert decision is None
+    assert not recorded.replayed
+    assert recorded.event_id != original.event_id
+
+    # A redelivery of the same invalidation converges without another row.
+    replayed, replayed_decision = apply(
+        database,
+        user_id=user_id,
+        concept_id=concept_id,
+        concept_version_id=version_id,
+        event=invalidating,
+        source_id=invalidation_source,
+    )
+    assert replayed.replayed
+    assert replayed.event_id == recorded.event_id
+    assert replayed_decision is None
+
+    # The snapshot, the original evidence and the original decision are intact.
+    assert state_row(database, user_id, concept_id) == original_state
+    with database.begin() as connection:
+        kept_event = dict(
+            connection.execute(
+                text("SELECT * FROM memory_events WHERE id = :id"),
+                {"id": str(original.event_id)},
+            )
+            .mappings()
+            .one()
+        )
+        kept_decision = dict(
+            connection.execute(
+                text("SELECT * FROM memory_decisions WHERE id = :id"),
+                {"id": str(original_decision.decision_id)},
+            )
+            .mappings()
+            .one()
+        )
+        event_types = (
+            connection.execute(
+                text(
+                    """
+                    SELECT event_type FROM memory_events
+                    WHERE user_id = :user_id
+                    ORDER BY observed_at, id
+                    """
+                ),
+                {"user_id": str(user_id)},
+            )
+            .scalars()
+            .all()
+        )
+        decisions = connection.execute(
+            text("SELECT count(*) FROM memory_decisions WHERE user_id = :user_id"),
+            {"user_id": str(user_id)},
+        ).scalar_one()
+        outbox = connection.execute(
+            text(
+                """
+                SELECT count(*) FROM outbox_events
+                WHERE event_type = :event_type AND payload->>'user_id' = :user_id
+                """
+            ),
+            {"event_type": OUTBOX_EVENT_TYPE, "user_id": str(user_id)},
+        ).scalar_one()
+
+    assert kept_event == original_event_row
+    assert kept_decision == original_decision_row
+    assert kept_event["event_type"] == EVENT_EXPOSURE
+    assert kept_event["score"] is None
+    assert kept_event["event_payload"]["schema_version"] == "1"
+    assert event_types == [EVENT_EXPOSURE, EVENT_INVALIDATION]
+    assert decisions == 1
+    assert outbox == 1
+    assert original_decision.outbox_event_id is not None
+
+
+# ---------------------------------------------------------------------------
+# engine versioning keeps history immutable and readable
+# ---------------------------------------------------------------------------
+
+
+def test_engine_version_bump_never_mutates_history(database: Engine) -> None:
+    user_id = create_user(database)
+    concept_id, version_id = seed_concept(database)
+    event, source_id = exposure()
+    _, first = apply(
+        database,
+        user_id=user_id,
+        concept_id=concept_id,
+        concept_version_id=version_id,
+        event=event,
+        source_id=source_id,
+    )
+
+    with database.begin() as connection:
+        first_row = dict(
+            connection.execute(
+                text("SELECT * FROM memory_decisions WHERE id = :id"),
+                {"id": str(first.decision_id)},
+            )
+            .mappings()
+            .one()
+        )
+
+    bumped_version = "fsrs-mvp-1.0.1"
+    bumped_config = dataclasses.replace(
+        DEFAULT_ENGINE_CONFIG,
+        engine_version=bumped_version,
+        # A real behavioural change must travel with the version bump.
+        recall_gain=1.0,
+    )
+    bumped_config.validate()
+    attempt_event, attempt_source = attempt(0.9)
+    _, second = MemoryRepository(database, config=bumped_config).apply_event(
+        user_id=user_id,
+        concept_id=concept_id,
+        active_concept_version_id=version_id,
+        event=attempt_event,
+        source_type="synthetic_source",
+        source_id=attempt_source,
+        correlation_id=uuid4(),
+        now=NOW,
+    )
+
+    assert second.engine_version == bumped_version
+    assert second.decision_id != first.decision_id
+
+    baseline_state = LearnerConceptState.from_snapshot(dict(first_row["result_state"]))
+    baseline = decide_with_policy(
+        baseline_state, attempt_event, now=NOW, config=DEFAULT_ENGINE_CONFIG
+    )
+    assert second.next_review_at != baseline.next_review_at
+
+    with database.begin() as connection:
+        kept = dict(
+            connection.execute(
+                text("SELECT * FROM memory_decisions WHERE id = :id"),
+                {"id": str(first.decision_id)},
+            )
+            .mappings()
+            .one()
+        )
+        state_engine_version = connection.execute(
+            text(
+                """
+                SELECT engine_version FROM learner_concept_states
+                WHERE user_id = :user_id AND concept_id = :concept_id
+                """
+            ),
+            {"user_id": str(user_id), "concept_id": str(concept_id)},
+        ).scalar_one()
+        second_row = (
+            connection.execute(
+                text(
+                    """
+                    SELECT previous_state, result_state
+                    FROM memory_decisions WHERE id = :id
+                    """
+                ),
+                {"id": str(second.decision_id)},
+            )
+            .mappings()
+            .one()
+        )
+        historical = (
+            connection.execute(
+                text(
+                    """
+                    SELECT previous_state, result_state
+                    FROM memory_decisions WHERE id = :id
+                    """
+                ),
+                {"id": str(first.decision_id)},
+            )
+            .mappings()
+            .one()
+        )
+
+    # The older decision row is byte-identical after the version bump.
+    assert kept == first_row
+    assert kept["engine_version"] == DEFAULT_ENGINE_CONFIG.engine_version
+    # New writes carry the bumped identity, including the stored state row.
+    assert state_engine_version == bumped_version
+    assert second_row["result_state"]["engine_version"] == bumped_version
+    # The previous snapshot keeps the identity of the engine that produced it.
+    assert second_row["previous_state"]["engine_version"] == (DEFAULT_ENGINE_CONFIG.engine_version)
+    # Historical snapshots stay readable under the same schema.
+    assert LearnerConceptState.from_snapshot(dict(historical["result_state"]))
+    assert LearnerConceptState.from_snapshot(dict(second_row["previous_state"]))
+    assert LearnerConceptState.from_snapshot(dict(second_row["result_state"]))
+
+
 # ---------------------------------------------------------------------------
 # concept and learner isolation (PRD 011)
 # ---------------------------------------------------------------------------
@@ -664,6 +1031,46 @@ def test_rls_scopes_memory_rows_to_the_transaction_owner(database: Engine) -> No
     assert visible_events == 1
     assert visible_states == 1
     assert visible_decisions == 1
+
+
+def test_transaction_local_user_context_does_not_leak(database: Engine) -> None:
+    user_id = create_user(database)
+    concept_id, version_id = seed_concept(database)
+    event, source_id = exposure()
+    apply(
+        database,
+        user_id=user_id,
+        concept_id=concept_id,
+        concept_version_id=version_id,
+        event=event,
+        source_id=source_id,
+    )
+
+    # One physical connection, two transactions: SET LOCAL must not survive
+    # the first commit and re-scope the second transaction.
+    with database.connect() as connection:
+        with connection.begin():
+            connection.execute(text("SET LOCAL ROLE memora_api"))
+            connection.execute(
+                text("SELECT set_config('memora.user_id', :user_id, true)"),
+                {"user_id": str(user_id)},
+            )
+            assert connection.execute(text("SELECT count(*) FROM memory_events")).scalar_one() == 1
+            assert connection.execute(text("SELECT current_user")).scalar_one() == "memora_api"
+
+        with connection.begin():
+            leaked_context = connection.execute(
+                text("SELECT current_setting('memora.user_id', true)")
+            ).scalar_one()
+            assert leaked_context in (None, "")
+            assert connection.execute(text("SELECT current_user")).scalar_one() != "memora_api"
+            connection.execute(text("SET LOCAL ROLE memora_api"))
+            # No owner context in this transaction means no visible rows.
+            assert connection.execute(text("SELECT count(*) FROM memory_events")).scalar_one() == 0
+            assert (
+                connection.execute(text("SELECT count(*) FROM learner_concept_states")).scalar_one()
+                == 0
+            )
 
 
 # ---------------------------------------------------------------------------

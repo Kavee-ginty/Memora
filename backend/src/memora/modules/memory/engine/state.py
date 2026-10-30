@@ -15,6 +15,7 @@ from typing import Any
 
 from memora.modules.memory.engine.config import (
     DEFAULT_ENGINE_CONFIG,
+    ENGINE_VERSION,
     STATE_SNAPSHOT_SCHEMA_VERSION,
     EngineConfig,
 )
@@ -77,11 +78,17 @@ class LearnerConceptState:
             lapse_count=self.lapse_count + lapse_delta,
         )
 
-    def to_snapshot(self) -> dict[str, Any]:
-        """Serialise to the schema-versioned jsonb shape stored in decisions."""
+    def to_snapshot(self, *, engine_version: str = ENGINE_VERSION) -> dict[str, Any]:
+        """Serialise to the schema-versioned jsonb shape stored in decisions.
+
+        ``engine_version`` is the version of the engine that produced this
+        state. The persistence layer passes the decision's version so a
+        runtime configuration bump never relabels an older snapshot, and a
+        historical snapshot keeps the identity of the engine that wrote it.
+        """
         return {
             "schema_version": STATE_SNAPSHOT_SCHEMA_VERSION,
-            "engine_version": DEFAULT_ENGINE_CONFIG.engine_version,
+            "engine_version": engine_version,
             "difficulty": self.difficulty,
             "stability_days": self.stability_days,
             "last_retrievability": self.last_retrievability,

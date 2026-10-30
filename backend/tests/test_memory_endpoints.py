@@ -525,6 +525,22 @@ def test_routes_are_private_no_store() -> None:
         assert response.headers["Cache-Control"] == "private, no-store"
 
 
+def test_openapi_declares_both_operations_with_security_and_envelopes() -> None:
+    from memora.api.openapi import custom_openapi
+
+    schema = custom_openapi(create_app())
+    for path, operation_id in (
+        ("/v1/subjects/{subject_id}/concept-progress", "listConceptProgress"),
+        ("/v1/concepts/{concept_id}/history", "getConceptHistory"),
+    ):
+        operation = schema["paths"][path]["get"]
+        assert operation["operationId"] == operation_id
+        assert operation["security"] == [{"bearerAuth": []}]
+        for status in ("400", "401", "403", "404", "409", "413", "415", "422", "429", "503"):
+            error_schema = operation["responses"][status]["content"]["application/json"]["schema"]
+            assert error_schema["$ref"] == "#/components/schemas/ErrorEnvelope"
+
+
 # ---------------------------------------------------------------------------
 # database-backed owner scoping and pagination
 # ---------------------------------------------------------------------------

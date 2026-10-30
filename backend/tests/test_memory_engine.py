@@ -7,6 +7,7 @@ round-trip, and the grade/confidence boundaries follow the documented bands.
 
 from __future__ import annotations
 
+import random
 from datetime import UTC, datetime, timedelta
 
 import pytest
@@ -14,6 +15,7 @@ import pytest
 from memora.modules.memory.constants import (
     EVENT_ATTEMPT,
     EVENT_EXPOSURE,
+    EVENT_INVALIDATION,
     REASON_OUT_OF_ORDER_EVIDENCE,
     REASON_RECALL_LAPSE,
     REASON_RECALL_SUCCESS,
@@ -167,6 +169,44 @@ def test_many_exposures_stay_inside_contract() -> None:
         assert_within_contract(decision.result_state)
         state = decision.result_state
         observed += timedelta(days=3)
+
+
+def _fuzz_decisions(seed: int, steps: int = 200) -> list[Decision]:
+    """Replay a seeded pseudo-random event sequence through the pure engine."""
+    rng = random.Random(seed)
+    state: LearnerConceptState | None = None
+    decisions: list[Decision] = []
+    observed = EXPOSED_AT
+    for _ in range(steps):
+        observed += timedelta(hours=rng.randint(1, 36))
+        if rng.random() < 0.3:
+            event = EventFacts(
+                event_type=EVENT_EXPOSURE,
+                observed_at=observed,
+                confidence=rng.random(),
+            )
+        else:
+            event = EventFacts(
+                event_type=EVENT_ATTEMPT,
+                observed_at=observed,
+                confidence=rng.random(),
+                score=rng.random(),
+            )
+        decision = decide(state, event, now=observed)
+        assert_within_contract(decision.result_state)
+        decisions.append(decision)
+        state = decision.result_state
+    return decisions
+
+
+def test_seeded_event_fuzz_stays_inside_contract_and_repeats() -> None:
+    """A long random sequence is bounded and bit-identical on replay."""
+    first = _fuzz_decisions(20261029)
+    second = _fuzz_decisions(20261029)
+
+    assert first == second
+    assert len(first) == 200
+    assert any(decision.result_state.lapse_count for decision in first)
 
 
 def test_recall_never_loses_stability() -> None:
@@ -412,6 +452,32 @@ def test_event_facts_validation(kwargs: dict, message: str) -> None:
     base.update(kwargs)
     with pytest.raises(ValueError, match=message):
         EventFacts(**base)
+
+
+def test_invalidation_is_metadata_not_a_decision() -> None:
+    event = EventFacts(
+        event_type=EVENT_INVALIDATION,
+        observed_at=REVIEWED_AT,
+        confidence=0.9,
+    )
+
+    with pytest.raises(ValueError, match="recorded without a decision"):
+        decide(bootstrapped_state(), event, now=NOW)
+
+    with pytest.raises(ValueError, match="invalidation events carry no score"):
+        EventFacts(
+            event_type=EVENT_INVALIDATION,
+            observed_at=REVIEWED_AT,
+            confidence=0.9,
+            score=0.5,
+        )
+
+
+def test_snapshot_engine_version_is_explicit() -> None:
+    state = bootstrapped_state()
+
+    assert state.to_snapshot()["engine_version"] == DEFAULT_ENGINE_CONFIG.engine_version
+    assert state.to_snapshot(engine_version="fsrs-mvp-9.9.9")["engine_version"] == "fsrs-mvp-9.9.9"
 
 
 def test_naive_datetimes_are_rejected() -> None:

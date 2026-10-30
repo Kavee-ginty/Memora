@@ -23,6 +23,7 @@ from uuid import UUID, uuid4
 
 from sqlalchemy import Connection, Engine, text
 
+from memora.modules.memory.constants import EVENT_INVALIDATION
 from memora.modules.memory.engine.config import (
     DEFAULT_ENGINE_CONFIG,
     STATE_SNAPSHOT_SCHEMA_VERSION,
@@ -93,12 +94,17 @@ class MemoryRepository:
         event_payload: dict[str, Any] | None = None,
         prerequisite_signal: PrerequisiteSignal | None = None,
         connection: Connection | None = None,
-    ) -> tuple[RecordedMemoryEvent, PersistedDecision]:
+    ) -> tuple[RecordedMemoryEvent, PersistedDecision | None]:
         """Record evidence and apply the policy decision in one transaction.
 
         Pass ``connection`` to join a caller-owned transaction (the worker
         applies every concept of one producer event atomically); otherwise a
         dedicated transaction is opened.
+
+        ``invalidation`` evidence is metadata about an earlier event, so it is
+        appended without a decision: the returned decision is ``None``, the
+        original evidence and snapshot stay untouched, and the corrective
+        state change arrives as a later ``manual_review`` event.
         """
         if connection is not None:
             return self._apply_event(
@@ -149,7 +155,7 @@ class MemoryRepository:
         ineligibility_reason: str | None,
         event_payload: dict[str, Any] | None,
         prerequisite_signal: PrerequisiteSignal | None,
-    ) -> tuple[RecordedMemoryEvent, PersistedDecision]:
+    ) -> tuple[RecordedMemoryEvent, PersistedDecision | None]:
         recorded = self.record_event(
             connection,
             user_id=user_id,
@@ -161,6 +167,9 @@ class MemoryRepository:
             ineligibility_reason=ineligibility_reason,
             event_payload=event_payload,
         )
+        if event.event_type == EVENT_INVALIDATION:
+            # Metadata only: append the evidence, never rewrite history.
+            return recorded, None
         decision = self.decide_and_persist(
             connection,
             user_id=user_id,
@@ -264,7 +273,9 @@ class MemoryRepository:
         ``memora_memory_apply_decision``. Replays return the stored
         decision without a second outbox row.
         """
-        state = self._current_state(connection, user_id=user_id, concept_id=concept_id)
+        state, state_engine_version = self._current_state(
+            connection, user_id=user_id, concept_id=concept_id
+        )
         decision = decide_with_policy(
             state,
             event,
@@ -275,11 +286,11 @@ class MemoryRepository:
 
         decision_id = uuid4()
         previous_snapshot = (
-            state.to_snapshot()
+            state.to_snapshot(engine_version=state_engine_version)
             if state is not None
             else {"schema_version": BOOTSTRAP_PREVIOUS_STATE_SCHEMA}
         )
-        result_snapshot = decision.result_state.to_snapshot()
+        result_snapshot = decision.result_state.to_snapshot(engine_version=decision.engine_version)
         payload = self._outbox_payload(
             user_id=user_id,
             concept_id=concept_id,
@@ -368,7 +379,12 @@ class MemoryRepository:
         *,
         user_id: UUID,
         concept_id: UUID,
-    ) -> LearnerConceptState | None:
+    ) -> tuple[LearnerConceptState | None, str]:
+        """Read the locked snapshot and the engine version that wrote it.
+
+        The stored version is carried into the ``previous_state`` snapshot so
+        a configuration bump cannot relabel a historical state.
+        """
         state_json = connection.scalar(
             text(
                 """
@@ -380,10 +396,16 @@ class MemoryRepository:
             {"p_user_id": str(user_id), "p_concept_id": str(concept_id)},
         )
         if state_json is None:
-            return None
+            return None, self.config.engine_version
         snapshot = dict(state_json)
         snapshot["schema_version"] = STATE_SNAPSHOT_SCHEMA_VERSION
-        return LearnerConceptState.from_snapshot(snapshot, config=self.config)
+        stored_engine_version = snapshot.get("engine_version")
+        state = LearnerConceptState.from_snapshot(snapshot, config=self.config)
+        return state, (
+            stored_engine_version
+            if isinstance(stored_engine_version, str)
+            else self.config.engine_version
+        )
 
     @staticmethod
     def _outbox_payload(
