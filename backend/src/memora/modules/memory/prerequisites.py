@@ -80,9 +80,22 @@ def collect_prerequisite_signal(
         if row is None:
             continue
         anchor = row["last_reviewed_at"] or row["first_exposed_at"]
-        retrievability = fsrs.retrievability(
-            float(row["stability_days"]), anchor, now, config=config
-        )
-        if retrievability < config.weak_prerequisite_retrievability_floor:
+        if is_weak_prerequisite_state(float(row["stability_days"]), anchor, now, config=config):
             weak.append(concept_id)
     return PrerequisiteSignal(weak_prerequisite_concept_ids=tuple(weak))
+
+
+def is_weak_prerequisite_state(
+    stability_days: float,
+    anchor: datetime,
+    now: datetime,
+    *,
+    config: EngineConfig = DEFAULT_ENGINE_CONFIG,
+) -> bool:
+    """Whether a prerequisite's current state counts as weak.
+
+    Shared by the decision-time signal and the due-selection inputs so the
+    Recover flag and the planner's weak-prerequisite flag use one rule.
+    """
+    retrievability = fsrs.retrievability(stability_days, anchor, now, config=config)
+    return retrievability < config.weak_prerequisite_retrievability_floor

@@ -91,6 +91,40 @@ MEMORY_EXPLANATION_TEMPLATE_KEYS: Final[tuple[str, ...]] = (
     TEMPLATE_WEAK_PREREQUISITE,
 )
 
+# Due-selection vocabulary (TRD §9.4, PRD 013). These are inputs to T13's
+# mission planner, not persisted decision codes: ``memory_decisions`` keeps
+# its own closed allowlist above.
+URGENCY_OVERDUE: Final = "overdue"
+URGENCY_DUE: Final = "due"
+URGENCY_NEAR_DUE: Final = "near_due"
+
+URGENCY_BANDS: Final[tuple[str, ...]] = (
+    URGENCY_OVERDUE,
+    URGENCY_DUE,
+    URGENCY_NEAR_DUE,
+)
+
+# The subset of the mission reason codes (TRD §9.5) that T11 can justify from
+# memory state, graph signals and recent evidence. ``misconception_detected``
+# and ``streak_preservation`` are added by the owning tasks (T13/T15).
+SELECTION_REASON_OVERDUE: Final = "forgetting_curve_overdue"
+SELECTION_REASON_RETENTION: Final = "daily_retention_protect"
+SELECTION_REASON_ERROR_REPAIR: Final = "high_error_rate_repair"
+SELECTION_REASON_WEAK_PREREQUISITE: Final = "weak_prerequisite_failure"
+SELECTION_REASON_NEW_CONCEPT: Final = "new_concept_introduction"
+
+SELECTION_REASON_CODES: Final[tuple[str, ...]] = (
+    SELECTION_REASON_OVERDUE,
+    SELECTION_REASON_RETENTION,
+    SELECTION_REASON_ERROR_REPAIR,
+    SELECTION_REASON_WEAK_PREREQUISITE,
+    SELECTION_REASON_NEW_CONCEPT,
+)
+
+# Identity of the due-selection input contract. Bump when a field changes
+# meaning so consumers (T13) can refuse mismatched inputs.
+SELECTION_INPUT_VERSION: Final = "memory-selection-inputs/1"
+
 # Retrievability bands for client-facing summaries. The engine returns exact
 # values internally, but the API reports bands only (TRD §9.4: clients never
 # receive hidden candidate scores).

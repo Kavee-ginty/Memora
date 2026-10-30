@@ -226,11 +226,25 @@ def _apply_comeback_cap(
 ) -> tuple[datetime, bool]:
     """Cap the schedule after an absence; elapsed evidence stays untouched."""
     anchor = state.last_reviewed_at or state.first_exposed_at
-    elapsed_days = (event.observed_at - anchor).total_seconds() / 86400.0
-    if elapsed_days <= config.comeback_threshold_days:
+    if not is_comeback_elapsed(anchor, event.observed_at, config=config):
         return next_review_at, False
     ceiling = now + timedelta(days=config.comeback_interval_max_days)
     return _cap_at(next_review_at, ceiling), True
+
+
+def is_comeback_elapsed(
+    anchor: datetime,
+    at: datetime,
+    *,
+    config: EngineConfig = DEFAULT_ENGINE_CONFIG,
+) -> bool:
+    """Whether the gap between ``anchor`` and ``at`` is a comeback (PRD 015).
+
+    Shared by the scheduling policy and the due-selection inputs so the flag
+    a learner sees and the flag the planner ranks on cannot drift.
+    """
+    elapsed = (require_utc(at, "at") - require_utc(anchor, "anchor")).total_seconds() / 86400.0
+    return elapsed > config.comeback_threshold_days
 
 
 def _apply_interval_cap(
