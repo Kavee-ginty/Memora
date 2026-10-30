@@ -170,7 +170,7 @@ payloads stay quarantined until an operator fixes them.
 The job lifecycle runs as `memora_worker`. The evidence transaction runs as
 `memora_api` with `memora.user_id` set for the envelope's learner, so the
 prerequisite lookup is RLS-scoped. Memory writes go through the SECURITY DEFINER
-functions added by migration `20261029_0006`.
+functions added by migration `20261029_0007`.
 
 ### Read endpoints
 

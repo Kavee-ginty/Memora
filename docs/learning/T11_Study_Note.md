@@ -203,8 +203,9 @@ a per-pair advisory lock, decide in Python, append-or-confirm the evidence
 event, write the decision with both state snapshots, upsert the snapshot and
 publish exactly one outbox event.
 
-Migration `20261029_0006` provides three SECURITY DEFINER functions because
-migration 0004 removed worker DML on user tables:
+Migration `20261029_0007` follows `20261029_0006_runtime_role_switch` and
+provides three SECURITY DEFINER functions because migration 0004 removed worker
+DML on user tables:
 
 | Function | Responsibility |
 | --- | --- |
