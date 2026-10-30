@@ -104,23 +104,23 @@ class IdentityRepository:
                     text("SELECT set_config('memora.user_id', :user_id, true)"),
                     {"user_id": str(user_id)},
                 )
-                connection.execute(
-                    text(
-                        """
-                        UPDATE users
-                        SET last_authenticated_at = :authenticated_at,
-                            updated_at = now(),
-                            row_version = row_version + 1
-                        WHERE id = :user_id
-                          AND :authenticated_at IS NOT NULL
-                          AND (
-                              last_authenticated_at IS NULL
-                              OR last_authenticated_at < :authenticated_at
-                          )
-                        """
-                    ),
-                    {"user_id": user_id, "authenticated_at": auth.authenticated_at},
-                )
+                if auth.authenticated_at is not None:
+                    connection.execute(
+                        text(
+                            """
+                            UPDATE users
+                            SET last_authenticated_at = :authenticated_at,
+                                updated_at = now(),
+                                row_version = row_version + 1
+                            WHERE id = :user_id
+                              AND (
+                                  last_authenticated_at IS NULL
+                                  OR last_authenticated_at < :authenticated_at
+                              )
+                            """
+                        ),
+                        {"user_id": user_id, "authenticated_at": auth.authenticated_at},
+                    )
             yield connection, user_id
 
     def bootstrap(

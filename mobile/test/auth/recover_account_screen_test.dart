@@ -65,6 +65,10 @@ void main() {
           ),
           findsOneWidget,
         );
+        expect(
+          mockAuth.lastRecoveryRedirectUri,
+          'com.kaveeginty.memora://login-callback',
+        );
         expect(find.text('Return to Sign In'), findsOneWidget);
       },
     );
