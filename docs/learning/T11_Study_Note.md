@@ -9,8 +9,9 @@ the code and its invariants, not a replacement for the specifications.
 T11 targets `task/T11-memory-engine` and depends on T08 (curriculum graph),
 which is Done. T09 (ingestion) is not merged on this branch, so exposure
 evidence arrives through the documented producer envelope and is exercised with
-synthetic outbox rows. The task table still lists T11 as Ready: nothing is Done
-until the branch is reviewed and merged.
+synthetic outbox rows. The task table now lists T11 as Review: the completion
+gates are recorded there, and nothing is Done until the pull request is
+reviewed, merged and the merge commit is recorded.
 
 ## 1. Contract surface
 
