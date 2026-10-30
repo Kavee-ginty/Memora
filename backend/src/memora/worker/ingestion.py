@@ -265,6 +265,8 @@ class IngestionWorker:
         supports_files = getattr(self.extractor, "supports_files", True)
         pending_text = manual_text
         if not supports_files:
+            if sources:
+                raise ExtractionUnavailable("File extraction requires a configured model provider.")
             if pending_text is not None:
                 candidates.extend(
                     self.extractor.extract(
@@ -275,9 +277,6 @@ class IngestionWorker:
                         aliases=context["aliases"],
                     )
                 )
-                pending_text = None
-            if sources and not candidates:
-                raise ExtractionUnavailable("File extraction requires a configured model provider.")
             return candidates
         empty_source = False
         for upload, file_bytes in sources:

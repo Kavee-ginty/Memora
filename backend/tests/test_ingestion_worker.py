@@ -421,7 +421,7 @@ def test_extract_candidates_processes_every_upload() -> None:
     assert provider.calls[0]["manual_text"] is None
 
 
-def test_extract_candidates_text_only_provider_ignores_files_without_failing() -> None:
+def test_extract_candidates_mixed_update_fails_closed_for_text_only_provider() -> None:
     protector = ManualTextProtector(base64.b64decode(INGESTION_KEY))
     update_id = uuid4()
     storage = MemoryObjectStorage()
@@ -438,10 +438,9 @@ def test_extract_candidates_text_only_provider_ignores_files_without_failing() -
         "aliases": [_acceleration_alias()],
     }
 
-    candidates, failure = worker._extract_candidates(context)
+    _, failure = worker._extract_candidates(context)
 
-    assert failure is None
-    assert [candidate.payload["title"] for candidate in candidates] == ["Acceleration"]
+    assert failure == "extraction_unavailable"
 
 
 def test_extract_candidates_file_only_update_fails_closed_for_text_only_provider() -> None:
@@ -1090,7 +1089,7 @@ def test_reconciler_expires_processing_upload_and_enqueues_deletion(
         assert del_job["status"] == "queued"
 
 
-def test_reconciler_revives_dead_lettered_deletion_jobs(
+def test_reconciler_leaves_dead_lettered_deletion_jobs_terminal(
     worker_context: dict[str, Any],
 ) -> None:
     service = worker_context["service"]
@@ -1193,9 +1192,9 @@ def test_reconciler_revives_dead_lettered_deletion_jobs(
             .first()
         )
         assert dead_job is not None
-        assert dead_job["status"] == "queued"
-        assert dead_job["attempt_count"] == 0
-        assert dead_job["last_error_code"] is None
+        assert dead_job["status"] == "dead_lettered"
+        assert dead_job["attempt_count"] == 5
+        assert dead_job["last_error_code"] == "deletion_failed"
 
         active_job = (
             connection.execute(

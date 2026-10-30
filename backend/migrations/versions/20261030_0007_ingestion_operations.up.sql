@@ -108,10 +108,9 @@ BEGIN
   WHERE status IN ('authorized','uploaded','validated','processing')
     AND expires_at < p_now;
 
-  -- Every upload that still owes a raw-object deletion gets a queued job. Active
-  -- jobs (queued, leased, retry_wait) and finished successes are left alone; a
-  -- dead-lettered or failed job is reset with fresh attempts so a provider outage
-  -- cannot leave a raw file stuck permanently.
+  -- Every upload that still owes a raw-object deletion gets a queued job. Existing
+  -- jobs are left alone so max_attempts remains a real bound; the explicit retry
+  -- endpoint is the only path that revives a dead-lettered deletion.
   INSERT INTO background_jobs(
     job_type, owner_user_id, resource_type, resource_id,
     dedupe_key, status, max_attempts, available_at, payload
@@ -120,11 +119,7 @@ BEGIN
          'delete_upload:' || id, 'queued', 5, now(), '{"schema_version":"1"}'::jsonb
   FROM source_uploads
   WHERE status IN ('deleting','expired','rejected') AND deleted_at IS NULL
-  ON CONFLICT (dedupe_key) DO UPDATE
-  SET status = 'queued', attempt_count = 0, available_at = now(),
-      lease_owner = NULL, lease_expires_at = NULL, last_error_code = NULL,
-      updated_at = now(), row_version = background_jobs.row_version + 1
-  WHERE background_jobs.status IN ('dead_lettered','failed');
+  ON CONFLICT (dedupe_key) DO NOTHING;
 
   UPDATE learning_updates
   SET status = 'expired', updated_at = now(), row_version = row_version + 1
