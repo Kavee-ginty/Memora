@@ -122,12 +122,14 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
     });
 
     try {
+      final config = ref.read(appConfigurationProvider);
       await ref
           .read(sessionControllerProvider.notifier)
           .createAccount(
             email: _emailController.text.trim(),
             password: _passwordController.text,
             fullName: _nameController.text.trim(),
+            redirectUri: config.oauthRedirectUri,
           );
       _passwordController.clear();
       _confirmPasswordController.clear();

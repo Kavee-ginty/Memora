@@ -29,7 +29,7 @@ cd /d "%~dp0mobile"
 call flutter build apk --debug ^
   --dart-define="MEMORA_SUPABASE_URL=%MEMORA_SUPABASE_URL%" ^
   --dart-define="MEMORA_SUPABASE_PUBLISHABLE_KEY=%MEMORA_SUPABASE_PUBLISHABLE_KEY%" ^
-  --dart-define="MEMORA_API_BASE_URL=http://127.0.0.1:8000" ^
+  --dart-define="MEMORA_API_BASE_URL=https://dev-api.memora.knurdz.org" ^
   --dart-define="MEMORA_OAUTH_REDIRECT_URI=com.kaveeginty.memora://login-callback"
 if errorlevel 1 goto :failed
 

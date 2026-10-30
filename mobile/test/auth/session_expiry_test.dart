@@ -44,13 +44,17 @@ class StorageClearingAuthRepository implements AuthRepository {
     required String email,
     required String password,
     required String fullName,
+    required String redirectUri,
   }) async => throw UnimplementedError();
 
   @override
   Future<void> signInWithGoogle({required String redirectUri}) async {}
 
   @override
-  Future<void> sendPasswordRecoveryEmail(String email) async {}
+  Future<void> sendPasswordRecoveryEmail(
+    String email, {
+    required String redirectUri,
+  }) async {}
 
   @override
   Future<AuthSession?> refreshSession() async => null;

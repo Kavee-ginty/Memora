@@ -84,7 +84,13 @@ jobs:
         with:
           persist-credentials: false
       - name: Validate Compose configuration
-        run: docker compose --env-file .env.example -f infra/compose.yaml config --quiet
+        run: |
+          docker compose --env-file .env.example -f infra/compose.yaml config --quiet
+          docker compose \
+            --env-file infra/development/development.env.example \
+            -f infra/development/compose.yaml \
+            config --quiet
+          bash -n infra/development/deploy.sh
 
   migrations:
     name: Migration checks

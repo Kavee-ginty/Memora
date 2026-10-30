@@ -152,6 +152,10 @@ void main() {
 
         expect(find.text('Check your email'), findsOneWidget);
         expect(find.text('Proceed to Sign In'), findsOneWidget);
+        expect(
+          mockAuth.lastCreateAccountRedirectUri,
+          'com.kaveeginty.memora://login-callback',
+        );
       },
     );
   });
