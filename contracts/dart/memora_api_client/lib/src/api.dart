@@ -9,6 +9,7 @@ import 'package:memora_api_client/src/auth/api_key_auth.dart';
 import 'package:memora_api_client/src/auth/basic_auth.dart';
 import 'package:memora_api_client/src/auth/bearer_auth.dart';
 import 'package:memora_api_client/src/auth/oauth.dart';
+import 'package:memora_api_client/src/api/curriculum_api.dart';
 import 'package:memora_api_client/src/api/health_api.dart';
 import 'package:memora_api_client/src/api/profile_api.dart';
 import 'package:memora_api_client/src/api/reports_api.dart';
@@ -132,6 +133,12 @@ class MemoraApiClient {
           .apiKeys
           .remove(name);
     }
+  }
+
+  /// Get CurriculumApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  CurriculumApi getCurriculumApi() {
+    return CurriculumApi(dio, serializers);
   }
 
   /// Get HealthApi instance, base route and serializer can be overridden by a given but be careful,

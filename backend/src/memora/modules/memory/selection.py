@@ -70,6 +70,8 @@ MAX_COVERAGE_OBJECTIVES = 10
 # Safety bound for the set-based weak-prerequisite lookup over one page.
 MAX_WEAK_PREREQUISITE_ROWS = 500
 MAX_CURSOR_LENGTH = 200
+# Cursor scope prefix; the full scope also binds the filter values below.
+SELECTION_CURSOR_SCOPE = "memory.due-selection/1"
 
 # Retrievability band floors for the client-facing band. These are display
 # bands, not scheduling thresholds; the policy keeps its own numbers.
@@ -83,6 +85,7 @@ _PAGE_QUERY = text(
         s.concept_id,
         s.active_concept_version_id AS concept_version_id,
         c.stable_code,
+        cv.title,
         s.next_review_at,
         s.stability_days,
         s.evidence_confidence,
@@ -97,6 +100,7 @@ _PAGE_QUERY = text(
         COALESCE(cov.objective_ids, ARRAY[]::uuid[]) AS coverage_objective_ids
     FROM learner_concept_states s
     JOIN concepts c ON c.id = s.concept_id
+    JOIN concept_versions cv ON cv.id = s.active_concept_version_id
     LEFT JOIN LATERAL (
         SELECT avg(1.0 - e.score) AS severity, count(*) AS event_count
         FROM (
@@ -204,7 +208,9 @@ class DueConceptCandidate:
     concept_id: UUID
     concept_version_id: UUID
     stable_code: str
+    title: str
     next_review_at: datetime
+    last_reviewed_at: datetime | None
     urgency: str
     overdue_days: float
     retrievability: float
@@ -261,20 +267,25 @@ def list_due_candidates(
     horizon_days: float = DEFAULT_HORIZON_DAYS,
     limit: int = DEFAULT_SELECTION_LIMIT,
     cursor: str | None = None,
+    cursor_scope: str = SELECTION_CURSOR_SCOPE,
     config: EngineConfig = DEFAULT_ENGINE_CONFIG,
 ) -> DueSelectionPage:
     """Return one bounded page of due/near-due selection inputs.
 
     ``horizon_days`` bounds how far ahead near-due concepts are included;
     nothing beyond the horizon leaves the backend. ``cursor`` is the opaque
-    value from a previous page's ``next_cursor``.
+    value from a previous page's ``next_cursor`` and is bound to
+    ``cursor_scope`` plus the subject and horizon that produced it.
     """
     _require_aware(as_of, "as_of")
     if not 0.0 < horizon_days <= MAX_HORIZON_DAYS:
         raise ValueError(f"horizon_days must be within (0, {MAX_HORIZON_DAYS}]")
     if not 1 <= limit <= MAX_SELECTION_LIMIT:
         raise ValueError(f"limit must be within [1, {MAX_SELECTION_LIMIT}]")
-    cursor_at, cursor_concept = decode_cursor(cursor) if cursor is not None else (None, None)
+    scope = f"{cursor_scope}/{subject_id}/{horizon_days:g}"
+    cursor_at, cursor_concept = (
+        decode_cursor(cursor, scope=scope) if cursor is not None else (None, None)
+    )
 
     rows = (
         connection.execute(
@@ -311,7 +322,7 @@ def list_due_candidates(
         _candidate(row, as_of=as_of, weak_by_root=weak_by_root, config=config) for row in page_rows
     )
     next_cursor = (
-        encode_cursor(candidates[-1].next_review_at, candidates[-1].concept_id)
+        encode_cursor(candidates[-1].next_review_at, candidates[-1].concept_id, scope=scope)
         if has_more and candidates
         else None
     )
@@ -326,22 +337,32 @@ def list_due_candidates(
     )
 
 
-def encode_cursor(next_review_at: datetime, concept_id: UUID) -> str:
-    """Encode a keyset position; the value is opaque to clients."""
+def encode_cursor(next_review_at: datetime, concept_id: UUID, *, scope: str = "") -> str:
+    """Encode a keyset position; the value is opaque to clients.
+
+    ``scope`` binds the cursor to the endpoint and filter that produced it, so
+    a cursor cannot be replayed against a different endpoint or filter set
+    (API §5). The default keeps plain keyset round-trips usable in tests.
+    """
     _require_aware(next_review_at, "next_review_at")
     micros = int(next_review_at.timestamp() * 1_000_000)
-    raw = f"{micros}:{concept_id}".encode()
-    return base64.urlsafe_b64encode(raw).decode().rstrip("=")
+    raw = f"{scope}|{micros}|{concept_id}".encode()
+    encoded = base64.urlsafe_b64encode(raw).decode().rstrip("=")
+    if len(encoded) > MAX_CURSOR_LENGTH:
+        raise ValueError("cursor scope is too long")
+    return encoded
 
 
-def decode_cursor(cursor: str) -> tuple[datetime, UUID]:
+def decode_cursor(cursor: str, *, scope: str = "") -> tuple[datetime, UUID]:
     """Decode a keyset cursor or raise ``ValueError`` for malformed input."""
     if not isinstance(cursor, str) or not cursor or len(cursor) > MAX_CURSOR_LENGTH:
         raise ValueError("invalid selection cursor")
     padded = cursor + "=" * (-len(cursor) % 4)
     try:
         raw = base64.urlsafe_b64decode(padded.encode()).decode()
-        micros_text, concept_text = raw.split(":", 1)
+        encoded_scope, micros_text, concept_text = raw.split("|", 2)
+        if encoded_scope != scope:
+            raise ValueError("cursor scope mismatch")
         micros = int(micros_text)
         concept_id = UUID(concept_text)
     except (binascii.Error, UnicodeDecodeError, ValueError) as exc:
@@ -390,7 +411,11 @@ def _candidate(
         concept_id=UUID(str(row["concept_id"])),
         concept_version_id=UUID(str(row["concept_version_id"])),
         stable_code=str(row["stable_code"]),
+        title=str(row["title"]),
         next_review_at=next_review_at,
+        last_reviewed_at=(
+            None if row["last_reviewed_at"] is None else _aware(row["last_reviewed_at"])
+        ),
         urgency=urgency,
         overdue_days=overdue_days,
         retrievability=retrievability,

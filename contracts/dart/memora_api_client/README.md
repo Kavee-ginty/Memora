@@ -47,13 +47,20 @@ Please follow the [installation procedure](#installation--usage) and then run th
 import 'package:memora_api_client/memora_api_client.dart';
 
 
-final api = MemoraApiClient().getHealthApi();
+final api = MemoraApiClient().getCurriculumApi();
+final String conceptId = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+final String xCorrelationID = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+final String xClientVersion = xClientVersion_example; // String | 
+final String xPlatform = xPlatform_example; // String | 
+final int limit = 56; // int | 
+final String cursor = cursor_example; // String | 
+final String acceptLanguage = acceptLanguage_example; // String | 
 
 try {
-    final response = await api.healthLive();
+    final response = await api.getConceptHistory(conceptId, xCorrelationID, xClientVersion, xPlatform, limit, cursor, acceptLanguage);
     print(response);
 } on DioException catch (e) {
-    print("Exception when calling HealthApi->healthLive: $e\n");
+    print("Exception when calling CurriculumApi->getConceptHistory: $e\n");
 }
 
 ```
@@ -64,6 +71,8 @@ All URIs are relative to *http://localhost*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
+[*CurriculumApi*](doc/CurriculumApi.md) | [**getConceptHistory**](doc/CurriculumApi.md#getconcepthistory) | **GET** /v1/concepts/{concept_id}/history | Read a concept&#39;s evidence summary and scheduling history
+[*CurriculumApi*](doc/CurriculumApi.md) | [**listConceptProgress**](doc/CurriculumApi.md#listconceptprogress) | **GET** /v1/subjects/{subject_id}/concept-progress | List due and near-due concept progress for a subject
 [*HealthApi*](doc/HealthApi.md) | [**healthLive**](doc/HealthApi.md#healthlive) | **GET** /health/live | Live
 [*HealthApi*](doc/HealthApi.md) | [**healthReady**](doc/HealthApi.md#healthready) | **GET** /health/ready | Ready
 [*ProfileApi*](doc/ProfileApi.md) | [**acceptConsent**](doc/ProfileApi.md#acceptconsent) | **POST** /v1/consent/acceptances | Accept a current consent policy
@@ -83,6 +92,8 @@ Class | Method | HTTP request | Description
  - [ActiveMissionSummary](doc/ActiveMissionSummary.md)
  - [AsyncOperation](doc/AsyncOperation.md)
  - [CapabilityFlags](doc/CapabilityFlags.md)
+ - [ConceptHistoryResponse](doc/ConceptHistoryResponse.md)
+ - [ConceptProgressItem](doc/ConceptProgressItem.md)
  - [ConsentAcceptanceRequest](doc/ConsentAcceptanceRequest.md)
  - [ConsentAcceptanceResponse](doc/ConsentAcceptanceResponse.md)
  - [ConsentDecision](doc/ConsentDecision.md)
@@ -91,12 +102,15 @@ Class | Method | HTTP request | Description
  - [ConsentType](doc/ConsentType.md)
  - [DeviceRegistrationRequest](doc/DeviceRegistrationRequest.md)
  - [DeviceRegistrationResponse](doc/DeviceRegistrationResponse.md)
+ - [DueReasonExplanation](doc/DueReasonExplanation.md)
  - [ErrorDetail](doc/ErrorDetail.md)
  - [ErrorEnvelope](doc/ErrorEnvelope.md)
+ - [EvidenceSummary](doc/EvidenceSummary.md)
  - [FieldError](doc/FieldError.md)
  - [HealthResponse](doc/HealthResponse.md)
  - [HealthStatus](doc/HealthStatus.md)
  - [IdempotencyHeaders](doc/IdempotencyHeaders.md)
+ - [PageConceptProgressItem](doc/PageConceptProgressItem.md)
  - [PageMeta](doc/PageMeta.md)
  - [PageParams](doc/PageParams.md)
  - [PageQuestionReportSummary](doc/PageQuestionReportSummary.md)
@@ -106,6 +120,7 @@ Class | Method | HTTP request | Description
  - [QuestionReportResponse](doc/QuestionReportResponse.md)
  - [QuestionReportSummary](doc/QuestionReportSummary.md)
  - [RequestHeaders](doc/RequestHeaders.md)
+ - [SchedulingExplanation](doc/SchedulingExplanation.md)
  - [SessionBootstrapResponse](doc/SessionBootstrapResponse.md)
  - [SessionRevocationScope](doc/SessionRevocationScope.md)
  - [SessionRevokeRequest](doc/SessionRevokeRequest.md)

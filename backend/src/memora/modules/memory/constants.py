@@ -136,3 +136,41 @@ RETRIEVABILITY_BAND_CRITICAL: Final = "critical"
 RETRIEVABILITY_BAND_FRESH_MAX: Final = 1.0
 RETRIEVABILITY_BAND_SETTLING_MAX: Final = 0.8
 RETRIEVABILITY_BAND_FADING_MAX: Final = 0.5
+
+# Confidence bands for evidence summaries (D12: the client receives bands,
+# never raw state values). Floors mirror the retrievability band style so the
+# mobile client can render one visual language for "how sure" and "how fresh".
+CONFIDENCE_BAND_HIGH: Final = "high"
+CONFIDENCE_BAND_MEDIUM: Final = "medium"
+CONFIDENCE_BAND_LOW: Final = "low"
+
+CONFIDENCE_BANDS: Final[tuple[str, ...]] = (
+    CONFIDENCE_BAND_HIGH,
+    CONFIDENCE_BAND_MEDIUM,
+    CONFIDENCE_BAND_LOW,
+)
+
+CONFIDENCE_BAND_HIGH_FLOOR: Final = 0.75
+CONFIDENCE_BAND_MEDIUM_FLOOR: Final = 0.5
+
+# Copy keys for the plain-language due reason (PRD 016). T14 renders the key;
+# ``message`` is the server-authored accessible fallback. Kept separate from
+# the decision templates above because a due reason explains *selection* while
+# a decision template explains a *schedule change*.
+TEMPLATE_DUE_OVERDUE: Final = "memory.due_reason.overdue"
+TEMPLATE_DUE_RETENTION: Final = "memory.due_reason.retention"
+TEMPLATE_DUE_ERROR_REPAIR: Final = "memory.due_reason.error_repair"
+TEMPLATE_DUE_WEAK_PREREQUISITE: Final = "memory.due_reason.weak_prerequisite"
+TEMPLATE_DUE_NEW_CONCEPT: Final = "memory.due_reason.new_concept"
+
+DUE_REASON_TEMPLATE_KEYS: Final[tuple[str, ...]] = (
+    TEMPLATE_DUE_OVERDUE,
+    TEMPLATE_DUE_RETENTION,
+    TEMPLATE_DUE_ERROR_REPAIR,
+    TEMPLATE_DUE_WEAK_PREREQUISITE,
+    TEMPLATE_DUE_NEW_CONCEPT,
+)
+
+# History is bounded: evidence older than the window is summarised by the
+# stored state, not replayed. The client never receives the raw event stream.
+HISTORY_EVIDENCE_WINDOW_DAYS: Final = 90
