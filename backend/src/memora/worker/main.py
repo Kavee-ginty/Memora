@@ -1,10 +1,149 @@
+from __future__ import annotations
+
 import logging
+import time
+from typing import Any
+from uuid import UUID
+
+from sqlalchemy import Engine, text
+
+from memora.core.config import get_settings
+from memora.db.runtime import database_engine
+from memora.modules.privacy.repository import PrivacyRepository
+
+logger = logging.getLogger(__name__)
+
+
+def process_one_job(engine: Engine) -> bool:
+    """Leases and processes one eligible background job.
+
+    Returns True if a job was found and processed, False otherwise.
+    """
+    repository = PrivacyRepository(engine)
+    with engine.begin() as connection:
+        connection.execute(text("SET LOCAL ROLE memora_worker"))
+        row = (
+            connection.execute(
+                text(
+                    """
+                SELECT id, job_type, resource_id, payload
+                FROM background_jobs
+                WHERE status IN ('queued', 'retry_wait')
+                  AND available_at <= now()
+                ORDER BY available_at ASC
+                FOR UPDATE SKIP LOCKED
+                LIMIT 1
+                """
+                )
+            )
+            .mappings()
+            .one_or_none()
+        )
+
+        if row is None:
+            return False
+
+        job_id = row["id"]
+        job_type = row["job_type"]
+        payload: dict[str, Any] = row["payload"]
+
+        # Mark leased
+        connection.execute(
+            text(
+                """
+                UPDATE background_jobs
+                SET status = 'leased', lease_owner = 'memora_worker',
+                    lease_expires_at = now() + interval '5 minutes',
+                    attempt_count = attempt_count + 1,
+                    updated_at = now(), row_version = row_version + 1
+                WHERE id = :id
+                """
+            ),
+            {"id": job_id},
+        )
+
+    # Process outside the lease transaction
+    try:
+        if job_type == "privacy.export":
+            request_id = UUID(str(payload["request_id"]))
+            user_id = UUID(str(payload["user_id"]))
+            repository.execute_export_job(request_id, user_id)
+        elif job_type == "privacy.deletion":
+            request_id = UUID(str(payload["request_id"]))
+            user_id = UUID(str(payload["user_id"]))
+            repository.execute_deletion_job(request_id, user_id)
+        else:
+            logger.warning("Unrecognized job type %s", job_type)
+            with engine.begin() as connection:
+                connection.execute(text("SET LOCAL ROLE memora_worker"))
+                connection.execute(
+                    text(
+                        """
+                        UPDATE background_jobs
+                        SET status = 'failed', last_error_code = 'unknown_job_type',
+                            updated_at = now(), row_version = row_version + 1
+                        WHERE id = :id
+                        """
+                    ),
+                    {"id": job_id},
+                )
+            return True
+
+        with engine.begin() as connection:
+            connection.execute(text("SET LOCAL ROLE memora_worker"))
+            connection.execute(
+                text(
+                    """
+                    UPDATE background_jobs
+                    SET status = 'succeeded', completed_at = now(),
+                        updated_at = now(), row_version = row_version + 1
+                    WHERE id = :id
+                    """
+                ),
+                {"id": job_id},
+            )
+    except Exception as exc:
+        logger.exception("Error processing background job %s: %s", job_id, exc)
+        with engine.begin() as connection:
+            connection.execute(text("SET LOCAL ROLE memora_worker"))
+            connection.execute(
+                text(
+                    """
+                    UPDATE background_jobs
+                    SET status = 'failed', last_error_code = 'execution_failed',
+                        updated_at = now(), row_version = row_version + 1
+                    WHERE id = :id
+                    """
+                ),
+                {"id": job_id},
+            )
+
+    return True
+
+
+def run_worker_once(engine: Engine, limit: int = 100) -> int:
+    """Processes up to `limit` available jobs and returns the count processed."""
+    processed = 0
+    for _ in range(limit):
+        if not process_one_job(engine):
+            break
+        processed += 1
+    return processed
 
 
 def main() -> None:
-    """Worker placeholder; queue consumers are introduced by their owning tasks."""
     logging.basicConfig(level=logging.INFO)
-    logging.getLogger(__name__).info("No worker jobs are registered in the T01 baseline.")
+    logger.info("Starting Memora background worker...")
+    settings = get_settings()
+    engine = database_engine(settings.database_url)
+
+    try:
+        while True:
+            did_work = process_one_job(engine)
+            if not did_work:
+                time.sleep(1.0)
+    except KeyboardInterrupt:
+        logger.info("Memora background worker stopped.")
 
 
 if __name__ == "__main__":

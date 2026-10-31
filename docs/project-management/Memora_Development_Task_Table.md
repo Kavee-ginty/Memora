@@ -52,7 +52,7 @@ If two sources appear inconsistent, stop implementation and resolve the conflict
 | T17 | Profile preferences and notifications backend | **Ready** | - | 4 | T06 | `task/T17-profile-backend` | Backend account |
 | T18 | Profile and settings mobile | Blocked | - | 4 | T07, T17 | `task/T18-profile-mobile` | Mobile feature |
 | T19 | Push notifications and deep links | Blocked | - | 4 | T07, T17 | `task/T19-push-deep-links` | Mobile and backend |
-| T20 | Privacy export and deletion backend | **Ready** | - | 5 | T06, T04 | `task/T20-privacy-backend` | Backend privacy |
+| T20 | Privacy export and deletion backend | **In Progress** | Antigravity | 5 | T06, T04 | `task/T20-privacy-backend` | Backend privacy |
 | T21 | Privacy mobile experience | Blocked | - | 3 | T07, T20 | `task/T21-privacy-mobile` | Mobile feature |
 | T22 | Offline sync and idempotency hardening | Blocked | - | 6 | T09, T13, T07 | `task/T22-offline-idempotency` | Cross-platform |
 | T23 | Observability and security hardening | Blocked | - | 5 | T02, T09, T13, T17, T20 | `task/T23-security-observability` | Platform |
@@ -234,5 +234,5 @@ Every task pull request must contain:
 
 ## 7 Current next action
 
-T01, T02, T03, T04, T05, T06, T08 and T12 are merged and Done. T07, T09, T11, T17, T20 and T24 are Ready. T11 remains the next zero-float critical-path task; T13 remains Blocked until T11 is Done.
+T01, T02, T03, T04, T05, T06, T08 and T12 are merged and Done. T20 is In Progress under Antigravity. T07, T09, T11, T17 and T24 are Ready. T11 remains the next zero-float critical-path task; T13 remains Blocked until T11 is Done.
 
