@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS ix_privacy_requests_active_user_type;

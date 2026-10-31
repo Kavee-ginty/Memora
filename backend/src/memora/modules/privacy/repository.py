@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 from collections.abc import Iterator
 from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
@@ -13,6 +14,7 @@ from sqlalchemy import Connection, Engine, text
 from memora.api.errors import ApiError
 from memora.api.security import AuthContext
 from memora.modules.privacy.constants import (
+    ALLOWED_CANCELLATION_REASONS,
     EXPORT_DOWNLOAD_TTL_SECONDS,
     LEGAL_RETENTION_EXCEPTIONS,
     RECONCILER_VERSION,
@@ -21,6 +23,14 @@ from memora.modules.privacy.constants import (
     SCOPE_UPLOADS,
     WORKFLOW_VERSION,
 )
+from memora.modules.privacy.provider import get_auth_provider
+from memora.modules.privacy.storage import (
+    export_archive_exists,
+    purge_upload_object,
+    write_export_archive,
+)
+
+logger = logging.getLogger(__name__)
 
 
 class PrivacyRepository:
@@ -104,54 +114,55 @@ class PrivacyRepository:
                 {"scope": str(user_id), "operation": operation, "key": key},
             )
             .mappings()
-            .one()
+            .one_or_none()
         )
+        if record is None:
+            return None
+
         if record["request_hash"] != request_hash:
             raise ApiError(
                 409,
-                "idempotency_key_reused",
-                "Use a new idempotency key for this request.",
-                "correct_input",
+                "idempotency_conflict",
+                "Idempotency key has already been used with different request parameters.",
+                "retry_with_new_key",
             )
-        if record["status"] != "completed" or not record["response_reference"]:
+        if record["status"] == "processing":
             raise ApiError(
                 409,
-                "operation_in_progress",
-                "This operation is still in progress.",
-                "retry",
-                retryable=True,
-                retry_after_seconds=1,
+                "concurrent_mutation",
+                "Another request is currently processing with this idempotency key.",
+                "retry_after_wait",
             )
-        return str(record["response_reference"])
+        return record["response_reference"]
 
-    @staticmethod
     def _complete_idempotency(
+        self,
         connection: Connection,
         user_id: UUID,
         operation: str,
         key: str,
-        response_reference: str,
+        response_ref: str,
     ) -> None:
         connection.execute(
             text(
                 """
                 UPDATE idempotency_records
-                SET status = 'completed', response_reference = :reference,
+                SET status = 'completed', response_reference = :ref,
                     updated_at = now(), row_version = row_version + 1
-                WHERE user_id = :user_id AND operation = :operation
-                  AND idempotency_key = :key AND status = 'processing'
+                WHERE scope = :scope AND operation = :operation
+                  AND idempotency_key = :key
                 """
             ),
             {
-                "user_id": user_id,
+                "scope": str(user_id),
                 "operation": operation,
                 "key": key,
-                "reference": response_reference,
+                "ref": response_ref,
             },
         )
 
-    @staticmethod
     def _record_audit_event(
+        self,
         connection: Connection,
         *,
         actor_id: str,
@@ -195,6 +206,13 @@ class PrivacyRepository:
         correlation_id: UUID | None = None,
     ) -> dict[str, Any]:
         with self._connection(auth) as (connection, user_id):
+            # Advisory transaction lock for user export concurrency
+            lock_key = f"privacy_request:{user_id}:export"
+            connection.execute(
+                text("SELECT pg_advisory_xact_lock(hashtextextended(:lock_key, 0))"),
+                {"lock_key": lock_key},
+            )
+
             replay = self._claim_idempotency(
                 connection,
                 user_id,
@@ -336,7 +354,7 @@ class PrivacyRepository:
             completed_time: datetime = data["completed_at"]
             expires_at = completed_time + timedelta(seconds=EXPORT_DOWNLOAD_TTL_SECONDS)
             now = datetime.now(UTC)
-            if now < expires_at:
+            if now < expires_at and export_archive_exists(request_id):
                 raw_token = f"{request_id}:{completed_time.isoformat()}".encode()
                 token = hashlib.sha256(raw_token).hexdigest()
                 base_url = "https://storage.memora.internal/v1/privacy/exports"
@@ -361,6 +379,13 @@ class PrivacyRepository:
         correlation_id: UUID | None = None,
     ) -> dict[str, Any]:
         with self._connection(auth) as (connection, user_id):
+            # Advisory transaction lock for user deletion concurrency
+            lock_key = f"privacy_request:{user_id}:delete"
+            connection.execute(
+                text("SELECT pg_advisory_xact_lock(hashtextextended(:lock_key, 0))"),
+                {"lock_key": lock_key},
+            )
+
             replay = self._claim_idempotency(
                 connection,
                 user_id,
@@ -611,6 +636,21 @@ class PrivacyRepository:
                 {"user_id": user_id},
             )
 
+            # Cancel background job if still queued or waiting retry
+            connection.execute(
+                text(
+                    """
+                    UPDATE background_jobs
+                    SET status = 'cancelled', updated_at = now(), row_version = row_version + 1
+                    WHERE resource_id = :request_id AND status IN ('queued', 'retry_wait')
+                    """
+                ),
+                {"request_id": request_id},
+            )
+
+            # Audit metadata must only contain allowlisted reason codes, never free user text
+            safe_reason = reason if reason in ALLOWED_CANCELLATION_REASONS else "user_requested"
+
             self._record_audit_event(
                 connection,
                 actor_id=str(user_id),
@@ -619,7 +659,7 @@ class PrivacyRepository:
                 auth=auth,
                 safe_metadata={
                     "schema_version": "1",
-                    "reason": reason or "cancelled_by_user",
+                    "reason": safe_reason,
                 },
                 correlation_id=correlation_id,
             )
@@ -668,18 +708,176 @@ class PrivacyRepository:
                 {"id": request_id},
             )
 
-            # Query data to verify presence and complete export
-            connection.execute(
-                text(
+            now = datetime.now(UTC)
+
+            # Query complete learner profile and history
+            profile_row = (
+                connection.execute(
+                    text(
+                        """
+                    SELECT u.id, u.status, u.default_timezone, u.locale, u.created_at,
+                           p.display_name, p.active_subject_id, p.accessibility_preferences
+                    FROM users u
+                    LEFT JOIN user_profiles p ON u.id = p.user_id
+                    WHERE u.id = :user_id
                     """
-                    SELECT user_id, display_name, active_subject_id
-                    FROM user_profiles WHERE user_id = :user_id
+                    ),
+                    {"user_id": user_id},
+                )
+                .mappings()
+                .one_or_none()
+            )
+            profile_data = dict(profile_row) if profile_row else {}
+
+            notif_row = (
+                connection.execute(
+                    text("SELECT * FROM notification_preferences WHERE user_id = :user_id"),
+                    {"user_id": user_id},
+                )
+                .mappings()
+                .one_or_none()
+            )
+            notif_data = dict(notif_row) if notif_row else {}
+
+            consent_rows = (
+                connection.execute(
+                    text(
+                        """
+                    SELECT consent_type, policy_version, granted_at, valid_until
+                    FROM consent_records WHERE user_id = :user_id
+                    ORDER BY granted_at DESC
                     """
-                ),
-                {"user_id": user_id},
+                    ),
+                    {"user_id": user_id},
+                )
+                .mappings()
+                .all()
+            )
+            consent_data = [dict(r) for r in consent_rows]
+
+            concept_rows = (
+                connection.execute(
+                    text(
+                        """
+                    SELECT concept_id, retrievability, stability, state, next_review_at,
+                           last_reviewed_at, review_count, lapse_count
+                    FROM learner_concept_states WHERE user_id = :user_id
+                    """
+                    ),
+                    {"user_id": user_id},
+                )
+                .mappings()
+                .all()
+            )
+            concept_data = [dict(r) for r in concept_rows]
+
+            mission_rows = (
+                connection.execute(
+                    text(
+                        """
+                    SELECT id, subject_id, mission_date, sequence_no, status,
+                           planned_item_count, started_at, completed_at
+                    FROM missions WHERE user_id = :user_id
+                    ORDER BY mission_date DESC
+                    """
+                    ),
+                    {"user_id": user_id},
+                )
+                .mappings()
+                .all()
+            )
+            missions_data = [dict(r) for r in mission_rows]
+
+            attempt_rows = (
+                connection.execute(
+                    text(
+                        """
+                    SELECT id, mission_item_id, attempt_no, submitted_at,
+                           elapsed_ms, is_offline_submission
+                    FROM attempts WHERE user_id = :user_id
+                    ORDER BY submitted_at DESC
+                    """
+                    ),
+                    {"user_id": user_id},
+                )
+                .mappings()
+                .all()
+            )
+            attempts_data = [dict(r) for r in attempt_rows]
+
+            pk_rows = (
+                connection.execute(
+                    text(
+                        """
+                    SELECT id, learning_update_id, item_type, structured_content,
+                           confidence, status, created_at
+                    FROM private_knowledge_items WHERE user_id = :user_id
+                    """
+                    ),
+                    {"user_id": user_id},
+                )
+                .mappings()
+                .all()
+            )
+            pk_data = [dict(r) for r in pk_rows]
+
+            xp_rows = (
+                connection.execute(
+                    text(
+                        """
+                    SELECT id, amount, entry_type, source_event_type, created_at
+                    FROM xp_ledger WHERE user_id = :user_id
+                    ORDER BY created_at DESC
+                    """
+                    ),
+                    {"user_id": user_id},
+                )
+                .mappings()
+                .all()
+            )
+            xp_data = [dict(r) for r in xp_rows]
+
+            export_payload = {
+                "schema_version": "1.0",
+                "request_id": str(request_id),
+                "user_id": str(user_id),
+                "exported_at": now.isoformat(),
+                "profile": profile_data,
+                "notification_preferences": notif_data,
+                "consent_history": consent_data,
+                "concept_progress": concept_data,
+                "missions": missions_data,
+                "attempts": attempts_data,
+                "private_knowledge": pk_data,
+                "xp_ledger": xp_data,
+            }
+
+            summary_text = (
+                f"Memora Learner Data Export\n"
+                f"===========================\n"
+                f"Student ID: {user_id}\n"
+                f"Display Name: {profile_data.get('display_name', 'Student')}\n"
+                f"Export Date: {now.isoformat()}\n\n"
+                f"Overview of Personal Learning Data:\n"
+                f"- Tracked Concept States: {len(concept_data)}\n"
+                f"- Missions Recorded: {len(missions_data)}\n"
+                f"- Practice Attempts: {len(attempts_data)}\n"
+                f"- Private Knowledge Items: {len(pk_data)}\n"
+                f"- XP Ledger Entries: {len(xp_data)}\n"
+                f"- Consent History Entries: {len(consent_data)}\n\n"
+                f"This archive contains export.json with your full machine-readable data.\n"
             )
 
-            now = datetime.now(UTC)
+            # Persist the export archive
+            write_export_archive(
+                request_id,
+                json.dumps(export_payload, default=str, indent=2).encode("utf-8"),
+                summary_text,
+            )
+
+            if not export_archive_exists(request_id):
+                raise RuntimeError(f"Export archive generation failed for request {request_id}")
+
             connection.execute(
                 text(
                     """
@@ -743,23 +941,67 @@ class PrivacyRepository:
             now = datetime.now(UTC)
             user_fingerprint = hashlib.sha256(str(user_id).encode()).hexdigest()
 
-            # Scope 1: Database Learner State (Anonymize profile and remove device tokens)
+            # -----------------------------------------------------------------
+            # Scope 1: Database Learner State (Delete private data and vectors)
+            # -----------------------------------------------------------------
             connection.execute(
-                text(
-                    """
-                    UPDATE user_profiles
-                    SET display_name = 'Deleted Learner',
-                        accessibility_preferences = '{"schema_version":"1"}'::jsonb,
-                        updated_at = now(), row_version = row_version + 1
-                    WHERE user_id = :user_id
-                    """
-                ),
+                text("DELETE FROM learner_concept_states WHERE user_id = :user_id"),
+                {"user_id": user_id},
+            )
+            connection.execute(
+                text("DELETE FROM private_knowledge_items WHERE user_id = :user_id"),
+                {"user_id": user_id},
+            )
+            connection.execute(
+                text("DELETE FROM reef_projections WHERE user_id = :user_id"),
+                {"user_id": user_id},
+            )
+            connection.execute(
+                text("DELETE FROM notification_preferences WHERE user_id = :user_id"),
                 {"user_id": user_id},
             )
             connection.execute(
                 text("DELETE FROM device_registrations WHERE user_id = :user_id"),
                 {"user_id": user_id},
             )
+            connection.execute(
+                text("DELETE FROM question_reports WHERE user_id = :user_id"),
+                {"user_id": user_id},
+            )
+
+            # Anonymize profile
+            connection.execute(
+                text(
+                    """
+                    UPDATE user_profiles
+                    SET display_name = 'Deleted Learner',
+                        accessibility_preferences = '{"schema_version":"1"}'::jsonb,
+                        active_subject_id = NULL,
+                        updated_at = now(), row_version = row_version + 1
+                    WHERE user_id = :user_id
+                    """
+                ),
+                {"user_id": user_id},
+            )
+
+            # Verification of Scope 1
+            remaining_states = connection.scalar(
+                text("SELECT count(*) FROM learner_concept_states WHERE user_id = :user_id"),
+                {"user_id": user_id},
+            )
+            remaining_knowledge = connection.scalar(
+                text("SELECT count(*) FROM private_knowledge_items WHERE user_id = :user_id"),
+                {"user_id": user_id},
+            )
+            remaining_devices = connection.scalar(
+                text("SELECT count(*) FROM device_registrations WHERE user_id = :user_id"),
+                {"user_id": user_id},
+            )
+            if remaining_states != 0 or remaining_knowledge != 0 or remaining_devices != 0:
+                raise RuntimeError(
+                    f"Database deletion verification failed: states={remaining_states}, "
+                    f"knowledge={remaining_knowledge}, devices={remaining_devices}"
+                )
 
             connection.execute(
                 text(
@@ -782,7 +1024,52 @@ class PrivacyRepository:
                 },
             )
 
+            # -----------------------------------------------------------------
             # Scope 2: Temporary Uploads
+            # -----------------------------------------------------------------
+            active_uploads = (
+                connection.execute(
+                    text(
+                        """
+                    SELECT id, object_key FROM source_uploads
+                    WHERE user_id = :user_id AND status != 'deleted'
+                    """
+                    ),
+                    {"user_id": user_id},
+                )
+                .mappings()
+                .all()
+            )
+
+            for up in active_uploads:
+                purge_upload_object(up["object_key"])
+
+            connection.execute(
+                text(
+                    """
+                    UPDATE source_uploads
+                    SET status = 'deleted', deleted_at = :now, updated_at = :now,
+                        row_version = row_version + 1
+                    WHERE user_id = :user_id AND status != 'deleted'
+                    """
+                ),
+                {"user_id": user_id, "now": now},
+            )
+
+            remaining_uploads = connection.scalar(
+                text(
+                    """
+                    SELECT count(*) FROM source_uploads
+                    WHERE user_id = :user_id AND status != 'deleted'
+                    """
+                ),
+                {"user_id": user_id},
+            )
+            if remaining_uploads != 0:
+                raise RuntimeError(
+                    f"Uploads deletion verification failed: remaining={remaining_uploads}"
+                )
+
             connection.execute(
                 text(
                     """
@@ -804,7 +1091,24 @@ class PrivacyRepository:
                 },
             )
 
+            # -----------------------------------------------------------------
             # Scope 3: Auth Provider
+            # -----------------------------------------------------------------
+            user_row = (
+                connection.execute(
+                    text("SELECT oidc_subject FROM users WHERE id = :user_id"),
+                    {"user_id": user_id},
+                )
+                .mappings()
+                .one()
+            )
+            oidc_subject = user_row["oidc_subject"]
+
+            auth_prov = get_auth_provider()
+            deleted_from_provider = auth_prov.delete_user(user_id, oidc_subject)
+            if not deleted_from_provider or not auth_prov.verify_user_absent(user_id, oidc_subject):
+                raise RuntimeError("Auth provider deletion verification failed")
+
             connection.execute(
                 text(
                     """
@@ -826,7 +1130,9 @@ class PrivacyRepository:
                 },
             )
 
-            # Mark user deleted
+            # -----------------------------------------------------------------
+            # Mark user and request completed
+            # -----------------------------------------------------------------
             connection.execute(
                 text(
                     """
@@ -839,7 +1145,6 @@ class PrivacyRepository:
                 {"user_id": user_id, "now": now},
             )
 
-            # Mark request completed
             connection.execute(
                 text(
                     """

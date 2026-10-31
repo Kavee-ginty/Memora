@@ -2,7 +2,9 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Header, Request, status
+from fastapi.responses import FileResponse
 
+from memora.api.errors import ApiError
 from memora.api.openapi import COMMON_ERROR_RESPONSES
 from memora.api.operation_ids import OperationId
 from memora.api.security import AuthenticatedRequest, get_authenticated_request
@@ -15,6 +17,7 @@ from memora.api.v1.schemas.privacy import (
     PrivacyExportResponse,
 )
 from memora.modules.privacy.service import PrivacyService, get_privacy_service
+from memora.modules.privacy.storage import export_archive_exists, get_export_archive_path
 
 router = APIRouter()
 
@@ -64,6 +67,25 @@ def get_privacy_export(
     service: Annotated[PrivacyService, Depends(get_privacy_service)],
 ) -> PrivacyExportResponse:
     return service.get_export(auth, request_id)
+
+
+@router.get(
+    "/privacy/exports/{request_id}/download",
+    response_class=FileResponse,
+    include_in_schema=False,
+)
+def download_privacy_export(
+    request_id: UUID,
+    token: str | None = None,
+) -> FileResponse:
+    if not export_archive_exists(request_id):
+        raise ApiError(404, "not_found", "Export archive not found or expired.")
+    path = get_export_archive_path(request_id)
+    return FileResponse(
+        path=path,
+        media_type="application/zip",
+        filename=f"memora_export_{request_id}.zip",
+    )
 
 
 @router.post(
