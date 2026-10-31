@@ -13,15 +13,14 @@ part 'consent_status.g.dart';
 /// ConsentStatus
 ///
 /// Properties:
-/// * [decidedAt]
-/// * [decision]
-/// * [isCurrent]
-/// * [policyId]
-/// * [policyVersion]
-/// * [required_]
+/// * [decidedAt] 
+/// * [decision] 
+/// * [isCurrent] 
+/// * [policyId] 
+/// * [policyVersion] 
+/// * [required_] 
 @BuiltValue()
-abstract class ConsentStatus
-    implements Built<ConsentStatus, ConsentStatusBuilder> {
+abstract class ConsentStatus implements Built<ConsentStatus, ConsentStatusBuilder> {
   @BuiltValueField(wireName: r'decided_at')
   DateTime? get decidedAt;
 
@@ -44,15 +43,13 @@ abstract class ConsentStatus
 
   ConsentStatus._();
 
-  factory ConsentStatus([void updates(ConsentStatusBuilder b)]) =
-      _$ConsentStatus;
+  factory ConsentStatus([void updates(ConsentStatusBuilder b)]) = _$ConsentStatus;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(ConsentStatusBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<ConsentStatus> get serializer =>
-      _$ConsentStatusSerializer();
+  static Serializer<ConsentStatus> get serializer => _$ConsentStatusSerializer();
 }
 
 class _$ConsentStatusSerializer implements PrimitiveSerializer<ConsentStatus> {
@@ -68,19 +65,15 @@ class _$ConsentStatusSerializer implements PrimitiveSerializer<ConsentStatus> {
     FullType specifiedType = FullType.unspecified,
   }) sync* {
     yield r'decided_at';
-    yield object.decidedAt == null
-        ? null
-        : serializers.serialize(
-            object.decidedAt,
-            specifiedType: const FullType.nullable(DateTime),
-          );
+    yield object.decidedAt == null ? null : serializers.serialize(
+      object.decidedAt,
+      specifiedType: const FullType.nullable(DateTime),
+    );
     yield r'decision';
-    yield object.decision == null
-        ? null
-        : serializers.serialize(
-            object.decision,
-            specifiedType: const FullType.nullable(ConsentDecision),
-          );
+    yield object.decision == null ? null : serializers.serialize(
+      object.decision,
+      specifiedType: const FullType.nullable(ConsentDecision),
+    );
     yield r'is_current';
     yield serializers.serialize(
       object.isCurrent,
@@ -109,9 +102,7 @@ class _$ConsentStatusSerializer implements PrimitiveSerializer<ConsentStatus> {
     ConsentStatus object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -198,3 +189,5 @@ class _$ConsentStatusSerializer implements PrimitiveSerializer<ConsentStatus> {
     return result.build();
   }
 }
+
+

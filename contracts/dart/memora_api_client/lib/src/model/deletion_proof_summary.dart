@@ -11,15 +11,14 @@ part 'deletion_proof_summary.g.dart';
 /// DeletionProofSummary
 ///
 /// Properties:
-/// * [id]
-/// * [provider]
-/// * [result]
-/// * [scope]
-/// * [targetFingerprint]
-/// * [verifiedAt]
+/// * [id] 
+/// * [provider] 
+/// * [result] 
+/// * [scope] 
+/// * [targetFingerprint] 
+/// * [verifiedAt] 
 @BuiltValue()
-abstract class DeletionProofSummary
-    implements Built<DeletionProofSummary, DeletionProofSummaryBuilder> {
+abstract class DeletionProofSummary implements Built<DeletionProofSummary, DeletionProofSummaryBuilder> {
   @BuiltValueField(wireName: r'id')
   String get id;
 
@@ -40,24 +39,18 @@ abstract class DeletionProofSummary
 
   DeletionProofSummary._();
 
-  factory DeletionProofSummary([void updates(DeletionProofSummaryBuilder b)]) =
-      _$DeletionProofSummary;
+  factory DeletionProofSummary([void updates(DeletionProofSummaryBuilder b)]) = _$DeletionProofSummary;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(DeletionProofSummaryBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<DeletionProofSummary> get serializer =>
-      _$DeletionProofSummarySerializer();
+  static Serializer<DeletionProofSummary> get serializer => _$DeletionProofSummarySerializer();
 }
 
-class _$DeletionProofSummarySerializer
-    implements PrimitiveSerializer<DeletionProofSummary> {
+class _$DeletionProofSummarySerializer implements PrimitiveSerializer<DeletionProofSummary> {
   @override
-  final Iterable<Type> types = const [
-    DeletionProofSummary,
-    _$DeletionProofSummary
-  ];
+  final Iterable<Type> types = const [DeletionProofSummary, _$DeletionProofSummary];
 
   @override
   final String wireName = r'DeletionProofSummary';
@@ -105,9 +98,7 @@ class _$DeletionProofSummarySerializer
     DeletionProofSummary object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -192,3 +183,5 @@ class _$DeletionProofSummarySerializer
     return result.build();
   }
 }
+
+

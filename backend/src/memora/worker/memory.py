@@ -41,6 +41,7 @@ from __future__ import annotations
 import logging
 import os
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Any
@@ -276,7 +277,9 @@ def map_outbox_event(
     except (KeyError, TypeError, ValueError) as exc:
         raise NonRetryableJobError(CODE_INVALID_EVENT_PAYLOAD) from exc
 
-    if not isinstance(entries, list) or not entries:
+    if not isinstance(entries, list):
+        raise NonRetryableJobError(CODE_INVALID_EVENT_PAYLOAD)
+    if event_type == ATTEMPT_SOURCE_EVENT_TYPE and not entries:
         raise NonRetryableJobError(CODE_INVALID_EVENT_PAYLOAD)
 
     return [
@@ -714,6 +717,7 @@ def run_worker(
     reconcile_seconds: float = RECONCILE_SECONDS,
     lease_owner: str | None = None,
     stop_after_cycles: int | None = None,
+    cycle_callback: Callable[[], bool] | None = None,
 ) -> None:
     """Poll for memory jobs forever; reconcile leases and backlog periodically."""
     owner = lease_owner or f"memory-worker:{os.getpid()}:{uuid4().hex[:8]}"
@@ -732,7 +736,8 @@ def run_worker(
             last_reconcile = time.monotonic()
 
         outcome = process_next_job(engine, now=datetime.now(UTC), lease_owner=owner)
-        if outcome == OUTCOME_IDLE:
+        callback_worked = cycle_callback() if cycle_callback is not None else False
+        if outcome == OUTCOME_IDLE and not callback_worked:
             time.sleep(poll_seconds)
         cycles += 1
         if stop_after_cycles is not None and cycles >= stop_after_cycles:

@@ -12,8 +12,8 @@ part 'page_params.g.dart';
 /// PageParams
 ///
 /// Properties:
-/// * [cursor]
-/// * [limit]
+/// * [cursor] 
+/// * [limit] 
 @BuiltValue()
 abstract class PageParams implements Built<PageParams, PageParamsBuilder> {
   @BuiltValueField(wireName: r'cursor')
@@ -28,8 +28,8 @@ abstract class PageParams implements Built<PageParams, PageParamsBuilder> {
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(PageParamsBuilder b) => b
-    ..cursor = Optional.absent()
-    ..limit = Optional.absent();
+      ..cursor = Optional.absent()
+      ..limit = Optional.absent();
 
   @BuiltValueSerializer(custom: true)
   static Serializer<PageParams> get serializer => _$PageParamsSerializer();
@@ -79,9 +79,7 @@ class _$PageParamsSerializer implements PrimitiveSerializer<PageParams> {
     PageParams object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -138,3 +136,5 @@ class _$PageParamsSerializer implements PrimitiveSerializer<PageParams> {
     return result.build();
   }
 }
+
+

@@ -1,8 +1,8 @@
 """Durable worker entry point.
 
-Runs the outbox-driven worker loop: poll background jobs (memory events,
-privacy export/deletion), reconcile expired leases and unprocessed producer
-evidence periodically.
+Runs the outbox-driven worker loop: polls background jobs (memory events,
+privacy export/deletion) and invokes the ingestion worker once per cycle.
+Reconciles expired leases and unprocessed producer evidence periodically.
 """
 
 from __future__ import annotations
@@ -10,6 +10,7 @@ from __future__ import annotations
 import logging
 import os
 import time
+from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID, uuid4
@@ -19,6 +20,7 @@ from sqlalchemy import Engine, text
 from memora.core.config import get_settings
 from memora.db.runtime import database_engine
 from memora.modules.privacy.repository import PrivacyRepository
+from memora.worker.ingestion import build_worker
 from memora.worker.memory import (
     JOB_TYPE_MEMORY_PROCESS_EVENT,
     OUTCOME_DEAD_LETTERED,
@@ -196,6 +198,7 @@ def run_worker(
     reconcile_seconds: float = RECONCILE_SECONDS,
     lease_owner: str | None = None,
     stop_after_cycles: int | None = None,
+    cycle_callback: Callable[[], bool] | None = None,
 ) -> None:
     """Poll for background jobs forever; reconcile leases and backlog periodically."""
     owner = lease_owner or f"memora-worker:{os.getpid()}:{uuid4().hex[:8]}"
@@ -214,7 +217,8 @@ def run_worker(
             last_reconcile = time.monotonic()
 
         outcome = process_next_job(engine, now=datetime.now(UTC), lease_owner=owner)
-        if outcome == OUTCOME_IDLE:
+        callback_worked = cycle_callback() if cycle_callback is not None else False
+        if outcome == OUTCOME_IDLE and not callback_worked:
             time.sleep(poll_seconds)
         cycles += 1
         if stop_after_cycles is not None and cycles >= stop_after_cycles:
@@ -230,11 +234,16 @@ def build_worker_engine() -> Engine:
 
 
 def main() -> None:
+    settings = get_settings()
     logging.basicConfig(
-        level=logging.INFO,
+        level=settings.log_level,
         format="%(asctime)s %(levelname)s %(name)s %(message)s",
     )
-    run_worker(build_worker_engine())
+    ingestion_worker = build_worker(settings)
+    run_worker(
+        ingestion_worker.engine,
+        cycle_callback=ingestion_worker.run_once,
+    )
 
 
 if __name__ == "__main__":

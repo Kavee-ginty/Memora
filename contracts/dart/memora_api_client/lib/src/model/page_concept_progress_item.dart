@@ -13,12 +13,11 @@ part 'page_concept_progress_item.g.dart';
 /// PageConceptProgressItem
 ///
 /// Properties:
-/// * [hasMore]
-/// * [items]
-/// * [nextCursor]
+/// * [hasMore] 
+/// * [items] 
+/// * [nextCursor] 
 @BuiltValue()
-abstract class PageConceptProgressItem
-    implements Built<PageConceptProgressItem, PageConceptProgressItemBuilder> {
+abstract class PageConceptProgressItem implements Built<PageConceptProgressItem, PageConceptProgressItemBuilder> {
   @BuiltValueField(wireName: r'has_more')
   bool get hasMore;
 
@@ -30,25 +29,18 @@ abstract class PageConceptProgressItem
 
   PageConceptProgressItem._();
 
-  factory PageConceptProgressItem(
-          [void updates(PageConceptProgressItemBuilder b)]) =
-      _$PageConceptProgressItem;
+  factory PageConceptProgressItem([void updates(PageConceptProgressItemBuilder b)]) = _$PageConceptProgressItem;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(PageConceptProgressItemBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<PageConceptProgressItem> get serializer =>
-      _$PageConceptProgressItemSerializer();
+  static Serializer<PageConceptProgressItem> get serializer => _$PageConceptProgressItemSerializer();
 }
 
-class _$PageConceptProgressItemSerializer
-    implements PrimitiveSerializer<PageConceptProgressItem> {
+class _$PageConceptProgressItemSerializer implements PrimitiveSerializer<PageConceptProgressItem> {
   @override
-  final Iterable<Type> types = const [
-    PageConceptProgressItem,
-    _$PageConceptProgressItem
-  ];
+  final Iterable<Type> types = const [PageConceptProgressItem, _$PageConceptProgressItem];
 
   @override
   final String wireName = r'PageConceptProgressItem';
@@ -69,12 +61,10 @@ class _$PageConceptProgressItemSerializer
       specifiedType: const FullType(BuiltList, [FullType(ConceptProgressItem)]),
     );
     yield r'next_cursor';
-    yield object.nextCursor == null
-        ? null
-        : serializers.serialize(
-            object.nextCursor,
-            specifiedType: const FullType.nullable(String),
-          );
+    yield object.nextCursor == null ? null : serializers.serialize(
+      object.nextCursor,
+      specifiedType: const FullType.nullable(String),
+    );
   }
 
   @override
@@ -83,9 +73,7 @@ class _$PageConceptProgressItemSerializer
     PageConceptProgressItem object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -110,8 +98,7 @@ class _$PageConceptProgressItemSerializer
         case r'items':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType:
-                const FullType(BuiltList, [FullType(ConceptProgressItem)]),
+            specifiedType: const FullType(BuiltList, [FullType(ConceptProgressItem)]),
           ) as BuiltList<ConceptProgressItem>;
           result.items.replace(valueDes);
           break;
@@ -151,3 +138,5 @@ class _$PageConceptProgressItemSerializer
     return result.build();
   }
 }
+
+

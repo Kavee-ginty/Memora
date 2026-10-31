@@ -12,13 +12,12 @@ part 'profile_update_request.g.dart';
 /// ProfileUpdateRequest
 ///
 /// Properties:
-/// * [displayName]
-/// * [locale]
-/// * [timezone]
-/// * [version]
+/// * [displayName] 
+/// * [locale] 
+/// * [timezone] 
+/// * [version] 
 @BuiltValue()
-abstract class ProfileUpdateRequest
-    implements Built<ProfileUpdateRequest, ProfileUpdateRequestBuilder> {
+abstract class ProfileUpdateRequest implements Built<ProfileUpdateRequest, ProfileUpdateRequestBuilder> {
   @BuiltValueField(wireName: r'display_name')
   Optional<String?> get displayName;
 
@@ -33,27 +32,21 @@ abstract class ProfileUpdateRequest
 
   ProfileUpdateRequest._();
 
-  factory ProfileUpdateRequest([void updates(ProfileUpdateRequestBuilder b)]) =
-      _$ProfileUpdateRequest;
+  factory ProfileUpdateRequest([void updates(ProfileUpdateRequestBuilder b)]) = _$ProfileUpdateRequest;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(ProfileUpdateRequestBuilder b) => b
-    ..displayName = Optional.absent()
-    ..locale = Optional.absent()
-    ..timezone = Optional.absent();
+      ..displayName = Optional.absent()
+      ..locale = Optional.absent()
+      ..timezone = Optional.absent();
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<ProfileUpdateRequest> get serializer =>
-      _$ProfileUpdateRequestSerializer();
+  static Serializer<ProfileUpdateRequest> get serializer => _$ProfileUpdateRequestSerializer();
 }
 
-class _$ProfileUpdateRequestSerializer
-    implements PrimitiveSerializer<ProfileUpdateRequest> {
+class _$ProfileUpdateRequestSerializer implements PrimitiveSerializer<ProfileUpdateRequest> {
   @override
-  final Iterable<Type> types = const [
-    ProfileUpdateRequest,
-    _$ProfileUpdateRequest
-  ];
+  final Iterable<Type> types = const [ProfileUpdateRequest, _$ProfileUpdateRequest];
 
   @override
   final String wireName = r'ProfileUpdateRequest';
@@ -112,9 +105,7 @@ class _$ProfileUpdateRequestSerializer
     ProfileUpdateRequest object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -185,3 +176,5 @@ class _$ProfileUpdateRequestSerializer
     return result.build();
   }
 }
+
+

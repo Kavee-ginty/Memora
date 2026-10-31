@@ -13,13 +13,11 @@ part 'question_report_create_request.g.dart';
 /// QuestionReportCreateRequest
 ///
 /// Properties:
-/// * [attemptId]
-/// * [description]
-/// * [reportType]
+/// * [attemptId] 
+/// * [description] 
+/// * [reportType] 
 @BuiltValue()
-abstract class QuestionReportCreateRequest
-    implements
-        Built<QuestionReportCreateRequest, QuestionReportCreateRequestBuilder> {
+abstract class QuestionReportCreateRequest implements Built<QuestionReportCreateRequest, QuestionReportCreateRequestBuilder> {
   @BuiltValueField(wireName: r'attempt_id')
   Optional<String?> get attemptId;
 
@@ -32,27 +30,20 @@ abstract class QuestionReportCreateRequest
 
   QuestionReportCreateRequest._();
 
-  factory QuestionReportCreateRequest(
-          [void updates(QuestionReportCreateRequestBuilder b)]) =
-      _$QuestionReportCreateRequest;
+  factory QuestionReportCreateRequest([void updates(QuestionReportCreateRequestBuilder b)]) = _$QuestionReportCreateRequest;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(QuestionReportCreateRequestBuilder b) => b
-    ..attemptId = Optional.absent()
-    ..description = Optional.absent();
+      ..attemptId = Optional.absent()
+      ..description = Optional.absent();
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<QuestionReportCreateRequest> get serializer =>
-      _$QuestionReportCreateRequestSerializer();
+  static Serializer<QuestionReportCreateRequest> get serializer => _$QuestionReportCreateRequestSerializer();
 }
 
-class _$QuestionReportCreateRequestSerializer
-    implements PrimitiveSerializer<QuestionReportCreateRequest> {
+class _$QuestionReportCreateRequestSerializer implements PrimitiveSerializer<QuestionReportCreateRequest> {
   @override
-  final Iterable<Type> types = const [
-    QuestionReportCreateRequest,
-    _$QuestionReportCreateRequest
-  ];
+  final Iterable<Type> types = const [QuestionReportCreateRequest, _$QuestionReportCreateRequest];
 
   @override
   final String wireName = r'QuestionReportCreateRequest';
@@ -99,9 +90,7 @@ class _$QuestionReportCreateRequestSerializer
     QuestionReportCreateRequest object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -133,8 +122,7 @@ class _$QuestionReportCreateRequestSerializer
         case r'report_type':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType:
-                const FullType(QuestionReportCreateRequestReportTypeEnum),
+            specifiedType: const FullType(QuestionReportCreateRequestReportTypeEnum),
           ) as QuestionReportCreateRequestReportTypeEnum;
           result.reportType = valueDes;
           break;
@@ -167,33 +155,27 @@ class _$QuestionReportCreateRequestSerializer
   }
 }
 
+
 class QuestionReportCreateRequestReportTypeEnum extends EnumClass {
+
   @BuiltValueEnumConst(wireName: r'question_error')
-  static const QuestionReportCreateRequestReportTypeEnum questionError =
-      _$questionReportCreateRequestReportTypeEnum_questionError;
+  static const QuestionReportCreateRequestReportTypeEnum questionError = _$questionReportCreateRequestReportTypeEnum_questionError;
   @BuiltValueEnumConst(wireName: r'answer_error')
-  static const QuestionReportCreateRequestReportTypeEnum answerError =
-      _$questionReportCreateRequestReportTypeEnum_answerError;
+  static const QuestionReportCreateRequestReportTypeEnum answerError = _$questionReportCreateRequestReportTypeEnum_answerError;
   @BuiltValueEnumConst(wireName: r'explanation_error')
-  static const QuestionReportCreateRequestReportTypeEnum explanationError =
-      _$questionReportCreateRequestReportTypeEnum_explanationError;
+  static const QuestionReportCreateRequestReportTypeEnum explanationError = _$questionReportCreateRequestReportTypeEnum_explanationError;
   @BuiltValueEnumConst(wireName: r'grading_dispute')
-  static const QuestionReportCreateRequestReportTypeEnum gradingDispute =
-      _$questionReportCreateRequestReportTypeEnum_gradingDispute;
+  static const QuestionReportCreateRequestReportTypeEnum gradingDispute = _$questionReportCreateRequestReportTypeEnum_gradingDispute;
   @BuiltValueEnumConst(wireName: r'accessibility')
-  static const QuestionReportCreateRequestReportTypeEnum accessibility =
-      _$questionReportCreateRequestReportTypeEnum_accessibility;
+  static const QuestionReportCreateRequestReportTypeEnum accessibility = _$questionReportCreateRequestReportTypeEnum_accessibility;
   @BuiltValueEnumConst(wireName: r'unknown_default_open_api', fallback: true)
-  static const QuestionReportCreateRequestReportTypeEnum unknownDefaultOpenApi =
-      _$questionReportCreateRequestReportTypeEnum_unknownDefaultOpenApi;
+  static const QuestionReportCreateRequestReportTypeEnum unknownDefaultOpenApi = _$questionReportCreateRequestReportTypeEnum_unknownDefaultOpenApi;
 
-  static Serializer<QuestionReportCreateRequestReportTypeEnum> get serializer =>
-      _$questionReportCreateRequestReportTypeEnumSerializer;
+  static Serializer<QuestionReportCreateRequestReportTypeEnum> get serializer => _$questionReportCreateRequestReportTypeEnumSerializer;
 
-  const QuestionReportCreateRequestReportTypeEnum._(String name) : super(name);
+  const QuestionReportCreateRequestReportTypeEnum._(String name): super(name);
 
-  static BuiltSet<QuestionReportCreateRequestReportTypeEnum> get values =>
-      _$questionReportCreateRequestReportTypeEnumValues;
-  static QuestionReportCreateRequestReportTypeEnum valueOf(String name) =>
-      _$questionReportCreateRequestReportTypeEnumValueOf(name);
+  static BuiltSet<QuestionReportCreateRequestReportTypeEnum> get values => _$questionReportCreateRequestReportTypeEnumValues;
+  static QuestionReportCreateRequestReportTypeEnum valueOf(String name) => _$questionReportCreateRequestReportTypeEnumValueOf(name);
 }
+

@@ -13,35 +13,28 @@ part 'session_revoke_request.g.dart';
 /// SessionRevokeRequest
 ///
 /// Properties:
-/// * [scope]
+/// * [scope] 
 @BuiltValue()
-abstract class SessionRevokeRequest
-    implements Built<SessionRevokeRequest, SessionRevokeRequestBuilder> {
+abstract class SessionRevokeRequest implements Built<SessionRevokeRequest, SessionRevokeRequestBuilder> {
   @BuiltValueField(wireName: r'scope')
   Optional<SessionRevocationScope?> get scope;
   // enum scopeEnum {  current,  other_sessions,  all,  };
 
   SessionRevokeRequest._();
 
-  factory SessionRevokeRequest([void updates(SessionRevokeRequestBuilder b)]) =
-      _$SessionRevokeRequest;
+  factory SessionRevokeRequest([void updates(SessionRevokeRequestBuilder b)]) = _$SessionRevokeRequest;
 
   @BuiltValueHook(initializeBuilder: true)
-  static void _defaults(SessionRevokeRequestBuilder b) =>
-      b..scope = Optional.absent();
+  static void _defaults(SessionRevokeRequestBuilder b) => b
+      ..scope = Optional.absent();
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<SessionRevokeRequest> get serializer =>
-      _$SessionRevokeRequestSerializer();
+  static Serializer<SessionRevokeRequest> get serializer => _$SessionRevokeRequestSerializer();
 }
 
-class _$SessionRevokeRequestSerializer
-    implements PrimitiveSerializer<SessionRevokeRequest> {
+class _$SessionRevokeRequestSerializer implements PrimitiveSerializer<SessionRevokeRequest> {
   @override
-  final Iterable<Type> types = const [
-    SessionRevokeRequest,
-    _$SessionRevokeRequest
-  ];
+  final Iterable<Type> types = const [SessionRevokeRequest, _$SessionRevokeRequest];
 
   @override
   final String wireName = r'SessionRevokeRequest';
@@ -71,9 +64,7 @@ class _$SessionRevokeRequestSerializer
     SessionRevokeRequest object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -123,3 +114,5 @@ class _$SessionRevokeRequestSerializer
     return result.build();
   }
 }
+
+

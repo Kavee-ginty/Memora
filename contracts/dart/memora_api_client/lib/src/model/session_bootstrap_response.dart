@@ -19,19 +19,17 @@ part 'session_bootstrap_response.g.dart';
 /// SessionBootstrapResponse
 ///
 /// Properties:
-/// * [accountStatus]
-/// * [activeMission]
-/// * [capabilityFlags]
-/// * [consentStatus]
-/// * [pendingLearningUpdates]
-/// * [pendingPrivacyRequests]
-/// * [profileSummary]
-/// * [serverTime]
-/// * [subjects]
+/// * [accountStatus] 
+/// * [activeMission] 
+/// * [capabilityFlags] 
+/// * [consentStatus] 
+/// * [pendingLearningUpdates] 
+/// * [pendingPrivacyRequests] 
+/// * [profileSummary] 
+/// * [serverTime] 
+/// * [subjects] 
 @BuiltValue()
-abstract class SessionBootstrapResponse
-    implements
-        Built<SessionBootstrapResponse, SessionBootstrapResponseBuilder> {
+abstract class SessionBootstrapResponse implements Built<SessionBootstrapResponse, SessionBootstrapResponseBuilder> {
   @BuiltValueField(wireName: r'account_status')
   AccountStatus get accountStatus;
   // enum accountStatusEnum {  active,  suspended,  deletion_pending,  deleted,  };
@@ -62,25 +60,18 @@ abstract class SessionBootstrapResponse
 
   SessionBootstrapResponse._();
 
-  factory SessionBootstrapResponse(
-          [void updates(SessionBootstrapResponseBuilder b)]) =
-      _$SessionBootstrapResponse;
+  factory SessionBootstrapResponse([void updates(SessionBootstrapResponseBuilder b)]) = _$SessionBootstrapResponse;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(SessionBootstrapResponseBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<SessionBootstrapResponse> get serializer =>
-      _$SessionBootstrapResponseSerializer();
+  static Serializer<SessionBootstrapResponse> get serializer => _$SessionBootstrapResponseSerializer();
 }
 
-class _$SessionBootstrapResponseSerializer
-    implements PrimitiveSerializer<SessionBootstrapResponse> {
+class _$SessionBootstrapResponseSerializer implements PrimitiveSerializer<SessionBootstrapResponse> {
   @override
-  final Iterable<Type> types = const [
-    SessionBootstrapResponse,
-    _$SessionBootstrapResponse
-  ];
+  final Iterable<Type> types = const [SessionBootstrapResponse, _$SessionBootstrapResponse];
 
   @override
   final String wireName = r'SessionBootstrapResponse';
@@ -96,12 +87,10 @@ class _$SessionBootstrapResponseSerializer
       specifiedType: const FullType(AccountStatus),
     );
     yield r'active_mission';
-    yield object.activeMission == null
-        ? null
-        : serializers.serialize(
-            object.activeMission,
-            specifiedType: const FullType.nullable(ActiveMissionSummary),
-          );
+    yield object.activeMission == null ? null : serializers.serialize(
+      object.activeMission,
+      specifiedType: const FullType.nullable(ActiveMissionSummary),
+    );
     yield r'capability_flags';
     yield serializers.serialize(
       object.capabilityFlags,
@@ -115,14 +104,12 @@ class _$SessionBootstrapResponseSerializer
     yield r'pending_learning_updates';
     yield serializers.serialize(
       object.pendingLearningUpdates,
-      specifiedType:
-          const FullType(BuiltList, [FullType(PendingResourceSummary)]),
+      specifiedType: const FullType(BuiltList, [FullType(PendingResourceSummary)]),
     );
     yield r'pending_privacy_requests';
     yield serializers.serialize(
       object.pendingPrivacyRequests,
-      specifiedType:
-          const FullType(BuiltList, [FullType(PendingResourceSummary)]),
+      specifiedType: const FullType(BuiltList, [FullType(PendingResourceSummary)]),
     );
     yield r'profile_summary';
     yield serializers.serialize(
@@ -147,9 +134,7 @@ class _$SessionBootstrapResponseSerializer
     SessionBootstrapResponse object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -196,16 +181,14 @@ class _$SessionBootstrapResponseSerializer
         case r'pending_learning_updates':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType:
-                const FullType(BuiltList, [FullType(PendingResourceSummary)]),
+            specifiedType: const FullType(BuiltList, [FullType(PendingResourceSummary)]),
           ) as BuiltList<PendingResourceSummary>;
           result.pendingLearningUpdates.replace(valueDes);
           break;
         case r'pending_privacy_requests':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType:
-                const FullType(BuiltList, [FullType(PendingResourceSummary)]),
+            specifiedType: const FullType(BuiltList, [FullType(PendingResourceSummary)]),
           ) as BuiltList<PendingResourceSummary>;
           result.pendingPrivacyRequests.replace(valueDes);
           break;
@@ -226,8 +209,7 @@ class _$SessionBootstrapResponseSerializer
         case r'subjects':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType:
-                const FullType(BuiltList, [FullType(SubjectSummary)]),
+            specifiedType: const FullType(BuiltList, [FullType(SubjectSummary)]),
           ) as BuiltList<SubjectSummary>;
           result.subjects.replace(valueDes);
           break;
@@ -259,3 +241,5 @@ class _$SessionBootstrapResponseSerializer
     return result.build();
   }
 }
+
+

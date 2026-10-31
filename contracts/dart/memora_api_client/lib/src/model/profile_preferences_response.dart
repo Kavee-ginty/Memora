@@ -13,23 +13,21 @@ part 'profile_preferences_response.g.dart';
 /// ProfilePreferencesResponse
 ///
 /// Properties:
-/// * [accessibility]
-/// * [lockScreenDetail]
-/// * [maxDailyReminders]
-/// * [missionEnabled]
-/// * [notificationsEnabled]
-/// * [preferredWindowEndLocal]
-/// * [preferredWindowStartLocal]
-/// * [quietEndLocal]
-/// * [quietStartLocal]
-/// * [rewardEnabled]
-/// * [streakEnabled]
-/// * [timezone]
-/// * [version]
+/// * [accessibility] 
+/// * [lockScreenDetail] 
+/// * [maxDailyReminders] 
+/// * [missionEnabled] 
+/// * [notificationsEnabled] 
+/// * [preferredWindowEndLocal] 
+/// * [preferredWindowStartLocal] 
+/// * [quietEndLocal] 
+/// * [quietStartLocal] 
+/// * [rewardEnabled] 
+/// * [streakEnabled] 
+/// * [timezone] 
+/// * [version] 
 @BuiltValue()
-abstract class ProfilePreferencesResponse
-    implements
-        Built<ProfilePreferencesResponse, ProfilePreferencesResponseBuilder> {
+abstract class ProfilePreferencesResponse implements Built<ProfilePreferencesResponse, ProfilePreferencesResponseBuilder> {
   @BuiltValueField(wireName: r'accessibility')
   AccessibilityPreferences get accessibility;
 
@@ -72,25 +70,18 @@ abstract class ProfilePreferencesResponse
 
   ProfilePreferencesResponse._();
 
-  factory ProfilePreferencesResponse(
-          [void updates(ProfilePreferencesResponseBuilder b)]) =
-      _$ProfilePreferencesResponse;
+  factory ProfilePreferencesResponse([void updates(ProfilePreferencesResponseBuilder b)]) = _$ProfilePreferencesResponse;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(ProfilePreferencesResponseBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<ProfilePreferencesResponse> get serializer =>
-      _$ProfilePreferencesResponseSerializer();
+  static Serializer<ProfilePreferencesResponse> get serializer => _$ProfilePreferencesResponseSerializer();
 }
 
-class _$ProfilePreferencesResponseSerializer
-    implements PrimitiveSerializer<ProfilePreferencesResponse> {
+class _$ProfilePreferencesResponseSerializer implements PrimitiveSerializer<ProfilePreferencesResponse> {
   @override
-  final Iterable<Type> types = const [
-    ProfilePreferencesResponse,
-    _$ProfilePreferencesResponse
-  ];
+  final Iterable<Type> types = const [ProfilePreferencesResponse, _$ProfilePreferencesResponse];
 
   @override
   final String wireName = r'ProfilePreferencesResponse';
@@ -108,8 +99,7 @@ class _$ProfilePreferencesResponseSerializer
     yield r'lock_screen_detail';
     yield serializers.serialize(
       object.lockScreenDetail,
-      specifiedType:
-          const FullType(ProfilePreferencesResponseLockScreenDetailEnum),
+      specifiedType: const FullType(ProfilePreferencesResponseLockScreenDetailEnum),
     );
     yield r'max_daily_reminders';
     yield serializers.serialize(
@@ -127,33 +117,25 @@ class _$ProfilePreferencesResponseSerializer
       specifiedType: const FullType(bool),
     );
     yield r'preferred_window_end_local';
-    yield object.preferredWindowEndLocal == null
-        ? null
-        : serializers.serialize(
-            object.preferredWindowEndLocal,
-            specifiedType: const FullType.nullable(String),
-          );
+    yield object.preferredWindowEndLocal == null ? null : serializers.serialize(
+      object.preferredWindowEndLocal,
+      specifiedType: const FullType.nullable(String),
+    );
     yield r'preferred_window_start_local';
-    yield object.preferredWindowStartLocal == null
-        ? null
-        : serializers.serialize(
-            object.preferredWindowStartLocal,
-            specifiedType: const FullType.nullable(String),
-          );
+    yield object.preferredWindowStartLocal == null ? null : serializers.serialize(
+      object.preferredWindowStartLocal,
+      specifiedType: const FullType.nullable(String),
+    );
     yield r'quiet_end_local';
-    yield object.quietEndLocal == null
-        ? null
-        : serializers.serialize(
-            object.quietEndLocal,
-            specifiedType: const FullType.nullable(String),
-          );
+    yield object.quietEndLocal == null ? null : serializers.serialize(
+      object.quietEndLocal,
+      specifiedType: const FullType.nullable(String),
+    );
     yield r'quiet_start_local';
-    yield object.quietStartLocal == null
-        ? null
-        : serializers.serialize(
-            object.quietStartLocal,
-            specifiedType: const FullType.nullable(String),
-          );
+    yield object.quietStartLocal == null ? null : serializers.serialize(
+      object.quietStartLocal,
+      specifiedType: const FullType.nullable(String),
+    );
     yield r'reward_enabled';
     yield serializers.serialize(
       object.rewardEnabled,
@@ -182,9 +164,7 @@ class _$ProfilePreferencesResponseSerializer
     ProfilePreferencesResponse object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -209,8 +189,7 @@ class _$ProfilePreferencesResponseSerializer
         case r'lock_screen_detail':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType:
-                const FullType(ProfilePreferencesResponseLockScreenDetailEnum),
+            specifiedType: const FullType(ProfilePreferencesResponseLockScreenDetailEnum),
           ) as ProfilePreferencesResponseLockScreenDetailEnum;
           result.lockScreenDetail = valueDes;
           break;
@@ -324,30 +303,23 @@ class _$ProfilePreferencesResponseSerializer
   }
 }
 
+
 class ProfilePreferencesResponseLockScreenDetailEnum extends EnumClass {
+
   @BuiltValueEnumConst(wireName: r'minimal')
-  static const ProfilePreferencesResponseLockScreenDetailEnum minimal =
-      _$profilePreferencesResponseLockScreenDetailEnum_minimal;
+  static const ProfilePreferencesResponseLockScreenDetailEnum minimal = _$profilePreferencesResponseLockScreenDetailEnum_minimal;
   @BuiltValueEnumConst(wireName: r'subject')
-  static const ProfilePreferencesResponseLockScreenDetailEnum subject =
-      _$profilePreferencesResponseLockScreenDetailEnum_subject;
+  static const ProfilePreferencesResponseLockScreenDetailEnum subject = _$profilePreferencesResponseLockScreenDetailEnum_subject;
   @BuiltValueEnumConst(wireName: r'detailed')
-  static const ProfilePreferencesResponseLockScreenDetailEnum detailed =
-      _$profilePreferencesResponseLockScreenDetailEnum_detailed;
+  static const ProfilePreferencesResponseLockScreenDetailEnum detailed = _$profilePreferencesResponseLockScreenDetailEnum_detailed;
   @BuiltValueEnumConst(wireName: r'unknown_default_open_api', fallback: true)
-  static const ProfilePreferencesResponseLockScreenDetailEnum
-      unknownDefaultOpenApi =
-      _$profilePreferencesResponseLockScreenDetailEnum_unknownDefaultOpenApi;
+  static const ProfilePreferencesResponseLockScreenDetailEnum unknownDefaultOpenApi = _$profilePreferencesResponseLockScreenDetailEnum_unknownDefaultOpenApi;
 
-  static Serializer<ProfilePreferencesResponseLockScreenDetailEnum>
-      get serializer =>
-          _$profilePreferencesResponseLockScreenDetailEnumSerializer;
+  static Serializer<ProfilePreferencesResponseLockScreenDetailEnum> get serializer => _$profilePreferencesResponseLockScreenDetailEnumSerializer;
 
-  const ProfilePreferencesResponseLockScreenDetailEnum._(String name)
-      : super(name);
+  const ProfilePreferencesResponseLockScreenDetailEnum._(String name): super(name);
 
-  static BuiltSet<ProfilePreferencesResponseLockScreenDetailEnum> get values =>
-      _$profilePreferencesResponseLockScreenDetailEnumValues;
-  static ProfilePreferencesResponseLockScreenDetailEnum valueOf(String name) =>
-      _$profilePreferencesResponseLockScreenDetailEnumValueOf(name);
+  static BuiltSet<ProfilePreferencesResponseLockScreenDetailEnum> get values => _$profilePreferencesResponseLockScreenDetailEnumValues;
+  static ProfilePreferencesResponseLockScreenDetailEnum valueOf(String name) => _$profilePreferencesResponseLockScreenDetailEnumValueOf(name);
 }
+

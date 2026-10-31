@@ -13,13 +13,12 @@ part 'active_mission_summary.g.dart';
 /// ActiveMissionSummary
 ///
 /// Properties:
-/// * [id]
-/// * [missionDate]
-/// * [status]
-/// * [subjectId]
+/// * [id] 
+/// * [missionDate] 
+/// * [status] 
+/// * [subjectId] 
 @BuiltValue()
-abstract class ActiveMissionSummary
-    implements Built<ActiveMissionSummary, ActiveMissionSummaryBuilder> {
+abstract class ActiveMissionSummary implements Built<ActiveMissionSummary, ActiveMissionSummaryBuilder> {
   @BuiltValueField(wireName: r'id')
   String get id;
 
@@ -35,24 +34,18 @@ abstract class ActiveMissionSummary
 
   ActiveMissionSummary._();
 
-  factory ActiveMissionSummary([void updates(ActiveMissionSummaryBuilder b)]) =
-      _$ActiveMissionSummary;
+  factory ActiveMissionSummary([void updates(ActiveMissionSummaryBuilder b)]) = _$ActiveMissionSummary;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(ActiveMissionSummaryBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<ActiveMissionSummary> get serializer =>
-      _$ActiveMissionSummarySerializer();
+  static Serializer<ActiveMissionSummary> get serializer => _$ActiveMissionSummarySerializer();
 }
 
-class _$ActiveMissionSummarySerializer
-    implements PrimitiveSerializer<ActiveMissionSummary> {
+class _$ActiveMissionSummarySerializer implements PrimitiveSerializer<ActiveMissionSummary> {
   @override
-  final Iterable<Type> types = const [
-    ActiveMissionSummary,
-    _$ActiveMissionSummary
-  ];
+  final Iterable<Type> types = const [ActiveMissionSummary, _$ActiveMissionSummary];
 
   @override
   final String wireName = r'ActiveMissionSummary';
@@ -90,9 +83,7 @@ class _$ActiveMissionSummarySerializer
     ActiveMissionSummary object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -164,27 +155,23 @@ class _$ActiveMissionSummarySerializer
   }
 }
 
+
 class ActiveMissionSummaryStatusEnum extends EnumClass {
+
   @BuiltValueEnumConst(wireName: r'planned')
-  static const ActiveMissionSummaryStatusEnum planned =
-      _$activeMissionSummaryStatusEnum_planned;
+  static const ActiveMissionSummaryStatusEnum planned = _$activeMissionSummaryStatusEnum_planned;
   @BuiltValueEnumConst(wireName: r'started')
-  static const ActiveMissionSummaryStatusEnum started =
-      _$activeMissionSummaryStatusEnum_started;
+  static const ActiveMissionSummaryStatusEnum started = _$activeMissionSummaryStatusEnum_started;
   @BuiltValueEnumConst(wireName: r'paused')
-  static const ActiveMissionSummaryStatusEnum paused =
-      _$activeMissionSummaryStatusEnum_paused;
+  static const ActiveMissionSummaryStatusEnum paused = _$activeMissionSummaryStatusEnum_paused;
   @BuiltValueEnumConst(wireName: r'unknown_default_open_api', fallback: true)
-  static const ActiveMissionSummaryStatusEnum unknownDefaultOpenApi =
-      _$activeMissionSummaryStatusEnum_unknownDefaultOpenApi;
+  static const ActiveMissionSummaryStatusEnum unknownDefaultOpenApi = _$activeMissionSummaryStatusEnum_unknownDefaultOpenApi;
 
-  static Serializer<ActiveMissionSummaryStatusEnum> get serializer =>
-      _$activeMissionSummaryStatusEnumSerializer;
+  static Serializer<ActiveMissionSummaryStatusEnum> get serializer => _$activeMissionSummaryStatusEnumSerializer;
 
-  const ActiveMissionSummaryStatusEnum._(String name) : super(name);
+  const ActiveMissionSummaryStatusEnum._(String name): super(name);
 
-  static BuiltSet<ActiveMissionSummaryStatusEnum> get values =>
-      _$activeMissionSummaryStatusEnumValues;
-  static ActiveMissionSummaryStatusEnum valueOf(String name) =>
-      _$activeMissionSummaryStatusEnumValueOf(name);
+  static BuiltSet<ActiveMissionSummaryStatusEnum> get values => _$activeMissionSummaryStatusEnumValues;
+  static ActiveMissionSummaryStatusEnum valueOf(String name) => _$activeMissionSummaryStatusEnumValueOf(name);
 }
+

@@ -14,6 +14,7 @@ import 'package:memora_api_client/src/model/error_envelope.dart';
 import 'package:memora_api_client/src/model/page_concept_progress_item.dart';
 
 class CurriculumApi {
+
   final Dio _dio;
 
   final Serializers _serializers;
@@ -24,13 +25,13 @@ class CurriculumApi {
   /// Returns the authenticated student&#39;s bounded evidence summary and paginated scheduling decisions for one concept, each with allowlisted reason codes, a template key and safe copy. Another learner&#39;s concept returns 404.
   ///
   /// Parameters:
-  /// * [conceptId]
-  /// * [xCorrelationID]
-  /// * [xClientVersion]
-  /// * [xPlatform]
-  /// * [limit]
-  /// * [cursor]
-  /// * [acceptLanguage]
+  /// * [conceptId] 
+  /// * [xCorrelationID] 
+  /// * [xClientVersion] 
+  /// * [xPlatform] 
+  /// * [limit] 
+  /// * [cursor] 
+  /// * [acceptLanguage] 
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -40,7 +41,7 @@ class CurriculumApi {
   ///
   /// Returns a [Future] containing a [Response] with a [ConceptHistoryResponse] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<ConceptHistoryResponse>> getConceptHistory({
+  Future<Response<ConceptHistoryResponse>> getConceptHistory({ 
     required String conceptId,
     required String xCorrelationID,
     required String xClientVersion,
@@ -55,10 +56,7 @@ class CurriculumApi {
     ProgressCallback? onSendProgress,
     ProgressCallback? onReceiveProgress,
   }) async {
-    final _path = r'/v1/concepts/{concept_id}/history'.replaceAll(
-        '{' r'concept_id' '}',
-        encodeQueryParameter(_serializers, conceptId, const FullType(String))
-            .toString());
+    final _path = r'/v1/concepts/{concept_id}/history'.replaceAll('{' r'concept_id' '}', encodeQueryParameter(_serializers, conceptId, const FullType(String)).toString());
     final _options = Options(
       method: r'GET',
       headers: <String, dynamic>{
@@ -82,12 +80,8 @@ class CurriculumApi {
     );
 
     final _queryParameters = <String, dynamic>{
-      if (limit != null)
-        r'limit':
-            encodeQueryParameter(_serializers, limit, const FullType(int)),
-      if (cursor != null)
-        r'cursor':
-            encodeQueryParameter(_serializers, cursor, const FullType(String)),
+      if (limit != null) r'limit': encodeQueryParameter(_serializers, limit, const FullType(int)),
+      if (cursor != null) r'cursor': encodeQueryParameter(_serializers, cursor, const FullType(String)),
     };
 
     final _response = await _dio.request<Object>(
@@ -103,12 +97,11 @@ class CurriculumApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null
-          ? null
-          : _serializers.deserialize(
-              rawResponse,
-              specifiedType: const FullType(ConceptHistoryResponse),
-            ) as ConceptHistoryResponse;
+      _responseData = rawResponse == null ? null : _serializers.deserialize(
+        rawResponse,
+        specifiedType: const FullType(ConceptHistoryResponse),
+      ) as ConceptHistoryResponse;
+
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -135,14 +128,14 @@ class CurriculumApi {
   /// Returns the authenticated student&#39;s concept states in next-review order for the requested horizon, with a retrievability band, a review window and a plain-language due reason. Hidden ranking scores and event payloads are never returned.
   ///
   /// Parameters:
-  /// * [subjectId]
-  /// * [xCorrelationID]
-  /// * [xClientVersion]
-  /// * [xPlatform]
-  /// * [limit]
-  /// * [cursor]
-  /// * [horizonDays]
-  /// * [acceptLanguage]
+  /// * [subjectId] 
+  /// * [xCorrelationID] 
+  /// * [xClientVersion] 
+  /// * [xPlatform] 
+  /// * [limit] 
+  /// * [cursor] 
+  /// * [horizonDays] 
+  /// * [acceptLanguage] 
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -152,7 +145,7 @@ class CurriculumApi {
   ///
   /// Returns a [Future] containing a [Response] with a [PageConceptProgressItem] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<PageConceptProgressItem>> listConceptProgress({
+  Future<Response<PageConceptProgressItem>> listConceptProgress({ 
     required String subjectId,
     required String xCorrelationID,
     required String xClientVersion,
@@ -168,10 +161,7 @@ class CurriculumApi {
     ProgressCallback? onSendProgress,
     ProgressCallback? onReceiveProgress,
   }) async {
-    final _path = r'/v1/subjects/{subject_id}/concept-progress'.replaceAll(
-        '{' r'subject_id' '}',
-        encodeQueryParameter(_serializers, subjectId, const FullType(String))
-            .toString());
+    final _path = r'/v1/subjects/{subject_id}/concept-progress'.replaceAll('{' r'subject_id' '}', encodeQueryParameter(_serializers, subjectId, const FullType(String)).toString());
     final _options = Options(
       method: r'GET',
       headers: <String, dynamic>{
@@ -195,15 +185,9 @@ class CurriculumApi {
     );
 
     final _queryParameters = <String, dynamic>{
-      if (limit != null)
-        r'limit':
-            encodeQueryParameter(_serializers, limit, const FullType(int)),
-      if (cursor != null)
-        r'cursor':
-            encodeQueryParameter(_serializers, cursor, const FullType(String)),
-      if (horizonDays != null)
-        r'horizon_days': encodeQueryParameter(
-            _serializers, horizonDays, const FullType(num)),
+      if (limit != null) r'limit': encodeQueryParameter(_serializers, limit, const FullType(int)),
+      if (cursor != null) r'cursor': encodeQueryParameter(_serializers, cursor, const FullType(String)),
+      if (horizonDays != null) r'horizon_days': encodeQueryParameter(_serializers, horizonDays, const FullType(num)),
     };
 
     final _response = await _dio.request<Object>(
@@ -219,12 +203,11 @@ class CurriculumApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null
-          ? null
-          : _serializers.deserialize(
-              rawResponse,
-              specifiedType: const FullType(PageConceptProgressItem),
-            ) as PageConceptProgressItem;
+      _responseData = rawResponse == null ? null : _serializers.deserialize(
+        rawResponse,
+        specifiedType: const FullType(PageConceptProgressItem),
+      ) as PageConceptProgressItem;
+
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -246,4 +229,5 @@ class CurriculumApi {
       extra: _response.extra,
     );
   }
+
 }

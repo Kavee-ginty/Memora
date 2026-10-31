@@ -405,6 +405,12 @@ def test_profile_update_normalizes_name_and_validates_timezone() -> None:
             ProfileUpdateRequest(version=1, timezone="Not/A_Zone"),
             idempotency_key="profile-timezone-key",
         )
+    with pytest.raises(ApiError, match="validation_failed"):
+        service.update_profile(
+            request,
+            ProfileUpdateRequest(version=1, timezone="../UTC"),
+            idempotency_key="profile-timezone-path-key",
+        )
 
 
 def test_preference_models_reject_partial_pairs_unknown_keys_and_cap() -> None:

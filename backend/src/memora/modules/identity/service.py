@@ -377,7 +377,7 @@ class IdentityService:
     def _validate_timezone(value: str) -> None:
         try:
             ZoneInfo(value)
-        except ZoneInfoNotFoundError as exc:
+        except (ValueError, ZoneInfoNotFoundError) as exc:
             raise ApiError(
                 422,
                 "validation_failed",

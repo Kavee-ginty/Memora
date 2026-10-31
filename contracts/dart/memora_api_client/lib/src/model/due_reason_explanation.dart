@@ -12,12 +12,11 @@ part 'due_reason_explanation.g.dart';
 /// Why this concept is due, in plain language (PRD 016).
 ///
 /// Properties:
-/// * [message]
-/// * [reasonCode]
-/// * [templateKey]
+/// * [message] 
+/// * [reasonCode] 
+/// * [templateKey] 
 @BuiltValue()
-abstract class DueReasonExplanation
-    implements Built<DueReasonExplanation, DueReasonExplanationBuilder> {
+abstract class DueReasonExplanation implements Built<DueReasonExplanation, DueReasonExplanationBuilder> {
   @BuiltValueField(wireName: r'message')
   String get message;
 
@@ -31,24 +30,18 @@ abstract class DueReasonExplanation
 
   DueReasonExplanation._();
 
-  factory DueReasonExplanation([void updates(DueReasonExplanationBuilder b)]) =
-      _$DueReasonExplanation;
+  factory DueReasonExplanation([void updates(DueReasonExplanationBuilder b)]) = _$DueReasonExplanation;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(DueReasonExplanationBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<DueReasonExplanation> get serializer =>
-      _$DueReasonExplanationSerializer();
+  static Serializer<DueReasonExplanation> get serializer => _$DueReasonExplanationSerializer();
 }
 
-class _$DueReasonExplanationSerializer
-    implements PrimitiveSerializer<DueReasonExplanation> {
+class _$DueReasonExplanationSerializer implements PrimitiveSerializer<DueReasonExplanation> {
   @override
-  final Iterable<Type> types = const [
-    DueReasonExplanation,
-    _$DueReasonExplanation
-  ];
+  final Iterable<Type> types = const [DueReasonExplanation, _$DueReasonExplanation];
 
   @override
   final String wireName = r'DueReasonExplanation';
@@ -81,9 +74,7 @@ class _$DueReasonExplanationSerializer
     DueReasonExplanation object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -148,69 +139,50 @@ class _$DueReasonExplanationSerializer
   }
 }
 
+
 class DueReasonExplanationReasonCodeEnum extends EnumClass {
+
   @BuiltValueEnumConst(wireName: r'forgetting_curve_overdue')
-  static const DueReasonExplanationReasonCodeEnum forgettingCurveOverdue =
-      _$dueReasonExplanationReasonCodeEnum_forgettingCurveOverdue;
+  static const DueReasonExplanationReasonCodeEnum forgettingCurveOverdue = _$dueReasonExplanationReasonCodeEnum_forgettingCurveOverdue;
   @BuiltValueEnumConst(wireName: r'daily_retention_protect')
-  static const DueReasonExplanationReasonCodeEnum dailyRetentionProtect =
-      _$dueReasonExplanationReasonCodeEnum_dailyRetentionProtect;
+  static const DueReasonExplanationReasonCodeEnum dailyRetentionProtect = _$dueReasonExplanationReasonCodeEnum_dailyRetentionProtect;
   @BuiltValueEnumConst(wireName: r'high_error_rate_repair')
-  static const DueReasonExplanationReasonCodeEnum highErrorRateRepair =
-      _$dueReasonExplanationReasonCodeEnum_highErrorRateRepair;
+  static const DueReasonExplanationReasonCodeEnum highErrorRateRepair = _$dueReasonExplanationReasonCodeEnum_highErrorRateRepair;
   @BuiltValueEnumConst(wireName: r'weak_prerequisite_failure')
-  static const DueReasonExplanationReasonCodeEnum weakPrerequisiteFailure =
-      _$dueReasonExplanationReasonCodeEnum_weakPrerequisiteFailure;
+  static const DueReasonExplanationReasonCodeEnum weakPrerequisiteFailure = _$dueReasonExplanationReasonCodeEnum_weakPrerequisiteFailure;
   @BuiltValueEnumConst(wireName: r'new_concept_introduction')
-  static const DueReasonExplanationReasonCodeEnum newConceptIntroduction =
-      _$dueReasonExplanationReasonCodeEnum_newConceptIntroduction;
+  static const DueReasonExplanationReasonCodeEnum newConceptIntroduction = _$dueReasonExplanationReasonCodeEnum_newConceptIntroduction;
   @BuiltValueEnumConst(wireName: r'unknown_default_open_api', fallback: true)
-  static const DueReasonExplanationReasonCodeEnum unknownDefaultOpenApi =
-      _$dueReasonExplanationReasonCodeEnum_unknownDefaultOpenApi;
+  static const DueReasonExplanationReasonCodeEnum unknownDefaultOpenApi = _$dueReasonExplanationReasonCodeEnum_unknownDefaultOpenApi;
 
-  static Serializer<DueReasonExplanationReasonCodeEnum> get serializer =>
-      _$dueReasonExplanationReasonCodeEnumSerializer;
+  static Serializer<DueReasonExplanationReasonCodeEnum> get serializer => _$dueReasonExplanationReasonCodeEnumSerializer;
 
-  const DueReasonExplanationReasonCodeEnum._(String name) : super(name);
+  const DueReasonExplanationReasonCodeEnum._(String name): super(name);
 
-  static BuiltSet<DueReasonExplanationReasonCodeEnum> get values =>
-      _$dueReasonExplanationReasonCodeEnumValues;
-  static DueReasonExplanationReasonCodeEnum valueOf(String name) =>
-      _$dueReasonExplanationReasonCodeEnumValueOf(name);
+  static BuiltSet<DueReasonExplanationReasonCodeEnum> get values => _$dueReasonExplanationReasonCodeEnumValues;
+  static DueReasonExplanationReasonCodeEnum valueOf(String name) => _$dueReasonExplanationReasonCodeEnumValueOf(name);
 }
 
 class DueReasonExplanationTemplateKeyEnum extends EnumClass {
+
   @BuiltValueEnumConst(wireName: r'memory.due_reason.overdue')
-  static const DueReasonExplanationTemplateKeyEnum
-      memoryPeriodDueReasonPeriodOverdue =
-      _$dueReasonExplanationTemplateKeyEnum_memoryPeriodDueReasonPeriodOverdue;
+  static const DueReasonExplanationTemplateKeyEnum memoryPeriodDueReasonPeriodOverdue = _$dueReasonExplanationTemplateKeyEnum_memoryPeriodDueReasonPeriodOverdue;
   @BuiltValueEnumConst(wireName: r'memory.due_reason.retention')
-  static const DueReasonExplanationTemplateKeyEnum
-      memoryPeriodDueReasonPeriodRetention =
-      _$dueReasonExplanationTemplateKeyEnum_memoryPeriodDueReasonPeriodRetention;
+  static const DueReasonExplanationTemplateKeyEnum memoryPeriodDueReasonPeriodRetention = _$dueReasonExplanationTemplateKeyEnum_memoryPeriodDueReasonPeriodRetention;
   @BuiltValueEnumConst(wireName: r'memory.due_reason.error_repair')
-  static const DueReasonExplanationTemplateKeyEnum
-      memoryPeriodDueReasonPeriodErrorRepair =
-      _$dueReasonExplanationTemplateKeyEnum_memoryPeriodDueReasonPeriodErrorRepair;
+  static const DueReasonExplanationTemplateKeyEnum memoryPeriodDueReasonPeriodErrorRepair = _$dueReasonExplanationTemplateKeyEnum_memoryPeriodDueReasonPeriodErrorRepair;
   @BuiltValueEnumConst(wireName: r'memory.due_reason.weak_prerequisite')
-  static const DueReasonExplanationTemplateKeyEnum
-      memoryPeriodDueReasonPeriodWeakPrerequisite =
-      _$dueReasonExplanationTemplateKeyEnum_memoryPeriodDueReasonPeriodWeakPrerequisite;
+  static const DueReasonExplanationTemplateKeyEnum memoryPeriodDueReasonPeriodWeakPrerequisite = _$dueReasonExplanationTemplateKeyEnum_memoryPeriodDueReasonPeriodWeakPrerequisite;
   @BuiltValueEnumConst(wireName: r'memory.due_reason.new_concept')
-  static const DueReasonExplanationTemplateKeyEnum
-      memoryPeriodDueReasonPeriodNewConcept =
-      _$dueReasonExplanationTemplateKeyEnum_memoryPeriodDueReasonPeriodNewConcept;
+  static const DueReasonExplanationTemplateKeyEnum memoryPeriodDueReasonPeriodNewConcept = _$dueReasonExplanationTemplateKeyEnum_memoryPeriodDueReasonPeriodNewConcept;
   @BuiltValueEnumConst(wireName: r'unknown_default_open_api', fallback: true)
-  static const DueReasonExplanationTemplateKeyEnum unknownDefaultOpenApi =
-      _$dueReasonExplanationTemplateKeyEnum_unknownDefaultOpenApi;
+  static const DueReasonExplanationTemplateKeyEnum unknownDefaultOpenApi = _$dueReasonExplanationTemplateKeyEnum_unknownDefaultOpenApi;
 
-  static Serializer<DueReasonExplanationTemplateKeyEnum> get serializer =>
-      _$dueReasonExplanationTemplateKeyEnumSerializer;
+  static Serializer<DueReasonExplanationTemplateKeyEnum> get serializer => _$dueReasonExplanationTemplateKeyEnumSerializer;
 
-  const DueReasonExplanationTemplateKeyEnum._(String name) : super(name);
+  const DueReasonExplanationTemplateKeyEnum._(String name): super(name);
 
-  static BuiltSet<DueReasonExplanationTemplateKeyEnum> get values =>
-      _$dueReasonExplanationTemplateKeyEnumValues;
-  static DueReasonExplanationTemplateKeyEnum valueOf(String name) =>
-      _$dueReasonExplanationTemplateKeyEnumValueOf(name);
+  static BuiltSet<DueReasonExplanationTemplateKeyEnum> get values => _$dueReasonExplanationTemplateKeyEnumValues;
+  static DueReasonExplanationTemplateKeyEnum valueOf(String name) => _$dueReasonExplanationTemplateKeyEnumValueOf(name);
 }
+

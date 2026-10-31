@@ -14,19 +14,18 @@ part 'concept_history_response.g.dart';
 /// Concept state, bounded evidence summary and paginated explanations.
 ///
 /// Properties:
-/// * [conceptId]
-/// * [conceptVersionId]
-/// * [evidence]
-/// * [hasMore]
-/// * [items]
-/// * [nextCursor]
-/// * [nextReviewAt]
-/// * [stableCode]
-/// * [stateBand]
-/// * [title]
+/// * [conceptId] 
+/// * [conceptVersionId] 
+/// * [evidence] 
+/// * [hasMore] 
+/// * [items] 
+/// * [nextCursor] 
+/// * [nextReviewAt] 
+/// * [stableCode] 
+/// * [stateBand] 
+/// * [title] 
 @BuiltValue()
-abstract class ConceptHistoryResponse
-    implements Built<ConceptHistoryResponse, ConceptHistoryResponseBuilder> {
+abstract class ConceptHistoryResponse implements Built<ConceptHistoryResponse, ConceptHistoryResponseBuilder> {
   @BuiltValueField(wireName: r'concept_id')
   String get conceptId;
 
@@ -60,25 +59,18 @@ abstract class ConceptHistoryResponse
 
   ConceptHistoryResponse._();
 
-  factory ConceptHistoryResponse(
-          [void updates(ConceptHistoryResponseBuilder b)]) =
-      _$ConceptHistoryResponse;
+  factory ConceptHistoryResponse([void updates(ConceptHistoryResponseBuilder b)]) = _$ConceptHistoryResponse;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(ConceptHistoryResponseBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<ConceptHistoryResponse> get serializer =>
-      _$ConceptHistoryResponseSerializer();
+  static Serializer<ConceptHistoryResponse> get serializer => _$ConceptHistoryResponseSerializer();
 }
 
-class _$ConceptHistoryResponseSerializer
-    implements PrimitiveSerializer<ConceptHistoryResponse> {
+class _$ConceptHistoryResponseSerializer implements PrimitiveSerializer<ConceptHistoryResponse> {
   @override
-  final Iterable<Type> types = const [
-    ConceptHistoryResponse,
-    _$ConceptHistoryResponse
-  ];
+  final Iterable<Type> types = const [ConceptHistoryResponse, _$ConceptHistoryResponse];
 
   @override
   final String wireName = r'ConceptHistoryResponse';
@@ -111,16 +103,13 @@ class _$ConceptHistoryResponseSerializer
     yield r'items';
     yield serializers.serialize(
       object.items,
-      specifiedType:
-          const FullType(BuiltList, [FullType(SchedulingExplanation)]),
+      specifiedType: const FullType(BuiltList, [FullType(SchedulingExplanation)]),
     );
     yield r'next_cursor';
-    yield object.nextCursor == null
-        ? null
-        : serializers.serialize(
-            object.nextCursor,
-            specifiedType: const FullType.nullable(String),
-          );
+    yield object.nextCursor == null ? null : serializers.serialize(
+      object.nextCursor,
+      specifiedType: const FullType.nullable(String),
+    );
     yield r'next_review_at';
     yield serializers.serialize(
       object.nextReviewAt,
@@ -149,9 +138,7 @@ class _$ConceptHistoryResponseSerializer
     ConceptHistoryResponse object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -197,8 +184,7 @@ class _$ConceptHistoryResponseSerializer
         case r'items':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType:
-                const FullType(BuiltList, [FullType(SchedulingExplanation)]),
+            specifiedType: const FullType(BuiltList, [FullType(SchedulingExplanation)]),
           ) as BuiltList<SchedulingExplanation>;
           result.items.replace(valueDes);
           break;
@@ -267,30 +253,25 @@ class _$ConceptHistoryResponseSerializer
   }
 }
 
+
 class ConceptHistoryResponseStateBandEnum extends EnumClass {
+
   @BuiltValueEnumConst(wireName: r'fresh')
-  static const ConceptHistoryResponseStateBandEnum fresh =
-      _$conceptHistoryResponseStateBandEnum_fresh;
+  static const ConceptHistoryResponseStateBandEnum fresh = _$conceptHistoryResponseStateBandEnum_fresh;
   @BuiltValueEnumConst(wireName: r'settling')
-  static const ConceptHistoryResponseStateBandEnum settling =
-      _$conceptHistoryResponseStateBandEnum_settling;
+  static const ConceptHistoryResponseStateBandEnum settling = _$conceptHistoryResponseStateBandEnum_settling;
   @BuiltValueEnumConst(wireName: r'fading')
-  static const ConceptHistoryResponseStateBandEnum fading =
-      _$conceptHistoryResponseStateBandEnum_fading;
+  static const ConceptHistoryResponseStateBandEnum fading = _$conceptHistoryResponseStateBandEnum_fading;
   @BuiltValueEnumConst(wireName: r'critical')
-  static const ConceptHistoryResponseStateBandEnum critical =
-      _$conceptHistoryResponseStateBandEnum_critical;
+  static const ConceptHistoryResponseStateBandEnum critical = _$conceptHistoryResponseStateBandEnum_critical;
   @BuiltValueEnumConst(wireName: r'unknown_default_open_api', fallback: true)
-  static const ConceptHistoryResponseStateBandEnum unknownDefaultOpenApi =
-      _$conceptHistoryResponseStateBandEnum_unknownDefaultOpenApi;
+  static const ConceptHistoryResponseStateBandEnum unknownDefaultOpenApi = _$conceptHistoryResponseStateBandEnum_unknownDefaultOpenApi;
 
-  static Serializer<ConceptHistoryResponseStateBandEnum> get serializer =>
-      _$conceptHistoryResponseStateBandEnumSerializer;
+  static Serializer<ConceptHistoryResponseStateBandEnum> get serializer => _$conceptHistoryResponseStateBandEnumSerializer;
 
-  const ConceptHistoryResponseStateBandEnum._(String name) : super(name);
+  const ConceptHistoryResponseStateBandEnum._(String name): super(name);
 
-  static BuiltSet<ConceptHistoryResponseStateBandEnum> get values =>
-      _$conceptHistoryResponseStateBandEnumValues;
-  static ConceptHistoryResponseStateBandEnum valueOf(String name) =>
-      _$conceptHistoryResponseStateBandEnumValueOf(name);
+  static BuiltSet<ConceptHistoryResponseStateBandEnum> get values => _$conceptHistoryResponseStateBandEnumValues;
+  static ConceptHistoryResponseStateBandEnum valueOf(String name) => _$conceptHistoryResponseStateBandEnumValueOf(name);
 }
+

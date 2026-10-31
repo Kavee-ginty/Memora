@@ -12,18 +12,17 @@ part 'scheduling_explanation.g.dart';
 /// One stored scheduling decision and its allowlisted explanation.
 ///
 /// Properties:
-/// * [decidedAt]
-/// * [decisionId]
-/// * [engineVersion]
-/// * [message]
-/// * [nextReviewAt]
-/// * [policyVersion]
-/// * [reasonCodes]
-/// * [templateKey]
-/// * [triggerEventType]
+/// * [decidedAt] 
+/// * [decisionId] 
+/// * [engineVersion] 
+/// * [message] 
+/// * [nextReviewAt] 
+/// * [policyVersion] 
+/// * [reasonCodes] 
+/// * [templateKey] 
+/// * [triggerEventType] 
 @BuiltValue()
-abstract class SchedulingExplanation
-    implements Built<SchedulingExplanation, SchedulingExplanationBuilder> {
+abstract class SchedulingExplanation implements Built<SchedulingExplanation, SchedulingExplanationBuilder> {
   @BuiltValueField(wireName: r'decided_at')
   String get decidedAt;
 
@@ -56,24 +55,18 @@ abstract class SchedulingExplanation
 
   SchedulingExplanation._();
 
-  factory SchedulingExplanation(
-      [void updates(SchedulingExplanationBuilder b)]) = _$SchedulingExplanation;
+  factory SchedulingExplanation([void updates(SchedulingExplanationBuilder b)]) = _$SchedulingExplanation;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(SchedulingExplanationBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<SchedulingExplanation> get serializer =>
-      _$SchedulingExplanationSerializer();
+  static Serializer<SchedulingExplanation> get serializer => _$SchedulingExplanationSerializer();
 }
 
-class _$SchedulingExplanationSerializer
-    implements PrimitiveSerializer<SchedulingExplanation> {
+class _$SchedulingExplanationSerializer implements PrimitiveSerializer<SchedulingExplanation> {
   @override
-  final Iterable<Type> types = const [
-    SchedulingExplanation,
-    _$SchedulingExplanation
-  ];
+  final Iterable<Type> types = const [SchedulingExplanation, _$SchedulingExplanation];
 
   @override
   final String wireName = r'SchedulingExplanation';
@@ -116,8 +109,7 @@ class _$SchedulingExplanationSerializer
     yield r'reason_codes';
     yield serializers.serialize(
       object.reasonCodes,
-      specifiedType: const FullType(
-          BuiltList, [FullType(SchedulingExplanationReasonCodesEnum)]),
+      specifiedType: const FullType(BuiltList, [FullType(SchedulingExplanationReasonCodesEnum)]),
     );
     yield r'template_key';
     yield serializers.serialize(
@@ -137,9 +129,7 @@ class _$SchedulingExplanationSerializer
     SchedulingExplanation object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -199,8 +189,7 @@ class _$SchedulingExplanationSerializer
         case r'reason_codes':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(
-                BuiltList, [FullType(SchedulingExplanationReasonCodesEnum)]),
+            specifiedType: const FullType(BuiltList, [FullType(SchedulingExplanationReasonCodesEnum)]),
           ) as BuiltList<SchedulingExplanationReasonCodesEnum>;
           result.reasonCodes.replace(valueDes);
           break;
@@ -214,8 +203,7 @@ class _$SchedulingExplanationSerializer
         case r'trigger_event_type':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType:
-                const FullType(SchedulingExplanationTriggerEventTypeEnum),
+            specifiedType: const FullType(SchedulingExplanationTriggerEventTypeEnum),
           ) as SchedulingExplanationTriggerEventTypeEnum;
           result.triggerEventType = valueDes;
           break;
@@ -248,140 +236,97 @@ class _$SchedulingExplanationSerializer
   }
 }
 
+
 class SchedulingExplanationReasonCodesEnum extends EnumClass {
+
   @BuiltValueEnumConst(wireName: r'state_initialized')
-  static const SchedulingExplanationReasonCodesEnum stateInitialized =
-      _$schedulingExplanationReasonCodesEnum_stateInitialized;
+  static const SchedulingExplanationReasonCodesEnum stateInitialized = _$schedulingExplanationReasonCodesEnum_stateInitialized;
   @BuiltValueEnumConst(wireName: r'exposure_recorded')
-  static const SchedulingExplanationReasonCodesEnum exposureRecorded =
-      _$schedulingExplanationReasonCodesEnum_exposureRecorded;
+  static const SchedulingExplanationReasonCodesEnum exposureRecorded = _$schedulingExplanationReasonCodesEnum_exposureRecorded;
   @BuiltValueEnumConst(wireName: r'recall_success')
-  static const SchedulingExplanationReasonCodesEnum recallSuccess =
-      _$schedulingExplanationReasonCodesEnum_recallSuccess;
+  static const SchedulingExplanationReasonCodesEnum recallSuccess = _$schedulingExplanationReasonCodesEnum_recallSuccess;
   @BuiltValueEnumConst(wireName: r'recall_lapse')
-  static const SchedulingExplanationReasonCodesEnum recallLapse =
-      _$schedulingExplanationReasonCodesEnum_recallLapse;
+  static const SchedulingExplanationReasonCodesEnum recallLapse = _$schedulingExplanationReasonCodesEnum_recallLapse;
   @BuiltValueEnumConst(wireName: r'review_scheduled')
-  static const SchedulingExplanationReasonCodesEnum reviewScheduled =
-      _$schedulingExplanationReasonCodesEnum_reviewScheduled;
+  static const SchedulingExplanationReasonCodesEnum reviewScheduled = _$schedulingExplanationReasonCodesEnum_reviewScheduled;
   @BuiltValueEnumConst(wireName: r'out_of_order_evidence')
-  static const SchedulingExplanationReasonCodesEnum outOfOrderEvidence =
-      _$schedulingExplanationReasonCodesEnum_outOfOrderEvidence;
+  static const SchedulingExplanationReasonCodesEnum outOfOrderEvidence = _$schedulingExplanationReasonCodesEnum_outOfOrderEvidence;
   @BuiltValueEnumConst(wireName: r'first_review_bounded')
-  static const SchedulingExplanationReasonCodesEnum firstReviewBounded =
-      _$schedulingExplanationReasonCodesEnum_firstReviewBounded;
+  static const SchedulingExplanationReasonCodesEnum firstReviewBounded = _$schedulingExplanationReasonCodesEnum_firstReviewBounded;
   @BuiltValueEnumConst(wireName: r'evidence_justified_schedule')
-  static const SchedulingExplanationReasonCodesEnum evidenceJustifiedSchedule =
-      _$schedulingExplanationReasonCodesEnum_evidenceJustifiedSchedule;
+  static const SchedulingExplanationReasonCodesEnum evidenceJustifiedSchedule = _$schedulingExplanationReasonCodesEnum_evidenceJustifiedSchedule;
   @BuiltValueEnumConst(wireName: r'comeback_elapsed')
-  static const SchedulingExplanationReasonCodesEnum comebackElapsed =
-      _$schedulingExplanationReasonCodesEnum_comebackElapsed;
+  static const SchedulingExplanationReasonCodesEnum comebackElapsed = _$schedulingExplanationReasonCodesEnum_comebackElapsed;
   @BuiltValueEnumConst(wireName: r'low_confidence_damped')
-  static const SchedulingExplanationReasonCodesEnum lowConfidenceDamped =
-      _$schedulingExplanationReasonCodesEnum_lowConfidenceDamped;
+  static const SchedulingExplanationReasonCodesEnum lowConfidenceDamped = _$schedulingExplanationReasonCodesEnum_lowConfidenceDamped;
   @BuiltValueEnumConst(wireName: r'weak_prerequisite_recover')
-  static const SchedulingExplanationReasonCodesEnum weakPrerequisiteRecover =
-      _$schedulingExplanationReasonCodesEnum_weakPrerequisiteRecover;
+  static const SchedulingExplanationReasonCodesEnum weakPrerequisiteRecover = _$schedulingExplanationReasonCodesEnum_weakPrerequisiteRecover;
   @BuiltValueEnumConst(wireName: r'interval_bounded')
-  static const SchedulingExplanationReasonCodesEnum intervalBounded =
-      _$schedulingExplanationReasonCodesEnum_intervalBounded;
+  static const SchedulingExplanationReasonCodesEnum intervalBounded = _$schedulingExplanationReasonCodesEnum_intervalBounded;
   @BuiltValueEnumConst(wireName: r'unknown_default_open_api', fallback: true)
-  static const SchedulingExplanationReasonCodesEnum unknownDefaultOpenApi =
-      _$schedulingExplanationReasonCodesEnum_unknownDefaultOpenApi;
+  static const SchedulingExplanationReasonCodesEnum unknownDefaultOpenApi = _$schedulingExplanationReasonCodesEnum_unknownDefaultOpenApi;
 
-  static Serializer<SchedulingExplanationReasonCodesEnum> get serializer =>
-      _$schedulingExplanationReasonCodesEnumSerializer;
+  static Serializer<SchedulingExplanationReasonCodesEnum> get serializer => _$schedulingExplanationReasonCodesEnumSerializer;
 
-  const SchedulingExplanationReasonCodesEnum._(String name) : super(name);
+  const SchedulingExplanationReasonCodesEnum._(String name): super(name);
 
-  static BuiltSet<SchedulingExplanationReasonCodesEnum> get values =>
-      _$schedulingExplanationReasonCodesEnumValues;
-  static SchedulingExplanationReasonCodesEnum valueOf(String name) =>
-      _$schedulingExplanationReasonCodesEnumValueOf(name);
+  static BuiltSet<SchedulingExplanationReasonCodesEnum> get values => _$schedulingExplanationReasonCodesEnumValues;
+  static SchedulingExplanationReasonCodesEnum valueOf(String name) => _$schedulingExplanationReasonCodesEnumValueOf(name);
 }
 
 class SchedulingExplanationTemplateKeyEnum extends EnumClass {
+
   @BuiltValueEnumConst(wireName: r'memory.explanation.state_initialized')
-  static const SchedulingExplanationTemplateKeyEnum
-      memoryPeriodExplanationPeriodStateInitialized =
-      _$schedulingExplanationTemplateKeyEnum_memoryPeriodExplanationPeriodStateInitialized;
+  static const SchedulingExplanationTemplateKeyEnum memoryPeriodExplanationPeriodStateInitialized = _$schedulingExplanationTemplateKeyEnum_memoryPeriodExplanationPeriodStateInitialized;
   @BuiltValueEnumConst(wireName: r'memory.explanation.exposure_recorded')
-  static const SchedulingExplanationTemplateKeyEnum
-      memoryPeriodExplanationPeriodExposureRecorded =
-      _$schedulingExplanationTemplateKeyEnum_memoryPeriodExplanationPeriodExposureRecorded;
+  static const SchedulingExplanationTemplateKeyEnum memoryPeriodExplanationPeriodExposureRecorded = _$schedulingExplanationTemplateKeyEnum_memoryPeriodExplanationPeriodExposureRecorded;
   @BuiltValueEnumConst(wireName: r'memory.explanation.recall_success')
-  static const SchedulingExplanationTemplateKeyEnum
-      memoryPeriodExplanationPeriodRecallSuccess =
-      _$schedulingExplanationTemplateKeyEnum_memoryPeriodExplanationPeriodRecallSuccess;
+  static const SchedulingExplanationTemplateKeyEnum memoryPeriodExplanationPeriodRecallSuccess = _$schedulingExplanationTemplateKeyEnum_memoryPeriodExplanationPeriodRecallSuccess;
   @BuiltValueEnumConst(wireName: r'memory.explanation.recall_lapse')
-  static const SchedulingExplanationTemplateKeyEnum
-      memoryPeriodExplanationPeriodRecallLapse =
-      _$schedulingExplanationTemplateKeyEnum_memoryPeriodExplanationPeriodRecallLapse;
+  static const SchedulingExplanationTemplateKeyEnum memoryPeriodExplanationPeriodRecallLapse = _$schedulingExplanationTemplateKeyEnum_memoryPeriodExplanationPeriodRecallLapse;
   @BuiltValueEnumConst(wireName: r'memory.explanation.first_review_scheduled')
-  static const SchedulingExplanationTemplateKeyEnum
-      memoryPeriodExplanationPeriodFirstReviewScheduled =
-      _$schedulingExplanationTemplateKeyEnum_memoryPeriodExplanationPeriodFirstReviewScheduled;
+  static const SchedulingExplanationTemplateKeyEnum memoryPeriodExplanationPeriodFirstReviewScheduled = _$schedulingExplanationTemplateKeyEnum_memoryPeriodExplanationPeriodFirstReviewScheduled;
   @BuiltValueEnumConst(wireName: r'memory.explanation.comeback')
-  static const SchedulingExplanationTemplateKeyEnum
-      memoryPeriodExplanationPeriodComeback =
-      _$schedulingExplanationTemplateKeyEnum_memoryPeriodExplanationPeriodComeback;
+  static const SchedulingExplanationTemplateKeyEnum memoryPeriodExplanationPeriodComeback = _$schedulingExplanationTemplateKeyEnum_memoryPeriodExplanationPeriodComeback;
   @BuiltValueEnumConst(wireName: r'memory.explanation.low_confidence')
-  static const SchedulingExplanationTemplateKeyEnum
-      memoryPeriodExplanationPeriodLowConfidence =
-      _$schedulingExplanationTemplateKeyEnum_memoryPeriodExplanationPeriodLowConfidence;
+  static const SchedulingExplanationTemplateKeyEnum memoryPeriodExplanationPeriodLowConfidence = _$schedulingExplanationTemplateKeyEnum_memoryPeriodExplanationPeriodLowConfidence;
   @BuiltValueEnumConst(wireName: r'memory.explanation.weak_prerequisite')
-  static const SchedulingExplanationTemplateKeyEnum
-      memoryPeriodExplanationPeriodWeakPrerequisite =
-      _$schedulingExplanationTemplateKeyEnum_memoryPeriodExplanationPeriodWeakPrerequisite;
+  static const SchedulingExplanationTemplateKeyEnum memoryPeriodExplanationPeriodWeakPrerequisite = _$schedulingExplanationTemplateKeyEnum_memoryPeriodExplanationPeriodWeakPrerequisite;
   @BuiltValueEnumConst(wireName: r'memory.explanation.evidence_recorded')
-  static const SchedulingExplanationTemplateKeyEnum
-      memoryPeriodExplanationPeriodEvidenceRecorded =
-      _$schedulingExplanationTemplateKeyEnum_memoryPeriodExplanationPeriodEvidenceRecorded;
+  static const SchedulingExplanationTemplateKeyEnum memoryPeriodExplanationPeriodEvidenceRecorded = _$schedulingExplanationTemplateKeyEnum_memoryPeriodExplanationPeriodEvidenceRecorded;
   @BuiltValueEnumConst(wireName: r'unknown_default_open_api', fallback: true)
-  static const SchedulingExplanationTemplateKeyEnum unknownDefaultOpenApi =
-      _$schedulingExplanationTemplateKeyEnum_unknownDefaultOpenApi;
+  static const SchedulingExplanationTemplateKeyEnum unknownDefaultOpenApi = _$schedulingExplanationTemplateKeyEnum_unknownDefaultOpenApi;
 
-  static Serializer<SchedulingExplanationTemplateKeyEnum> get serializer =>
-      _$schedulingExplanationTemplateKeyEnumSerializer;
+  static Serializer<SchedulingExplanationTemplateKeyEnum> get serializer => _$schedulingExplanationTemplateKeyEnumSerializer;
 
-  const SchedulingExplanationTemplateKeyEnum._(String name) : super(name);
+  const SchedulingExplanationTemplateKeyEnum._(String name): super(name);
 
-  static BuiltSet<SchedulingExplanationTemplateKeyEnum> get values =>
-      _$schedulingExplanationTemplateKeyEnumValues;
-  static SchedulingExplanationTemplateKeyEnum valueOf(String name) =>
-      _$schedulingExplanationTemplateKeyEnumValueOf(name);
+  static BuiltSet<SchedulingExplanationTemplateKeyEnum> get values => _$schedulingExplanationTemplateKeyEnumValues;
+  static SchedulingExplanationTemplateKeyEnum valueOf(String name) => _$schedulingExplanationTemplateKeyEnumValueOf(name);
 }
 
 class SchedulingExplanationTriggerEventTypeEnum extends EnumClass {
+
   @BuiltValueEnumConst(wireName: r'exposure')
-  static const SchedulingExplanationTriggerEventTypeEnum exposure =
-      _$schedulingExplanationTriggerEventTypeEnum_exposure;
+  static const SchedulingExplanationTriggerEventTypeEnum exposure = _$schedulingExplanationTriggerEventTypeEnum_exposure;
   @BuiltValueEnumConst(wireName: r'attempt')
-  static const SchedulingExplanationTriggerEventTypeEnum attempt =
-      _$schedulingExplanationTriggerEventTypeEnum_attempt;
+  static const SchedulingExplanationTriggerEventTypeEnum attempt = _$schedulingExplanationTriggerEventTypeEnum_attempt;
   @BuiltValueEnumConst(wireName: r'repair')
-  static const SchedulingExplanationTriggerEventTypeEnum repair =
-      _$schedulingExplanationTriggerEventTypeEnum_repair;
+  static const SchedulingExplanationTriggerEventTypeEnum repair = _$schedulingExplanationTriggerEventTypeEnum_repair;
   @BuiltValueEnumConst(wireName: r'regrade')
-  static const SchedulingExplanationTriggerEventTypeEnum regrade =
-      _$schedulingExplanationTriggerEventTypeEnum_regrade;
+  static const SchedulingExplanationTriggerEventTypeEnum regrade = _$schedulingExplanationTriggerEventTypeEnum_regrade;
   @BuiltValueEnumConst(wireName: r'invalidation')
-  static const SchedulingExplanationTriggerEventTypeEnum invalidation =
-      _$schedulingExplanationTriggerEventTypeEnum_invalidation;
+  static const SchedulingExplanationTriggerEventTypeEnum invalidation = _$schedulingExplanationTriggerEventTypeEnum_invalidation;
   @BuiltValueEnumConst(wireName: r'manual_review')
-  static const SchedulingExplanationTriggerEventTypeEnum manualReview =
-      _$schedulingExplanationTriggerEventTypeEnum_manualReview;
+  static const SchedulingExplanationTriggerEventTypeEnum manualReview = _$schedulingExplanationTriggerEventTypeEnum_manualReview;
   @BuiltValueEnumConst(wireName: r'unknown_default_open_api', fallback: true)
-  static const SchedulingExplanationTriggerEventTypeEnum unknownDefaultOpenApi =
-      _$schedulingExplanationTriggerEventTypeEnum_unknownDefaultOpenApi;
+  static const SchedulingExplanationTriggerEventTypeEnum unknownDefaultOpenApi = _$schedulingExplanationTriggerEventTypeEnum_unknownDefaultOpenApi;
 
-  static Serializer<SchedulingExplanationTriggerEventTypeEnum> get serializer =>
-      _$schedulingExplanationTriggerEventTypeEnumSerializer;
+  static Serializer<SchedulingExplanationTriggerEventTypeEnum> get serializer => _$schedulingExplanationTriggerEventTypeEnumSerializer;
 
-  const SchedulingExplanationTriggerEventTypeEnum._(String name) : super(name);
+  const SchedulingExplanationTriggerEventTypeEnum._(String name): super(name);
 
-  static BuiltSet<SchedulingExplanationTriggerEventTypeEnum> get values =>
-      _$schedulingExplanationTriggerEventTypeEnumValues;
-  static SchedulingExplanationTriggerEventTypeEnum valueOf(String name) =>
-      _$schedulingExplanationTriggerEventTypeEnumValueOf(name);
+  static BuiltSet<SchedulingExplanationTriggerEventTypeEnum> get values => _$schedulingExplanationTriggerEventTypeEnumValues;
+  static SchedulingExplanationTriggerEventTypeEnum valueOf(String name) => _$schedulingExplanationTriggerEventTypeEnumValueOf(name);
 }
+

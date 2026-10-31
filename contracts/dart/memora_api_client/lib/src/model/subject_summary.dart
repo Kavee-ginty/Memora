@@ -11,14 +11,13 @@ part 'subject_summary.g.dart';
 /// SubjectSummary
 ///
 /// Properties:
-/// * [code]
-/// * [curriculumEditionCode]
-/// * [curriculumVersionId]
-/// * [id]
-/// * [name]
+/// * [code] 
+/// * [curriculumEditionCode] 
+/// * [curriculumVersionId] 
+/// * [id] 
+/// * [name] 
 @BuiltValue()
-abstract class SubjectSummary
-    implements Built<SubjectSummary, SubjectSummaryBuilder> {
+abstract class SubjectSummary implements Built<SubjectSummary, SubjectSummaryBuilder> {
   @BuiltValueField(wireName: r'code')
   String get code;
 
@@ -36,19 +35,16 @@ abstract class SubjectSummary
 
   SubjectSummary._();
 
-  factory SubjectSummary([void updates(SubjectSummaryBuilder b)]) =
-      _$SubjectSummary;
+  factory SubjectSummary([void updates(SubjectSummaryBuilder b)]) = _$SubjectSummary;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(SubjectSummaryBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<SubjectSummary> get serializer =>
-      _$SubjectSummarySerializer();
+  static Serializer<SubjectSummary> get serializer => _$SubjectSummarySerializer();
 }
 
-class _$SubjectSummarySerializer
-    implements PrimitiveSerializer<SubjectSummary> {
+class _$SubjectSummarySerializer implements PrimitiveSerializer<SubjectSummary> {
   @override
   final Iterable<Type> types = const [SubjectSummary, _$SubjectSummary];
 
@@ -93,9 +89,7 @@ class _$SubjectSummarySerializer
     SubjectSummary object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -173,3 +167,5 @@ class _$SubjectSummarySerializer
     return result.build();
   }
 }
+
+

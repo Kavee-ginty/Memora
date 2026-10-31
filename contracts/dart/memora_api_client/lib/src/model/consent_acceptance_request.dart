@@ -13,13 +13,11 @@ part 'consent_acceptance_request.g.dart';
 /// ConsentAcceptanceRequest
 ///
 /// Properties:
-/// * [acceptedScopes]
-/// * [policyId]
-/// * [policyVersion]
+/// * [acceptedScopes] 
+/// * [policyId] 
+/// * [policyVersion] 
 @BuiltValue()
-abstract class ConsentAcceptanceRequest
-    implements
-        Built<ConsentAcceptanceRequest, ConsentAcceptanceRequestBuilder> {
+abstract class ConsentAcceptanceRequest implements Built<ConsentAcceptanceRequest, ConsentAcceptanceRequestBuilder> {
   @BuiltValueField(wireName: r'accepted_scopes')
   BuiltList<String> get acceptedScopes;
 
@@ -32,25 +30,18 @@ abstract class ConsentAcceptanceRequest
 
   ConsentAcceptanceRequest._();
 
-  factory ConsentAcceptanceRequest(
-          [void updates(ConsentAcceptanceRequestBuilder b)]) =
-      _$ConsentAcceptanceRequest;
+  factory ConsentAcceptanceRequest([void updates(ConsentAcceptanceRequestBuilder b)]) = _$ConsentAcceptanceRequest;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(ConsentAcceptanceRequestBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<ConsentAcceptanceRequest> get serializer =>
-      _$ConsentAcceptanceRequestSerializer();
+  static Serializer<ConsentAcceptanceRequest> get serializer => _$ConsentAcceptanceRequestSerializer();
 }
 
-class _$ConsentAcceptanceRequestSerializer
-    implements PrimitiveSerializer<ConsentAcceptanceRequest> {
+class _$ConsentAcceptanceRequestSerializer implements PrimitiveSerializer<ConsentAcceptanceRequest> {
   @override
-  final Iterable<Type> types = const [
-    ConsentAcceptanceRequest,
-    _$ConsentAcceptanceRequest
-  ];
+  final Iterable<Type> types = const [ConsentAcceptanceRequest, _$ConsentAcceptanceRequest];
 
   @override
   final String wireName = r'ConsentAcceptanceRequest';
@@ -83,9 +74,7 @@ class _$ConsentAcceptanceRequestSerializer
     ConsentAcceptanceRequest object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -149,3 +138,5 @@ class _$ConsentAcceptanceRequestSerializer
     return result.build();
   }
 }
+
+

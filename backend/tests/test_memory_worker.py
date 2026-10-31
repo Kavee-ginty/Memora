@@ -94,6 +94,21 @@ def test_unknown_event_type_maps_to_no_evidence() -> None:
     assert evidence == []
 
 
+def test_learning_update_without_mapped_concepts_maps_to_no_evidence() -> None:
+    evidence = map_outbox_event(
+        "learning_update",
+        "learning_update.committed",
+        {
+            "schema_version": "1",
+            "user_id": str(uuid4()),
+            "learning_update_id": str(uuid4()),
+            "committed_concepts": [],
+        },
+        outbox_event_id=uuid4(),
+    )
+    assert evidence == []
+
+
 def test_known_event_type_with_wrong_aggregate_is_malformed() -> None:
     with pytest.raises(NonRetryableJobError) as raised:
         map_outbox_event(

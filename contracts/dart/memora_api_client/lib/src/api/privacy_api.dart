@@ -17,6 +17,7 @@ import 'package:memora_api_client/src/model/privacy_export_request.dart';
 import 'package:memora_api_client/src/model/privacy_export_response.dart';
 
 class PrivacyApi {
+
   final Dio _dio;
 
   final Serializers _serializers;
@@ -27,13 +28,13 @@ class PrivacyApi {
   /// Cancels a deletion request if processing has not yet commenced.
   ///
   /// Parameters:
-  /// * [requestId]
-  /// * [xCorrelationID]
-  /// * [xClientVersion]
-  /// * [xPlatform]
-  /// * [idempotencyKey]
-  /// * [privacyDeletionCancelRequest]
-  /// * [acceptLanguage]
+  /// * [requestId] 
+  /// * [xCorrelationID] 
+  /// * [xClientVersion] 
+  /// * [xPlatform] 
+  /// * [idempotencyKey] 
+  /// * [privacyDeletionCancelRequest] 
+  /// * [acceptLanguage] 
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -43,7 +44,7 @@ class PrivacyApi {
   ///
   /// Returns a [Future] containing a [Response] with a [PrivacyDeletionResponse] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<PrivacyDeletionResponse>> cancelPrivacyDeletion({
+  Future<Response<PrivacyDeletionResponse>> cancelPrivacyDeletion({ 
     required String requestId,
     required String xCorrelationID,
     required String xClientVersion,
@@ -58,10 +59,7 @@ class PrivacyApi {
     ProgressCallback? onSendProgress,
     ProgressCallback? onReceiveProgress,
   }) async {
-    final _path = r'/v1/privacy/deletions/{request_id}/cancel'.replaceAll(
-        '{' r'request_id' '}',
-        encodeQueryParameter(_serializers, requestId, const FullType(String))
-            .toString());
+    final _path = r'/v1/privacy/deletions/{request_id}/cancel'.replaceAll('{' r'request_id' '}', encodeQueryParameter(_serializers, requestId, const FullType(String)).toString());
     final _options = Options(
       method: r'POST',
       headers: <String, dynamic>{
@@ -90,11 +88,11 @@ class PrivacyApi {
 
     try {
       const _type = FullType(PrivacyDeletionCancelRequest);
-      _bodyData = _serializers.serialize(privacyDeletionCancelRequest,
-          specifiedType: _type);
-    } catch (error, stackTrace) {
+      _bodyData = _serializers.serialize(privacyDeletionCancelRequest, specifiedType: _type);
+
+    } catch(error, stackTrace) {
       throw DioException(
-        requestOptions: _options.compose(
+         requestOptions: _options.compose(
           _dio.options,
           _path,
         ),
@@ -117,12 +115,11 @@ class PrivacyApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null
-          ? null
-          : _serializers.deserialize(
-              rawResponse,
-              specifiedType: const FullType(PrivacyDeletionResponse),
-            ) as PrivacyDeletionResponse;
+      _responseData = rawResponse == null ? null : _serializers.deserialize(
+        rawResponse,
+        specifiedType: const FullType(PrivacyDeletionResponse),
+      ) as PrivacyDeletionResponse;
+
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -149,12 +146,12 @@ class PrivacyApi {
   /// Idempotently initiates verified durable account deletion after recent authentication.
   ///
   /// Parameters:
-  /// * [xCorrelationID]
-  /// * [xClientVersion]
-  /// * [xPlatform]
-  /// * [idempotencyKey]
-  /// * [privacyDeletionRequest]
-  /// * [acceptLanguage]
+  /// * [xCorrelationID] 
+  /// * [xClientVersion] 
+  /// * [xPlatform] 
+  /// * [idempotencyKey] 
+  /// * [privacyDeletionRequest] 
+  /// * [acceptLanguage] 
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -164,7 +161,7 @@ class PrivacyApi {
   ///
   /// Returns a [Future] containing a [Response] with a [PrivacyDeletionResponse] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<PrivacyDeletionResponse>> createPrivacyDeletion({
+  Future<Response<PrivacyDeletionResponse>> createPrivacyDeletion({ 
     required String xCorrelationID,
     required String xClientVersion,
     required String xPlatform,
@@ -207,11 +204,11 @@ class PrivacyApi {
 
     try {
       const _type = FullType(PrivacyDeletionRequest);
-      _bodyData =
-          _serializers.serialize(privacyDeletionRequest, specifiedType: _type);
-    } catch (error, stackTrace) {
+      _bodyData = _serializers.serialize(privacyDeletionRequest, specifiedType: _type);
+
+    } catch(error, stackTrace) {
       throw DioException(
-        requestOptions: _options.compose(
+         requestOptions: _options.compose(
           _dio.options,
           _path,
         ),
@@ -234,12 +231,11 @@ class PrivacyApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null
-          ? null
-          : _serializers.deserialize(
-              rawResponse,
-              specifiedType: const FullType(PrivacyDeletionResponse),
-            ) as PrivacyDeletionResponse;
+      _responseData = rawResponse == null ? null : _serializers.deserialize(
+        rawResponse,
+        specifiedType: const FullType(PrivacyDeletionResponse),
+      ) as PrivacyDeletionResponse;
+
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -266,12 +262,12 @@ class PrivacyApi {
   /// Idempotently initiates an asynchronous data export job after recent authentication.
   ///
   /// Parameters:
-  /// * [xCorrelationID]
-  /// * [xClientVersion]
-  /// * [xPlatform]
-  /// * [idempotencyKey]
-  /// * [privacyExportRequest]
-  /// * [acceptLanguage]
+  /// * [xCorrelationID] 
+  /// * [xClientVersion] 
+  /// * [xPlatform] 
+  /// * [idempotencyKey] 
+  /// * [privacyExportRequest] 
+  /// * [acceptLanguage] 
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -281,7 +277,7 @@ class PrivacyApi {
   ///
   /// Returns a [Future] containing a [Response] with a [PrivacyExportResponse] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<PrivacyExportResponse>> createPrivacyExport({
+  Future<Response<PrivacyExportResponse>> createPrivacyExport({ 
     required String xCorrelationID,
     required String xClientVersion,
     required String xPlatform,
@@ -324,11 +320,11 @@ class PrivacyApi {
 
     try {
       const _type = FullType(PrivacyExportRequest);
-      _bodyData =
-          _serializers.serialize(privacyExportRequest, specifiedType: _type);
-    } catch (error, stackTrace) {
+      _bodyData = _serializers.serialize(privacyExportRequest, specifiedType: _type);
+
+    } catch(error, stackTrace) {
       throw DioException(
-        requestOptions: _options.compose(
+         requestOptions: _options.compose(
           _dio.options,
           _path,
         ),
@@ -351,12 +347,11 @@ class PrivacyApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null
-          ? null
-          : _serializers.deserialize(
-              rawResponse,
-              specifiedType: const FullType(PrivacyExportResponse),
-            ) as PrivacyExportResponse;
+      _responseData = rawResponse == null ? null : _serializers.deserialize(
+        rawResponse,
+        specifiedType: const FullType(PrivacyExportResponse),
+      ) as PrivacyExportResponse;
+
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -383,11 +378,11 @@ class PrivacyApi {
   /// Returns deletion workflow progress and cryptographic deletion proofs upon completion.
   ///
   /// Parameters:
-  /// * [requestId]
-  /// * [xCorrelationID]
-  /// * [xClientVersion]
-  /// * [xPlatform]
-  /// * [acceptLanguage]
+  /// * [requestId] 
+  /// * [xCorrelationID] 
+  /// * [xClientVersion] 
+  /// * [xPlatform] 
+  /// * [acceptLanguage] 
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -397,7 +392,7 @@ class PrivacyApi {
   ///
   /// Returns a [Future] containing a [Response] with a [PrivacyDeletionResponse] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<PrivacyDeletionResponse>> getPrivacyDeletion({
+  Future<Response<PrivacyDeletionResponse>> getPrivacyDeletion({ 
     required String requestId,
     required String xCorrelationID,
     required String xClientVersion,
@@ -410,10 +405,7 @@ class PrivacyApi {
     ProgressCallback? onSendProgress,
     ProgressCallback? onReceiveProgress,
   }) async {
-    final _path = r'/v1/privacy/deletions/{request_id}'.replaceAll(
-        '{' r'request_id' '}',
-        encodeQueryParameter(_serializers, requestId, const FullType(String))
-            .toString());
+    final _path = r'/v1/privacy/deletions/{request_id}'.replaceAll('{' r'request_id' '}', encodeQueryParameter(_serializers, requestId, const FullType(String)).toString());
     final _options = Options(
       method: r'GET',
       headers: <String, dynamic>{
@@ -448,12 +440,11 @@ class PrivacyApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null
-          ? null
-          : _serializers.deserialize(
-              rawResponse,
-              specifiedType: const FullType(PrivacyDeletionResponse),
-            ) as PrivacyDeletionResponse;
+      _responseData = rawResponse == null ? null : _serializers.deserialize(
+        rawResponse,
+        specifiedType: const FullType(PrivacyDeletionResponse),
+      ) as PrivacyDeletionResponse;
+
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -480,11 +471,11 @@ class PrivacyApi {
   /// Returns the status and ephemeral download link of an export request.
   ///
   /// Parameters:
-  /// * [requestId]
-  /// * [xCorrelationID]
-  /// * [xClientVersion]
-  /// * [xPlatform]
-  /// * [acceptLanguage]
+  /// * [requestId] 
+  /// * [xCorrelationID] 
+  /// * [xClientVersion] 
+  /// * [xPlatform] 
+  /// * [acceptLanguage] 
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -494,7 +485,7 @@ class PrivacyApi {
   ///
   /// Returns a [Future] containing a [Response] with a [PrivacyExportResponse] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<PrivacyExportResponse>> getPrivacyExport({
+  Future<Response<PrivacyExportResponse>> getPrivacyExport({ 
     required String requestId,
     required String xCorrelationID,
     required String xClientVersion,
@@ -507,10 +498,7 @@ class PrivacyApi {
     ProgressCallback? onSendProgress,
     ProgressCallback? onReceiveProgress,
   }) async {
-    final _path = r'/v1/privacy/exports/{request_id}'.replaceAll(
-        '{' r'request_id' '}',
-        encodeQueryParameter(_serializers, requestId, const FullType(String))
-            .toString());
+    final _path = r'/v1/privacy/exports/{request_id}'.replaceAll('{' r'request_id' '}', encodeQueryParameter(_serializers, requestId, const FullType(String)).toString());
     final _options = Options(
       method: r'GET',
       headers: <String, dynamic>{
@@ -545,12 +533,11 @@ class PrivacyApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null
-          ? null
-          : _serializers.deserialize(
-              rawResponse,
-              specifiedType: const FullType(PrivacyExportResponse),
-            ) as PrivacyExportResponse;
+      _responseData = rawResponse == null ? null : _serializers.deserialize(
+        rawResponse,
+        specifiedType: const FullType(PrivacyExportResponse),
+      ) as PrivacyExportResponse;
+
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -572,4 +559,5 @@ class PrivacyApi {
       extra: _response.extra,
     );
   }
+
 }

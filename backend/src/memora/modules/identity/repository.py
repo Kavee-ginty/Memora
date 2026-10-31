@@ -352,7 +352,9 @@ class IdentityRepository:
                     text(
                         """
                         UPDATE user_profiles
-                        SET accessibility_preferences=CAST(:accessibility AS jsonb),
+                        SET accessibility_preferences=(
+                                accessibility_preferences || CAST(:accessibility AS jsonb)
+                            ),
                             updated_at=now(), row_version=row_version+1
                         WHERE user_id=:user_id
                         """
@@ -468,8 +470,12 @@ class IdentityRepository:
                 body_hash,
             )
             if replay:
-                result = self._device_by_id(connection, user_id, UUID(replay))
-                result.update({"locale": locale, "timezone": timezone})
+                try:
+                    result = json.loads(replay)
+                except json.JSONDecodeError:
+                    # Compatibility for registrations written before response snapshots.
+                    result = self._device_by_id(connection, user_id, UUID(replay))
+                    result.update({"locale": locale, "timezone": timezone})
                 return result, False
 
             connection.execute(
@@ -536,10 +542,7 @@ class IdentityRepository:
                 ),
                 {"user_id": user_id, "locale": locale, "timezone": timezone},
             )
-            self._complete_idempotency(
-                connection, user_id, "registerDevice", idempotency_key, str(device_id)
-            )
-            return {
+            result = {
                 "id": device_id,
                 "installation_id": installation_id,
                 "platform": platform,
@@ -547,7 +550,15 @@ class IdentityRepository:
                 "timezone": timezone,
                 "app_version": app_version,
                 "last_seen_at": last_seen_at,
-            }, existing is None
+            }
+            self._complete_idempotency(
+                connection,
+                user_id,
+                "registerDevice",
+                idempotency_key,
+                json.dumps(result, default=str, sort_keys=True),
+            )
+            return result, existing is None
 
     def delete_device(self, auth: AuthContext, device_id: UUID) -> None:
         with self._connection(auth) as (connection, user_id):

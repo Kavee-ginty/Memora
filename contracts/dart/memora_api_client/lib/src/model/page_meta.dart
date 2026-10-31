@@ -11,8 +11,8 @@ part 'page_meta.g.dart';
 /// PageMeta
 ///
 /// Properties:
-/// * [hasMore]
-/// * [nextCursor]
+/// * [hasMore] 
+/// * [nextCursor] 
 @BuiltValue()
 abstract class PageMeta implements Built<PageMeta, PageMetaBuilder> {
   @BuiltValueField(wireName: r'has_more')
@@ -50,12 +50,10 @@ class _$PageMetaSerializer implements PrimitiveSerializer<PageMeta> {
       specifiedType: const FullType(bool),
     );
     yield r'next_cursor';
-    yield object.nextCursor == null
-        ? null
-        : serializers.serialize(
-            object.nextCursor,
-            specifiedType: const FullType.nullable(String),
-          );
+    yield object.nextCursor == null ? null : serializers.serialize(
+      object.nextCursor,
+      specifiedType: const FullType.nullable(String),
+    );
   }
 
   @override
@@ -64,9 +62,7 @@ class _$PageMetaSerializer implements PrimitiveSerializer<PageMeta> {
     PageMeta object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -124,3 +120,5 @@ class _$PageMetaSerializer implements PrimitiveSerializer<PageMeta> {
     return result.build();
   }
 }
+
+

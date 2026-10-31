@@ -1,4 +1,4 @@
-"""Enforce single active privacy request per user and request type.
+"""Add ingestion worker access, indexes and deletion proof guard.
 
 Revision ID: 20261031_0011
 Revises: 20261031_0010
@@ -20,8 +20,8 @@ def _run_script(name: str) -> None:
 
 
 def upgrade() -> None:
-    _run_script("20261031_0011_privacy_active_request_unique.up.sql")
+    _run_script("20261031_0011_ingestion_operations.up.sql")
 
 
 def downgrade() -> None:
-    _run_script("20261031_0011_privacy_active_request_unique.down.sql")
+    _run_script("20261031_0011_ingestion_operations.down.sql")

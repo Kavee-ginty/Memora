@@ -11,16 +11,15 @@ part 'profile_response.g.dart';
 /// ProfileResponse
 ///
 /// Properties:
-/// * [activeSubjectId]
-/// * [curriculumVersionId]
-/// * [displayName]
-/// * [locale]
-/// * [timezone]
-/// * [userId]
-/// * [version]
+/// * [activeSubjectId] 
+/// * [curriculumVersionId] 
+/// * [displayName] 
+/// * [locale] 
+/// * [timezone] 
+/// * [userId] 
+/// * [version] 
 @BuiltValue()
-abstract class ProfileResponse
-    implements Built<ProfileResponse, ProfileResponseBuilder> {
+abstract class ProfileResponse implements Built<ProfileResponse, ProfileResponseBuilder> {
   @BuiltValueField(wireName: r'active_subject_id')
   String? get activeSubjectId;
 
@@ -44,19 +43,16 @@ abstract class ProfileResponse
 
   ProfileResponse._();
 
-  factory ProfileResponse([void updates(ProfileResponseBuilder b)]) =
-      _$ProfileResponse;
+  factory ProfileResponse([void updates(ProfileResponseBuilder b)]) = _$ProfileResponse;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(ProfileResponseBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<ProfileResponse> get serializer =>
-      _$ProfileResponseSerializer();
+  static Serializer<ProfileResponse> get serializer => _$ProfileResponseSerializer();
 }
 
-class _$ProfileResponseSerializer
-    implements PrimitiveSerializer<ProfileResponse> {
+class _$ProfileResponseSerializer implements PrimitiveSerializer<ProfileResponse> {
   @override
   final Iterable<Type> types = const [ProfileResponse, _$ProfileResponse];
 
@@ -69,19 +65,15 @@ class _$ProfileResponseSerializer
     FullType specifiedType = FullType.unspecified,
   }) sync* {
     yield r'active_subject_id';
-    yield object.activeSubjectId == null
-        ? null
-        : serializers.serialize(
-            object.activeSubjectId,
-            specifiedType: const FullType.nullable(String),
-          );
+    yield object.activeSubjectId == null ? null : serializers.serialize(
+      object.activeSubjectId,
+      specifiedType: const FullType.nullable(String),
+    );
     yield r'curriculum_version_id';
-    yield object.curriculumVersionId == null
-        ? null
-        : serializers.serialize(
-            object.curriculumVersionId,
-            specifiedType: const FullType.nullable(String),
-          );
+    yield object.curriculumVersionId == null ? null : serializers.serialize(
+      object.curriculumVersionId,
+      specifiedType: const FullType.nullable(String),
+    );
     yield r'display_name';
     yield serializers.serialize(
       object.displayName,
@@ -115,9 +107,7 @@ class _$ProfileResponseSerializer
     ProfileResponse object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -211,3 +201,5 @@ class _$ProfileResponseSerializer
     return result.build();
   }
 }
+
+

@@ -11,28 +11,24 @@ part 'idempotency_headers.g.dart';
 /// IdempotencyHeaders
 ///
 /// Properties:
-/// * [idempotencyKey]
+/// * [idempotencyKey] 
 @BuiltValue()
-abstract class IdempotencyHeaders
-    implements Built<IdempotencyHeaders, IdempotencyHeadersBuilder> {
+abstract class IdempotencyHeaders implements Built<IdempotencyHeaders, IdempotencyHeadersBuilder> {
   @BuiltValueField(wireName: r'Idempotency-Key')
   String get idempotencyKey;
 
   IdempotencyHeaders._();
 
-  factory IdempotencyHeaders([void updates(IdempotencyHeadersBuilder b)]) =
-      _$IdempotencyHeaders;
+  factory IdempotencyHeaders([void updates(IdempotencyHeadersBuilder b)]) = _$IdempotencyHeaders;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(IdempotencyHeadersBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<IdempotencyHeaders> get serializer =>
-      _$IdempotencyHeadersSerializer();
+  static Serializer<IdempotencyHeaders> get serializer => _$IdempotencyHeadersSerializer();
 }
 
-class _$IdempotencyHeadersSerializer
-    implements PrimitiveSerializer<IdempotencyHeaders> {
+class _$IdempotencyHeadersSerializer implements PrimitiveSerializer<IdempotencyHeaders> {
   @override
   final Iterable<Type> types = const [IdempotencyHeaders, _$IdempotencyHeaders];
 
@@ -57,9 +53,7 @@ class _$IdempotencyHeadersSerializer
     IdempotencyHeaders object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -109,3 +103,5 @@ class _$IdempotencyHeadersSerializer
     return result.build();
   }
 }
+
+

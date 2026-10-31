@@ -11,12 +11,11 @@ part 'pending_resource_summary.g.dart';
 /// PendingResourceSummary
 ///
 /// Properties:
-/// * [id]
-/// * [status]
-/// * [updatedAt]
+/// * [id] 
+/// * [status] 
+/// * [updatedAt] 
 @BuiltValue()
-abstract class PendingResourceSummary
-    implements Built<PendingResourceSummary, PendingResourceSummaryBuilder> {
+abstract class PendingResourceSummary implements Built<PendingResourceSummary, PendingResourceSummaryBuilder> {
   @BuiltValueField(wireName: r'id')
   String get id;
 
@@ -28,25 +27,18 @@ abstract class PendingResourceSummary
 
   PendingResourceSummary._();
 
-  factory PendingResourceSummary(
-          [void updates(PendingResourceSummaryBuilder b)]) =
-      _$PendingResourceSummary;
+  factory PendingResourceSummary([void updates(PendingResourceSummaryBuilder b)]) = _$PendingResourceSummary;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(PendingResourceSummaryBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<PendingResourceSummary> get serializer =>
-      _$PendingResourceSummarySerializer();
+  static Serializer<PendingResourceSummary> get serializer => _$PendingResourceSummarySerializer();
 }
 
-class _$PendingResourceSummarySerializer
-    implements PrimitiveSerializer<PendingResourceSummary> {
+class _$PendingResourceSummarySerializer implements PrimitiveSerializer<PendingResourceSummary> {
   @override
-  final Iterable<Type> types = const [
-    PendingResourceSummary,
-    _$PendingResourceSummary
-  ];
+  final Iterable<Type> types = const [PendingResourceSummary, _$PendingResourceSummary];
 
   @override
   final String wireName = r'PendingResourceSummary';
@@ -79,9 +71,7 @@ class _$PendingResourceSummarySerializer
     PendingResourceSummary object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -145,3 +135,5 @@ class _$PendingResourceSummarySerializer
     return result.build();
   }
 }
+
+

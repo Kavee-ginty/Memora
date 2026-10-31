@@ -58,3 +58,8 @@ contracts/dart/generated/
 
 # Contract tooling cache
 tools/.cache/
+
+# Temporary uploads and ingestion cache
+.uploads/
+backend/.uploads/
+

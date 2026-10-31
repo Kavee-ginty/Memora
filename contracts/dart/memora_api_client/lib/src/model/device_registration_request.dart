@@ -12,16 +12,14 @@ part 'device_registration_request.g.dart';
 /// DeviceRegistrationRequest
 ///
 /// Properties:
-/// * [appVersion]
-/// * [installationId]
-/// * [locale]
-/// * [platform]
-/// * [pushToken]
-/// * [timezone]
+/// * [appVersion] 
+/// * [installationId] 
+/// * [locale] 
+/// * [platform] 
+/// * [pushToken] 
+/// * [timezone] 
 @BuiltValue()
-abstract class DeviceRegistrationRequest
-    implements
-        Built<DeviceRegistrationRequest, DeviceRegistrationRequestBuilder> {
+abstract class DeviceRegistrationRequest implements Built<DeviceRegistrationRequest, DeviceRegistrationRequestBuilder> {
   @BuiltValueField(wireName: r'app_version')
   String get appVersion;
 
@@ -43,25 +41,18 @@ abstract class DeviceRegistrationRequest
 
   DeviceRegistrationRequest._();
 
-  factory DeviceRegistrationRequest(
-          [void updates(DeviceRegistrationRequestBuilder b)]) =
-      _$DeviceRegistrationRequest;
+  factory DeviceRegistrationRequest([void updates(DeviceRegistrationRequestBuilder b)]) = _$DeviceRegistrationRequest;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(DeviceRegistrationRequestBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<DeviceRegistrationRequest> get serializer =>
-      _$DeviceRegistrationRequestSerializer();
+  static Serializer<DeviceRegistrationRequest> get serializer => _$DeviceRegistrationRequestSerializer();
 }
 
-class _$DeviceRegistrationRequestSerializer
-    implements PrimitiveSerializer<DeviceRegistrationRequest> {
+class _$DeviceRegistrationRequestSerializer implements PrimitiveSerializer<DeviceRegistrationRequest> {
   @override
-  final Iterable<Type> types = const [
-    DeviceRegistrationRequest,
-    _$DeviceRegistrationRequest
-  ];
+  final Iterable<Type> types = const [DeviceRegistrationRequest, _$DeviceRegistrationRequest];
 
   @override
   final String wireName = r'DeviceRegistrationRequest';
@@ -109,9 +100,7 @@ class _$DeviceRegistrationRequestSerializer
     DeviceRegistrationRequest object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object,
-            specifiedType: specifiedType)
-        .toList();
+    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
   void _deserializeProperties(
@@ -150,8 +139,7 @@ class _$DeviceRegistrationRequestSerializer
         case r'platform':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType:
-                const FullType(DeviceRegistrationRequestPlatformEnum),
+            specifiedType: const FullType(DeviceRegistrationRequestPlatformEnum),
           ) as DeviceRegistrationRequestPlatformEnum;
           result.platform = valueDes;
           break;
@@ -198,24 +186,21 @@ class _$DeviceRegistrationRequestSerializer
   }
 }
 
+
 class DeviceRegistrationRequestPlatformEnum extends EnumClass {
+
   @BuiltValueEnumConst(wireName: r'android')
-  static const DeviceRegistrationRequestPlatformEnum android =
-      _$deviceRegistrationRequestPlatformEnum_android;
+  static const DeviceRegistrationRequestPlatformEnum android = _$deviceRegistrationRequestPlatformEnum_android;
   @BuiltValueEnumConst(wireName: r'ios')
-  static const DeviceRegistrationRequestPlatformEnum ios =
-      _$deviceRegistrationRequestPlatformEnum_ios;
+  static const DeviceRegistrationRequestPlatformEnum ios = _$deviceRegistrationRequestPlatformEnum_ios;
   @BuiltValueEnumConst(wireName: r'unknown_default_open_api', fallback: true)
-  static const DeviceRegistrationRequestPlatformEnum unknownDefaultOpenApi =
-      _$deviceRegistrationRequestPlatformEnum_unknownDefaultOpenApi;
+  static const DeviceRegistrationRequestPlatformEnum unknownDefaultOpenApi = _$deviceRegistrationRequestPlatformEnum_unknownDefaultOpenApi;
 
-  static Serializer<DeviceRegistrationRequestPlatformEnum> get serializer =>
-      _$deviceRegistrationRequestPlatformEnumSerializer;
+  static Serializer<DeviceRegistrationRequestPlatformEnum> get serializer => _$deviceRegistrationRequestPlatformEnumSerializer;
 
-  const DeviceRegistrationRequestPlatformEnum._(String name) : super(name);
+  const DeviceRegistrationRequestPlatformEnum._(String name): super(name);
 
-  static BuiltSet<DeviceRegistrationRequestPlatformEnum> get values =>
-      _$deviceRegistrationRequestPlatformEnumValues;
-  static DeviceRegistrationRequestPlatformEnum valueOf(String name) =>
-      _$deviceRegistrationRequestPlatformEnumValueOf(name);
+  static BuiltSet<DeviceRegistrationRequestPlatformEnum> get values => _$deviceRegistrationRequestPlatformEnumValues;
+  static DeviceRegistrationRequestPlatformEnum valueOf(String name) => _$deviceRegistrationRequestPlatformEnumValueOf(name);
 }
+
