@@ -39,11 +39,11 @@ If two sources appear inconsistent, stop implementation and resolve the conflict
 | T04 | PostgreSQL migrations and seed framework | **Done** | Codex | 6 | T01 | `task/T04-database-schema` | Backend database |
 | T05 | OpenAPI models and generated client pipeline | **Done** | Dasun Jayasanka | 4 | T01 | `task/T05-openapi-pipeline` | API contracts |
 | T06 | Identity and session backend | **Done** | Codex | 4 | T02, T04, T05 | `task/T06-identity-session` | Backend API |
-| T07 | Auth bootstrap mobile and guarded routes | **Ready** | - | 5 | T03, T05, T06 | `task/T07-mobile-auth-routes` | Mobile navigation |
+| T07 | Auth bootstrap mobile and guarded routes | **Done** | Codex | 5 | T03, T05, T06 | `task/T07-mobile-auth-routes` | Mobile navigation |
 | T08 | Curriculum and knowledge graph seed | **Done** | Antigravity | 5 | T04, T05 | `task/T08-curriculum-graph` | Data and knowledge |
-| T09 | Learning ingestion backend | **Ready** | - | 7 | T05, T06, T08 | `task/T09-ingestion-backend` | API and worker |
+| T09 | Learning ingestion backend | **Ready** | Dasun Jayasanka | 7 | T05, T06, T08 | `task/T09-ingestion-backend` | API and worker |
 | T10 | Learning ingestion mobile | Blocked | - | 6 | T07, T09 | `task/T10-ingestion-mobile` | Mobile feature |
-| T11 | Memory engine v1 | **Ready** | - | 7 | T08 | `task/T11-memory-engine` | Learning engine |
+| T11 | Memory engine v1 | **Review** | Dasun Jayasanka | 7 | T08 | `task/T11-memory-engine` | Learning engine |
 | T12 | Question bank and grading backend | **Done** | Neleesha Peiris | 7 | T08, T05 | `task/T12-questions-grading` | Backend learning |
 | T13 | Mission assembly and completion backend | Blocked | - | 7 | T06, T11, T12 | `task/T13-mission-backend` | Backend learning |
 | T14 | Mission mobile experience | Blocked | - | 7 | T07, T13 | `task/T14-mission-mobile` | Mobile feature |
@@ -79,6 +79,23 @@ If two sources appear inconsistent, stop implementation and resolve the conflict
 | T06 | Integrate the approved OIDC contract, token validation, request context, scoped repositories, session bootstrap/revocation, device registration and consent status. Add recent-authentication handling. | Invalid tokens fail safely; private reads are server-scoped; bootstrap returns the contracted summary; negative authorization and session-expiry tests pass; tokens are absent from logs. | API 4, 8-9; Schema 6; Flow 4-6; TRD 14 |
 | T07 | Implement splash/bootstrap resolution, onboarding/auth routes, root shell, guarded routes, one-time return locations, session refresh and safe sign-out clearing. Consume generated DTOs through repositories. | Every guarded route has tested signed-out, expired-session, invalid-owner and invalid-state behavior; process restart restores only approved state; visual implementation follows matching PNGs. | Flow 3-6; UI/UX 8-9.7; API 8-10 |
 | T08 | Seed the approved Physics subject/curriculum framework, typed concepts, aliases, claims, objectives and edge allowlist. Implement bounded authorized knowledge access methods and seed validation. | Seeds are versioned and environment-safe; cycles/invalid edge types fail; curriculum mapping and provenance tests pass; no production user or secret appears in seed data. | PRD 9; TRD 8; Schema 7, 18 |
+
+### T07 Definition of Done
+
+This expands the acceptance gate in Section 4 for T07. It does not replace the board rule in Section 2 or the remaining-task evidence rules in Section 5.
+
+| Area | Done criteria | Evidence |
+| --- | --- | --- |
+| Provider authentication | Supabase email/password, account creation, recovery and Google authentication use the approved provider SDK. Provider sessions are stored through operating-system secure storage; passwords, refresh material and access tokens are absent from application logs and non-secure persistence. | auth repository and secure-storage adapter; provider error-mapping, storage and sign-in/create/recovery tests; Android/iOS callback configuration |
+| Bootstrap and session state | Startup restores approved local preferences, restores the provider session, calls the generated session-bootstrap operation and maps account, consent, subject, active-mission, pending-resource and capability fields into immutable Riverpod state. Unknown enum values and blocked accounts fail safely; the splash has no artificial delay. | session repository/controller and DTO mapping; bootstrap success, failure, unknown-value and blocked-account tests |
+| Generated-client boundary | Mobile code consumes the committed generated Dart DTOs and session operations through typed repositories. Screens and providers do not construct API URLs, parse raw error JSON or hand-copy transport models; generated client files remain unedited and drift-clean. | mobile dependency and repository wiring; repository/serialization tests; generated-client and OpenAPI drift checks |
+| Routes and root shell | Splash, three-step onboarding, sign-in, create-account, recovery and the four authenticated root destinations use named `go_router` routes. Bottom navigation is route-driven, preserves root branch state and is hidden on public or immersive routes. A validated safe return location is consumed once and cannot form a redirect loop or accept an external URL. | router, route definitions and root shell; route inventory, tab-state, back behavior, return-location and redirect-cycle tests |
+| Guard enforcement | Guards run in the approved session, account, recent-authentication, consent, ownership and workflow-state order. Every T07 guarded route has signed-out and expired-session coverage; representative private-resource guards prove wrong-owner and invalid-state requests fall back without disclosing resource existence. Malformed identifiers fail before an unnecessary private-resource request. | typed guard results and router matrix; signed-out, refresh-success/failure, wrong-owner, invalid-state and malformed-route tests |
+| Refresh and sign-out | One failed authenticated safe read may trigger one single-flight provider refresh and one replay. Mutations are not replayed without their original idempotency contract. Sign-out uses one idempotency key for server revocation when possible, still completes locally on network/revocation failure, clears secure credentials and account-scoped private state, and preserves only approved non-sensitive preferences. | session repository/controller; refresh replay-limit, revocation, pending-work warning and selective-clearing tests |
+| Persistence and isolation | Process restart restores onboarding completion, accessibility settings and other explicitly approved non-sensitive state only; it performs a fresh bootstrap instead of restoring stale authoritative data. Passwords are never durable, incompatible local records are discarded safely, consumed return locations do not replay and state from one account cannot restore under another account. | restoration schema/storage code; process-recreation, incompatible-record, return-location and cross-account isolation tests |
+| T07 presentation boundary | Splash, onboarding, authentication and bootstrap-backed Home states follow the approved copy and matching PNG composition while honoring the Markdown specifications where they differ. Home never fabricates mission counts, due dates, XP, streak or reef health before T15 provides the authoritative read model; unavailable successor workflows fail explicitly instead of navigating to dead or mocked screens. | screen/widget tests; comparison screenshots for matching source PNGs; Home authoritative-data tests |
+| Accessibility and responsive behavior | Every T07 screen exposes one primary heading, logical focus order, screen-reader names/states, at least 48 px targets, inline and focusable validation, and reduced-motion behavior. Applicable loading, error, retry, offline/connection-required and blocked states remain usable at 320 px width and 200 percent text scale. | accessibility and responsive widget tests; recorded screen-reader, focus, reduced-motion, 320 px and 200 percent text evidence |
+| Verification and handoff | Flutter formatting, analysis, unit/widget tests and Android debug build pass; affected generated-client checks remain green. The pull request records exact commands, visual/accessibility evidence, security/privacy impact, specification traceability and any approved deviation without claiming T07 Done before merge and board recalculation. | CI run and local command log; screenshots/accessibility record; pull-request checklist and handoff |
 
 ### T06 Definition of Done
 
@@ -156,7 +173,7 @@ This expands the acceptance gate in Section 4 for T05. It does not replace the b
 
 ## 5 Remaining-task definitions of done
 
-These gates apply to every task not already Done: `T07` and `T09`-`T31`. The acceptance
+These gates apply to every task not already Done: `T09`-`T11` and `T13`-`T31`. The acceptance
 gate in Section 4 defines the delivery boundary; this section defines the minimum evidence
 required to prove that boundary. A task may be marked **Done** only when all of the following
 are true:
@@ -185,8 +202,26 @@ are true:
 | T07 | Bootstrap, onboarding/auth, root-shell and guarded routes use generated DTOs through repositories; signed-out, expired-session, wrong-owner and invalid-state navigation falls back safely; sign-out clears only approved state and process restart restores only approved state. | Router and repository tests for every guard and restoration case; 320 px, 200% text, screen-reader and reduced-motion results for matching screens; screenshots against approved PNG composition; Flutter format, analyze, test and build jobs. |
 | T09 | Text and file ingestion cover create, upload grant, finalize, status, retry, extraction, verification, commit and deletion reconciliation; duplicate finalize/commit requests converge; unsupported or malicious input fails safely; uncertain candidates cannot commit without verification; raw-file deletion records proof. | Owner-negative, validation, idempotency, concurrency, worker retry/provider-failure and deletion-proof integration tests; migration and seed checks; OpenAPI and generated-client drift checks; logs proven free of source text, signed URLs and authorization data. |
 | T10 | Add-material, progress/status, concept-verification and learning-path-preview screens cover every contracted update state; safe drafts and edits survive interruption; text and file flows can leave and resume; unavailable actions explain connectivity. | Mobile integration tests for text and file paths plus retry/restoration; loading, empty, error, offline and deletion-pending state tests; 320 px, 200% text, semantics and reduced-motion evidence; approved screenshots. |
-| T11 | Versioned memory inputs reproduce the same decision; updates are isolated per learner concept; expert bounds control first review, overdue and comeback cases; model output cannot directly set due dates; explanations identify the governing evidence and policy. | Deterministic unit/property tests, versioned calibration fixtures and scheduling simulations covering new, overdue, weak-prerequisite and comeback cases; persistence tests proving append-only evidence and concept isolation; recorded policy and fixture versions. |
+| T11 | Versioned memory inputs reproduce the same decision; updates are isolated per learner concept; expert bounds control first review, overdue and comeback cases; model output cannot directly set due dates; explanations identify the governing evidence and policy. | Deterministic unit/property tests, versioned calibration fixtures and scheduling simulations covering new, overdue, weak-prerequisite and comeback cases; persistence tests proving append-only evidence and concept isolation; recorded policy and fixture versions. Expanded in the T11 Definition of Done subsection below and `docs/learning/T11_Study_Note.md`. |
 | T12 | Verified questions, versions, options, rubrics and concept mappings remain immutable after use; answer keys stay hidden before submission; MCQ and numeric grading are deterministic; enabled short-answer grading is bounded and low-confidence evidence has limited influence; report/dispute hooks preserve provenance. | Import and schema validation tests; authorization and pre-submission response tests; grading fixtures for correct, partial, uncertain, unit and tolerance cases; immutable-version and report/dispute tests; OpenAPI/client drift checks for changed contracts. |
+
+### T11 Definition of Done
+
+This expands the acceptance gate in Section 4 and the T11 row in Section 5.1. It does not replace the board rule in Section 2.
+
+| Area | Done criteria | Evidence |
+| --- | --- | --- |
+| Determinism | The same learner state, event, `now`, engine version and policy version reproduce a bit-identical decision. Both versions are stamped on every decision row and every calibration fixture, so a later configuration bump cannot relabel history. | `test_memory_engine.py` determinism and seeded 200-event fuzz tests; `backend/tests/fixtures/memory/calibration_v1.json`; `ENGINE_VERSION` and `POLICY_VERSION` stamped on `memory_decisions` |
+| Isolation | One concept update never reads or writes another concept's state, and every memory row stays owner-scoped. Cross-user reads return `404` without disclosing resource existence. | `test_memory_persistence.py` per-concept, per-learner, RLS and worker-grant negative tests; `test_memory_endpoints.py` owner-negative matrix |
+| Evidence | Memory events are append-only and deduplicated by the schema uniqueness contract. Invalidation appends a new event and leaves the original event, decision and state rows byte-identical. | `test_memory_persistence.py` sequential and concurrent duplicate delivery, invalidation-append and outbox domain-key uniqueness tests; `memory_events` migration constraints |
+| Policy bounds | First review lands near the next day; overdue, comeback and stability intervals stay inside the frozen `EngineConfig` bounds; confidence at or below the floor cannot produce an unbounded stability jump. | `test_memory_policy.py` first-review window, confidence damping, comeback and interval-cap tests; `test_memory_simulation.py` 30-day calendar over the four gate scenarios |
+| Authority | No model or AI output can set a due date. Scheduling is deterministic code with no provider adapter, network call, clock read or randomness; due dates come only from `decide()` under the stamped policy. | `modules/memory/engine/` review boundary; engine configuration and policy version stamps; rationale recorded in `docs/learning/T11_Study_Note.md` |
+| Selection inputs | T13 receives typed due, urgency, risk, prerequisite and recent-error inputs with capped page sizes. Ranking, diversity and workload caps stay in T13. | `test_memory_selection.py` input bands, reason precedence, caps, cursor scoping and limit boundaries; `memory-selection-inputs/1` contract version |
+| Explanations | Every decision carries allowlisted reason codes, a `template_key` and a client-safe summary. Raw event payloads and raw retrievability, stability or forgetting-risk values never leave the backend. | `test_memory_endpoints.py` explanation-copy, band-only response, bounds and `no-store` tests; closed reason and template allowlists in `modules/memory/constants.py` |
+| Persistence contract | Decision, state snapshot and outbox event commit in one transaction; duplicate delivery converges; `row_version` moves monotonically. | `test_memory_persistence.py` transaction atomicity, duplicate convergence, engine-version immutability and `SET LOCAL` isolation tests |
+| Contracts and docs | Both operations use permanent T05 operation IDs with shared security and error envelopes. OpenAPI and the Dart client are regenerated together and drift-clean; backend documentation and the T11 study note are merged. | `operation_ids.py`; `contracts/openapi/memora-v1.json`; `generate_contracts.py --check`; generated Dart client tests; `backend/README.md`; `docs/learning/T11_Study_Note.md` |
+
+Known cross-task boundaries: exposure ingestion consumes the documented `learning_update.committed` envelope until T09 merges, so T11 exercises it with synthetic outbox rows only. Attempt-graded evidence uses the envelope D9 reserves for T13. `concept-progress` gains reef, XP and streak fields only when T15 extends it additively. Mission assembly, ranking, diversity and workload caps remain T13's boundary.
 
 ### 5.2 Missions progress account and privacy
 
@@ -232,7 +267,24 @@ Every task pull request must contain:
 - Security/privacy impact and confirmation that prohibited data is not logged.
 - Any approved deviation, reviewer and follow-up task ID.
 
+### T11 pull-request evidence
+
+This records the Section 6 checklist for T11. It does not mark the task Done: status stays **Review** until the pull request is reviewed and merged, and the human updates the Owner column and final status.
+
+| Checklist item | T11 evidence |
+| --- | --- |
+| Task ID and branch | T11, `task/T11-memory-engine`, one pull request for the task |
+| Completed acceptance boundary | Versioned FSRS-style state, memory events and decisions, first-review/overdue/comeback policy, due-selection inputs for T13, prerequisite signals, explanations, the `memory.process_event` outbox consumer and the two owner-scoped read operations. Mission assembly, ranking, XP/reef and mobile rendering stay outside the boundary. |
+| Specification sections | PRD 011-016; TRD 3.2-3.3, 4, 9; Schema 2, 3, 10, 13, 14.1-14.2; API 3-7, 10 and the `listConceptProgress`/`getConceptHistory` inventory rows. Traceability is in `docs/learning/T11_Study_Note.md`. |
+| Tests and exact commands | `backend\.venv\Scripts\python.exe -m ruff format --check backend`; `-m ruff check backend`; `-m pytest backend\tests` with `MEMORA_TEST_DATABASE_URL`; `tools\contracts\generate_contracts.py --check`; `dart test` in `contracts\dart\memora_api_client`. Latest results: 432 backend tests (182 T11), 171 Dart tests, 91 files format-clean, contract check exit `0`. |
+| Section 5 DoD mapping | Every row of `### T11 Definition of Done` names its suites or artifacts. The known cross-task boundaries are listed in the same subsection. |
+| Migration, OpenAPI and client changes | `20261029_0007_memory_engine` follows `20261029_0006_runtime_role_switch` and adds the worker access contract; `contracts/openapi/memora-v1.json` and the committed Dart client were regenerated with the two operations and are drift-clean. No seed change. |
+| UI and accessibility evidence | Not applicable: T11 has no mobile surface. T14 renders `template_key` and T16 renders progress; their state, 320 px, 200% text and semantics evidence belongs to those tasks. |
+| Security and privacy | Ownership is derived from the validated session and enforced by RLS plus explicit predicates; cross-user reads return `404`; responses are `private, no-store` and band-only; logs contain no learning text, event payloads or authorization headers. Worker roles are limited to the granted tables. |
+| Deviations and follow-ups | No approved deviation. Follow-ups: composite `memory_decisions` history index, `disable_existing_loggers=False` in migration logging, real T09 producer wiring, and T13/T15 additive extensions. All are recorded in `docs/learning/T11_Study_Note.md` and are outside the T11 merge boundary. |
+
 ## 7 Current next action
 
-T01, T02, T03, T04, T05, T06, T08 and T12 are merged and Done. T20 is In Progress under Antigravity. T07, T09, T11, T17 and T24 are Ready. T11 remains the next zero-float critical-path task; T13 remains Blocked until T11 is Done.
+T01-T08 and T12 are merged and Done. T20 is In Progress under Antigravity. T09, T17 and T24 are Ready. T11 is in **Review**: open the pull request from `task/T11-memory-engine` with the Section 6 evidence, obtain review and merge, then record the merge commit and move T11 to Done. T13 remains Blocked until T11 is Done; T15 remains Blocked until T11 and T13 are Done.
+
 

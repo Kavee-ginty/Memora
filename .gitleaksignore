@@ -1,3 +1,12 @@
 # Synthetic idempotency-key fixture in the T12 question-report tests.
 # This is not a credential; the fingerprint only suppresses that exact finding.
 57a812425cb22d17894dd38fd5d3d730eeb4e276:backend/tests/test_question_reports.py:generic-api-key:35
+
+# Synthetic ingestion idempotency-key fixtures on the active T09 branch.
+# These fingerprints suppress only the exact historical test findings.
+780c76cd1ef002e34b592575d2670af625072b6b:backend/tests/test_ingestion_bug_hunt.py:generic-api-key:56
+561bb9438089e8cc32d3d017e94824b9b8bd900a:backend/tests/test_ingestion_commit.py:generic-api-key:38
+fbca586400a72d0f215af209e9decb2cf61c0913:backend/tests/test_ingestion_upload_lifecycle.py:generic-api-key:36
+5c8e2f95ce46ea6462814ae41e8d23c39459bbf4:backend/tests/test_ingestion_verification.py:generic-api-key:35
+fb449863ed3dc5da23b645575101d9132261c4a7:backend/tests/test_ingestion_updates.py:generic-api-key:32
+383e7e4566d44086e792b3664068c571de979a48:backend/tests/test_ingestion_worker.py:generic-api-key:37

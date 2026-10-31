@@ -20,6 +20,8 @@ plan_assets/
 
 # Local task implementation guides
 /docs/learning/*_Implementation_Guide.md
+/docs/learning/*_Bug_Report.md
+/T07_IMPLEMENTATION_PLAN.md
 
 # Python
 __pycache__/

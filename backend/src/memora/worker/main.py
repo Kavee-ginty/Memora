@@ -1,7 +1,13 @@
+"""Durable worker entry point.
+
+Runs the outbox-driven worker loop: poll background jobs (memory events,
+privacy export/deletion), reconcile expired leases and unprocessed producer
+evidence periodically.
+"""
+
 from __future__ import annotations
 
 import logging
-import time
 from typing import Any
 from uuid import UUID
 
@@ -10,6 +16,7 @@ from sqlalchemy import Engine, text
 from memora.core.config import get_settings
 from memora.db.runtime import database_engine
 from memora.modules.privacy.repository import PrivacyRepository
+from memora.worker.memory import run_worker
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +36,7 @@ def process_one_job(engine: Engine) -> bool:
                 SELECT id, job_type, resource_id, payload
                 FROM background_jobs
                 WHERE status IN ('queued', 'retry_wait')
+                  AND job_type IN ('privacy.export', 'privacy.deletion')
                   AND available_at <= now()
                 ORDER BY available_at ASC
                 FOR UPDATE SKIP LOCKED
@@ -131,19 +139,20 @@ def run_worker_once(engine: Engine, limit: int = 100) -> int:
     return processed
 
 
-def main() -> None:
-    logging.basicConfig(level=logging.INFO)
-    logger.info("Starting Memora background worker...")
+def build_worker_engine() -> Engine:
     settings = get_settings()
-    engine = database_engine(settings.database_url)
+    database_url = settings.database_url
+    if not database_url:
+        raise RuntimeError("MEMORA_DATABASE_URL is required for the worker")
+    return database_engine(database_url)
 
-    try:
-        while True:
-            did_work = process_one_job(engine)
-            if not did_work:
-                time.sleep(1.0)
-    except KeyboardInterrupt:
-        logger.info("Memora background worker stopped.")
+
+def main() -> None:
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s %(name)s %(message)s",
+    )
+    run_worker(build_worker_engine())
 
 
 if __name__ == "__main__":

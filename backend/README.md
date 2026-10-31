@@ -108,3 +108,93 @@ Supabase logout revokes refresh material; an already issued access token remains
 valid until its short expiry. Keep the provider access-token lifetime short. Session
 revocation requires interactive authentication within the configured ten-minute
 window and records a safe audit event without the token.
+
+## Memory engine
+
+T11 schedules reviews per learner-concept pair. The engine is deterministic code
+with no AI provider: a due date is produced only by
+`modules/memory/engine/decide.py`, never by a model. Same inputs plus the same
+engine and policy versions reproduce the identical decision.
+
+### Module map
+
+```text
+modules/memory/engine/config.py    frozen weights, bounds and the two versions
+modules/memory/engine/state.py     immutable LearnerConceptState + jsonb snapshots
+modules/memory/engine/fsrs.py      forgetting curve, difficulty/stability transitions
+modules/memory/engine/decide.py    pure decide(state, event, now) -> Decision
+modules/memory/engine/policy.py    first review, confidence damping, comeback, caps
+modules/memory/prerequisites.py    read-only weak-prerequisite signal from the graph
+modules/memory/repository.py       SECURITY DEFINER calls; event + decision + outbox
+modules/memory/selection.py        due-selection inputs for T13 (no ranking)
+modules/memory/service.py          owner-scoped reads for the two read endpoints
+modules/memory/explanations.py     reason codes and template keys -> safe copy
+modules/memory/constants.py        closed allowlists: event types, codes, keys, bands
+worker/memory.py                   outbox -> memory job handler, retries, reconcile
+worker/main.py                     worker entry point (runs the memory loop)
+api/v1/memory.py                   concept-progress and history routes
+```
+
+### Versions
+
+Every decision row and calibration fixture stamps its configuration identity:
+
+- `ENGINE_VERSION = fsrs-mvp-1.0.0` — the quantitative model and its weights.
+- `POLICY_VERSION = policy-mvp-1.0.0` — the expert rules layered on top.
+- `STATE_SNAPSHOT_SCHEMA_VERSION = memora.memory_state/1` — the
+  `previous_state` / `result_state` jsonb envelope.
+- `SELECTION_INPUT_VERSION = memory-selection-inputs/1` — the due-selection
+  contract T13 consumes.
+
+Change a weight or a rule and bump the matching version. Never mutate a stored
+snapshot: a version bump changes future decisions and leaves past rows readable.
+
+### Worker job type
+
+`memory.process_event` carries one `outbox_event_id` and nothing else. The worker
+reads the producer event, maps it to per-concept evidence and applies each concept
+in one transaction. Two producer envelopes are reserved:
+
+| Event type | Aggregate | Evidence |
+| --- | --- | --- |
+| `learning_update.committed` | `learning_update` | one `exposure` per committed concept |
+| `mission.attempt_graded` | `attempt` | one scored event per mapped concept |
+
+Unknown event types succeed as a skip. A known envelope with a malformed payload
+dead-letters immediately with `invalid_event_payload` and never blocks the queue.
+Retryable failures back off `15/60/180/600/1800` seconds across five attempts, then
+dead-letter. A reconcile pass re-enqueues producer events that have no job and
+recovers expired leases, so a restarted worker loses nothing; dead-lettered
+payloads stay quarantined until an operator fixes them.
+
+The job lifecycle runs as `memora_worker`. The evidence transaction runs as
+`memora_api` with `memora.user_id` set for the envelope's learner, so the
+prerequisite lookup is RLS-scoped. Memory writes go through the SECURITY DEFINER
+functions added by migration `20261029_0007`.
+
+### Read endpoints
+
+`GET /v1/subjects/{subject_id}/concept-progress` and
+`GET /v1/concepts/{concept_id}/history` are owner-scoped and `no-store`. They
+return bands, stable identifiers, counts and allowlisted codes — never raw
+retrievability, stability, forgetting risk, candidate scores or `event_payload`.
+The `due_reason` and explanation `template_key` values are the copy contract for
+T14; the server supplies a plain-language fallback message. Cursors are bound to
+the endpoint and filter that produced them, so a cursor cannot be replayed against
+another route or another concept.
+
+### Tests
+
+From the repository root, with the backend environment active:
+
+```powershell
+$env:MEMORA_TEST_DATABASE_URL = 'postgresql+psycopg://memora:<local-password>@127.0.0.1:5432/memora_migration_test'
+backend\.venv\Scripts\python.exe -m pytest backend\tests\test_memory_engine.py backend\tests\test_memory_policy.py backend\tests\test_memory_persistence.py backend\tests\test_memory_selection.py backend\tests\test_memory_simulation.py backend\tests\test_memory_worker.py backend\tests\test_memory_endpoints.py
+```
+
+The database-backed cases in `test_memory_persistence`, `test_memory_selection`,
+`test_memory_worker` and `test_memory_endpoints` skip without
+`MEMORA_TEST_DATABASE_URL`; the pure engine, policy and simulation suites run
+everywhere. `test_memory_simulation.py` replays the versioned calibration fixture
+in `backend/tests/fixtures/memory` across a simulated calendar for the four
+acceptance scenarios (new, overdue, weak prerequisite, comeback).

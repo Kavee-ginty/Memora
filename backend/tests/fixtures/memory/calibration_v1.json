@@ -1,0 +1,47 @@
+{
+  "fixture_version": "memory-calibration/1",
+  "calendar_days": 30,
+  "description": "Versioned T11 calibration fixtures. Each scenario replays a 30-day calendar of learner evidence through the deterministic engine and policy. Days are offsets from the simulation start; the harness applies each event at 09:00 UTC on its day.",
+  "scenarios": [
+    {
+      "name": "new_concept",
+      "description": "A first exposure followed by a strong first retrieval, then spaced reviews. Gate scenario: first review must land inside the PRD 012 window.",
+      "events": [
+        {"day": 0, "event_type": "exposure", "confidence": 0.9},
+        {"day": 1, "event_type": "attempt", "score": 0.9, "confidence": 0.9},
+        {"day": 5, "event_type": "attempt", "score": 0.85, "confidence": 0.9},
+        {"day": 12, "event_type": "attempt", "score": 0.8, "confidence": 0.85}
+      ]
+    },
+    {
+      "name": "overdue",
+      "description": "A review missed by two weeks. Gate scenario: actual elapsed time drives retrievability but the new interval stays inside the policy cap.",
+      "events": [
+        {"day": 0, "event_type": "exposure", "confidence": 0.9},
+        {"day": 1, "event_type": "attempt", "score": 0.9, "confidence": 0.9},
+        {"day": 16, "event_type": "attempt", "score": 0.7, "confidence": 0.85},
+        {"day": 24, "event_type": "attempt", "score": 0.8, "confidence": 0.85}
+      ]
+    },
+    {
+      "name": "weak_prerequisite",
+      "description": "A dependent concept fails while its prerequisite is weak. Gate scenario: the lapse is flagged weak_prerequisite_recover and the next review is pulled earlier for Recover work.",
+      "events": [
+        {"day": 0, "event_type": "exposure", "confidence": 0.9},
+        {"day": 1, "event_type": "attempt", "score": 0.85, "confidence": 0.9},
+        {"day": 6, "event_type": "attempt", "score": 0.2, "confidence": 0.9, "weak_prerequisite": true},
+        {"day": 10, "event_type": "attempt", "score": 0.75, "confidence": 0.85}
+      ]
+    },
+    {
+      "name": "comeback",
+      "description": "A three-week absence then a successful retrieval. Gate scenario: progress is preserved, elapsed time is used, and the next review is capped to a welcoming interval.",
+      "events": [
+        {"day": 0, "event_type": "exposure", "confidence": 0.9},
+        {"day": 1, "event_type": "attempt", "score": 0.85, "confidence": 0.9},
+        {"day": 22, "event_type": "attempt", "score": 0.8, "confidence": 0.85},
+        {"day": 26, "event_type": "attempt", "score": 0.85, "confidence": 0.85}
+      ]
+    }
+  ]
+}
