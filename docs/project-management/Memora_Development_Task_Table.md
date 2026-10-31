@@ -33,30 +33,30 @@ If two sources appear inconsistent, stop implementation and resolve the conflict
 
 | ID | Task | Status | Owner | Days | Dependencies | Branch | Primary area |
 | --- | --- | --- | --- | ---: | --- | --- | --- |
-| T01 | Architecture baseline and repository scaffold | **Done** | Codex | 2 | None | `task/T01-repo-baseline` | Repository-wide |
-| T02 | CI and development environments | **Done** | Codex | 3 | T01 | `task/T02-ci-environments` | CI and infrastructure |
-| T03 | Flutter design system and app shell | **Done** | Antigravity | 5 | T01 | `task/T03-flutter-design-system` | Mobile shared UI |
-| T04 | PostgreSQL migrations and seed framework | **Done** | Codex | 6 | T01 | `task/T04-database-schema` | Backend database |
-| T05 | OpenAPI models and generated client pipeline | **Done** | Dasun Jayasanka | 4 | T01 | `task/T05-openapi-pipeline` | API contracts |
-| T06 | Identity and session backend | **Done** | Codex | 4 | T02, T04, T05 | `task/T06-identity-session` | Backend API |
-| T07 | Auth bootstrap mobile and guarded routes | **Done** | Codex | 5 | T03, T05, T06 | `task/T07-mobile-auth-routes` | Mobile navigation |
-| T08 | Curriculum and knowledge graph seed | **Done** | Antigravity | 5 | T04, T05 | `task/T08-curriculum-graph` | Data and knowledge |
-| T09 | Learning ingestion backend | **Review** | Dasun Jayasanka | 7 | T05, T06, T08 | `task/T09-ingestion-backend` | API and worker |
-| T10 | Learning ingestion mobile | Blocked | - | 6 | T07, T09 | `task/T10-ingestion-mobile` | Mobile feature |
-| T11 | Memory engine v1 | **Review** | Dasun Jayasanka | 7 | T08 | `task/T11-memory-engine` | Learning engine |
-| T12 | Question bank and grading backend | **Done** | Neleesha Peiris | 7 | T08, T05 | `task/T12-questions-grading` | Backend learning |
-| T13 | Mission assembly and completion backend | Blocked | - | 7 | T06, T11, T12 | `task/T13-mission-backend` | Backend learning |
+| T01 | Architecture baseline and repository scaffold | **Done** | Ginodh | 2 | None | `task/T01-repo-baseline` | Repository-wide |
+| T02 | CI and development environments | **Done** | Neleesha | 3 | T01 | `task/T02-ci-environments` | CI and infrastructure |
+| T03 | Flutter design system and app shell | **Done** | Ginodh | 5 | T01 | `task/T03-flutter-design-system` | Mobile shared UI |
+| T04 | PostgreSQL migrations and seed framework | **Done** | Ginodh | 6 | T01 | `task/T04-database-schema` | Backend database |
+| T05 | OpenAPI models and generated client pipeline | **Done** | Dasun | 4 | T01 | `task/T05-openapi-pipeline` | API contracts |
+| T06 | Identity and session backend | **Done** | Ginodh | 4 | T02, T04, T05 | `task/T06-identity-session` | Backend API |
+| T07 | Auth bootstrap mobile and guarded routes | **Done** | Ginodh | 5 | T03, T05, T06 | `task/T07-mobile-auth-routes` | Mobile navigation |
+| T08 | Curriculum and knowledge graph seed | **Done** | Dima | 5 | T04, T05 | `task/T08-curriculum-graph` | Data and knowledge |
+| T09 | Learning ingestion backend | **Done** | Dasun | 7 | T05, T06, T08 | `task/T09-ingestion-backend` | API and worker |
+| T10 | Learning ingestion mobile | **Ready** | - | 6 | T07, T09 | `task/T10-ingestion-mobile` | Mobile feature |
+| T11 | Memory engine v1 | **Done** | Dasun | 7 | T08 | `task/T11-memory-engine` | Learning engine |
+| T12 | Question bank and grading backend | **Done** | Neleesha | 7 | T08, T05 | `task/T12-questions-grading` | Backend learning |
+| T13 | Mission assembly and completion backend | **Ready** | - | 7 | T06, T11, T12 | `task/T13-mission-backend` | Backend learning |
 | T14 | Mission mobile experience | Blocked | - | 7 | T07, T13 | `task/T14-mission-mobile` | Mobile feature |
 | T15 | Progress XP streak and reef backend | Blocked | - | 5 | T11, T13 | `task/T15-progress-backend` | Backend engagement |
 | T16 | Progress mobile experience | Blocked | - | 5 | T07, T15 | `task/T16-progress-mobile` | Mobile feature |
-| T17 | Profile preferences and notifications backend | **In Progress** | Codex | 4 | T06 | `task/T17-profile-backend` | Backend account |
-| T18 | Profile and settings mobile | Blocked | - | 4 | T07, T17 | `task/T18-profile-mobile` | Mobile feature |
-| T19 | Push notifications and deep links | Blocked | - | 4 | T07, T17 | `task/T19-push-deep-links` | Mobile and backend |
-| T20 | Privacy export and deletion backend | **Ready** | - | 5 | T06, T04 | `task/T20-privacy-backend` | Backend privacy |
+| T17 | Profile preferences and notifications backend | **Done** | Harsha | 4 | T06 | `task/T17-profile-backend` | Backend account |
+| T18 | Profile and settings mobile | **Ready** | - | 4 | T07, T17 | `task/T18-profile-mobile` | Mobile feature |
+| T19 | Push notifications and deep links | **Ready** | - | 4 | T07, T17 | `task/T19-push-deep-links` | Mobile and backend |
+| T20 | Privacy export and deletion backend | **In Progress** | Dima | 5 | T06, T04 | `task/T20-privacy-backend` | Backend privacy |
 | T21 | Privacy mobile experience | Blocked | - | 3 | T07, T20 | `task/T21-privacy-mobile` | Mobile feature |
 | T22 | Offline sync and idempotency hardening | Blocked | - | 6 | T09, T13, T07 | `task/T22-offline-idempotency` | Cross-platform |
 | T23 | Observability and security hardening | Blocked | - | 5 | T02, T09, T13, T17, T20 | `task/T23-security-observability` | Platform |
-| T24 | Verified Physics pilot content | **Ready** | - | 6 | T08, T12 | `task/T24-physics-content` | Academic content |
+| T24 | Verified Physics pilot content | **In Progress** | Neleesha | 6 | T08, T12 | `task/T24-physics-content` | Academic content |
 | T25 | API contract and authorization tests | Blocked | - | 5 | T09, T13, T15, T17, T20 | `task/T25-api-auth-tests` | QA and backend |
 | T26 | Cross-feature end-to-end integration | Blocked | - | 6 | T10, T14, T16, T18, T19, T21, T22, T25 | `task/T26-e2e-integration` | Integration |
 | T27 | Accessibility and visual QA | Blocked | - | 5 | T10, T14, T16, T18, T19, T21 | `task/T27-accessibility-visual-qa` | QA and mobile |
@@ -173,7 +173,7 @@ This expands the acceptance gate in Section 4 for T05. It does not replace the b
 
 ## 5 Remaining-task definitions of done
 
-These gates apply to every task not already Done: `T09`-`T11` and `T13`-`T31`. The acceptance
+These gates apply to every task not already Done: `T10`, `T13`-`T16` and `T18`-`T31`. The acceptance
 gate in Section 4 defines the delivery boundary; this section defines the minimum evidence
 required to prove that boundary. A task may be marked **Done** only when all of the following
 are true:
@@ -269,7 +269,7 @@ Every task pull request must contain:
 
 ### T11 pull-request evidence
 
-This records the Section 6 checklist for T11. It does not mark the task Done: status stays **Review** until the pull request is reviewed and merged, and the human updates the Owner column and final status.
+This records the Section 6 checklist for T11. Pull request #37 was reviewed and merged into `develop` at `4cbde6c`, so the task is **Done**.
 
 | Checklist item | T11 evidence |
 | --- | --- |
@@ -285,5 +285,5 @@ This records the Section 6 checklist for T11. It does not mark the task Done: st
 
 ## 7 Current next action
 
-T01-T08 and T12 are merged and Done. T09 and T11 are in **Review**. T17, T20 and T24 are Ready. T13 remains Blocked until T11 is Done; T15 remains Blocked until T11 and T13 are Done.
+T01-T09, T11-T12 and T17 are merged and Done. T20 and T24 are In Progress. T10, T13, T18 and T19 are Ready. T15 remains Blocked until T13 is Done; later tasks remain blocked until all listed dependencies are Done.
 
