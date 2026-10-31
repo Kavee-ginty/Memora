@@ -32,7 +32,7 @@ void main() {
       // TODO
     });
 
-    // Optional<String?> requestType (default value: 'export')
+    // String requestType
     test('to test the property `requestType`', () async {
       // TODO
     });

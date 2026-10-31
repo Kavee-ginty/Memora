@@ -11,10 +11,10 @@ Name | Type | Description | Notes
 **completedAt** | **Optional&lt;String?&gt;** |  | [optional] 
 **failureCode** | **Optional&lt;String?&gt;** |  | [optional] 
 **id** | **String** |  | 
-**proofs** | [**Optional&lt;BuiltList&lt;DeletionProofSummary&gt;?&gt;**](DeletionProofSummary.md) |  | [optional] 
-**requestType** | **Optional&lt;String?&gt;** |  | [optional] [default to 'delete']
+**proofs** | [**BuiltList&lt;DeletionProofSummary&gt;**](DeletionProofSummary.md) |  | 
+**requestType** | **String** |  | 
 **requestedAt** | **String** |  | 
-**retentionExceptions** | **Optional&lt;BuiltList&lt;String&gt;?&gt;** |  | [optional] 
+**retentionExceptions** | **BuiltList&lt;String&gt;** |  | 
 **status** | **String** |  | 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

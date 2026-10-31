@@ -22,12 +22,12 @@ void main() {
       // TODO
     });
 
-    // Optional<BuiltList<DeletionProofSummary>?> proofs
+    // BuiltList<DeletionProofSummary> proofs
     test('to test the property `proofs`', () async {
       // TODO
     });
 
-    // Optional<String?> requestType (default value: 'delete')
+    // String requestType
     test('to test the property `requestType`', () async {
       // TODO
     });
@@ -37,7 +37,7 @@ void main() {
       // TODO
     });
 
-    // Optional<BuiltList<String>?> retentionExceptions
+    // BuiltList<String> retentionExceptions
     test('to test the property `retentionExceptions`', () async {
       // TODO
     });

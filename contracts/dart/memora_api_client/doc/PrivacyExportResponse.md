@@ -13,7 +13,7 @@ Name | Type | Description | Notes
 **downloadUrl** | **Optional&lt;String?&gt;** |  | [optional] 
 **failureCode** | **Optional&lt;String?&gt;** |  | [optional] 
 **id** | **String** |  | 
-**requestType** | **Optional&lt;String?&gt;** |  | [optional] [default to 'export']
+**requestType** | **String** |  | 
 **requestedAt** | **String** |  | 
 **status** | **String** |  | 
 

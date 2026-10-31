@@ -20,12 +20,12 @@ PrivacyRequestStatus = Literal[
 class PrivacyExportRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    format: Literal["json"] = "json"
+    format: str = "json"
 
 
 class PrivacyExportResponse(BaseModel):
     id: UUID
-    request_type: Literal["export"] = "export"
+    request_type: str
     status: PrivacyRequestStatus
     requested_at: UtcDatetime
     completed_at: UtcDatetime | None = None
@@ -51,12 +51,12 @@ class DeletionProofSummary(BaseModel):
 
 class PrivacyDeletionResponse(BaseModel):
     id: UUID
-    request_type: Literal["delete"] = "delete"
+    request_type: str
     status: PrivacyRequestStatus
     requested_at: UtcDatetime
     completed_at: UtcDatetime | None = None
-    proofs: list[DeletionProofSummary] = Field(default_factory=list)
-    retention_exceptions: list[str] = Field(default_factory=list)
+    proofs: list[DeletionProofSummary]
+    retention_exceptions: list[str]
     failure_code: str | None = None
 
 

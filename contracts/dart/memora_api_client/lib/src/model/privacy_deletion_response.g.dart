@@ -6,32 +6,6 @@ part of 'privacy_deletion_response.dart';
 // BuiltValueGenerator
 // **************************************************************************
 
-const PrivacyDeletionResponseRequestTypeEnum
-    _$privacyDeletionResponseRequestTypeEnum_delete =
-    const PrivacyDeletionResponseRequestTypeEnum._('delete');
-const PrivacyDeletionResponseRequestTypeEnum
-    _$privacyDeletionResponseRequestTypeEnum_unknownDefaultOpenApi =
-    const PrivacyDeletionResponseRequestTypeEnum._('unknownDefaultOpenApi');
-
-PrivacyDeletionResponseRequestTypeEnum
-    _$privacyDeletionResponseRequestTypeEnumValueOf(String name) {
-  switch (name) {
-    case 'delete':
-      return _$privacyDeletionResponseRequestTypeEnum_delete;
-    case 'unknownDefaultOpenApi':
-      return _$privacyDeletionResponseRequestTypeEnum_unknownDefaultOpenApi;
-    default:
-      return _$privacyDeletionResponseRequestTypeEnum_unknownDefaultOpenApi;
-  }
-}
-
-final BuiltSet<PrivacyDeletionResponseRequestTypeEnum>
-    _$privacyDeletionResponseRequestTypeEnumValues = BuiltSet<
-        PrivacyDeletionResponseRequestTypeEnum>(const <PrivacyDeletionResponseRequestTypeEnum>[
-  _$privacyDeletionResponseRequestTypeEnum_delete,
-  _$privacyDeletionResponseRequestTypeEnum_unknownDefaultOpenApi,
-]);
-
 const PrivacyDeletionResponseStatusEnum
     _$privacyDeletionResponseStatusEnum_requested =
     const PrivacyDeletionResponseStatusEnum._('requested');
@@ -88,44 +62,9 @@ final BuiltSet<PrivacyDeletionResponseStatusEnum>
   _$privacyDeletionResponseStatusEnum_unknownDefaultOpenApi,
 ]);
 
-Serializer<PrivacyDeletionResponseRequestTypeEnum>
-    _$privacyDeletionResponseRequestTypeEnumSerializer =
-    _$PrivacyDeletionResponseRequestTypeEnumSerializer();
 Serializer<PrivacyDeletionResponseStatusEnum>
     _$privacyDeletionResponseStatusEnumSerializer =
     _$PrivacyDeletionResponseStatusEnumSerializer();
-
-class _$PrivacyDeletionResponseRequestTypeEnumSerializer
-    implements PrimitiveSerializer<PrivacyDeletionResponseRequestTypeEnum> {
-  static const Map<String, Object> _toWire = const <String, Object>{
-    'delete': 'delete',
-    'unknownDefaultOpenApi': 'unknown_default_open_api',
-  };
-  static const Map<Object, String> _fromWire = const <Object, String>{
-    'delete': 'delete',
-    'unknown_default_open_api': 'unknownDefaultOpenApi',
-  };
-
-  @override
-  final Iterable<Type> types = const <Type>[
-    PrivacyDeletionResponseRequestTypeEnum
-  ];
-  @override
-  final String wireName = 'PrivacyDeletionResponseRequestTypeEnum';
-
-  @override
-  Object serialize(Serializers serializers,
-          PrivacyDeletionResponseRequestTypeEnum object,
-          {FullType specifiedType = FullType.unspecified}) =>
-      _toWire[object.name] ?? object.name;
-
-  @override
-  PrivacyDeletionResponseRequestTypeEnum deserialize(
-          Serializers serializers, Object serialized,
-          {FullType specifiedType = FullType.unspecified}) =>
-      PrivacyDeletionResponseRequestTypeEnum.valueOf(
-          _fromWire[serialized] ?? (serialized is String ? serialized : ''));
-}
 
 class _$PrivacyDeletionResponseStatusEnumSerializer
     implements PrimitiveSerializer<PrivacyDeletionResponseStatusEnum> {
@@ -177,7 +116,7 @@ class _$PrivacyDeletionResponse extends PrivacyDeletionResponse {
   @override
   final BuiltList<DeletionProofSummary> proofs;
   @override
-  final Optional<PrivacyDeletionResponseRequestTypeEnum?> requestType;
+  final String requestType;
   @override
   final String requestedAt;
   @override
@@ -277,12 +216,9 @@ class PrivacyDeletionResponseBuilder
   set proofs(ListBuilder<DeletionProofSummary>? proofs) =>
       _$this._proofs = proofs;
 
-  Optional<PrivacyDeletionResponseRequestTypeEnum?>? _requestType;
-  Optional<PrivacyDeletionResponseRequestTypeEnum?>? get requestType =>
-      _$this._requestType;
-  set requestType(
-          Optional<PrivacyDeletionResponseRequestTypeEnum?>? requestType) =>
-      _$this._requestType = requestType;
+  String? _requestType;
+  String? get requestType => _$this._requestType;
+  set requestType(String? requestType) => _$this._requestType = requestType;
 
   String? _requestedAt;
   String? get requestedAt => _$this._requestedAt;

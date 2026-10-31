@@ -3,7 +3,6 @@
 //
 
 // ignore_for_file: unused_element
-import 'package:built_collection/built_collection.dart';
 import 'package:built_value/built_value.dart';
 import 'package:built_value/serializer.dart';
 import 'package:memora_api_client/src/optional.dart';
@@ -18,8 +17,7 @@ part 'privacy_export_request.g.dart';
 abstract class PrivacyExportRequest
     implements Built<PrivacyExportRequest, PrivacyExportRequestBuilder> {
   @BuiltValueField(wireName: r'format')
-  Optional<PrivacyExportRequestFormatEnum?> get format;
-  // enum formatEnum {  json,  };
+  Optional<String?> get format;
 
   PrivacyExportRequest._();
 
@@ -122,23 +120,4 @@ class _$PrivacyExportRequestSerializer
     );
     return result.build();
   }
-}
-
-class PrivacyExportRequestFormatEnum extends EnumClass {
-  @BuiltValueEnumConst(wireName: r'json')
-  static const PrivacyExportRequestFormatEnum json =
-      _$privacyExportRequestFormatEnum_json;
-  @BuiltValueEnumConst(wireName: r'unknown_default_open_api', fallback: true)
-  static const PrivacyExportRequestFormatEnum unknownDefaultOpenApi =
-      _$privacyExportRequestFormatEnum_unknownDefaultOpenApi;
-
-  static Serializer<PrivacyExportRequestFormatEnum> get serializer =>
-      _$privacyExportRequestFormatEnumSerializer;
-
-  const PrivacyExportRequestFormatEnum._(String name) : super(name);
-
-  static BuiltSet<PrivacyExportRequestFormatEnum> get values =>
-      _$privacyExportRequestFormatEnumValues;
-  static PrivacyExportRequestFormatEnum valueOf(String name) =>
-      _$privacyExportRequestFormatEnumValueOf(name);
 }

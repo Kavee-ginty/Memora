@@ -1139,8 +1139,6 @@
             "type": "array"
           },
           "request_type": {
-            "const": "delete",
-            "default": "delete",
             "title": "Request Type",
             "type": "string"
           },
@@ -1170,8 +1168,11 @@
         },
         "required": [
           "id",
+          "request_type",
           "status",
-          "requested_at"
+          "requested_at",
+          "proofs",
+          "retention_exceptions"
         ],
         "title": "PrivacyDeletionResponse",
         "type": "object"
@@ -1180,7 +1181,6 @@
         "additionalProperties": false,
         "properties": {
           "format": {
-            "const": "json",
             "default": "json",
             "title": "Format",
             "type": "string"
@@ -1241,8 +1241,6 @@
             "type": "string"
           },
           "request_type": {
-            "const": "export",
-            "default": "export",
             "title": "Request Type",
             "type": "string"
           },
@@ -1265,6 +1263,7 @@
         },
         "required": [
           "id",
+          "request_type",
           "status",
           "requested_at"
         ],

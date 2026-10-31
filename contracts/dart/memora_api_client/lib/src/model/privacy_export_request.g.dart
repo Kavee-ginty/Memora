@@ -6,68 +6,9 @@ part of 'privacy_export_request.dart';
 // BuiltValueGenerator
 // **************************************************************************
 
-const PrivacyExportRequestFormatEnum _$privacyExportRequestFormatEnum_json =
-    const PrivacyExportRequestFormatEnum._('json');
-const PrivacyExportRequestFormatEnum
-    _$privacyExportRequestFormatEnum_unknownDefaultOpenApi =
-    const PrivacyExportRequestFormatEnum._('unknownDefaultOpenApi');
-
-PrivacyExportRequestFormatEnum _$privacyExportRequestFormatEnumValueOf(
-    String name) {
-  switch (name) {
-    case 'json':
-      return _$privacyExportRequestFormatEnum_json;
-    case 'unknownDefaultOpenApi':
-      return _$privacyExportRequestFormatEnum_unknownDefaultOpenApi;
-    default:
-      return _$privacyExportRequestFormatEnum_unknownDefaultOpenApi;
-  }
-}
-
-final BuiltSet<PrivacyExportRequestFormatEnum>
-    _$privacyExportRequestFormatEnumValues = BuiltSet<
-        PrivacyExportRequestFormatEnum>(const <PrivacyExportRequestFormatEnum>[
-  _$privacyExportRequestFormatEnum_json,
-  _$privacyExportRequestFormatEnum_unknownDefaultOpenApi,
-]);
-
-Serializer<PrivacyExportRequestFormatEnum>
-    _$privacyExportRequestFormatEnumSerializer =
-    _$PrivacyExportRequestFormatEnumSerializer();
-
-class _$PrivacyExportRequestFormatEnumSerializer
-    implements PrimitiveSerializer<PrivacyExportRequestFormatEnum> {
-  static const Map<String, Object> _toWire = const <String, Object>{
-    'json': 'json',
-    'unknownDefaultOpenApi': 'unknown_default_open_api',
-  };
-  static const Map<Object, String> _fromWire = const <Object, String>{
-    'json': 'json',
-    'unknown_default_open_api': 'unknownDefaultOpenApi',
-  };
-
-  @override
-  final Iterable<Type> types = const <Type>[PrivacyExportRequestFormatEnum];
-  @override
-  final String wireName = 'PrivacyExportRequestFormatEnum';
-
-  @override
-  Object serialize(
-          Serializers serializers, PrivacyExportRequestFormatEnum object,
-          {FullType specifiedType = FullType.unspecified}) =>
-      _toWire[object.name] ?? object.name;
-
-  @override
-  PrivacyExportRequestFormatEnum deserialize(
-          Serializers serializers, Object serialized,
-          {FullType specifiedType = FullType.unspecified}) =>
-      PrivacyExportRequestFormatEnum.valueOf(
-          _fromWire[serialized] ?? (serialized is String ? serialized : ''));
-}
-
 class _$PrivacyExportRequest extends PrivacyExportRequest {
   @override
-  final Optional<PrivacyExportRequestFormatEnum?> format;
+  final Optional<String?> format;
 
   factory _$PrivacyExportRequest(
           [void Function(PrivacyExportRequestBuilder)? updates]) =>
@@ -109,10 +50,9 @@ class PrivacyExportRequestBuilder
     implements Builder<PrivacyExportRequest, PrivacyExportRequestBuilder> {
   _$PrivacyExportRequest? _$v;
 
-  Optional<PrivacyExportRequestFormatEnum?>? _format;
-  Optional<PrivacyExportRequestFormatEnum?>? get format => _$this._format;
-  set format(Optional<PrivacyExportRequestFormatEnum?>? format) =>
-      _$this._format = format;
+  Optional<String?>? _format;
+  Optional<String?>? get format => _$this._format;
+  set format(Optional<String?>? format) => _$this._format = format;
 
   PrivacyExportRequestBuilder() {
     PrivacyExportRequest._defaults(this);

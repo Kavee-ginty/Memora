@@ -6,32 +6,6 @@ part of 'privacy_export_response.dart';
 // BuiltValueGenerator
 // **************************************************************************
 
-const PrivacyExportResponseRequestTypeEnum
-    _$privacyExportResponseRequestTypeEnum_export_ =
-    const PrivacyExportResponseRequestTypeEnum._('export_');
-const PrivacyExportResponseRequestTypeEnum
-    _$privacyExportResponseRequestTypeEnum_unknownDefaultOpenApi =
-    const PrivacyExportResponseRequestTypeEnum._('unknownDefaultOpenApi');
-
-PrivacyExportResponseRequestTypeEnum
-    _$privacyExportResponseRequestTypeEnumValueOf(String name) {
-  switch (name) {
-    case 'export_':
-      return _$privacyExportResponseRequestTypeEnum_export_;
-    case 'unknownDefaultOpenApi':
-      return _$privacyExportResponseRequestTypeEnum_unknownDefaultOpenApi;
-    default:
-      return _$privacyExportResponseRequestTypeEnum_unknownDefaultOpenApi;
-  }
-}
-
-final BuiltSet<PrivacyExportResponseRequestTypeEnum>
-    _$privacyExportResponseRequestTypeEnumValues = BuiltSet<
-        PrivacyExportResponseRequestTypeEnum>(const <PrivacyExportResponseRequestTypeEnum>[
-  _$privacyExportResponseRequestTypeEnum_export_,
-  _$privacyExportResponseRequestTypeEnum_unknownDefaultOpenApi,
-]);
-
 const PrivacyExportResponseStatusEnum
     _$privacyExportResponseStatusEnum_requested =
     const PrivacyExportResponseStatusEnum._('requested');
@@ -87,44 +61,9 @@ final BuiltSet<PrivacyExportResponseStatusEnum>
   _$privacyExportResponseStatusEnum_unknownDefaultOpenApi,
 ]);
 
-Serializer<PrivacyExportResponseRequestTypeEnum>
-    _$privacyExportResponseRequestTypeEnumSerializer =
-    _$PrivacyExportResponseRequestTypeEnumSerializer();
 Serializer<PrivacyExportResponseStatusEnum>
     _$privacyExportResponseStatusEnumSerializer =
     _$PrivacyExportResponseStatusEnumSerializer();
-
-class _$PrivacyExportResponseRequestTypeEnumSerializer
-    implements PrimitiveSerializer<PrivacyExportResponseRequestTypeEnum> {
-  static const Map<String, Object> _toWire = const <String, Object>{
-    'export_': 'export',
-    'unknownDefaultOpenApi': 'unknown_default_open_api',
-  };
-  static const Map<Object, String> _fromWire = const <Object, String>{
-    'export': 'export_',
-    'unknown_default_open_api': 'unknownDefaultOpenApi',
-  };
-
-  @override
-  final Iterable<Type> types = const <Type>[
-    PrivacyExportResponseRequestTypeEnum
-  ];
-  @override
-  final String wireName = 'PrivacyExportResponseRequestTypeEnum';
-
-  @override
-  Object serialize(
-          Serializers serializers, PrivacyExportResponseRequestTypeEnum object,
-          {FullType specifiedType = FullType.unspecified}) =>
-      _toWire[object.name] ?? object.name;
-
-  @override
-  PrivacyExportResponseRequestTypeEnum deserialize(
-          Serializers serializers, Object serialized,
-          {FullType specifiedType = FullType.unspecified}) =>
-      PrivacyExportResponseRequestTypeEnum.valueOf(
-          _fromWire[serialized] ?? (serialized is String ? serialized : ''));
-}
 
 class _$PrivacyExportResponseStatusEnumSerializer
     implements PrimitiveSerializer<PrivacyExportResponseStatusEnum> {
@@ -178,7 +117,7 @@ class _$PrivacyExportResponse extends PrivacyExportResponse {
   @override
   final String id;
   @override
-  final Optional<PrivacyExportResponseRequestTypeEnum?> requestType;
+  final String requestType;
   @override
   final String requestedAt;
   @override
@@ -279,12 +218,9 @@ class PrivacyExportResponseBuilder
   String? get id => _$this._id;
   set id(String? id) => _$this._id = id;
 
-  Optional<PrivacyExportResponseRequestTypeEnum?>? _requestType;
-  Optional<PrivacyExportResponseRequestTypeEnum?>? get requestType =>
-      _$this._requestType;
-  set requestType(
-          Optional<PrivacyExportResponseRequestTypeEnum?>? requestType) =>
-      _$this._requestType = requestType;
+  String? _requestType;
+  String? get requestType => _$this._requestType;
+  set requestType(String? requestType) => _$this._requestType = requestType;
 
   String? _requestedAt;
   String? get requestedAt => _$this._requestedAt;

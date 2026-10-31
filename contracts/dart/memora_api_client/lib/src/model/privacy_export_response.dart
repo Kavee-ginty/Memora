@@ -40,8 +40,7 @@ abstract class PrivacyExportResponse
   String get id;
 
   @BuiltValueField(wireName: r'request_type')
-  Optional<PrivacyExportResponseRequestTypeEnum?> get requestType;
-  // enum requestTypeEnum {  export,  };
+  String get requestType;
 
   @BuiltValueField(wireName: r'requested_at')
   String get requestedAt;
@@ -60,8 +59,7 @@ abstract class PrivacyExportResponse
     ..completedAt = Optional.absent()
     ..downloadExpiresAt = Optional.absent()
     ..downloadUrl = Optional.absent()
-    ..failureCode = Optional.absent()
-    ..requestType = Optional.absent();
+    ..failureCode = Optional.absent();
 
   @BuiltValueSerializer(custom: true)
   static Serializer<PrivacyExportResponse> get serializer =>
@@ -137,18 +135,11 @@ class _$PrivacyExportResponseSerializer
       object.id,
       specifiedType: const FullType(String),
     );
-    if (object.requestType.isPresent) {
-      yield r'request_type';
-      final optionalValue = object.requestType.value;
-      if (optionalValue == null) {
-        yield null;
-      } else {
-        yield serializers.serialize(
-          optionalValue,
-          specifiedType: const FullType.nullable(String),
-        );
-      }
-    }
+    yield r'request_type';
+    yield serializers.serialize(
+      object.requestType,
+      specifiedType: const FullType(String),
+    );
     yield r'requested_at';
     yield serializers.serialize(
       object.requestedAt,
@@ -222,9 +213,9 @@ class _$PrivacyExportResponseSerializer
         case r'request_type':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType.nullable(String),
-          ) as String?;
-          result.requestType = Optional.present(valueDes);
+            specifiedType: const FullType(String),
+          ) as String;
+          result.requestType = valueDes;
           break;
         case r'requested_at':
           final valueDes = serializers.deserialize(
@@ -267,25 +258,6 @@ class _$PrivacyExportResponseSerializer
     );
     return result.build();
   }
-}
-
-class PrivacyExportResponseRequestTypeEnum extends EnumClass {
-  @BuiltValueEnumConst(wireName: r'export')
-  static const PrivacyExportResponseRequestTypeEnum export_ =
-      _$privacyExportResponseRequestTypeEnum_export_;
-  @BuiltValueEnumConst(wireName: r'unknown_default_open_api', fallback: true)
-  static const PrivacyExportResponseRequestTypeEnum unknownDefaultOpenApi =
-      _$privacyExportResponseRequestTypeEnum_unknownDefaultOpenApi;
-
-  static Serializer<PrivacyExportResponseRequestTypeEnum> get serializer =>
-      _$privacyExportResponseRequestTypeEnumSerializer;
-
-  const PrivacyExportResponseRequestTypeEnum._(String name) : super(name);
-
-  static BuiltSet<PrivacyExportResponseRequestTypeEnum> get values =>
-      _$privacyExportResponseRequestTypeEnumValues;
-  static PrivacyExportResponseRequestTypeEnum valueOf(String name) =>
-      _$privacyExportResponseRequestTypeEnumValueOf(name);
 }
 
 class PrivacyExportResponseStatusEnum extends EnumClass {

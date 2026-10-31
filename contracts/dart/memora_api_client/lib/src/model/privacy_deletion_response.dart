@@ -38,8 +38,7 @@ abstract class PrivacyDeletionResponse
   BuiltList<DeletionProofSummary> get proofs;
 
   @BuiltValueField(wireName: r'request_type')
-  Optional<PrivacyDeletionResponseRequestTypeEnum?> get requestType;
-  // enum requestTypeEnum {  delete,  };
+  String get requestType;
 
   @BuiltValueField(wireName: r'requested_at')
   String get requestedAt;
@@ -60,10 +59,7 @@ abstract class PrivacyDeletionResponse
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(PrivacyDeletionResponseBuilder b) => b
     ..completedAt = Optional.absent()
-    ..failureCode = Optional.absent()
-    ..proofs = Optional.absent()
-    ..requestType = Optional.absent()
-    ..retentionExceptions = Optional.absent();
+    ..failureCode = Optional.absent();
 
   @BuiltValueSerializer(custom: true)
   static Serializer<PrivacyDeletionResponse> get serializer =>
@@ -115,48 +111,27 @@ class _$PrivacyDeletionResponseSerializer
       object.id,
       specifiedType: const FullType(String),
     );
-    if (object.proofs.isPresent) {
-      yield r'proofs';
-      final optionalValue = object.proofs.value;
-      if (optionalValue == null) {
-        yield null;
-      } else {
-        yield serializers.serialize(
-          optionalValue,
-          specifiedType:
-              const FullType(BuiltList, [FullType(DeletionProofSummary)]),
-        );
-      }
-    }
-    if (object.requestType.isPresent) {
-      yield r'request_type';
-      final optionalValue = object.requestType.value;
-      if (optionalValue == null) {
-        yield null;
-      } else {
-        yield serializers.serialize(
-          optionalValue,
-          specifiedType: const FullType.nullable(String),
-        );
-      }
-    }
+    yield r'proofs';
+    yield serializers.serialize(
+      object.proofs,
+      specifiedType:
+          const FullType(BuiltList, [FullType(DeletionProofSummary)]),
+    );
+    yield r'request_type';
+    yield serializers.serialize(
+      object.requestType,
+      specifiedType: const FullType(String),
+    );
     yield r'requested_at';
     yield serializers.serialize(
       object.requestedAt,
       specifiedType: const FullType(String),
     );
-    if (object.retentionExceptions.isPresent) {
-      yield r'retention_exceptions';
-      final optionalValue = object.retentionExceptions.value;
-      if (optionalValue == null) {
-        yield null;
-      } else {
-        yield serializers.serialize(
-          optionalValue,
-          specifiedType: const FullType(BuiltList, [FullType(String)]),
-        );
-      }
-    }
+    yield r'retention_exceptions';
+    yield serializers.serialize(
+      object.retentionExceptions,
+      specifiedType: const FullType(BuiltList, [FullType(String)]),
+    );
     yield r'status';
     yield serializers.serialize(
       object.status,
@@ -213,15 +188,15 @@ class _$PrivacyDeletionResponseSerializer
             value,
             specifiedType:
                 const FullType(BuiltList, [FullType(DeletionProofSummary)]),
-          ) as BuiltList<DeletionProofSummary>?;
-          result.proofs = Optional.present(valueDes);
+          ) as BuiltList<DeletionProofSummary>;
+          result.proofs.replace(valueDes);
           break;
         case r'request_type':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType.nullable(String),
-          ) as String?;
-          result.requestType = Optional.present(valueDes);
+            specifiedType: const FullType(String),
+          ) as String;
+          result.requestType = valueDes;
           break;
         case r'requested_at':
           final valueDes = serializers.deserialize(
@@ -234,8 +209,8 @@ class _$PrivacyDeletionResponseSerializer
           final valueDes = serializers.deserialize(
             value,
             specifiedType: const FullType(BuiltList, [FullType(String)]),
-          ) as BuiltList<String>?;
-          result.retentionExceptions = Optional.present(valueDes);
+          ) as BuiltList<String>;
+          result.retentionExceptions.replace(valueDes);
           break;
         case r'status':
           final valueDes = serializers.deserialize(
@@ -271,25 +246,6 @@ class _$PrivacyDeletionResponseSerializer
     );
     return result.build();
   }
-}
-
-class PrivacyDeletionResponseRequestTypeEnum extends EnumClass {
-  @BuiltValueEnumConst(wireName: r'delete')
-  static const PrivacyDeletionResponseRequestTypeEnum delete =
-      _$privacyDeletionResponseRequestTypeEnum_delete;
-  @BuiltValueEnumConst(wireName: r'unknown_default_open_api', fallback: true)
-  static const PrivacyDeletionResponseRequestTypeEnum unknownDefaultOpenApi =
-      _$privacyDeletionResponseRequestTypeEnum_unknownDefaultOpenApi;
-
-  static Serializer<PrivacyDeletionResponseRequestTypeEnum> get serializer =>
-      _$privacyDeletionResponseRequestTypeEnumSerializer;
-
-  const PrivacyDeletionResponseRequestTypeEnum._(String name) : super(name);
-
-  static BuiltSet<PrivacyDeletionResponseRequestTypeEnum> get values =>
-      _$privacyDeletionResponseRequestTypeEnumValues;
-  static PrivacyDeletionResponseRequestTypeEnum valueOf(String name) =>
-      _$privacyDeletionResponseRequestTypeEnumValueOf(name);
 }
 
 class PrivacyDeletionResponseStatusEnum extends EnumClass {
