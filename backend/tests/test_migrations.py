@@ -6,6 +6,7 @@ from uuid import UUID, uuid4
 import pytest
 from alembic import command
 from alembic.config import Config
+from alembic.script import ScriptDirectory
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine, make_url
 from sqlalchemy.exc import DBAPIError
@@ -168,6 +169,14 @@ STATUS_VALUES = {
         "cancelled",
     },
 }
+
+
+def test_migration_graph_has_one_head() -> None:
+    config = Config(BACKEND_ROOT / "alembic.ini")
+    config.set_main_option("script_location", str(BACKEND_ROOT / "migrations"))
+
+    assert len(ScriptDirectory.from_config(config).get_heads()) == 1
+
 
 INSERT_UPDATE_SQL = text(
     """

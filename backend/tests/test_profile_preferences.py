@@ -181,6 +181,18 @@ def test_profile_and_preferences_enforce_versions_idempotency_and_ownership(
         )
         == preferences
     )
+
+    partial_accessibility = repository.update_preferences(
+        owner,
+        version=preferences["version"],
+        idempotency_key=str(uuid4()),
+        values={"accessibility": {"reduced_motion": False}},
+        default_reminders=1,
+    )
+    assert partial_accessibility["accessibility"] == {
+        **preference_values["accessibility"],
+        "reduced_motion": False,
+    }
     with pytest.raises(ApiError, match="idempotency_key_reused"):
         repository.update_preferences(
             owner,
@@ -241,17 +253,19 @@ def test_device_refresh_revocation_and_prohibited_values_stay_protected(
     installation_id = uuid4()
     first_token = "synthetic-push-token-one"
     second_token = "synthetic-push-token-two"
+    first_key = str(uuid4())
+    first_body = DeviceRegistrationRequest(
+        installation_id=installation_id,
+        platform="android",
+        push_token=first_token,
+        locale="en-LK",
+        timezone="Asia/Colombo",
+        app_version="1.0.0",
+    )
     first, created = service.register_device(
         request(owner),
-        DeviceRegistrationRequest(
-            installation_id=installation_id,
-            platform="android",
-            push_token=first_token,
-            locale="en-LK",
-            timezone="Asia/Colombo",
-            app_version="1.0.0",
-        ),
-        idempotency_key=str(uuid4()),
+        first_body,
+        idempotency_key=first_key,
     )
     assert created is True
     assert first_token not in first.model_dump_json()
@@ -286,6 +300,13 @@ def test_device_refresh_revocation_and_prohibited_values_stay_protected(
     assert created is False
     assert refreshed.id == first.id
     assert refreshed.app_version == "1.1.0"
+    replayed, created = service.register_device(
+        request(owner),
+        first_body,
+        idempotency_key=first_key,
+    )
+    assert created is False
+    assert replayed == first
     repository.delete_device(other, first.id)
     with engine.connect() as connection:
         assert connection.scalar(
