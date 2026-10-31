@@ -47,13 +47,20 @@ Please follow the [installation procedure](#installation--usage) and then run th
 import 'package:memora_api_client/memora_api_client.dart';
 
 
-final api = MemoraApiClient().getHealthApi();
+final api = MemoraApiClient().getCurriculumApi();
+final String conceptId = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+final String xCorrelationID = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+final String xClientVersion = xClientVersion_example; // String | 
+final String xPlatform = xPlatform_example; // String | 
+final int limit = 56; // int | 
+final String cursor = cursor_example; // String | 
+final String acceptLanguage = acceptLanguage_example; // String | 
 
 try {
-    final response = await api.healthLive();
+    final response = await api.getConceptHistory(conceptId, xCorrelationID, xClientVersion, xPlatform, limit, cursor, acceptLanguage);
     print(response);
 } on DioException catch (e) {
-    print("Exception when calling HealthApi->healthLive: $e\n");
+    print("Exception when calling CurriculumApi->getConceptHistory: $e\n");
 }
 
 ```
@@ -64,6 +71,8 @@ All URIs are relative to *http://localhost*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
+[*CurriculumApi*](doc/CurriculumApi.md) | [**getConceptHistory**](doc/CurriculumApi.md#getconcepthistory) | **GET** /v1/concepts/{concept_id}/history | Read a concept&#39;s evidence summary and scheduling history
+[*CurriculumApi*](doc/CurriculumApi.md) | [**listConceptProgress**](doc/CurriculumApi.md#listconceptprogress) | **GET** /v1/subjects/{subject_id}/concept-progress | List due and near-due concept progress for a subject
 [*HealthApi*](doc/HealthApi.md) | [**healthLive**](doc/HealthApi.md#healthlive) | **GET** /health/live | Live
 [*HealthApi*](doc/HealthApi.md) | [**healthReady**](doc/HealthApi.md#healthready) | **GET** /health/ready | Ready
 [*LearningUpdatesApi*](doc/LearningUpdatesApi.md) | [**createLearningUpdate**](doc/LearningUpdatesApi.md#createlearningupdate) | **POST** /v1/learning-updates | Create a text or upload-backed learning update
@@ -98,6 +107,8 @@ Class | Method | HTTP request | Description
  - [CandidateResponse](doc/CandidateResponse.md)
  - [CandidateStatus](doc/CandidateStatus.md)
  - [CapabilityFlags](doc/CapabilityFlags.md)
+ - [ConceptHistoryResponse](doc/ConceptHistoryResponse.md)
+ - [ConceptProgressItem](doc/ConceptProgressItem.md)
  - [ConsentAcceptanceRequest](doc/ConsentAcceptanceRequest.md)
  - [ConsentAcceptanceResponse](doc/ConsentAcceptanceResponse.md)
  - [ConsentDecision](doc/ConsentDecision.md)
@@ -109,8 +120,10 @@ Class | Method | HTTP request | Description
  - [DeletionStatus](doc/DeletionStatus.md)
  - [DeviceRegistrationRequest](doc/DeviceRegistrationRequest.md)
  - [DeviceRegistrationResponse](doc/DeviceRegistrationResponse.md)
+ - [DueReasonExplanation](doc/DueReasonExplanation.md)
  - [ErrorDetail](doc/ErrorDetail.md)
  - [ErrorEnvelope](doc/ErrorEnvelope.md)
+ - [EvidenceSummary](doc/EvidenceSummary.md)
  - [FieldError](doc/FieldError.md)
  - [FinalizeUploadRequest](doc/FinalizeUploadRequest.md)
  - [FirstMissionSummary](doc/FirstMissionSummary.md)
@@ -124,6 +137,7 @@ Class | Method | HTTP request | Description
  - [LearningUpdateListResponse](doc/LearningUpdateListResponse.md)
  - [LearningUpdateResponse](doc/LearningUpdateResponse.md)
  - [LearningUpdateStatus](doc/LearningUpdateStatus.md)
+ - [PageConceptProgressItem](doc/PageConceptProgressItem.md)
  - [PageMeta](doc/PageMeta.md)
  - [PageParams](doc/PageParams.md)
  - [PageQuestionReportSummary](doc/PageQuestionReportSummary.md)
@@ -134,6 +148,7 @@ Class | Method | HTTP request | Description
  - [QuestionReportSummary](doc/QuestionReportSummary.md)
  - [RequestHeaders](doc/RequestHeaders.md)
  - [RetryLearningUpdateRequest](doc/RetryLearningUpdateRequest.md)
+ - [SchedulingExplanation](doc/SchedulingExplanation.md)
  - [SessionBootstrapResponse](doc/SessionBootstrapResponse.md)
  - [SessionRevocationScope](doc/SessionRevocationScope.md)
  - [SessionRevokeRequest](doc/SessionRevokeRequest.md)

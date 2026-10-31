@@ -21,6 +21,8 @@ import 'package:memora_api_client/src/model/candidate_list_response.dart';
 import 'package:memora_api_client/src/model/candidate_response.dart';
 import 'package:memora_api_client/src/model/candidate_status.dart';
 import 'package:memora_api_client/src/model/capability_flags.dart';
+import 'package:memora_api_client/src/model/concept_history_response.dart';
+import 'package:memora_api_client/src/model/concept_progress_item.dart';
 import 'package:memora_api_client/src/model/consent_acceptance_request.dart';
 import 'package:memora_api_client/src/model/consent_acceptance_response.dart';
 import 'package:memora_api_client/src/model/consent_decision.dart';
@@ -32,8 +34,10 @@ import 'package:memora_api_client/src/model/declared_file.dart';
 import 'package:memora_api_client/src/model/deletion_status.dart';
 import 'package:memora_api_client/src/model/device_registration_request.dart';
 import 'package:memora_api_client/src/model/device_registration_response.dart';
+import 'package:memora_api_client/src/model/due_reason_explanation.dart';
 import 'package:memora_api_client/src/model/error_detail.dart';
 import 'package:memora_api_client/src/model/error_envelope.dart';
+import 'package:memora_api_client/src/model/evidence_summary.dart';
 import 'package:memora_api_client/src/model/field_error.dart';
 import 'package:memora_api_client/src/model/finalize_upload_request.dart';
 import 'package:memora_api_client/src/model/first_mission_summary.dart';
@@ -47,6 +51,7 @@ import 'package:memora_api_client/src/model/learning_path_preview_response.dart'
 import 'package:memora_api_client/src/model/learning_update_list_response.dart';
 import 'package:memora_api_client/src/model/learning_update_response.dart';
 import 'package:memora_api_client/src/model/learning_update_status.dart';
+import 'package:memora_api_client/src/model/page_concept_progress_item.dart';
 import 'package:memora_api_client/src/model/page_meta.dart';
 import 'package:memora_api_client/src/model/page_params.dart';
 import 'package:memora_api_client/src/model/page_question_report_summary.dart';
@@ -57,6 +62,7 @@ import 'package:memora_api_client/src/model/question_report_response.dart';
 import 'package:memora_api_client/src/model/question_report_summary.dart';
 import 'package:memora_api_client/src/model/request_headers.dart';
 import 'package:memora_api_client/src/model/retry_learning_update_request.dart';
+import 'package:memora_api_client/src/model/scheduling_explanation.dart';
 import 'package:memora_api_client/src/model/session_bootstrap_response.dart';
 import 'package:memora_api_client/src/model/session_revocation_scope.dart';
 import 'package:memora_api_client/src/model/session_revoke_request.dart';
@@ -82,6 +88,8 @@ part 'serializers.g.dart';
   CandidateResponse,
   CandidateStatus,
   CapabilityFlags,
+  ConceptHistoryResponse,
+  ConceptProgressItem,
   ConsentAcceptanceRequest,
   ConsentAcceptanceResponse,
   ConsentDecision,
@@ -93,8 +101,10 @@ part 'serializers.g.dart';
   DeletionStatus,
   DeviceRegistrationRequest,
   DeviceRegistrationResponse,
+  DueReasonExplanation,
   ErrorDetail,
   ErrorEnvelope,
+  EvidenceSummary,
   FieldError,
   FinalizeUploadRequest,
   FirstMissionSummary,
@@ -108,6 +118,7 @@ part 'serializers.g.dart';
   LearningUpdateListResponse,
   LearningUpdateResponse,
   LearningUpdateStatus,
+  PageConceptProgressItem,
   PageMeta,
   PageParams,
   PageQuestionReportSummary,
@@ -118,6 +129,7 @@ part 'serializers.g.dart';
   QuestionReportSummary,
   RequestHeaders,
   RetryLearningUpdateRequest,
+  SchedulingExplanation,
   SessionBootstrapResponse,
   SessionRevocationScope,
   SessionRevokeRequest,
@@ -192,12 +204,20 @@ Serializers serializers = (_$serializers.toBuilder()
         () => MapBuilder<String, int>(),
       )
       ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(SchedulingExplanation)]),
+        () => ListBuilder<SchedulingExplanation>(),
+      )
+      ..addBuilderFactory(
         const FullType(BuiltList, [FullType(String)]),
         () => ListBuilder<String>(),
       )
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(SourceUploadSummary)]),
         () => ListBuilder<SourceUploadSummary>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(ConceptProgressItem)]),
+        () => ListBuilder<ConceptProgressItem>(),
       )
       ..add(const OneOfSerializer())
       ..add(const AnyOfSerializer())

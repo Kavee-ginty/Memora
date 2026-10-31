@@ -9,6 +9,8 @@ doc/CandidateListResponse.md
 doc/CandidateResponse.md
 doc/CandidateStatus.md
 doc/CapabilityFlags.md
+doc/ConceptHistoryResponse.md
+doc/ConceptProgressItem.md
 doc/ConsentAcceptanceRequest.md
 doc/ConsentAcceptanceResponse.md
 doc/ConsentDecision.md
@@ -16,12 +18,15 @@ doc/ConsentResponse.md
 doc/ConsentStatus.md
 doc/ConsentType.md
 doc/CreateLearningUpdateRequest.md
+doc/CurriculumApi.md
 doc/DeclaredFile.md
 doc/DeletionStatus.md
 doc/DeviceRegistrationRequest.md
 doc/DeviceRegistrationResponse.md
+doc/DueReasonExplanation.md
 doc/ErrorDetail.md
 doc/ErrorEnvelope.md
+doc/EvidenceSummary.md
 doc/FieldError.md
 doc/FinalizeUploadRequest.md
 doc/FirstMissionSummary.md
@@ -37,6 +42,7 @@ doc/LearningUpdateListResponse.md
 doc/LearningUpdateResponse.md
 doc/LearningUpdateStatus.md
 doc/LearningUpdatesApi.md
+doc/PageConceptProgressItem.md
 doc/PageMeta.md
 doc/PageParams.md
 doc/PageQuestionReportSummary.md
@@ -49,6 +55,7 @@ doc/QuestionReportSummary.md
 doc/ReportsApi.md
 doc/RequestHeaders.md
 doc/RetryLearningUpdateRequest.md
+doc/SchedulingExplanation.md
 doc/SessionApi.md
 doc/SessionBootstrapResponse.md
 doc/SessionRevocationScope.md
@@ -67,6 +74,7 @@ doc/VerificationDecisionResult.md
 doc/VerificationDecisionValue.md
 lib/memora_api_client.dart
 lib/src/api.dart
+lib/src/api/curriculum_api.dart
 lib/src/api/health_api.dart
 lib/src/api/learning_updates_api.dart
 lib/src/api/profile_api.dart
@@ -87,6 +95,8 @@ lib/src/model/candidate_list_response.dart
 lib/src/model/candidate_response.dart
 lib/src/model/candidate_status.dart
 lib/src/model/capability_flags.dart
+lib/src/model/concept_history_response.dart
+lib/src/model/concept_progress_item.dart
 lib/src/model/consent_acceptance_request.dart
 lib/src/model/consent_acceptance_response.dart
 lib/src/model/consent_decision.dart
@@ -99,8 +109,10 @@ lib/src/model/declared_file.dart
 lib/src/model/deletion_status.dart
 lib/src/model/device_registration_request.dart
 lib/src/model/device_registration_response.dart
+lib/src/model/due_reason_explanation.dart
 lib/src/model/error_detail.dart
 lib/src/model/error_envelope.dart
+lib/src/model/evidence_summary.dart
 lib/src/model/field_error.dart
 lib/src/model/finalize_upload_request.dart
 lib/src/model/first_mission_summary.dart
@@ -114,6 +126,7 @@ lib/src/model/learning_path_preview_response.dart
 lib/src/model/learning_update_list_response.dart
 lib/src/model/learning_update_response.dart
 lib/src/model/learning_update_status.dart
+lib/src/model/page_concept_progress_item.dart
 lib/src/model/page_meta.dart
 lib/src/model/page_params.dart
 lib/src/model/page_question_report_summary.dart
@@ -124,6 +137,7 @@ lib/src/model/question_report_response.dart
 lib/src/model/question_report_summary.dart
 lib/src/model/request_headers.dart
 lib/src/model/retry_learning_update_request.dart
+lib/src/model/scheduling_explanation.dart
 lib/src/model/session_bootstrap_response.dart
 lib/src/model/session_revocation_scope.dart
 lib/src/model/session_revoke_request.dart
@@ -148,6 +162,8 @@ test/candidate_list_response_test.dart
 test/candidate_response_test.dart
 test/candidate_status_test.dart
 test/capability_flags_test.dart
+test/concept_history_response_test.dart
+test/concept_progress_item_test.dart
 test/consent_acceptance_request_test.dart
 test/consent_acceptance_response_test.dart
 test/consent_decision_test.dart
@@ -155,12 +171,15 @@ test/consent_response_test.dart
 test/consent_status_test.dart
 test/consent_type_test.dart
 test/create_learning_update_request_test.dart
+test/curriculum_api_test.dart
 test/declared_file_test.dart
 test/deletion_status_test.dart
 test/device_registration_request_test.dart
 test/device_registration_response_test.dart
+test/due_reason_explanation_test.dart
 test/error_detail_test.dart
 test/error_envelope_test.dart
+test/evidence_summary_test.dart
 test/field_error_test.dart
 test/finalize_upload_request_test.dart
 test/first_mission_summary_test.dart
@@ -176,6 +195,7 @@ test/learning_update_list_response_test.dart
 test/learning_update_response_test.dart
 test/learning_update_status_test.dart
 test/learning_updates_api_test.dart
+test/page_concept_progress_item_test.dart
 test/page_meta_test.dart
 test/page_params_test.dart
 test/page_question_report_summary_test.dart
@@ -188,6 +208,7 @@ test/question_report_summary_test.dart
 test/reports_api_test.dart
 test/request_headers_test.dart
 test/retry_learning_update_request_test.dart
+test/scheduling_explanation_test.dart
 test/session_api_test.dart
 test/session_bootstrap_response_test.dart
 test/session_revocation_scope_test.dart

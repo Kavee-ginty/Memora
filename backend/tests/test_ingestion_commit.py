@@ -233,7 +233,7 @@ def test_commit_idempotent_replay_and_snapshot_hash(commit_context: dict[str, An
     auth = commit_context["auth"]
     engine = commit_context["engine"]
 
-    update_id, _ = _setup_verified_update(commit_context)
+    update_id, candidates = _setup_verified_update(commit_context)
     key = str(uuid4())
 
     first_commit = service.commit(auth, update_id, idempotency_key=key)
@@ -261,14 +261,23 @@ def test_commit_idempotent_replay_and_snapshot_hash(commit_context: dict[str, An
         assert commits[0]["count"] == 1
         assert len(commits[0]["candidate_snapshot_hash"]) == 64  # valid SHA-256
 
-        outbox_count = connection.scalar(
+        outbox_payload = connection.execute(
             text(
-                "SELECT count(*) FROM outbox_events "
+                "SELECT payload FROM outbox_events "
                 "WHERE aggregate_id = :id AND event_type = 'learning_update.committed'"
             ),
             {"id": update_id},
-        )
-        assert outbox_count == 1
+        ).scalar_one()
+        assert outbox_payload["schema_version"] == "1"
+        assert outbox_payload["learning_update_id"] == str(update_id)
+        assert UUID(outbox_payload["user_id"])
+        assert outbox_payload["committed_concepts"] == [
+            {
+                "concept_id": candidates[0].payload["concept_id"],
+                "concept_version_id": candidates[0].payload["concept_version_id"],
+                "confidence": candidates[0].confidence,
+            }
+        ]
 
 
 def test_concurrent_commit_converges_to_single_commit(

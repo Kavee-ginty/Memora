@@ -268,6 +268,195 @@
         "title": "CapabilityFlags",
         "type": "object"
       },
+      "ConceptHistoryResponse": {
+        "description": "Concept state, bounded evidence summary and paginated explanations.",
+        "properties": {
+          "concept_id": {
+            "format": "uuid",
+            "title": "Concept Id",
+            "type": "string"
+          },
+          "concept_version_id": {
+            "format": "uuid",
+            "title": "Concept Version Id",
+            "type": "string"
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/EvidenceSummary"
+          },
+          "has_more": {
+            "title": "Has More",
+            "type": "boolean"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SchedulingExplanation"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "maxLength": 512,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          },
+          "next_review_at": {
+            "title": "Next Review At",
+            "type": "string"
+          },
+          "stable_code": {
+            "title": "Stable Code",
+            "type": "string"
+          },
+          "state_band": {
+            "enum": [
+              "fresh",
+              "settling",
+              "fading",
+              "critical"
+            ],
+            "title": "State Band",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "next_cursor",
+          "has_more",
+          "concept_id",
+          "concept_version_id",
+          "stable_code",
+          "title",
+          "state_band",
+          "next_review_at",
+          "evidence",
+          "items"
+        ],
+        "title": "ConceptHistoryResponse",
+        "type": "object"
+      },
+      "ConceptProgressItem": {
+        "description": "One concept's progress and due reason for a subject.",
+        "properties": {
+          "concept_id": {
+            "format": "uuid",
+            "title": "Concept Id",
+            "type": "string"
+          },
+          "concept_version_id": {
+            "format": "uuid",
+            "title": "Concept Version Id",
+            "type": "string"
+          },
+          "confidence_band": {
+            "enum": [
+              "high",
+              "medium",
+              "low"
+            ],
+            "title": "Confidence Band",
+            "type": "string"
+          },
+          "due_reason": {
+            "$ref": "#/components/schemas/DueReasonExplanation"
+          },
+          "eligible_review_count": {
+            "minimum": 0.0,
+            "title": "Eligible Review Count",
+            "type": "integer"
+          },
+          "exposure_count": {
+            "minimum": 0.0,
+            "title": "Exposure Count",
+            "type": "integer"
+          },
+          "is_comeback": {
+            "title": "Is Comeback",
+            "type": "boolean"
+          },
+          "is_new_concept": {
+            "title": "Is New Concept",
+            "type": "boolean"
+          },
+          "lapse_count": {
+            "minimum": 0.0,
+            "title": "Lapse Count",
+            "type": "integer"
+          },
+          "last_reviewed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Reviewed At"
+          },
+          "next_review_at": {
+            "title": "Next Review At",
+            "type": "string"
+          },
+          "review_window": {
+            "enum": [
+              "overdue",
+              "due",
+              "near_due"
+            ],
+            "title": "Review Window",
+            "type": "string"
+          },
+          "stable_code": {
+            "title": "Stable Code",
+            "type": "string"
+          },
+          "state_band": {
+            "enum": [
+              "fresh",
+              "settling",
+              "fading",
+              "critical"
+            ],
+            "title": "State Band",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "concept_id",
+          "concept_version_id",
+          "stable_code",
+          "title",
+          "state_band",
+          "confidence_band",
+          "review_window",
+          "next_review_at",
+          "last_reviewed_at",
+          "exposure_count",
+          "eligible_review_count",
+          "lapse_count",
+          "is_new_concept",
+          "is_comeback",
+          "due_reason"
+        ],
+        "title": "ConceptProgressItem",
+        "type": "object"
+      },
       "ConsentAcceptanceRequest": {
         "additionalProperties": false,
         "properties": {
@@ -628,6 +817,44 @@
         "title": "DeviceRegistrationResponse",
         "type": "object"
       },
+      "DueReasonExplanation": {
+        "description": "Why this concept is due, in plain language (PRD 016).",
+        "properties": {
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "reason_code": {
+            "enum": [
+              "forgetting_curve_overdue",
+              "daily_retention_protect",
+              "high_error_rate_repair",
+              "weak_prerequisite_failure",
+              "new_concept_introduction"
+            ],
+            "title": "Reason Code",
+            "type": "string"
+          },
+          "template_key": {
+            "enum": [
+              "memory.due_reason.overdue",
+              "memory.due_reason.retention",
+              "memory.due_reason.error_repair",
+              "memory.due_reason.weak_prerequisite",
+              "memory.due_reason.new_concept"
+            ],
+            "title": "Template Key",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason_code",
+          "template_key",
+          "message"
+        ],
+        "title": "DueReasonExplanation",
+        "type": "object"
+      },
       "ErrorDetail": {
         "properties": {
           "action": {
@@ -726,6 +953,86 @@
           "error"
         ],
         "title": "ErrorEnvelope",
+        "type": "object"
+      },
+      "EvidenceSummary": {
+        "description": "Bounded evidence summary; counts only, never payloads or scores.\n\nAll counts are lifetime counts, so ``total_events`` always equals\n``sum(counts_by_type.values())``. ``recent_events`` is the subset inside\n``window_days``; per-type counts are deliberately not windowed so the\nsummary stays additive and cheap to verify.",
+        "properties": {
+          "confidence_band": {
+            "description": "Banded evidence confidence; raw values are never returned.",
+            "enum": [
+              "high",
+              "medium",
+              "low"
+            ],
+            "title": "Confidence Band",
+            "type": "string"
+          },
+          "counts_by_type": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "description": "Lifetime event counts per type; sums to total_events.",
+            "propertyNames": {
+              "enum": [
+                "exposure",
+                "attempt",
+                "repair",
+                "regrade",
+                "invalidation",
+                "manual_review"
+              ]
+            },
+            "title": "Counts By Type",
+            "type": "object"
+          },
+          "eligible_events": {
+            "description": "Lifetime events that were eligible for scheduling.",
+            "minimum": 0.0,
+            "title": "Eligible Events",
+            "type": "integer"
+          },
+          "last_observed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Most recent evidence timestamp, or null when none is recorded.",
+            "title": "Last Observed At"
+          },
+          "recent_events": {
+            "description": "Evidence events observed inside the recency window.",
+            "minimum": 0.0,
+            "title": "Recent Events",
+            "type": "integer"
+          },
+          "total_events": {
+            "description": "Lifetime recorded evidence events.",
+            "minimum": 0.0,
+            "title": "Total Events",
+            "type": "integer"
+          },
+          "window_days": {
+            "description": "Length of the recency window in days.",
+            "minimum": 1.0,
+            "title": "Window Days",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "window_days",
+          "total_events",
+          "recent_events",
+          "eligible_events",
+          "counts_by_type",
+          "last_observed_at",
+          "confidence_band"
+        ],
+        "title": "EvidenceSummary",
         "type": "object"
       },
       "FieldError": {
@@ -1211,6 +1518,41 @@
         "title": "PageParams",
         "type": "object"
       },
+      "Page_ConceptProgressItem_": {
+        "properties": {
+          "has_more": {
+            "title": "Has More",
+            "type": "boolean"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ConceptProgressItem"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "maxLength": 512,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "next_cursor",
+          "has_more",
+          "items"
+        ],
+        "title": "Page[ConceptProgressItem]",
+        "type": "object"
+      },
       "Page_QuestionReportSummary_": {
         "properties": {
           "has_more": {
@@ -1619,6 +1961,97 @@
           "stage"
         ],
         "title": "RetryLearningUpdateRequest",
+        "type": "object"
+      },
+      "SchedulingExplanation": {
+        "description": "One stored scheduling decision and its allowlisted explanation.",
+        "properties": {
+          "decided_at": {
+            "title": "Decided At",
+            "type": "string"
+          },
+          "decision_id": {
+            "format": "uuid",
+            "title": "Decision Id",
+            "type": "string"
+          },
+          "engine_version": {
+            "title": "Engine Version",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "next_review_at": {
+            "title": "Next Review At",
+            "type": "string"
+          },
+          "policy_version": {
+            "title": "Policy Version",
+            "type": "string"
+          },
+          "reason_codes": {
+            "items": {
+              "enum": [
+                "state_initialized",
+                "exposure_recorded",
+                "recall_success",
+                "recall_lapse",
+                "review_scheduled",
+                "out_of_order_evidence",
+                "first_review_bounded",
+                "evidence_justified_schedule",
+                "comeback_elapsed",
+                "low_confidence_damped",
+                "weak_prerequisite_recover",
+                "interval_bounded"
+              ],
+              "type": "string"
+            },
+            "title": "Reason Codes",
+            "type": "array"
+          },
+          "template_key": {
+            "enum": [
+              "memory.explanation.state_initialized",
+              "memory.explanation.exposure_recorded",
+              "memory.explanation.recall_success",
+              "memory.explanation.recall_lapse",
+              "memory.explanation.first_review_scheduled",
+              "memory.explanation.comeback",
+              "memory.explanation.low_confidence",
+              "memory.explanation.weak_prerequisite",
+              "memory.explanation.evidence_recorded"
+            ],
+            "title": "Template Key",
+            "type": "string"
+          },
+          "trigger_event_type": {
+            "enum": [
+              "exposure",
+              "attempt",
+              "repair",
+              "regrade",
+              "invalidation",
+              "manual_review"
+            ],
+            "title": "Trigger Event Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "decision_id",
+          "decided_at",
+          "trigger_event_type",
+          "next_review_at",
+          "reason_codes",
+          "template_key",
+          "message",
+          "engine_version",
+          "policy_version"
+        ],
+        "title": "SchedulingExplanation",
         "type": "object"
       },
       "SessionBootstrapResponse": {
@@ -2159,6 +2592,380 @@
         "summary": "Ready",
         "tags": [
           "health"
+        ]
+      }
+    },
+    "/v1/concepts/{concept_id}/history": {
+      "get": {
+        "description": "Returns the authenticated student's bounded evidence summary and paginated scheduling decisions for one concept, each with allowlisted reason codes, a template key and safe copy. Another learner's concept returns 404.",
+        "operationId": "getConceptHistory",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "concept_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Concept Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 50,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Correlation-ID",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "X-Correlation-Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Client-Version",
+            "required": true,
+            "schema": {
+              "maxLength": 50,
+              "minLength": 1,
+              "title": "X-Client-Version",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Platform",
+            "required": true,
+            "schema": {
+              "enum": [
+                "android",
+                "ios"
+              ],
+              "title": "X-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 35,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConceptHistoryResponse"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Malformed request, invalid cursor or invalid state.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Missing, invalid or expired access token.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Consent, recent authentication or operation not allowed.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Resource not found in the authenticated scope.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Version, idempotency or workflow conflict.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Payload too large.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unsupported media type.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Validation failed.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Rate limited.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Temporarily unavailable.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Read a concept's evidence summary and scheduling history",
+        "tags": [
+          "curriculum"
         ]
       }
     },
@@ -9660,6 +10467,392 @@
         "summary": "Revoke authenticated sessions",
         "tags": [
           "session"
+        ]
+      }
+    },
+    "/v1/subjects/{subject_id}/concept-progress": {
+      "get": {
+        "description": "Returns the authenticated student's concept states in next-review order for the requested horizon, with a retrievability band, a review window and a plain-language due reason. Hidden ranking scores and event payloads are never returned.",
+        "operationId": "listConceptProgress",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "subject_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Subject Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 50,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "horizon_days",
+            "required": false,
+            "schema": {
+              "default": 3.0,
+              "exclusiveMinimum": 0,
+              "maximum": 30.0,
+              "title": "Horizon Days",
+              "type": "number"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Correlation-ID",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "X-Correlation-Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Client-Version",
+            "required": true,
+            "schema": {
+              "maxLength": 50,
+              "minLength": 1,
+              "title": "X-Client-Version",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Platform",
+            "required": true,
+            "schema": {
+              "enum": [
+                "android",
+                "ios"
+              ],
+              "title": "X-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 35,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_ConceptProgressItem_"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Malformed request, invalid cursor or invalid state.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Missing, invalid or expired access token.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Consent, recent authentication or operation not allowed.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Resource not found in the authenticated scope.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Version, idempotency or workflow conflict.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Payload too large.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unsupported media type.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Validation failed.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Rate limited.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Temporarily unavailable.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List due and near-due concept progress for a subject",
+        "tags": [
+          "curriculum"
         ]
       }
     }

@@ -42,6 +42,7 @@ def test_artifact_is_canonical_and_environment_free() -> None:
     assert set(schema["paths"]) == {
         "/health/live",
         "/health/ready",
+        "/v1/concepts/{concept_id}/history",
         "/v1/consent",
         "/v1/consent/acceptances",
         "/v1/devices",
@@ -60,6 +61,7 @@ def test_artifact_is_canonical_and_environment_free() -> None:
         "/v1/learning-updates/{update_id}/uploads",
         "/v1/learning-updates/{update_id}/uploads/{upload_id}/finalize",
         "/v1/learning-updates/{update_id}/verification-decisions",
+        "/v1/subjects/{subject_id}/concept-progress",
     }
     assert "bearerAuth" in schema["components"]["securitySchemes"]
     assert {

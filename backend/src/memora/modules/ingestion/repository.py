@@ -792,6 +792,17 @@ class IngestionRepository:
                     """),
                 {"update_id": update_id},
             )
+            committed_concepts = [
+                {
+                    "concept_id": str(candidate["candidate_payload"]["concept_id"]),
+                    "concept_version_id": str(candidate["candidate_payload"]["concept_version_id"]),
+                    "confidence": float(candidate["confidence"]),
+                }
+                for candidate in candidates
+                if candidate["candidate_type"] == "concept"
+                and candidate["candidate_payload"].get("concept_id")
+                and candidate["candidate_payload"].get("concept_version_id")
+            ]
             event_id = uuid4()
             connection.execute(
                 text("""
@@ -809,7 +820,12 @@ class IngestionRepository:
                     "event_key": f"learning_update.committed:{update_id}:{commit_version}",
                     "update_id": update_id,
                     "payload": json.dumps(
-                        {"schema_version": "1", "learning_update_id": str(update_id)}
+                        {
+                            "schema_version": "1",
+                            "user_id": str(user_id),
+                            "learning_update_id": str(update_id),
+                            "committed_concepts": committed_concepts,
+                        }
                     ),
                     "correlation_id": uuid4(),
                 },

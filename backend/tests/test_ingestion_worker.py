@@ -141,6 +141,51 @@ def worker_context(worker_engine: Engine) -> dict[str, Any]:
     }
 
 
+def test_ingestion_worker_does_not_claim_memory_jobs(
+    worker_context: dict[str, Any],
+) -> None:
+    engine: Engine = worker_context["engine"]
+    worker: IngestionWorker = worker_context["worker"]
+    subject = worker_context["auth"].context.subject
+    resource_id = uuid4()
+
+    with engine.begin() as connection:
+        user_id = connection.scalar(
+            text("SELECT id FROM users WHERE oidc_subject = :subject"),
+            {"subject": subject},
+        )
+        job_id = connection.scalar(
+            text("""
+                INSERT INTO background_jobs(
+                    job_type, owner_user_id, resource_type, resource_id,
+                    dedupe_key, status, max_attempts, available_at, payload
+                ) VALUES (
+                    'memory.process_event', :user_id, 'outbox_event', :resource_id,
+                    :dedupe_key, 'queued', 5, now(),
+                    jsonb_build_object('schema_version', '1', 'outbox_event_id', :resource_id)
+                )
+                RETURNING id
+                """),
+            {
+                "user_id": user_id,
+                "resource_id": resource_id,
+                "dedupe_key": f"memory-test:{resource_id}",
+            },
+        )
+
+    assert worker.run_once() is False
+    with engine.connect() as connection:
+        job = (
+            connection.execute(
+                text("SELECT status, attempt_count FROM background_jobs WHERE id = :id"),
+                {"id": job_id},
+            )
+            .mappings()
+            .one()
+        )
+    assert dict(job) == {"status": "queued", "attempt_count": 0}
+
+
 class FixedExtractionProvider:
     model_key = "fixed-test-provider"
     prompt_version = "v1"

@@ -65,6 +65,10 @@ class IngestionWorker:
         self._last_reconcile = 0.0
 
     def run_once(self) -> bool:
+        now = time.monotonic()
+        if now - self._last_reconcile >= RECONCILE_INTERVAL_SECONDS:
+            self._last_reconcile = now
+            self.reconcile()
         job = self._claim_job()
         if job is None:
             return False
@@ -88,10 +92,6 @@ class IngestionWorker:
         logger.info("ingestion worker started", extra={"worker_id": self.worker_id})
         while True:
             worked = self.run_once()
-            now = time.monotonic()
-            if now - self._last_reconcile >= RECONCILE_INTERVAL_SECONDS:
-                self._last_reconcile = now
-                self.reconcile()
             if not worked:
                 time.sleep(poll_seconds)
 
@@ -103,7 +103,8 @@ class IngestionWorker:
                     text("""
                         WITH next_job AS (
                             SELECT id FROM background_jobs
-                            WHERE (
+                            WHERE job_type IN (:extract_job, :delete_job, :reconcile_job)
+                              AND (
                                 (status IN ('queued','retry_wait') AND available_at <= now())
                                 OR (status = 'leased' AND lease_expires_at <= now())
                             )
@@ -122,7 +123,13 @@ class IngestionWorker:
                                   resource_type, resource_id, attempt_count,
                                   max_attempts, payload
                         """),
-                    {"owner": self.worker_id, "lease_seconds": LEASE_SECONDS},
+                    {
+                        "owner": self.worker_id,
+                        "lease_seconds": LEASE_SECONDS,
+                        "extract_job": JOB_EXTRACT,
+                        "delete_job": JOB_DELETE_UPLOAD,
+                        "reconcile_job": JOB_RECONCILE,
+                    },
                 )
                 .mappings()
                 .first()

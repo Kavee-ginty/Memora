@@ -16,6 +16,12 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(CandidateResponseConfidenceBandEnum.serializer)
       ..add(CandidateStatus.serializer)
       ..add(CapabilityFlags.serializer)
+      ..add(ConceptHistoryResponse.serializer)
+      ..add(ConceptHistoryResponseStateBandEnum.serializer)
+      ..add(ConceptProgressItem.serializer)
+      ..add(ConceptProgressItemConfidenceBandEnum.serializer)
+      ..add(ConceptProgressItemReviewWindowEnum.serializer)
+      ..add(ConceptProgressItemStateBandEnum.serializer)
       ..add(ConsentAcceptanceRequest.serializer)
       ..add(ConsentAcceptanceResponse.serializer)
       ..add(ConsentDecision.serializer)
@@ -29,8 +35,13 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(DeviceRegistrationRequestPlatformEnum.serializer)
       ..add(DeviceRegistrationResponse.serializer)
       ..add(DeviceRegistrationResponsePlatformEnum.serializer)
+      ..add(DueReasonExplanation.serializer)
+      ..add(DueReasonExplanationReasonCodeEnum.serializer)
+      ..add(DueReasonExplanationTemplateKeyEnum.serializer)
       ..add(ErrorDetail.serializer)
       ..add(ErrorEnvelope.serializer)
+      ..add(EvidenceSummary.serializer)
+      ..add(EvidenceSummaryConfidenceBandEnum.serializer)
       ..add(FieldError.serializer)
       ..add(FinalizeUploadRequest.serializer)
       ..add(FirstMissionSummary.serializer)
@@ -44,6 +55,7 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(LearningUpdateListResponse.serializer)
       ..add(LearningUpdateResponse.serializer)
       ..add(LearningUpdateStatus.serializer)
+      ..add(PageConceptProgressItem.serializer)
       ..add(PageMeta.serializer)
       ..add(PageParams.serializer)
       ..add(PageQuestionReportSummary.serializer)
@@ -63,6 +75,10 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(RequestHeadersXPlatformEnum.serializer)
       ..add(RetryLearningUpdateRequest.serializer)
       ..add(RetryLearningUpdateRequestStageEnum.serializer)
+      ..add(SchedulingExplanation.serializer)
+      ..add(SchedulingExplanationReasonCodesEnum.serializer)
+      ..add(SchedulingExplanationTemplateKeyEnum.serializer)
+      ..add(SchedulingExplanationTriggerEventTypeEnum.serializer)
       ..add(SessionBootstrapResponse.serializer)
       ..add(SessionRevocationScope.serializer)
       ..add(SessionRevokeRequest.serializer)
@@ -81,6 +97,10 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(CandidateResponse)]),
           () => ListBuilder<CandidateResponse>())
+      ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(ConceptProgressItem)]),
+          () => ListBuilder<ConceptProgressItem>())
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(ConsentStatus)]),
           () => ListBuilder<ConsentStatus>())
@@ -118,6 +138,14 @@ Serializers _$serializers = (Serializers().toBuilder()
           () => ListBuilder<QuestionReportSummary>())
       ..addBuilderFactory(
           const FullType(
+              BuiltList, const [const FullType(SchedulingExplanation)]),
+          () => ListBuilder<SchedulingExplanation>())
+      ..addBuilderFactory(
+          const FullType(BuiltList,
+              const [const FullType(SchedulingExplanationReasonCodesEnum)]),
+          () => ListBuilder<SchedulingExplanationReasonCodesEnum>())
+      ..addBuilderFactory(
+          const FullType(
               BuiltList, const [const FullType(SourceUploadSummary)]),
           () => ListBuilder<SourceUploadSummary>())
       ..addBuilderFactory(
@@ -138,6 +166,10 @@ Serializers _$serializers = (Serializers().toBuilder()
           const FullType(
               BuiltMap, const [const FullType(String), const FullType(String)]),
           () => MapBuilder<String, String>())
+      ..addBuilderFactory(
+          const FullType(
+              BuiltMap, const [const FullType(String), const FullType(int)]),
+          () => MapBuilder<String, int>())
       ..addBuilderFactory(
           const FullType(
               BuiltMap, const [const FullType(String), const FullType(int)]),
