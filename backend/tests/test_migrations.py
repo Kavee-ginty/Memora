@@ -634,6 +634,13 @@ def test_role_grants_rls_coverage_and_status_checks_against_postgres(
                 ")"
             )
         )
+        assert connection.scalar(
+            text(
+                "SELECT has_function_privilege("
+                "'memora_api', 'memora_transfer_device_token(text)', 'EXECUTE'"
+                ")"
+            )
+        )
         assert not connection.scalar(
             text(
                 "SELECT has_function_privilege("

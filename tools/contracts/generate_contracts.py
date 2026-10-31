@@ -22,6 +22,16 @@ CACHE_DIR = ROOT / "tools" / ".cache" / "openapi-generator"
 CHECK_DIR = ROOT / "tools" / ".cache" / "contract-check"
 
 IGNORED_COMPARE_DIRS = frozenset({".dart_tool", ".git", ".packages", ".pub", "build"})
+NORMALIZED_MARKDOWN_FILES = frozenset(
+    {
+        "doc/AccessibilityPreferences.md",
+        "doc/ProfileApi.md",
+        "doc/ProfilePreferencesResponse.md",
+        "doc/ProfilePreferencesUpdateRequest.md",
+        "doc/ProfileResponse.md",
+        "doc/ProfileUpdateRequest.md",
+    }
+)
 
 
 class ContractToolError(RuntimeError):
@@ -154,6 +164,18 @@ def generate_client(jar: Path, output: Path) -> None:
     )
 
 
+def _normalize_generated_markdown(output: Path) -> None:
+    for relative in NORMALIZED_MARKDOWN_FILES:
+        path = output / relative
+        if not path.is_file():
+            continue
+        raw = path.read_bytes()
+        lines = [line.rstrip() for line in raw.decode("utf-8").splitlines()]
+        while lines and not lines[-1]:
+            lines.pop()
+        path.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
+
+
 def _dart_pub_get(client_dir: Path, *, enforce_lockfile: bool) -> None:
     command = _dart_command("pub", "get")
     if enforce_lockfile:
@@ -211,8 +233,8 @@ def write_client(jar: Path, client_dir: Path = CLIENT_DIR) -> None:
     # Save the committed lockfile in memory before regeneration
     lockfile = client_dir / "pubspec.lock"
     lockfile_bytes = lockfile.read_bytes() if lockfile.is_file() else None
-
     generate_client(jar, client_dir)
+    _normalize_generated_markdown(client_dir)
 
     # Restore the lockfile so --enforce-lockfile can find it
     if lockfile_bytes is not None:
@@ -230,6 +252,7 @@ def check_client(jar: Path) -> None:
         )
 
     generate_client(jar, CHECK_DIR)
+    _normalize_generated_markdown(CHECK_DIR)
     shutil.copy2(lockfile, CHECK_DIR / "pubspec.lock")
     _build_client(CHECK_DIR, enforce_lockfile=True)
     if not _compare_client(CLIENT_DIR, CHECK_DIR):
