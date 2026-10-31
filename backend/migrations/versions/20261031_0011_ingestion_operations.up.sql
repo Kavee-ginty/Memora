@@ -50,7 +50,7 @@ AS $$
         'declared_media_type', su.declared_media_type,
         'byte_size', su.byte_size, 'content_sha256', su.content_sha256,
         'status', su.status
-      ) ORDER BY su.created_at, su.id)
+      ) ORDER BY su.created_at, su.declared_name, su.id)
       FROM source_uploads su
       WHERE su.learning_update_id = lu.id AND su.user_id = lu.user_id
         AND su.status IN ('processing','validated','uploaded')
