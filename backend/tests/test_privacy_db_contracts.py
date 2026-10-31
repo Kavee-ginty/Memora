@@ -133,10 +133,11 @@ def test_privacy_export_end_to_end_with_worker_and_package_contents(
             text(
                 """
                 INSERT INTO notification_preferences(
-                    user_id, notifications_enabled, streak_enabled, max_daily_reminders
+                    user_id, mission_enabled, reward_enabled, timezone,
+                    lock_screen_detail, max_daily_reminders
                 )
-                VALUES (:user_id, true, true, 2)
-                ON CONFLICT (user_id) DO UPDATE SET notifications_enabled = true
+                VALUES (:user_id, true, true, 'Asia/Colombo', 'minimal', 2)
+                ON CONFLICT (user_id) DO UPDATE SET mission_enabled = true
                 """
             ),
             {"user_id": user_id},
@@ -144,8 +145,13 @@ def test_privacy_export_end_to_end_with_worker_and_package_contents(
         conn.execute(
             text(
                 """
-                INSERT INTO consent_records(user_id, consent_type, policy_version, granted_at)
-                VALUES (:user_id, 'terms', '1.0', now())
+                INSERT INTO consent_records(
+                    user_id, consent_type, policy_version, decision, decided_at, evidence
+                )
+                VALUES (
+                    :user_id, 'terms', '1.0', 'granted', now(),
+                    '{"schema_version": "1"}'::jsonb
+                )
                 """
             ),
             {"user_id": user_id},
@@ -180,7 +186,7 @@ def test_privacy_export_end_to_end_with_worker_and_package_contents(
         assert pkg["schema_version"] == "1.0"
         assert pkg["user_id"] == str(user_id)
         assert pkg["profile"]["display_name"] == "Test Student"
-        assert pkg["notification_preferences"]["notifications_enabled"] is True
+        assert pkg["notification_preferences"]["mission_enabled"] is True
 
         summary = zf.read("summary.txt").decode("utf-8")
         assert "Test Student" in summary
@@ -246,15 +252,21 @@ def test_privacy_deletion_deletes_learner_data_and_verifies_absence(database: En
     service = PrivacyService(repo, settings)
 
     # Seed private learner data across multiple tables
-    concept_id = uuid4()
+    from memora.modules.curriculum.seed_data import CONCEPTS_DATA
+
+    concept = CONCEPTS_DATA[0]
+    concept_id = concept["concept_id"]
+    version_id = concept["version_id"]
+
     with database.begin() as conn:
         conn.execute(
             text(
                 """
                 INSERT INTO notification_preferences(
-                    user_id, notifications_enabled, streak_enabled, max_daily_reminders
+                    user_id, mission_enabled, reward_enabled, timezone,
+                    lock_screen_detail, max_daily_reminders
                 )
-                VALUES (:user_id, true, true, 2)
+                VALUES (:user_id, true, true, 'Asia/Colombo', 'minimal', 2)
                 ON CONFLICT (user_id) DO NOTHING
                 """
             ),
@@ -264,9 +276,13 @@ def test_privacy_deletion_deletes_learner_data_and_verifies_absence(database: En
             text(
                 """
                 INSERT INTO device_registrations(
-                    user_id, platform, token_fingerprint, push_token_ciphertext, app_version
+                    user_id, installation_id, platform, token_fingerprint,
+                    push_token_ciphertext, app_version, last_seen_at
                 )
-                VALUES (:user_id, 'android', :fp, 'ciphertext', '1.0.0')
+                VALUES (
+                    :user_id, gen_random_uuid(), 'android', :fp,
+                    decode('deadbeef', 'hex'), '1.0.0', now()
+                )
                 """
             ),
             {"user_id": user_id, "fp": f"fp-{uuid4()}"},
@@ -275,12 +291,22 @@ def test_privacy_deletion_deletes_learner_data_and_verifies_absence(database: En
             text(
                 """
                 INSERT INTO learner_concept_states(
-                    user_id, concept_id, retrievability, stability, state, next_review_at
+                    user_id, concept_id, active_concept_version_id,
+                    difficulty, stability_days, last_retrievability,
+                    evidence_confidence, first_exposed_at, next_review_at,
+                    exposure_count, eligible_review_count, lapse_count,
+                    engine_version
                 )
-                VALUES (:user_id, :concept_id, 0.9, 1.0, 'learning', now() + interval '1 day')
+                VALUES (
+                    :user_id, :concept_id, :version_id,
+                    2.5, 1.0, 0.9,
+                    0.8, now(), now() + interval '1 day',
+                    1, 1, 0,
+                    'v1'
+                )
                 """
             ),
-            {"user_id": user_id, "concept_id": concept_id},
+            {"user_id": user_id, "concept_id": concept_id, "version_id": version_id},
         )
 
     # Create deletion

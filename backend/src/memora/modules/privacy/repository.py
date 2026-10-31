@@ -743,9 +743,9 @@ class PrivacyRepository:
                 connection.execute(
                     text(
                         """
-                    SELECT consent_type, policy_version, granted_at, valid_until
+                    SELECT consent_type, policy_version, decision, decided_at
                     FROM consent_records WHERE user_id = :user_id
-                    ORDER BY granted_at DESC
+                    ORDER BY decided_at DESC
                     """
                     ),
                     {"user_id": user_id},
@@ -759,8 +759,9 @@ class PrivacyRepository:
                 connection.execute(
                     text(
                         """
-                    SELECT concept_id, retrievability, stability, state, next_review_at,
-                           last_reviewed_at, review_count, lapse_count
+                    SELECT concept_id, active_concept_version_id, last_retrievability,
+                           stability_days, difficulty, next_review_at, last_reviewed_at,
+                           exposure_count, eligible_review_count, lapse_count
                     FROM learner_concept_states WHERE user_id = :user_id
                     """
                     ),

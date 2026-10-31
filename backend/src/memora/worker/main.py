@@ -76,6 +76,12 @@ def _fail_and_sync(
             if job_type in ("privacy.export", "privacy.deletion") and "request_id" in payload:
                 request_id = UUID(str(payload["request_id"]))
                 user_id = UUID(str(payload["user_id"])) if "user_id" in payload else None
+                if user_id is not None:
+                    connection.execute(text("SET LOCAL ROLE memora_api"))
+                    connection.execute(
+                        text("SELECT set_config('memora.user_id', :user_id, true)"),
+                        {"user_id": str(user_id)},
+                    )
                 connection.execute(
                     text(
                         """
