@@ -58,6 +58,17 @@ class FakePrivacyService:
         self.export_id = uuid4()
         self.deletion_id = uuid4()
         self.deletion_status = "requested"
+        self.valid_token = "valid-test-token"
+        self.export_zip_content = b"PK\x03\x04test-zip-content"
+
+    def get_export_download_archive(self, request_id: UUID, token: str) -> bytes:
+        if not token:
+            raise ApiError(401, "authentication_required", "Token required.")
+        if token != self.valid_token:
+            raise ApiError(403, "forbidden", "Invalid token.")
+        if request_id != self.export_id:
+            raise ApiError(404, "not_found", "Archive not found.")
+        return self.export_zip_content
 
     def create_export(
         self,
@@ -352,3 +363,28 @@ def test_recent_authentication_enforcement() -> None:
     )
     res = service.create_export(fresh_auth, PrivacyExportRequest(), idempotency_key="test-key-4")
     assert res.status == "requested"
+
+
+def test_export_download_token_authorization() -> None:
+    app = create_app()
+    fake_service = FakePrivacyService()
+    app.dependency_overrides[get_privacy_service] = lambda: fake_service
+    client = TestClient(app)
+
+    # 1. Missing token -> 401
+    res = client.get(f"/v1/privacy/exports/{fake_service.export_id}/download")
+    assert res.status_code == 401
+    assert res.json()["error"]["code"] == "authentication_required"
+
+    # 2. Invalid token -> 403
+    res = client.get(f"/v1/privacy/exports/{fake_service.export_id}/download?token=bad-token")
+    assert res.status_code == 403
+    assert res.json()["error"]["code"] == "forbidden"
+
+    # 3. Valid token -> 200 application/zip
+    res = client.get(
+        f"/v1/privacy/exports/{fake_service.export_id}/download?token={fake_service.valid_token}"
+    )
+    assert res.status_code == 200
+    assert res.headers["content-type"] == "application/zip"
+    assert res.content == fake_service.export_zip_content

@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+import io
 import json
 import zipfile
+from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
-import pytest
-
+from memora.modules.ingestion.storage import MemoryObjectStorage
 from memora.modules.privacy.constants import (
     ALL_DELETION_SCOPES,
     ALLOWED_CANCELLATION_REASONS,
@@ -17,14 +18,15 @@ from memora.modules.privacy.constants import (
     SCOPE_UPLOADS,
     WORKFLOW_VERSION,
 )
-from memora.modules.privacy.provider import (
-    get_auth_provider,
-    set_auth_provider,
-)
+from memora.modules.privacy.provider import MemoryAuthProvider
 from memora.modules.privacy.storage import (
+    delete_export_archive,
     export_archive_exists,
-    get_export_archive_path,
+    generate_export_download_token,
+    get_export_archive_bytes,
     purge_upload_object,
+    set_privacy_object_storage,
+    verify_export_download_token,
     write_export_archive,
 )
 from memora.worker.memory import (
@@ -34,39 +36,72 @@ from memora.worker.memory import (
 )
 
 
-def test_export_archive_packaging_and_readability(
-    tmp_path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setenv("MEMORA_EXPORT_STORAGE_DIR", str(tmp_path))
+def test_export_archive_packaging_and_readability() -> None:
+    mem_storage = MemoryObjectStorage()
+    set_privacy_object_storage(mem_storage)
+    try:
+        request_id = uuid4()
+        user_id = uuid4()
+        export_data = {
+            "schema_version": "1.0",
+            "request_id": str(request_id),
+            "profile": {"display_name": "Ada Lovelace", "active_subject": "Physics"},
+            "concept_progress": [{"concept_id": str(uuid4()), "stability": 4.5}],
+        }
+        raw_json = json.dumps(export_data, indent=2).encode("utf-8")
+        summary = "Student: Ada Lovelace\nConcepts: 1\n"
+
+        assert not export_archive_exists(request_id)
+
+        key = write_export_archive(request_id, user_id, raw_json, summary)
+        assert key == f"exports/{request_id}.zip"
+        assert export_archive_exists(request_id)
+
+        archive_bytes = get_export_archive_bytes(request_id)
+        assert len(archive_bytes) > 0
+
+        # Inspect zip contents
+        with zipfile.ZipFile(io.BytesIO(archive_bytes), mode="r") as zf:
+            namelist = zf.namelist()
+            assert "export.json" in namelist
+            assert "summary.txt" in namelist
+
+            extracted_json = json.loads(zf.read("export.json").decode("utf-8"))
+            assert extracted_json["schema_version"] == "1.0"
+            assert extracted_json["profile"]["display_name"] == "Ada Lovelace"
+
+            extracted_summary = zf.read("summary.txt").decode("utf-8")
+            assert "Ada Lovelace" in extracted_summary
+
+        delete_export_archive(request_id)
+        assert not export_archive_exists(request_id)
+    finally:
+        set_privacy_object_storage(None)
+
+
+def test_export_download_tokens_and_expiry() -> None:
     request_id = uuid4()
-    export_data = {
-        "schema_version": "1.0",
-        "request_id": str(request_id),
-        "profile": {"display_name": "Ada Lovelace", "active_subject": "Physics"},
-        "concept_progress": [{"concept_id": str(uuid4()), "stability": 4.5}],
-    }
-    raw_json = json.dumps(export_data, indent=2).encode("utf-8")
-    summary = "Student: Ada Lovelace\nConcepts: 1\n"
+    user_id = uuid4()
+    now = datetime.now(UTC)
 
-    assert not export_archive_exists(request_id)
+    # Valid token
+    valid_exp = now + timedelta(hours=1)
+    token = generate_export_download_token(request_id, user_id, valid_exp)
+    assert verify_export_download_token(request_id, user_id, token) is True
 
-    path = write_export_archive(request_id, raw_json, summary)
-    assert path.is_file()
-    assert export_archive_exists(request_id)
-    assert get_export_archive_path(request_id) == path
+    # Reject different user or request
+    other_user = uuid4()
+    assert verify_export_download_token(request_id, other_user, token) is False
+    assert verify_export_download_token(uuid4(), user_id, token) is False
 
-    # Inspect zip contents
-    with zipfile.ZipFile(path, mode="r") as zf:
-        namelist = zf.namelist()
-        assert "export.json" in namelist
-        assert "summary.txt" in namelist
+    # Reject tampered token
+    tampered = token[:-2] + "00"
+    assert verify_export_download_token(request_id, user_id, tampered) is False
 
-        extracted_json = json.loads(zf.read("export.json").decode("utf-8"))
-        assert extracted_json["schema_version"] == "1.0"
-        assert extracted_json["profile"]["display_name"] == "Ada Lovelace"
-
-        extracted_summary = zf.read("summary.txt").decode("utf-8")
-        assert "Ada Lovelace" in extracted_summary
+    # Reject expired token
+    past_exp = now - timedelta(seconds=10)
+    expired_token = generate_export_download_token(request_id, user_id, past_exp)
+    assert verify_export_download_token(request_id, user_id, expired_token) is False
 
 
 def test_allowed_cancellation_reasons_contain_known_codes() -> None:
@@ -85,31 +120,16 @@ def test_deletion_scopes_and_retention_exceptions_constants() -> None:
     assert WORKFLOW_VERSION == "v1"
     assert RECONCILER_VERSION == "v1"
     assert EXPORT_DOWNLOAD_TTL_SECONDS == 86400
-    assert len(LEGAL_RETENTION_EXCEPTIONS) >= 2
+    assert len(LEGAL_RETENTION_EXCEPTIONS) >= 1
 
 
-def test_auth_provider_interface_and_mocking() -> None:
-    class MockAuthProvider:
-        def __init__(self) -> None:
-            self.deleted: list[tuple[str, str]] = []
+def test_auth_provider_interface_and_memory_provider() -> None:
+    provider = MemoryAuthProvider(initial_users={"sub-123", "sub-456"})
+    uid = uuid4()
 
-        def delete_user(self, user_id, oidc_subject: str) -> bool:
-            self.deleted.append((str(user_id), oidc_subject))
-            return True
-
-        def verify_user_absent(self, user_id, oidc_subject: str) -> bool:
-            return True
-
-    original = get_auth_provider()
-    mock_prov = MockAuthProvider()
-    set_auth_provider(mock_prov)
-    try:
-        uid = uuid4()
-        assert get_auth_provider().delete_user(uid, "sub-123") is True
-        assert mock_prov.deleted == [(str(uid), "sub-123")]
-        assert get_auth_provider().verify_user_absent(uid, "sub-123") is True
-    finally:
-        set_auth_provider(original)
+    assert provider.verify_user_absent(uid, "sub-123") is False
+    assert provider.delete_user(uid, "sub-123") is True
+    assert provider.verify_user_absent(uid, "sub-123") is True
 
 
 def test_retry_backoff_schedule() -> None:
@@ -126,4 +146,14 @@ def test_non_retryable_job_error_carries_code() -> None:
 
 
 def test_purge_upload_object() -> None:
-    assert purge_upload_object("uploads/temp/file-123.pdf") is True
+    mem_storage = MemoryObjectStorage()
+    set_privacy_object_storage(mem_storage)
+    try:
+        key = "uploads/temp/file-123.pdf"
+        mem_storage.put_object(key, b"file-content")
+        assert mem_storage.head_object(key) is not None
+
+        assert purge_upload_object(key) is True
+        assert mem_storage.head_object(key) is None
+    finally:
+        set_privacy_object_storage(None)

@@ -41,6 +41,7 @@ class Settings(BaseSettings):
     database_url: str | None = Field(default=None, repr=False)
     supabase_url: str | None = None
     supabase_publishable_key: SecretStr | None = Field(default=None, repr=False)
+    supabase_service_role_key: SecretStr | None = Field(default=None, repr=False)
     recent_auth_window_seconds: int = Field(default=600, ge=60, le=3600)
     default_timezone: str = "Asia/Colombo"
     default_locale: str = "en-LK"

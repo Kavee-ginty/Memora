@@ -61,6 +61,13 @@ class PrivacyService:
         record = self.repository.get_export_request(auth.context, request_id)
         return PrivacyExportResponse(**record)
 
+    def get_export_download_archive(
+        self,
+        request_id: UUID,
+        token: str,
+    ) -> bytes:
+        return self.repository.get_export_archive_for_download(request_id, token)
+
     def create_deletion(
         self,
         auth: AuthenticatedRequest,

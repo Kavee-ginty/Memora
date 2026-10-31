@@ -15,8 +15,7 @@ ALL_DELETION_SCOPES = (
 )
 
 LEGAL_RETENTION_EXCEPTIONS = [
-    "Security and consent audit records retained under tamper-resistant policy",
-    "Immutable academic attempt and memory ledger history retained without learner identity",
+    "Security audit and consent compliance records retained under approved legal schedule",
 ]
 
 ALLOWED_CANCELLATION_REASONS = {

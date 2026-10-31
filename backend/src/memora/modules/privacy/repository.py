@@ -25,8 +25,12 @@ from memora.modules.privacy.constants import (
 )
 from memora.modules.privacy.provider import get_auth_provider
 from memora.modules.privacy.storage import (
+    delete_export_archive,
     export_archive_exists,
+    generate_export_download_token,
+    get_export_archive_bytes,
     purge_upload_object,
+    verify_export_download_token,
     write_export_archive,
 )
 
@@ -355,10 +359,8 @@ class PrivacyRepository:
             expires_at = completed_time + timedelta(seconds=EXPORT_DOWNLOAD_TTL_SECONDS)
             now = datetime.now(UTC)
             if now < expires_at and export_archive_exists(request_id):
-                raw_token = f"{request_id}:{completed_time.isoformat()}".encode()
-                token = hashlib.sha256(raw_token).hexdigest()
-                base_url = "https://storage.memora.internal/v1/privacy/exports"
-                data["download_url"] = f"{base_url}/{request_id}/download?token={token}"
+                token = generate_export_download_token(request_id, user_id, expires_at)
+                data["download_url"] = f"/v1/privacy/exports/{request_id}/download?token={token}"
                 data["download_expires_at"] = expires_at
             else:
                 data["download_url"] = None
@@ -368,6 +370,46 @@ class PrivacyRepository:
             data["download_expires_at"] = None
 
         return data
+
+    def get_export_archive_for_download(self, request_id: UUID, token: str) -> bytes:
+        if not token:
+            raise ApiError(
+                401,
+                "authentication_required",
+                "A valid signed download token is required.",
+                "authenticate",
+            )
+        with self._connect() as connection:
+            row = (
+                connection.execute(
+                    text(
+                        """
+                        SELECT user_id, status, completed_at
+                        FROM privacy_requests
+                        WHERE id = :id AND request_type = 'export'
+                        """
+                    ),
+                    {"id": request_id},
+                )
+                .mappings()
+                .one_or_none()
+            )
+            if row is None:
+                raise ApiError(404, "not_found", "Export archive not found or expired.")
+
+            if row["status"] != "completed" or row["completed_at"] is None:
+                raise ApiError(
+                    409, "invalid_state", "Export archive is not yet ready for download."
+                )
+
+            user_id = row["user_id"]
+            if not verify_export_download_token(request_id, user_id, token):
+                raise ApiError(403, "forbidden", "Export download token is invalid or expired.")
+
+            if not export_archive_exists(request_id):
+                raise ApiError(404, "not_found", "Export archive not found or expired.")
+
+            return get_export_archive_bytes(request_id)
 
     def create_deletion_request(
         self,
@@ -872,6 +914,7 @@ class PrivacyRepository:
             # Persist the export archive
             write_export_archive(
                 request_id,
+                user_id,
                 json.dumps(export_payload, default=str, indent=2).encode("utf-8"),
                 summary_text,
             )
@@ -946,11 +989,48 @@ class PrivacyRepository:
             # Scope 1: Database Learner State (Delete private data and vectors)
             # -----------------------------------------------------------------
             connection.execute(
+                text("DELETE FROM question_reports WHERE user_id = :user_id"),
+                {"user_id": user_id},
+            )
+            connection.execute(
+                text("DELETE FROM attempts WHERE user_id = :user_id"),
+                {"user_id": user_id},
+            )
+            connection.execute(
+                text(
+                    """
+                    DELETE FROM mission_items
+                    WHERE mission_id IN (SELECT id FROM missions WHERE user_id = :user_id)
+                    """
+                ),
+                {"user_id": user_id},
+            )
+            connection.execute(
+                text("DELETE FROM missions WHERE user_id = :user_id"),
+                {"user_id": user_id},
+            )
+            connection.execute(
+                text("DELETE FROM memory_decisions WHERE user_id = :user_id"),
+                {"user_id": user_id},
+            )
+            connection.execute(
+                text("DELETE FROM memory_events WHERE user_id = :user_id"),
+                {"user_id": user_id},
+            )
+            connection.execute(
                 text("DELETE FROM learner_concept_states WHERE user_id = :user_id"),
                 {"user_id": user_id},
             )
             connection.execute(
-                text("DELETE FROM private_knowledge_items WHERE user_id = :user_id"),
+                text("DELETE FROM reward_grants WHERE user_id = :user_id"),
+                {"user_id": user_id},
+            )
+            connection.execute(
+                text("DELETE FROM xp_ledger WHERE user_id = :user_id"),
+                {"user_id": user_id},
+            )
+            connection.execute(
+                text("DELETE FROM streak_days WHERE user_id = :user_id"),
                 {"user_id": user_id},
             )
             connection.execute(
@@ -958,7 +1038,43 @@ class PrivacyRepository:
                 {"user_id": user_id},
             )
             connection.execute(
-                text("DELETE FROM notification_preferences WHERE user_id = :user_id"),
+                text("DELETE FROM verification_decisions WHERE user_id = :user_id"),
+                {"user_id": user_id},
+            )
+            connection.execute(
+                text(
+                    """
+                    DELETE FROM verification_requests
+                    WHERE extraction_candidate_id IN (
+                        SELECT ec.id FROM extraction_candidates ec
+                        JOIN learning_updates lu ON ec.learning_update_id = lu.id
+                        WHERE lu.user_id = :user_id
+                    )
+                    """
+                ),
+                {"user_id": user_id},
+            )
+            connection.execute(
+                text(
+                    """
+                    DELETE FROM extraction_candidates
+                    WHERE learning_update_id IN (
+                        SELECT id FROM learning_updates WHERE user_id = :user_id
+                    )
+                    """
+                ),
+                {"user_id": user_id},
+            )
+            connection.execute(
+                text("DELETE FROM knowledge_commits WHERE user_id = :user_id"),
+                {"user_id": user_id},
+            )
+            connection.execute(
+                text("DELETE FROM private_knowledge_items WHERE user_id = :user_id"),
+                {"user_id": user_id},
+            )
+            connection.execute(
+                text("DELETE FROM learning_updates WHERE user_id = :user_id"),
                 {"user_id": user_id},
             )
             connection.execute(
@@ -966,43 +1082,40 @@ class PrivacyRepository:
                 {"user_id": user_id},
             )
             connection.execute(
-                text("DELETE FROM question_reports WHERE user_id = :user_id"),
+                text("DELETE FROM notification_preferences WHERE user_id = :user_id"),
                 {"user_id": user_id},
             )
-
-            # Anonymize profile
             connection.execute(
-                text(
-                    """
-                    UPDATE user_profiles
-                    SET display_name = 'Deleted Learner',
-                        accessibility_preferences = '{"schema_version":"1"}'::jsonb,
-                        active_subject_id = NULL,
-                        updated_at = now(), row_version = row_version + 1
-                    WHERE user_id = :user_id
-                    """
-                ),
+                text("DELETE FROM user_profiles WHERE user_id = :user_id"),
+                {"user_id": user_id},
+            )
+            connection.execute(
+                text("DELETE FROM idempotency_records WHERE user_id = :user_id"),
                 {"user_id": user_id},
             )
 
             # Verification of Scope 1
-            remaining_states = connection.scalar(
-                text("SELECT count(*) FROM learner_concept_states WHERE user_id = :user_id"),
-                {"user_id": user_id},
+            tables_to_verify = (
+                "learner_concept_states",
+                "private_knowledge_items",
+                "attempts",
+                "missions",
+                "xp_ledger",
+                "streak_days",
+                "learning_updates",
+                "device_registrations",
+                "notification_preferences",
+                "user_profiles",
             )
-            remaining_knowledge = connection.scalar(
-                text("SELECT count(*) FROM private_knowledge_items WHERE user_id = :user_id"),
-                {"user_id": user_id},
-            )
-            remaining_devices = connection.scalar(
-                text("SELECT count(*) FROM device_registrations WHERE user_id = :user_id"),
-                {"user_id": user_id},
-            )
-            if remaining_states != 0 or remaining_knowledge != 0 or remaining_devices != 0:
-                raise RuntimeError(
-                    f"Database deletion verification failed: states={remaining_states}, "
-                    f"knowledge={remaining_knowledge}, devices={remaining_devices}"
+            for tbl in tables_to_verify:
+                cnt = connection.scalar(
+                    text(f"SELECT count(*) FROM {tbl} WHERE user_id = :user_id"),
+                    {"user_id": user_id},
                 )
+                if cnt != 0:
+                    raise RuntimeError(
+                        f"Database deletion verification failed for {tbl}: remaining={cnt}"
+                    )
 
             connection.execute(
                 text(
@@ -1044,6 +1157,8 @@ class PrivacyRepository:
 
             for up in active_uploads:
                 purge_upload_object(up["object_key"])
+
+            delete_export_archive(request_id)
 
             connection.execute(
                 text(
@@ -1138,7 +1253,10 @@ class PrivacyRepository:
                 text(
                     """
                     UPDATE users
-                    SET status = 'deleted', deleted_at = :now, updated_at = :now,
+                    SET status = 'deleted',
+                        deleted_at = coalesce(deleted_at, :now),
+                        updated_at = :now,
+                        oidc_subject = 'deleted:' || id::text,
                         row_version = row_version + 1
                     WHERE id = :user_id
                     """
@@ -1174,3 +1292,177 @@ class PrivacyRepository:
                 ),
                 {"id": request_id},
             )
+
+
+RECONCILIATION_LEARNER_TABLES = (
+    "learner_concept_states",
+    "private_knowledge_items",
+    "attempts",
+    "missions",
+    "xp_ledger",
+    "streak_days",
+    "learning_updates",
+    "device_registrations",
+    "notification_preferences",
+    "user_profiles",
+)
+
+
+def unreconciled_deletions_exist(connection: Connection) -> bool:
+    """Checks whether any deleted user or completed deletion request has resurrected learner
+
+    data or non-detached identity (e.g. after database restore).
+    """
+    # 1. Any user marked deleted whose OIDC subject does not start with 'deleted:'
+    non_detached = connection.scalar(
+        text(
+            """
+            SELECT count(*) FROM users
+            WHERE status = 'deleted' AND oidc_subject NOT LIKE 'deleted:%'
+            """
+        )
+    )
+    if non_detached and non_detached > 0:
+        return True
+
+    # 2. Any completed deletion request where the user is not marked deleted
+    unmarked_user = connection.scalar(
+        text(
+            """
+            SELECT count(*) FROM users u
+            JOIN privacy_requests pr ON u.id = pr.user_id
+            WHERE pr.request_type = 'delete' AND pr.status = 'completed'
+              AND (u.status != 'deleted' OR u.oidc_subject NOT LIKE 'deleted:%')
+            """
+        )
+    )
+    if unmarked_user and unmarked_user > 0:
+        return True
+
+    # 3. Any private learner rows existing for a user marked as deleted
+    for tbl in RECONCILIATION_LEARNER_TABLES:
+        cnt = connection.scalar(
+            text(
+                f"""
+                SELECT count(*) FROM {tbl} t
+                JOIN users u ON t.user_id = u.id
+                WHERE u.status = 'deleted'
+                """
+            )
+        )
+        if cnt and cnt > 0:
+            return True
+
+    return False
+
+
+def reconcile_privacy_deletions(
+    connection: Connection,
+    now: datetime | None = None,
+) -> int:
+    """Scans for deleted users or completed deletion requests that require
+
+    post-restore reconciliation, purges any resurrected learner rows,
+    ensures OIDC identity is detached, and logs audit events.
+    """
+    effective_now = now or datetime.now(UTC)
+    users_to_reconcile = (
+        connection.execute(
+            text(
+                """
+                SELECT DISTINCT u.id, u.oidc_subject
+                FROM users u
+                LEFT JOIN privacy_requests pr
+                  ON u.id = pr.user_id AND pr.request_type = 'delete' AND pr.status = 'completed'
+                WHERE u.status = 'deleted' OR pr.id IS NOT NULL
+                """
+            )
+        )
+        .mappings()
+        .all()
+    )
+
+    reconciled_count = 0
+    auth_prov = get_auth_provider()
+
+    for u in users_to_reconcile:
+        user_id = u["id"]
+        oidc_subject = u["oidc_subject"]
+
+        # Purge all learner tables
+        for table in (
+            "question_reports",
+            "attempts",
+            "missions",
+            "memory_decisions",
+            "memory_events",
+            "learner_concept_states",
+            "reward_grants",
+            "xp_ledger",
+            "streak_days",
+            "reef_projections",
+            "verification_decisions",
+            "knowledge_commits",
+            "private_knowledge_items",
+            "source_uploads",
+            "learning_updates",
+            "device_registrations",
+            "notification_preferences",
+            "user_profiles",
+            "idempotency_records",
+        ):
+            connection.execute(
+                text(f"DELETE FROM {table} WHERE user_id = :user_id"),
+                {"user_id": user_id},
+            )
+
+        connection.execute(
+            text(
+                """
+                DELETE FROM mission_items
+                WHERE mission_id IN (SELECT id FROM missions WHERE user_id = :user_id)
+                """
+            ),
+            {"user_id": user_id},
+        )
+
+        # Detach OIDC subject
+        connection.execute(
+            text(
+                """
+                UPDATE users
+                SET oidc_subject = 'deleted:' || id::text,
+                    status = 'deleted',
+                    deleted_at = coalesce(deleted_at, :now),
+                    updated_at = :now,
+                    row_version = row_version + 1
+                WHERE id = :user_id
+                """
+            ),
+            {"user_id": user_id, "now": effective_now},
+        )
+
+        # Ensure absence in auth provider
+        if not oidc_subject.startswith("deleted:"):
+            auth_prov.delete_user(user_id, oidc_subject)
+
+        # Record audit event
+        connection.execute(
+            text(
+                """
+                INSERT INTO audit_events(
+                    actor_type, actor_id, action, resource_type, resource_id,
+                    authorization_context, outcome, safe_metadata
+                ) VALUES (
+                    'system', 'memora_reconciler', 'privacy.deletion.reconciled',
+                    'user', :user_id,
+                    '{"schema_version": "1", "role": "memora_reconciler"}'::jsonb,
+                    'succeeded', '{"schema_version": "1", "reconciled": true}'::jsonb
+                )
+                """
+            ),
+            {"user_id": user_id},
+        )
+        reconciled_count += 1
+
+    return reconciled_count

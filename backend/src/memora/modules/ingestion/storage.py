@@ -53,6 +53,11 @@ class ObjectStorage(Protocol):
     def get_object(self, object_key: str) -> bytes:
         pass
 
+    def put_object(
+        self, object_key: str, payload: bytes, content_type: str = "application/octet-stream"
+    ) -> None:
+        pass
+
     def delete_object(self, object_key: str) -> None:
         pass
 
@@ -77,7 +82,9 @@ class MemoryObjectStorage:
     def create_download_url(self, object_key: str, *, expires_in: int = 300) -> str:
         return f"memory://uploads/{quote(object_key)}"
 
-    def put_object(self, object_key: str, payload: bytes, content_type: str) -> None:
+    def put_object(
+        self, object_key: str, payload: bytes, content_type: str = "application/octet-stream"
+    ) -> None:
         self._objects[object_key] = payload, content_type
 
     def head_object(self, object_key: str) -> ObjectMetadata | None:
@@ -233,6 +240,26 @@ class S3ObjectStorage:
             raise StorageUnavailable("The temporary source could not be read.") from exc
         except (urllib.error.URLError, TimeoutError) as exc:
             raise StorageUnavailable("The temporary source is temporarily unavailable.") from exc
+
+    def put_object(
+        self, object_key: str, payload: bytes, content_type: str = "application/octet-stream"
+    ) -> None:
+        url = self._presign(
+            "PUT", object_key, expires_in=60, extra_headers={"Content-Type": content_type}
+        )
+        request = urllib.request.Request(
+            url,
+            data=payload,
+            method="PUT",
+            headers={"Content-Type": content_type},
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=self.timeout_seconds):
+                pass
+        except urllib.error.HTTPError as exc:
+            raise StorageUnavailable("Failed to upload object to storage.") from exc
+        except (urllib.error.URLError, TimeoutError) as exc:
+            raise StorageUnavailable("Storage is temporarily unavailable.") from exc
 
     def delete_object(self, object_key: str) -> None:
         request = urllib.request.Request(

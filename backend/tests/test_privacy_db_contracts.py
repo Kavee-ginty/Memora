@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import io
 import json
 import os
 import zipfile
@@ -37,7 +38,7 @@ from memora.modules.privacy.repository import PrivacyRepository
 from memora.modules.privacy.service import PrivacyService
 from memora.modules.privacy.storage import (
     export_archive_exists,
-    get_export_archive_path,
+    get_export_archive_bytes,
 )
 from memora.worker.main import process_one_job, run_worker_once
 from memora.worker.memory import recover_expired_leases
@@ -174,10 +175,10 @@ def test_privacy_export_end_to_end_with_worker_and_package_contents(
     assert completed_export.download_url is not None
     assert completed_export.download_expires_at is not None
 
-    # 4. Verify Archive on Disk & Contents
+    # 4. Verify Archive Storage & Contents
     assert export_archive_exists(export.id)
-    archive_path = get_export_archive_path(export.id)
-    with zipfile.ZipFile(archive_path, mode="r") as zf:
+    archive_bytes = get_export_archive_bytes(export.id)
+    with zipfile.ZipFile(io.BytesIO(archive_bytes), mode="r") as zf:
         namelist = zf.namelist()
         assert "export.json" in namelist
         assert "summary.txt" in namelist
@@ -357,27 +358,25 @@ def test_privacy_deletion_deletes_learner_data_and_verifies_absence(database: En
             == 0
         )
 
-        # Profile is anonymized
-        prof = (
-            conn.execute(
-                text("SELECT display_name FROM user_profiles WHERE user_id = :u"),
-                {"u": user_id},
+        assert (
+            conn.scalar(
+                text("SELECT count(*) FROM user_profiles WHERE user_id = :u"), {"u": user_id}
             )
-            .mappings()
-            .one()
+            == 0
         )
-        assert prof["display_name"] == "Deleted Learner"
 
-        # User is deleted
+        # User is deleted and OIDC identity is irreversibly detached
         user_row = (
             conn.execute(
-                text("SELECT status, deleted_at FROM users WHERE id = :u"),
+                text("SELECT status, deleted_at, oidc_subject FROM users WHERE id = :u"),
                 {"u": user_id},
             )
             .mappings()
             .one()
         )
         assert user_row["status"] == "deleted"
+        assert user_row["deleted_at"] is not None
+        assert user_row["oidc_subject"].startswith("deleted:")
         assert user_row["deleted_at"] is not None
 
 
@@ -582,3 +581,83 @@ def test_cross_user_isolation(database: Engine) -> None:
         cancel_body = PrivacyDeletionCancelRequest()
         service.cancel_deletion(auth2, deletion.id, cancel_body, idempotency_key=f"k3-{uuid4()}")
     assert exc_cancel.value.status_code == 404
+
+
+def test_restore_reconciliation_rejects_traffic_until_reapplied(database: Engine) -> None:
+    from memora.api.health import database_is_ready
+    from memora.modules.curriculum.seed_data import CONCEPTS_DATA
+    from memora.modules.privacy.repository import (
+        reconcile_privacy_deletions,
+        unreconciled_deletions_exist,
+    )
+
+    user_id, _ = make_user(database, f"restored-user-{uuid4()}")
+    concept = CONCEPTS_DATA[0]
+
+    with database.begin() as conn:
+        # Simulate a database restoration where a user was previously deleted
+        # but resurrected backup data contains unpurged rows and active OIDC subject
+        conn.execute(
+            text(
+                """
+                UPDATE users
+                SET status = 'deleted', deleted_at = now(),
+                    oidc_subject = 'google-oauth2|restored-subject'
+                WHERE id = :user_id
+                """
+            ),
+            {"user_id": user_id},
+        )
+        conn.execute(
+            text(
+                """
+                INSERT INTO learner_concept_states(
+                    user_id, concept_id, active_concept_version_id,
+                    difficulty, stability_days, last_retrievability,
+                    evidence_confidence, first_exposed_at, next_review_at,
+                    exposure_count, eligible_review_count, lapse_count,
+                    engine_version
+                )
+                VALUES (
+                    :user_id, :concept_id, :version_id,
+                    2.5, 1.0, 0.9,
+                    0.8, now(), now() + interval '1 day',
+                    1, 1, 0,
+                    'v1'
+                )
+                """
+            ),
+            {
+                "user_id": user_id,
+                "concept_id": concept["concept_id"],
+                "version_id": concept["version_id"],
+            },
+        )
+
+        # 1. Verification that unreconciled state is detected
+        assert unreconciled_deletions_exist(conn) is True
+
+    # 2. Database readiness check fails (503 Service Unavailable blocks traffic)
+    assert database_is_ready() is False
+
+    # 3. Worker reconciliation runs and reapplies deletion state
+    with database.begin() as conn:
+        reconciled = reconcile_privacy_deletions(conn)
+        assert reconciled >= 1
+        assert unreconciled_deletions_exist(conn) is False
+
+    # 4. Traffic is now accepted
+    assert database_is_ready() is True
+
+    # 5. Authoritatively verify all learner data was purged and OIDC detached
+    with database.begin() as conn:
+        cnt = conn.scalar(
+            text("SELECT count(*) FROM learner_concept_states WHERE user_id = :user_id"),
+            {"user_id": user_id},
+        )
+        assert cnt == 0
+        oidc = conn.scalar(
+            text("SELECT oidc_subject FROM users WHERE id = :user_id"),
+            {"user_id": user_id},
+        )
+        assert oidc.startswith("deleted:")
