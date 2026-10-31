@@ -49,7 +49,7 @@ If two sources appear inconsistent, stop implementation and resolve the conflict
 | T14 | Mission mobile experience | Blocked | - | 7 | T07, T13 | `task/T14-mission-mobile` | Mobile feature |
 | T15 | Progress XP streak and reef backend | Blocked | - | 5 | T11, T13 | `task/T15-progress-backend` | Backend engagement |
 | T16 | Progress mobile experience | Blocked | - | 5 | T07, T15 | `task/T16-progress-mobile` | Mobile feature |
-| T17 | Profile preferences and notifications backend | **Ready** | - | 4 | T06 | `task/T17-profile-backend` | Backend account |
+| T17 | Profile preferences and notifications backend | **In Progress** | Codex | 4 | T06 | `task/T17-profile-backend` | Backend account |
 | T18 | Profile and settings mobile | Blocked | - | 4 | T07, T17 | `task/T18-profile-mobile` | Mobile feature |
 | T19 | Push notifications and deep links | Blocked | - | 4 | T07, T17 | `task/T19-push-deep-links` | Mobile and backend |
 | T20 | Privacy export and deletion backend | **Ready** | - | 5 | T06, T04 | `task/T20-privacy-backend` | Backend privacy |

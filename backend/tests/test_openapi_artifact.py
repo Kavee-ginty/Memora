@@ -47,6 +47,8 @@ def test_artifact_is_canonical_and_environment_free() -> None:
         "/v1/consent/acceptances",
         "/v1/devices",
         "/v1/devices/{device_id}",
+        "/v1/profile",
+        "/v1/profile/preferences",
         "/v1/question-reports",
         "/v1/question-reports/{report_id}",
         "/v1/questions/{question_version_id}/reports",

@@ -14,6 +14,7 @@ import 'package:built_value/iso_8601_date_time_serializer.dart';
 import 'package:memora_api_client/src/date_serializer.dart';
 import 'package:memora_api_client/src/model/date.dart';
 
+import 'package:memora_api_client/src/model/accessibility_preferences.dart';
 import 'package:memora_api_client/src/model/account_status.dart';
 import 'package:memora_api_client/src/model/active_mission_summary.dart';
 import 'package:memora_api_client/src/model/async_operation.dart';
@@ -41,7 +42,11 @@ import 'package:memora_api_client/src/model/page_meta.dart';
 import 'package:memora_api_client/src/model/page_params.dart';
 import 'package:memora_api_client/src/model/page_question_report_summary.dart';
 import 'package:memora_api_client/src/model/pending_resource_summary.dart';
+import 'package:memora_api_client/src/model/profile_preferences_response.dart';
+import 'package:memora_api_client/src/model/profile_preferences_update_request.dart';
+import 'package:memora_api_client/src/model/profile_response.dart';
 import 'package:memora_api_client/src/model/profile_summary.dart';
+import 'package:memora_api_client/src/model/profile_update_request.dart';
 import 'package:memora_api_client/src/model/question_report_create_request.dart';
 import 'package:memora_api_client/src/model/question_report_response.dart';
 import 'package:memora_api_client/src/model/question_report_summary.dart';
@@ -55,6 +60,7 @@ import 'package:memora_api_client/src/model/subject_summary.dart';
 part 'serializers.g.dart';
 
 @SerializersFor([
+  AccessibilityPreferences,
   AccountStatus,
   ActiveMissionSummary,
   AsyncOperation,
@@ -82,7 +88,11 @@ part 'serializers.g.dart';
   PageParams,
   PageQuestionReportSummary,
   PendingResourceSummary,
+  ProfilePreferencesResponse,
+  ProfilePreferencesUpdateRequest,
+  ProfileResponse,
   ProfileSummary,
+  ProfileUpdateRequest,
   QuestionReportCreateRequest,
   QuestionReportResponse,
   QuestionReportSummary,
