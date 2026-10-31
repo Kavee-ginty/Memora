@@ -25,5 +25,41 @@ void main() {
       // TODO
     });
 
+    // Get the authenticated profile
+    //
+    // Returns the owner-scoped profile with its optimistic concurrency version.
+    //
+    //Future<ProfileResponse> getProfile(String xCorrelationID, String xClientVersion, String xPlatform, { String acceptLanguage }) async
+    test('test getProfile', () async {
+      // TODO
+    });
+
+    // Get profile preferences
+    //
+    // Returns confirmed notification, accessibility and mission settings.
+    //
+    //Future<ProfilePreferencesResponse> getProfilePreferences(String xCorrelationID, String xClientVersion, String xPlatform, { String acceptLanguage }) async
+    test('test getProfilePreferences', () async {
+      // TODO
+    });
+
+    // Update the authenticated profile
+    //
+    // Idempotently updates allowlisted profile fields when the supplied version is current.
+    //
+    //Future<ProfileResponse> updateProfile(String xCorrelationID, String xClientVersion, String xPlatform, String idempotencyKey, ProfileUpdateRequest profileUpdateRequest, { String acceptLanguage }) async
+    test('test updateProfile', () async {
+      // TODO
+    });
+
+    // Update profile preferences
+    //
+    // Idempotently updates explicit settings when the supplied version is current.
+    //
+    //Future<ProfilePreferencesResponse> updateProfilePreferences(String xCorrelationID, String xClientVersion, String xPlatform, String idempotencyKey, ProfilePreferencesUpdateRequest profilePreferencesUpdateRequest, { String acceptLanguage }) async
+    test('test updateProfilePreferences', () async {
+      // TODO
+    });
+
   });
 }

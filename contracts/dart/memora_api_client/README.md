@@ -82,6 +82,10 @@ Class | Method | HTTP request | Description
 [*PrivacyApi*](doc/PrivacyApi.md) | [**getPrivacyExport**](doc/PrivacyApi.md#getprivacyexport) | **GET** /v1/privacy/exports/{request_id} | Get privacy export status
 [*ProfileApi*](doc/ProfileApi.md) | [**acceptConsent**](doc/ProfileApi.md#acceptconsent) | **POST** /v1/consent/acceptances | Accept a current consent policy
 [*ProfileApi*](doc/ProfileApi.md) | [**getConsent**](doc/ProfileApi.md#getconsent) | **GET** /v1/consent | Get current consent status
+[*ProfileApi*](doc/ProfileApi.md) | [**getProfile**](doc/ProfileApi.md#getprofile) | **GET** /v1/profile | Get the authenticated profile
+[*ProfileApi*](doc/ProfileApi.md) | [**getProfilePreferences**](doc/ProfileApi.md#getprofilepreferences) | **GET** /v1/profile/preferences | Get profile preferences
+[*ProfileApi*](doc/ProfileApi.md) | [**updateProfile**](doc/ProfileApi.md#updateprofile) | **PATCH** /v1/profile | Update the authenticated profile
+[*ProfileApi*](doc/ProfileApi.md) | [**updateProfilePreferences**](doc/ProfileApi.md#updateprofilepreferences) | **PATCH** /v1/profile/preferences | Update profile preferences
 [*ReportsApi*](doc/ReportsApi.md) | [**createQuestionReport**](doc/ReportsApi.md#createquestionreport) | **POST** /v1/questions/{question_version_id}/reports | Report a question, answer, explanation or grading issue
 [*ReportsApi*](doc/ReportsApi.md) | [**getQuestionReport**](doc/ReportsApi.md#getquestionreport) | **GET** /v1/question-reports/{report_id} | Read a question report and its safe resolution state
 [*ReportsApi*](doc/ReportsApi.md) | [**listQuestionReports**](doc/ReportsApi.md#listquestionreports) | **GET** /v1/question-reports | List the authenticated student&#39;s question reports
@@ -93,6 +97,7 @@ Class | Method | HTTP request | Description
 
 ## Documentation For Models
 
+ - [AccessibilityPreferences](doc/AccessibilityPreferences.md)
  - [AccountStatus](doc/AccountStatus.md)
  - [ActiveMissionSummary](doc/ActiveMissionSummary.md)
  - [AsyncOperation](doc/AsyncOperation.md)
@@ -126,7 +131,11 @@ Class | Method | HTTP request | Description
  - [PrivacyDeletionResponse](doc/PrivacyDeletionResponse.md)
  - [PrivacyExportRequest](doc/PrivacyExportRequest.md)
  - [PrivacyExportResponse](doc/PrivacyExportResponse.md)
+ - [ProfilePreferencesResponse](doc/ProfilePreferencesResponse.md)
+ - [ProfilePreferencesUpdateRequest](doc/ProfilePreferencesUpdateRequest.md)
+ - [ProfileResponse](doc/ProfileResponse.md)
  - [ProfileSummary](doc/ProfileSummary.md)
+ - [ProfileUpdateRequest](doc/ProfileUpdateRequest.md)
  - [QuestionReportCreateRequest](doc/QuestionReportCreateRequest.md)
  - [QuestionReportResponse](doc/QuestionReportResponse.md)
  - [QuestionReportSummary](doc/QuestionReportSummary.md)

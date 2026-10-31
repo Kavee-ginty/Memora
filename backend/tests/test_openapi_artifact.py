@@ -52,6 +52,8 @@ def test_artifact_is_canonical_and_environment_free() -> None:
         "/v1/privacy/deletions/{request_id}/cancel",
         "/v1/privacy/exports",
         "/v1/privacy/exports/{request_id}",
+        "/v1/profile",
+        "/v1/profile/preferences",
         "/v1/question-reports",
         "/v1/question-reports/{report_id}",
         "/v1/questions/{question_version_id}/reports",

@@ -9,7 +9,7 @@ import jwt
 import pytest
 from cryptography.hazmat.primitives.asymmetric import rsa
 from fastapi.testclient import TestClient
-from pydantic import SecretStr
+from pydantic import SecretStr, ValidationError
 
 from memora.api.errors import ApiError
 from memora.api.security import (
@@ -18,7 +18,12 @@ from memora.api.security import (
     SupabaseTokenValidator,
     require_recent_authentication,
 )
-from memora.api.v1.schemas.identity import ConsentAcceptanceRequest
+from memora.api.v1.schemas.identity import (
+    ConsentAcceptanceRequest,
+    DeviceRegistrationRequest,
+    ProfilePreferencesUpdateRequest,
+    ProfileUpdateRequest,
+)
 from memora.core.config import Settings
 from memora.main import create_app
 from memora.modules.identity.service import (
@@ -329,6 +334,128 @@ def test_device_keys_are_exactly_32_bytes() -> None:
 
     with pytest.raises(ApiError, match="temporarily_unavailable"):
         service._protector()
+
+
+class ProfileRepository:
+    def __init__(self) -> None:
+        self.profile_values: dict[str, object] | None = None
+        self.preference_values: dict[str, object] | None = None
+
+    def profile(self, _: AuthContext) -> dict[str, object]:
+        return self._profile()
+
+    def update_profile(self, _: AuthContext, **values: object) -> dict[str, object]:
+        self.profile_values = values
+        return {**self._profile(), "display_name": values["values"]["display_name"], "version": 2}  # type: ignore[index]
+
+    def preferences(self, _auth: AuthContext, **_values: object) -> dict[str, object]:
+        return self._preferences()
+
+    def update_preferences(self, _: AuthContext, **values: object) -> dict[str, object]:
+        self.preference_values = values
+        return {**self._preferences(), **values["values"], "version": 2}  # type: ignore[arg-type]
+
+    @staticmethod
+    def _profile() -> dict[str, object]:
+        return {
+            "user_id": uuid4(),
+            "display_name": "Student",
+            "locale": "en-LK",
+            "timezone": "Asia/Colombo",
+            "active_subject_id": None,
+            "curriculum_version_id": None,
+            "version": 1,
+        }
+
+    @staticmethod
+    def _preferences() -> dict[str, object]:
+        return {
+            "notifications_enabled": False,
+            "mission_enabled": True,
+            "reward_enabled": True,
+            "streak_enabled": True,
+            "quiet_start_local": None,
+            "quiet_end_local": None,
+            "preferred_window_start_local": None,
+            "preferred_window_end_local": None,
+            "timezone": "Asia/Colombo",
+            "lock_screen_detail": "minimal",
+            "max_daily_reminders": 1,
+            "accessibility": {"schema_version": "1"},
+            "version": 1,
+        }
+
+
+def test_profile_update_normalizes_name_and_validates_timezone() -> None:
+    repository = ProfileRepository()
+    service = IdentityService(repository, Settings(_env_file=None))  # type: ignore[arg-type]
+    request = authenticated_request(authenticated_at=datetime.now(UTC))
+
+    result = service.update_profile(
+        request,
+        ProfileUpdateRequest(version=1, display_name="  Ada   Student  "),
+        idempotency_key="profile-update-key",
+    )
+
+    assert result.display_name == "Ada Student"
+    assert repository.profile_values is not None
+    with pytest.raises(ApiError, match="validation_failed"):
+        service.update_profile(
+            request,
+            ProfileUpdateRequest(version=1, timezone="Not/A_Zone"),
+            idempotency_key="profile-timezone-key",
+        )
+
+
+def test_preference_models_reject_partial_pairs_unknown_keys_and_cap() -> None:
+    invalid_values = (
+        {"version": 1, "quiet_start_local": "22:00:00"},
+        {"version": 1, "preferred_window_end_local": "18:00:00"},
+        {"version": 1, "max_daily_reminders": 4},
+        {"version": 1, "unknown_setting": True},
+        {"version": 1, "accessibility": {"schema_version": "1", "unknown": True}},
+    )
+    for values in invalid_values:
+        with pytest.raises(ValidationError):
+            ProfilePreferencesUpdateRequest.model_validate(values)
+
+
+def test_device_registration_rejects_invalid_locale_before_protecting_token() -> None:
+    service = IdentityService(ProfileRepository(), Settings(_env_file=None))
+    with pytest.raises(ApiError, match="validation_failed"):
+        service.register_device(
+            authenticated_request(authenticated_at=datetime.now(UTC)),
+            DeviceRegistrationRequest(
+                installation_id=uuid4(),
+                platform="android",
+                push_token="synthetic-device-token",
+                locale="!!!!!!!!",
+                timezone="Asia/Colombo",
+                app_version="1.0.0",
+            ),
+            idempotency_key="invalid-device-locale",
+        )
+
+
+def test_notification_denial_and_accessibility_settings_are_supported() -> None:
+    repository = ProfileRepository()
+    service = IdentityService(repository, Settings(_env_file=None))  # type: ignore[arg-type]
+
+    result = service.update_preferences(
+        authenticated_request(authenticated_at=datetime.now(UTC)),
+        ProfilePreferencesUpdateRequest(
+            version=1,
+            notifications_enabled=False,
+            mission_enabled=False,
+            accessibility={"reduced_motion": True, "timer_visible": True},
+        ),
+        idempotency_key="preference-update-key",
+    )
+
+    assert result.notifications_enabled is False
+    assert result.mission_enabled is False
+    assert result.accessibility.reduced_motion is True
+    assert result.accessibility.timer_visible is True
 
 
 def authenticated_request(*, authenticated_at: datetime | None) -> AuthenticatedRequest:
