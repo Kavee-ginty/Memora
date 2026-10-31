@@ -15,6 +15,7 @@ doc/ConsentResponse.md
 doc/ConsentStatus.md
 doc/ConsentType.md
 doc/CurriculumApi.md
+doc/DeletionProofSummary.md
 doc/DeviceRegistrationRequest.md
 doc/DeviceRegistrationResponse.md
 doc/DueReasonExplanation.md
@@ -31,6 +32,12 @@ doc/PageMeta.md
 doc/PageParams.md
 doc/PageQuestionReportSummary.md
 doc/PendingResourceSummary.md
+doc/PrivacyApi.md
+doc/PrivacyDeletionCancelRequest.md
+doc/PrivacyDeletionRequest.md
+doc/PrivacyDeletionResponse.md
+doc/PrivacyExportRequest.md
+doc/PrivacyExportResponse.md
 doc/ProfileApi.md
 doc/ProfileSummary.md
 doc/QuestionReportCreateRequest.md
@@ -48,6 +55,7 @@ lib/memora_api_client.dart
 lib/src/api.dart
 lib/src/api/curriculum_api.dart
 lib/src/api/health_api.dart
+lib/src/api/privacy_api.dart
 lib/src/api/profile_api.dart
 lib/src/api/reports_api.dart
 lib/src/api/session_api.dart
@@ -71,6 +79,7 @@ lib/src/model/consent_response.dart
 lib/src/model/consent_status.dart
 lib/src/model/consent_type.dart
 lib/src/model/date.dart
+lib/src/model/deletion_proof_summary.dart
 lib/src/model/device_registration_request.dart
 lib/src/model/device_registration_response.dart
 lib/src/model/due_reason_explanation.dart
@@ -86,6 +95,11 @@ lib/src/model/page_meta.dart
 lib/src/model/page_params.dart
 lib/src/model/page_question_report_summary.dart
 lib/src/model/pending_resource_summary.dart
+lib/src/model/privacy_deletion_cancel_request.dart
+lib/src/model/privacy_deletion_request.dart
+lib/src/model/privacy_deletion_response.dart
+lib/src/model/privacy_export_request.dart
+lib/src/model/privacy_export_response.dart
 lib/src/model/profile_summary.dart
 lib/src/model/question_report_create_request.dart
 lib/src/model/question_report_response.dart
@@ -112,6 +126,7 @@ test/consent_response_test.dart
 test/consent_status_test.dart
 test/consent_type_test.dart
 test/curriculum_api_test.dart
+test/deletion_proof_summary_test.dart
 test/device_registration_request_test.dart
 test/device_registration_response_test.dart
 test/due_reason_explanation_test.dart
@@ -128,6 +143,12 @@ test/page_meta_test.dart
 test/page_params_test.dart
 test/page_question_report_summary_test.dart
 test/pending_resource_summary_test.dart
+test/privacy_api_test.dart
+test/privacy_deletion_cancel_request_test.dart
+test/privacy_deletion_request_test.dart
+test/privacy_deletion_response_test.dart
+test/privacy_export_request_test.dart
+test/privacy_export_response_test.dart
 test/profile_api_test.dart
 test/profile_summary_test.dart
 test/question_report_create_request_test.dart

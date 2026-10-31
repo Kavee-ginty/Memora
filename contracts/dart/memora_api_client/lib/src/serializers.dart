@@ -26,6 +26,7 @@ import 'package:memora_api_client/src/model/consent_decision.dart';
 import 'package:memora_api_client/src/model/consent_response.dart';
 import 'package:memora_api_client/src/model/consent_status.dart';
 import 'package:memora_api_client/src/model/consent_type.dart';
+import 'package:memora_api_client/src/model/deletion_proof_summary.dart';
 import 'package:memora_api_client/src/model/device_registration_request.dart';
 import 'package:memora_api_client/src/model/device_registration_response.dart';
 import 'package:memora_api_client/src/model/due_reason_explanation.dart';
@@ -41,6 +42,11 @@ import 'package:memora_api_client/src/model/page_meta.dart';
 import 'package:memora_api_client/src/model/page_params.dart';
 import 'package:memora_api_client/src/model/page_question_report_summary.dart';
 import 'package:memora_api_client/src/model/pending_resource_summary.dart';
+import 'package:memora_api_client/src/model/privacy_deletion_cancel_request.dart';
+import 'package:memora_api_client/src/model/privacy_deletion_request.dart';
+import 'package:memora_api_client/src/model/privacy_deletion_response.dart';
+import 'package:memora_api_client/src/model/privacy_export_request.dart';
+import 'package:memora_api_client/src/model/privacy_export_response.dart';
 import 'package:memora_api_client/src/model/profile_summary.dart';
 import 'package:memora_api_client/src/model/question_report_create_request.dart';
 import 'package:memora_api_client/src/model/question_report_response.dart';
@@ -67,6 +73,7 @@ part 'serializers.g.dart';
   ConsentResponse,
   ConsentStatus,
   ConsentType,
+  DeletionProofSummary,
   DeviceRegistrationRequest,
   DeviceRegistrationResponse,
   DueReasonExplanation,
@@ -82,6 +89,11 @@ part 'serializers.g.dart';
   PageParams,
   PageQuestionReportSummary,
   PendingResourceSummary,
+  PrivacyDeletionCancelRequest,
+  PrivacyDeletionRequest,
+  PrivacyDeletionResponse,
+  PrivacyExportRequest,
+  PrivacyExportResponse,
   ProfileSummary,
   QuestionReportCreateRequest,
   QuestionReportResponse,
@@ -129,6 +141,10 @@ Serializers serializers = (_$serializers.toBuilder()
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(ConceptProgressItem)]),
         () => ListBuilder<ConceptProgressItem>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(DeletionProofSummary)]),
+        () => ListBuilder<DeletionProofSummary>(),
       )
       ..add(const OneOfSerializer())
       ..add(const AnyOfSerializer())

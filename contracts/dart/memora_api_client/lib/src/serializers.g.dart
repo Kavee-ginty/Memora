@@ -24,6 +24,7 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(ConsentResponse.serializer)
       ..add(ConsentStatus.serializer)
       ..add(ConsentType.serializer)
+      ..add(DeletionProofSummary.serializer)
       ..add(DeviceRegistrationRequest.serializer)
       ..add(DeviceRegistrationRequestPlatformEnum.serializer)
       ..add(DeviceRegistrationResponse.serializer)
@@ -44,6 +45,16 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(PageParams.serializer)
       ..add(PageQuestionReportSummary.serializer)
       ..add(PendingResourceSummary.serializer)
+      ..add(PrivacyDeletionCancelRequest.serializer)
+      ..add(PrivacyDeletionRequest.serializer)
+      ..add(PrivacyDeletionResponse.serializer)
+      ..add(PrivacyDeletionResponseRequestTypeEnum.serializer)
+      ..add(PrivacyDeletionResponseStatusEnum.serializer)
+      ..add(PrivacyExportRequest.serializer)
+      ..add(PrivacyExportRequestFormatEnum.serializer)
+      ..add(PrivacyExportResponse.serializer)
+      ..add(PrivacyExportResponseRequestTypeEnum.serializer)
+      ..add(PrivacyExportResponseStatusEnum.serializer)
       ..add(ProfileSummary.serializer)
       ..add(QuestionReportCreateRequest.serializer)
       ..add(QuestionReportCreateRequestReportTypeEnum.serializer)
@@ -86,6 +97,13 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(SubjectSummary)]),
           () => ListBuilder<SubjectSummary>())
+      ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(DeletionProofSummary)]),
+          () => ListBuilder<DeletionProofSummary>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(String)]),
+          () => ListBuilder<String>())
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(FieldError)]),
           () => ListBuilder<FieldError>())
