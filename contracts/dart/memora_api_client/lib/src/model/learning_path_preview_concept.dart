@@ -11,13 +11,15 @@ part 'learning_path_preview_concept.g.dart';
 /// LearningPathPreviewConcept
 ///
 /// Properties:
-/// * [candidateId] 
-/// * [candidateType] 
-/// * [conceptId] 
-/// * [conceptVersionId] 
-/// * [title] 
+/// * [candidateId]
+/// * [candidateType]
+/// * [conceptId]
+/// * [conceptVersionId]
+/// * [title]
 @BuiltValue()
-abstract class LearningPathPreviewConcept implements Built<LearningPathPreviewConcept, LearningPathPreviewConceptBuilder> {
+abstract class LearningPathPreviewConcept
+    implements
+        Built<LearningPathPreviewConcept, LearningPathPreviewConceptBuilder> {
   @BuiltValueField(wireName: r'candidate_id')
   String get candidateId;
 
@@ -35,18 +37,25 @@ abstract class LearningPathPreviewConcept implements Built<LearningPathPreviewCo
 
   LearningPathPreviewConcept._();
 
-  factory LearningPathPreviewConcept([void updates(LearningPathPreviewConceptBuilder b)]) = _$LearningPathPreviewConcept;
+  factory LearningPathPreviewConcept(
+          [void updates(LearningPathPreviewConceptBuilder b)]) =
+      _$LearningPathPreviewConcept;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(LearningPathPreviewConceptBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<LearningPathPreviewConcept> get serializer => _$LearningPathPreviewConceptSerializer();
+  static Serializer<LearningPathPreviewConcept> get serializer =>
+      _$LearningPathPreviewConceptSerializer();
 }
 
-class _$LearningPathPreviewConceptSerializer implements PrimitiveSerializer<LearningPathPreviewConcept> {
+class _$LearningPathPreviewConceptSerializer
+    implements PrimitiveSerializer<LearningPathPreviewConcept> {
   @override
-  final Iterable<Type> types = const [LearningPathPreviewConcept, _$LearningPathPreviewConcept];
+  final Iterable<Type> types = const [
+    LearningPathPreviewConcept,
+    _$LearningPathPreviewConcept
+  ];
 
   @override
   final String wireName = r'LearningPathPreviewConcept';
@@ -67,15 +76,19 @@ class _$LearningPathPreviewConceptSerializer implements PrimitiveSerializer<Lear
       specifiedType: const FullType(String),
     );
     yield r'concept_id';
-    yield object.conceptId == null ? null : serializers.serialize(
-      object.conceptId,
-      specifiedType: const FullType.nullable(String),
-    );
+    yield object.conceptId == null
+        ? null
+        : serializers.serialize(
+            object.conceptId,
+            specifiedType: const FullType.nullable(String),
+          );
     yield r'concept_version_id';
-    yield object.conceptVersionId == null ? null : serializers.serialize(
-      object.conceptVersionId,
-      specifiedType: const FullType.nullable(String),
-    );
+    yield object.conceptVersionId == null
+        ? null
+        : serializers.serialize(
+            object.conceptVersionId,
+            specifiedType: const FullType.nullable(String),
+          );
     yield r'title';
     yield serializers.serialize(
       object.title,
@@ -89,7 +102,9 @@ class _$LearningPathPreviewConceptSerializer implements PrimitiveSerializer<Lear
     LearningPathPreviewConcept object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -169,5 +184,3 @@ class _$LearningPathPreviewConceptSerializer implements PrimitiveSerializer<Lear
     return result.build();
   }
 }
-
-

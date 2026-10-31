@@ -13,17 +13,18 @@ part 'source_upload_summary.g.dart';
 /// SourceUploadSummary
 ///
 /// Properties:
-/// * [byteSize] 
-/// * [declaredMediaType] 
-/// * [declaredName] 
-/// * [deletedAt] 
-/// * [deletionStatus] 
-/// * [detectedMediaType] 
-/// * [expiresAt] 
-/// * [id] 
-/// * [status] 
+/// * [byteSize]
+/// * [declaredMediaType]
+/// * [declaredName]
+/// * [deletedAt]
+/// * [deletionStatus]
+/// * [detectedMediaType]
+/// * [expiresAt]
+/// * [id]
+/// * [status]
 @BuiltValue()
-abstract class SourceUploadSummary implements Built<SourceUploadSummary, SourceUploadSummaryBuilder> {
+abstract class SourceUploadSummary
+    implements Built<SourceUploadSummary, SourceUploadSummaryBuilder> {
   @BuiltValueField(wireName: r'byte_size')
   int get byteSize;
 
@@ -55,18 +56,24 @@ abstract class SourceUploadSummary implements Built<SourceUploadSummary, SourceU
 
   SourceUploadSummary._();
 
-  factory SourceUploadSummary([void updates(SourceUploadSummaryBuilder b)]) = _$SourceUploadSummary;
+  factory SourceUploadSummary([void updates(SourceUploadSummaryBuilder b)]) =
+      _$SourceUploadSummary;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(SourceUploadSummaryBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<SourceUploadSummary> get serializer => _$SourceUploadSummarySerializer();
+  static Serializer<SourceUploadSummary> get serializer =>
+      _$SourceUploadSummarySerializer();
 }
 
-class _$SourceUploadSummarySerializer implements PrimitiveSerializer<SourceUploadSummary> {
+class _$SourceUploadSummarySerializer
+    implements PrimitiveSerializer<SourceUploadSummary> {
   @override
-  final Iterable<Type> types = const [SourceUploadSummary, _$SourceUploadSummary];
+  final Iterable<Type> types = const [
+    SourceUploadSummary,
+    _$SourceUploadSummary
+  ];
 
   @override
   final String wireName = r'SourceUploadSummary';
@@ -92,20 +99,24 @@ class _$SourceUploadSummarySerializer implements PrimitiveSerializer<SourceUploa
       specifiedType: const FullType(String),
     );
     yield r'deleted_at';
-    yield object.deletedAt == null ? null : serializers.serialize(
-      object.deletedAt,
-      specifiedType: const FullType.nullable(String),
-    );
+    yield object.deletedAt == null
+        ? null
+        : serializers.serialize(
+            object.deletedAt,
+            specifiedType: const FullType.nullable(String),
+          );
     yield r'deletion_status';
     yield serializers.serialize(
       object.deletionStatus,
       specifiedType: const FullType(DeletionStatus),
     );
     yield r'detected_media_type';
-    yield object.detectedMediaType == null ? null : serializers.serialize(
-      object.detectedMediaType,
-      specifiedType: const FullType.nullable(String),
-    );
+    yield object.detectedMediaType == null
+        ? null
+        : serializers.serialize(
+            object.detectedMediaType,
+            specifiedType: const FullType.nullable(String),
+          );
     yield r'expires_at';
     yield serializers.serialize(
       object.expiresAt,
@@ -129,7 +140,9 @@ class _$SourceUploadSummarySerializer implements PrimitiveSerializer<SourceUploa
     SourceUploadSummary object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -237,5 +250,3 @@ class _$SourceUploadSummarySerializer implements PrimitiveSerializer<SourceUploa
     return result.build();
   }
 }
-
-

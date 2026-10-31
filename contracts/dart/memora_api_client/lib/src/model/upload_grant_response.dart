@@ -12,15 +12,16 @@ part 'upload_grant_response.g.dart';
 /// UploadGrantResponse
 ///
 /// Properties:
-/// * [checksumRule] 
-/// * [expiresAt] 
-/// * [maxBytes] 
-/// * [method] 
-/// * [requiredHeaders] 
-/// * [uploadId] 
-/// * [url] 
+/// * [checksumRule]
+/// * [expiresAt]
+/// * [maxBytes]
+/// * [method]
+/// * [requiredHeaders]
+/// * [uploadId]
+/// * [url]
 @BuiltValue()
-abstract class UploadGrantResponse implements Built<UploadGrantResponse, UploadGrantResponseBuilder> {
+abstract class UploadGrantResponse
+    implements Built<UploadGrantResponse, UploadGrantResponseBuilder> {
   @BuiltValueField(wireName: r'checksum_rule')
   String get checksumRule;
 
@@ -45,19 +46,25 @@ abstract class UploadGrantResponse implements Built<UploadGrantResponse, UploadG
 
   UploadGrantResponse._();
 
-  factory UploadGrantResponse([void updates(UploadGrantResponseBuilder b)]) = _$UploadGrantResponse;
+  factory UploadGrantResponse([void updates(UploadGrantResponseBuilder b)]) =
+      _$UploadGrantResponse;
 
   @BuiltValueHook(initializeBuilder: true)
-  static void _defaults(UploadGrantResponseBuilder b) => b
-      ..method = UploadGrantResponseMethodEnum.valueOf('PUT');
+  static void _defaults(UploadGrantResponseBuilder b) =>
+      b..method = UploadGrantResponseMethodEnum.valueOf('PUT');
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<UploadGrantResponse> get serializer => _$UploadGrantResponseSerializer();
+  static Serializer<UploadGrantResponse> get serializer =>
+      _$UploadGrantResponseSerializer();
 }
 
-class _$UploadGrantResponseSerializer implements PrimitiveSerializer<UploadGrantResponse> {
+class _$UploadGrantResponseSerializer
+    implements PrimitiveSerializer<UploadGrantResponse> {
   @override
-  final Iterable<Type> types = const [UploadGrantResponse, _$UploadGrantResponse];
+  final Iterable<Type> types = const [
+    UploadGrantResponse,
+    _$UploadGrantResponse
+  ];
 
   @override
   final String wireName = r'UploadGrantResponse';
@@ -90,7 +97,8 @@ class _$UploadGrantResponseSerializer implements PrimitiveSerializer<UploadGrant
     yield r'required_headers';
     yield serializers.serialize(
       object.requiredHeaders,
-      specifiedType: const FullType(BuiltMap, [FullType(String), FullType(String)]),
+      specifiedType:
+          const FullType(BuiltMap, [FullType(String), FullType(String)]),
     );
     yield r'upload_id';
     yield serializers.serialize(
@@ -110,7 +118,9 @@ class _$UploadGrantResponseSerializer implements PrimitiveSerializer<UploadGrant
     UploadGrantResponse object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -156,7 +166,8 @@ class _$UploadGrantResponseSerializer implements PrimitiveSerializer<UploadGrant
         case r'required_headers':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(BuiltMap, [FullType(String), FullType(String)]),
+            specifiedType:
+                const FullType(BuiltMap, [FullType(String), FullType(String)]),
           ) as BuiltMap<String, String>;
           result.requiredHeaders.replace(valueDes);
           break;
@@ -203,19 +214,21 @@ class _$UploadGrantResponseSerializer implements PrimitiveSerializer<UploadGrant
   }
 }
 
-
 class UploadGrantResponseMethodEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'PUT')
-  static const UploadGrantResponseMethodEnum PUT = _$uploadGrantResponseMethodEnum_PUT;
+  static const UploadGrantResponseMethodEnum PUT =
+      _$uploadGrantResponseMethodEnum_PUT;
   @BuiltValueEnumConst(wireName: r'unknown_default_open_api', fallback: true)
-  static const UploadGrantResponseMethodEnum unknownDefaultOpenApi = _$uploadGrantResponseMethodEnum_unknownDefaultOpenApi;
+  static const UploadGrantResponseMethodEnum unknownDefaultOpenApi =
+      _$uploadGrantResponseMethodEnum_unknownDefaultOpenApi;
 
-  static Serializer<UploadGrantResponseMethodEnum> get serializer => _$uploadGrantResponseMethodEnumSerializer;
+  static Serializer<UploadGrantResponseMethodEnum> get serializer =>
+      _$uploadGrantResponseMethodEnumSerializer;
 
-  const UploadGrantResponseMethodEnum._(String name): super(name);
+  const UploadGrantResponseMethodEnum._(String name) : super(name);
 
-  static BuiltSet<UploadGrantResponseMethodEnum> get values => _$uploadGrantResponseMethodEnumValues;
-  static UploadGrantResponseMethodEnum valueOf(String name) => _$uploadGrantResponseMethodEnumValueOf(name);
+  static BuiltSet<UploadGrantResponseMethodEnum> get values =>
+      _$uploadGrantResponseMethodEnumValues;
+  static UploadGrantResponseMethodEnum valueOf(String name) =>
+      _$uploadGrantResponseMethodEnumValueOf(name);
 }
-

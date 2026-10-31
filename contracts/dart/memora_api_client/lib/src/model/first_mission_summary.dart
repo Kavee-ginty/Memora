@@ -11,10 +11,11 @@ part 'first_mission_summary.g.dart';
 /// FirstMissionSummary
 ///
 /// Properties:
-/// * [missionId] 
-/// * [status] 
+/// * [missionId]
+/// * [status]
 @BuiltValue()
-abstract class FirstMissionSummary implements Built<FirstMissionSummary, FirstMissionSummaryBuilder> {
+abstract class FirstMissionSummary
+    implements Built<FirstMissionSummary, FirstMissionSummaryBuilder> {
   @BuiltValueField(wireName: r'mission_id')
   String get missionId;
 
@@ -23,18 +24,24 @@ abstract class FirstMissionSummary implements Built<FirstMissionSummary, FirstMi
 
   FirstMissionSummary._();
 
-  factory FirstMissionSummary([void updates(FirstMissionSummaryBuilder b)]) = _$FirstMissionSummary;
+  factory FirstMissionSummary([void updates(FirstMissionSummaryBuilder b)]) =
+      _$FirstMissionSummary;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(FirstMissionSummaryBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<FirstMissionSummary> get serializer => _$FirstMissionSummarySerializer();
+  static Serializer<FirstMissionSummary> get serializer =>
+      _$FirstMissionSummarySerializer();
 }
 
-class _$FirstMissionSummarySerializer implements PrimitiveSerializer<FirstMissionSummary> {
+class _$FirstMissionSummarySerializer
+    implements PrimitiveSerializer<FirstMissionSummary> {
   @override
-  final Iterable<Type> types = const [FirstMissionSummary, _$FirstMissionSummary];
+  final Iterable<Type> types = const [
+    FirstMissionSummary,
+    _$FirstMissionSummary
+  ];
 
   @override
   final String wireName = r'FirstMissionSummary';
@@ -62,7 +69,9 @@ class _$FirstMissionSummarySerializer implements PrimitiveSerializer<FirstMissio
     FirstMissionSummary object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -119,5 +128,3 @@ class _$FirstMissionSummarySerializer implements PrimitiveSerializer<FirstMissio
     return result.build();
   }
 }
-
-

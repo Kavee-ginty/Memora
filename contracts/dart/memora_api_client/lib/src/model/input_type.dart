@@ -10,7 +10,6 @@ import 'package:built_value/serializer.dart';
 part 'input_type.g.dart';
 
 class InputType extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'manual_text')
   static const InputType manualText = _$manualText;
   @BuiltValueEnumConst(wireName: r'pdf')
@@ -24,7 +23,7 @@ class InputType extends EnumClass {
 
   static Serializer<InputType> get serializer => _$inputTypeSerializer;
 
-  const InputType._(String name): super(name);
+  const InputType._(String name) : super(name);
 
   static BuiltSet<InputType> get values => _$values;
   static InputType valueOf(String name) => _$valueOf(name);
@@ -37,4 +36,3 @@ class InputType extends EnumClass {
 ///
 /// Trigger mixin generation by writing a line like this one next to your enum.
 abstract class InputTypeMixin = Object with _$InputTypeMixin;
-

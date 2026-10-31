@@ -14,14 +14,16 @@ part 'consent_acceptance_response.g.dart';
 /// ConsentAcceptanceResponse
 ///
 /// Properties:
-/// * [acceptedScopes] 
-/// * [decidedAt] 
-/// * [decision] 
-/// * [id] 
-/// * [policyId] 
-/// * [policyVersion] 
+/// * [acceptedScopes]
+/// * [decidedAt]
+/// * [decision]
+/// * [id]
+/// * [policyId]
+/// * [policyVersion]
 @BuiltValue()
-abstract class ConsentAcceptanceResponse implements Built<ConsentAcceptanceResponse, ConsentAcceptanceResponseBuilder> {
+abstract class ConsentAcceptanceResponse
+    implements
+        Built<ConsentAcceptanceResponse, ConsentAcceptanceResponseBuilder> {
   @BuiltValueField(wireName: r'accepted_scopes')
   BuiltList<String> get acceptedScopes;
 
@@ -44,18 +46,25 @@ abstract class ConsentAcceptanceResponse implements Built<ConsentAcceptanceRespo
 
   ConsentAcceptanceResponse._();
 
-  factory ConsentAcceptanceResponse([void updates(ConsentAcceptanceResponseBuilder b)]) = _$ConsentAcceptanceResponse;
+  factory ConsentAcceptanceResponse(
+          [void updates(ConsentAcceptanceResponseBuilder b)]) =
+      _$ConsentAcceptanceResponse;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(ConsentAcceptanceResponseBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<ConsentAcceptanceResponse> get serializer => _$ConsentAcceptanceResponseSerializer();
+  static Serializer<ConsentAcceptanceResponse> get serializer =>
+      _$ConsentAcceptanceResponseSerializer();
 }
 
-class _$ConsentAcceptanceResponseSerializer implements PrimitiveSerializer<ConsentAcceptanceResponse> {
+class _$ConsentAcceptanceResponseSerializer
+    implements PrimitiveSerializer<ConsentAcceptanceResponse> {
   @override
-  final Iterable<Type> types = const [ConsentAcceptanceResponse, _$ConsentAcceptanceResponse];
+  final Iterable<Type> types = const [
+    ConsentAcceptanceResponse,
+    _$ConsentAcceptanceResponse
+  ];
 
   @override
   final String wireName = r'ConsentAcceptanceResponse';
@@ -103,7 +112,9 @@ class _$ConsentAcceptanceResponseSerializer implements PrimitiveSerializer<Conse
     ConsentAcceptanceResponse object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -188,5 +199,3 @@ class _$ConsentAcceptanceResponseSerializer implements PrimitiveSerializer<Conse
     return result.build();
   }
 }
-
-

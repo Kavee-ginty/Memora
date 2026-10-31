@@ -10,7 +10,6 @@ import 'package:built_value/serializer.dart';
 part 'consent_type.g.dart';
 
 class ConsentType extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'terms')
   static const ConsentType terms = _$terms;
   @BuiltValueEnumConst(wireName: r'privacy')
@@ -26,7 +25,7 @@ class ConsentType extends EnumClass {
 
   static Serializer<ConsentType> get serializer => _$consentTypeSerializer;
 
-  const ConsentType._(String name): super(name);
+  const ConsentType._(String name) : super(name);
 
   static BuiltSet<ConsentType> get values => _$values;
   static ConsentType valueOf(String name) => _$valueOf(name);
@@ -39,4 +38,3 @@ class ConsentType extends EnumClass {
 ///
 /// Trigger mixin generation by writing a line like this one next to your enum.
 abstract class ConsentTypeMixin = Object with _$ConsentTypeMixin;
-

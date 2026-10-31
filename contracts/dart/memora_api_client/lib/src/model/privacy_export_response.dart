@@ -13,16 +13,17 @@ part 'privacy_export_response.g.dart';
 /// PrivacyExportResponse
 ///
 /// Properties:
-/// * [completedAt] 
-/// * [downloadExpiresAt] 
-/// * [downloadUrl] 
-/// * [failureCode] 
-/// * [id] 
-/// * [requestType] 
-/// * [requestedAt] 
-/// * [status] 
+/// * [completedAt]
+/// * [downloadExpiresAt]
+/// * [downloadUrl]
+/// * [failureCode]
+/// * [id]
+/// * [requestType]
+/// * [requestedAt]
+/// * [status]
 @BuiltValue()
-abstract class PrivacyExportResponse implements Built<PrivacyExportResponse, PrivacyExportResponseBuilder> {
+abstract class PrivacyExportResponse
+    implements Built<PrivacyExportResponse, PrivacyExportResponseBuilder> {
   @BuiltValueField(wireName: r'completed_at')
   Optional<String?> get completedAt;
 
@@ -50,22 +51,28 @@ abstract class PrivacyExportResponse implements Built<PrivacyExportResponse, Pri
 
   PrivacyExportResponse._();
 
-  factory PrivacyExportResponse([void updates(PrivacyExportResponseBuilder b)]) = _$PrivacyExportResponse;
+  factory PrivacyExportResponse(
+      [void updates(PrivacyExportResponseBuilder b)]) = _$PrivacyExportResponse;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(PrivacyExportResponseBuilder b) => b
-      ..completedAt = Optional.absent()
-      ..downloadExpiresAt = Optional.absent()
-      ..downloadUrl = Optional.absent()
-      ..failureCode = Optional.absent();
+    ..completedAt = Optional.absent()
+    ..downloadExpiresAt = Optional.absent()
+    ..downloadUrl = Optional.absent()
+    ..failureCode = Optional.absent();
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<PrivacyExportResponse> get serializer => _$PrivacyExportResponseSerializer();
+  static Serializer<PrivacyExportResponse> get serializer =>
+      _$PrivacyExportResponseSerializer();
 }
 
-class _$PrivacyExportResponseSerializer implements PrimitiveSerializer<PrivacyExportResponse> {
+class _$PrivacyExportResponseSerializer
+    implements PrimitiveSerializer<PrivacyExportResponse> {
   @override
-  final Iterable<Type> types = const [PrivacyExportResponse, _$PrivacyExportResponse];
+  final Iterable<Type> types = const [
+    PrivacyExportResponse,
+    _$PrivacyExportResponse
+  ];
 
   @override
   final String wireName = r'PrivacyExportResponse';
@@ -151,7 +158,9 @@ class _$PrivacyExportResponseSerializer implements PrimitiveSerializer<PrivacyEx
     PrivacyExportResponse object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -251,29 +260,36 @@ class _$PrivacyExportResponseSerializer implements PrimitiveSerializer<PrivacyEx
   }
 }
 
-
 class PrivacyExportResponseStatusEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'requested')
-  static const PrivacyExportResponseStatusEnum requested = _$privacyExportResponseStatusEnum_requested;
+  static const PrivacyExportResponseStatusEnum requested =
+      _$privacyExportResponseStatusEnum_requested;
   @BuiltValueEnumConst(wireName: r'verifying')
-  static const PrivacyExportResponseStatusEnum verifying = _$privacyExportResponseStatusEnum_verifying;
+  static const PrivacyExportResponseStatusEnum verifying =
+      _$privacyExportResponseStatusEnum_verifying;
   @BuiltValueEnumConst(wireName: r'processing')
-  static const PrivacyExportResponseStatusEnum processing = _$privacyExportResponseStatusEnum_processing;
+  static const PrivacyExportResponseStatusEnum processing =
+      _$privacyExportResponseStatusEnum_processing;
   @BuiltValueEnumConst(wireName: r'completed')
-  static const PrivacyExportResponseStatusEnum completed = _$privacyExportResponseStatusEnum_completed;
+  static const PrivacyExportResponseStatusEnum completed =
+      _$privacyExportResponseStatusEnum_completed;
   @BuiltValueEnumConst(wireName: r'failed')
-  static const PrivacyExportResponseStatusEnum failed = _$privacyExportResponseStatusEnum_failed;
+  static const PrivacyExportResponseStatusEnum failed =
+      _$privacyExportResponseStatusEnum_failed;
   @BuiltValueEnumConst(wireName: r'cancelled')
-  static const PrivacyExportResponseStatusEnum cancelled = _$privacyExportResponseStatusEnum_cancelled;
+  static const PrivacyExportResponseStatusEnum cancelled =
+      _$privacyExportResponseStatusEnum_cancelled;
   @BuiltValueEnumConst(wireName: r'unknown_default_open_api', fallback: true)
-  static const PrivacyExportResponseStatusEnum unknownDefaultOpenApi = _$privacyExportResponseStatusEnum_unknownDefaultOpenApi;
+  static const PrivacyExportResponseStatusEnum unknownDefaultOpenApi =
+      _$privacyExportResponseStatusEnum_unknownDefaultOpenApi;
 
-  static Serializer<PrivacyExportResponseStatusEnum> get serializer => _$privacyExportResponseStatusEnumSerializer;
+  static Serializer<PrivacyExportResponseStatusEnum> get serializer =>
+      _$privacyExportResponseStatusEnumSerializer;
 
-  const PrivacyExportResponseStatusEnum._(String name): super(name);
+  const PrivacyExportResponseStatusEnum._(String name) : super(name);
 
-  static BuiltSet<PrivacyExportResponseStatusEnum> get values => _$privacyExportResponseStatusEnumValues;
-  static PrivacyExportResponseStatusEnum valueOf(String name) => _$privacyExportResponseStatusEnumValueOf(name);
+  static BuiltSet<PrivacyExportResponseStatusEnum> get values =>
+      _$privacyExportResponseStatusEnumValues;
+  static PrivacyExportResponseStatusEnum valueOf(String name) =>
+      _$privacyExportResponseStatusEnumValueOf(name);
 }
-

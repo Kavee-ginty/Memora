@@ -13,26 +13,30 @@ part 'health_response.g.dart';
 /// HealthResponse
 ///
 /// Properties:
-/// * [status] 
+/// * [status]
 @BuiltValue()
-abstract class HealthResponse implements Built<HealthResponse, HealthResponseBuilder> {
+abstract class HealthResponse
+    implements Built<HealthResponse, HealthResponseBuilder> {
   @BuiltValueField(wireName: r'status')
   Optional<HealthStatus?> get status;
   // enum statusEnum {  ok,  };
 
   HealthResponse._();
 
-  factory HealthResponse([void updates(HealthResponseBuilder b)]) = _$HealthResponse;
+  factory HealthResponse([void updates(HealthResponseBuilder b)]) =
+      _$HealthResponse;
 
   @BuiltValueHook(initializeBuilder: true)
-  static void _defaults(HealthResponseBuilder b) => b
-      ..status = Optional.absent();
+  static void _defaults(HealthResponseBuilder b) =>
+      b..status = Optional.absent();
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<HealthResponse> get serializer => _$HealthResponseSerializer();
+  static Serializer<HealthResponse> get serializer =>
+      _$HealthResponseSerializer();
 }
 
-class _$HealthResponseSerializer implements PrimitiveSerializer<HealthResponse> {
+class _$HealthResponseSerializer
+    implements PrimitiveSerializer<HealthResponse> {
   @override
   final Iterable<Type> types = const [HealthResponse, _$HealthResponse];
 
@@ -64,7 +68,9 @@ class _$HealthResponseSerializer implements PrimitiveSerializer<HealthResponse> 
     HealthResponse object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -114,5 +120,3 @@ class _$HealthResponseSerializer implements PrimitiveSerializer<HealthResponse> 
     return result.build();
   }
 }
-
-

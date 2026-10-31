@@ -14,16 +14,17 @@ part 'privacy_deletion_response.g.dart';
 /// PrivacyDeletionResponse
 ///
 /// Properties:
-/// * [completedAt] 
-/// * [failureCode] 
-/// * [id] 
-/// * [proofs] 
-/// * [requestType] 
-/// * [requestedAt] 
-/// * [retentionExceptions] 
-/// * [status] 
+/// * [completedAt]
+/// * [failureCode]
+/// * [id]
+/// * [proofs]
+/// * [requestType]
+/// * [requestedAt]
+/// * [retentionExceptions]
+/// * [status]
 @BuiltValue()
-abstract class PrivacyDeletionResponse implements Built<PrivacyDeletionResponse, PrivacyDeletionResponseBuilder> {
+abstract class PrivacyDeletionResponse
+    implements Built<PrivacyDeletionResponse, PrivacyDeletionResponseBuilder> {
   @BuiltValueField(wireName: r'completed_at')
   Optional<String?> get completedAt;
 
@@ -51,20 +52,27 @@ abstract class PrivacyDeletionResponse implements Built<PrivacyDeletionResponse,
 
   PrivacyDeletionResponse._();
 
-  factory PrivacyDeletionResponse([void updates(PrivacyDeletionResponseBuilder b)]) = _$PrivacyDeletionResponse;
+  factory PrivacyDeletionResponse(
+          [void updates(PrivacyDeletionResponseBuilder b)]) =
+      _$PrivacyDeletionResponse;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(PrivacyDeletionResponseBuilder b) => b
-      ..completedAt = Optional.absent()
-      ..failureCode = Optional.absent();
+    ..completedAt = Optional.absent()
+    ..failureCode = Optional.absent();
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<PrivacyDeletionResponse> get serializer => _$PrivacyDeletionResponseSerializer();
+  static Serializer<PrivacyDeletionResponse> get serializer =>
+      _$PrivacyDeletionResponseSerializer();
 }
 
-class _$PrivacyDeletionResponseSerializer implements PrimitiveSerializer<PrivacyDeletionResponse> {
+class _$PrivacyDeletionResponseSerializer
+    implements PrimitiveSerializer<PrivacyDeletionResponse> {
   @override
-  final Iterable<Type> types = const [PrivacyDeletionResponse, _$PrivacyDeletionResponse];
+  final Iterable<Type> types = const [
+    PrivacyDeletionResponse,
+    _$PrivacyDeletionResponse
+  ];
 
   @override
   final String wireName = r'PrivacyDeletionResponse';
@@ -106,7 +114,8 @@ class _$PrivacyDeletionResponseSerializer implements PrimitiveSerializer<Privacy
     yield r'proofs';
     yield serializers.serialize(
       object.proofs,
-      specifiedType: const FullType(BuiltList, [FullType(DeletionProofSummary)]),
+      specifiedType:
+          const FullType(BuiltList, [FullType(DeletionProofSummary)]),
     );
     yield r'request_type';
     yield serializers.serialize(
@@ -136,7 +145,9 @@ class _$PrivacyDeletionResponseSerializer implements PrimitiveSerializer<Privacy
     PrivacyDeletionResponse object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -175,7 +186,8 @@ class _$PrivacyDeletionResponseSerializer implements PrimitiveSerializer<Privacy
         case r'proofs':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(BuiltList, [FullType(DeletionProofSummary)]),
+            specifiedType:
+                const FullType(BuiltList, [FullType(DeletionProofSummary)]),
           ) as BuiltList<DeletionProofSummary>;
           result.proofs.replace(valueDes);
           break;
@@ -236,29 +248,36 @@ class _$PrivacyDeletionResponseSerializer implements PrimitiveSerializer<Privacy
   }
 }
 
-
 class PrivacyDeletionResponseStatusEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'requested')
-  static const PrivacyDeletionResponseStatusEnum requested = _$privacyDeletionResponseStatusEnum_requested;
+  static const PrivacyDeletionResponseStatusEnum requested =
+      _$privacyDeletionResponseStatusEnum_requested;
   @BuiltValueEnumConst(wireName: r'verifying')
-  static const PrivacyDeletionResponseStatusEnum verifying = _$privacyDeletionResponseStatusEnum_verifying;
+  static const PrivacyDeletionResponseStatusEnum verifying =
+      _$privacyDeletionResponseStatusEnum_verifying;
   @BuiltValueEnumConst(wireName: r'processing')
-  static const PrivacyDeletionResponseStatusEnum processing = _$privacyDeletionResponseStatusEnum_processing;
+  static const PrivacyDeletionResponseStatusEnum processing =
+      _$privacyDeletionResponseStatusEnum_processing;
   @BuiltValueEnumConst(wireName: r'completed')
-  static const PrivacyDeletionResponseStatusEnum completed = _$privacyDeletionResponseStatusEnum_completed;
+  static const PrivacyDeletionResponseStatusEnum completed =
+      _$privacyDeletionResponseStatusEnum_completed;
   @BuiltValueEnumConst(wireName: r'failed')
-  static const PrivacyDeletionResponseStatusEnum failed = _$privacyDeletionResponseStatusEnum_failed;
+  static const PrivacyDeletionResponseStatusEnum failed =
+      _$privacyDeletionResponseStatusEnum_failed;
   @BuiltValueEnumConst(wireName: r'cancelled')
-  static const PrivacyDeletionResponseStatusEnum cancelled = _$privacyDeletionResponseStatusEnum_cancelled;
+  static const PrivacyDeletionResponseStatusEnum cancelled =
+      _$privacyDeletionResponseStatusEnum_cancelled;
   @BuiltValueEnumConst(wireName: r'unknown_default_open_api', fallback: true)
-  static const PrivacyDeletionResponseStatusEnum unknownDefaultOpenApi = _$privacyDeletionResponseStatusEnum_unknownDefaultOpenApi;
+  static const PrivacyDeletionResponseStatusEnum unknownDefaultOpenApi =
+      _$privacyDeletionResponseStatusEnum_unknownDefaultOpenApi;
 
-  static Serializer<PrivacyDeletionResponseStatusEnum> get serializer => _$privacyDeletionResponseStatusEnumSerializer;
+  static Serializer<PrivacyDeletionResponseStatusEnum> get serializer =>
+      _$privacyDeletionResponseStatusEnumSerializer;
 
-  const PrivacyDeletionResponseStatusEnum._(String name): super(name);
+  const PrivacyDeletionResponseStatusEnum._(String name) : super(name);
 
-  static BuiltSet<PrivacyDeletionResponseStatusEnum> get values => _$privacyDeletionResponseStatusEnumValues;
-  static PrivacyDeletionResponseStatusEnum valueOf(String name) => _$privacyDeletionResponseStatusEnumValueOf(name);
+  static BuiltSet<PrivacyDeletionResponseStatusEnum> get values =>
+      _$privacyDeletionResponseStatusEnumValues;
+  static PrivacyDeletionResponseStatusEnum valueOf(String name) =>
+      _$privacyDeletionResponseStatusEnumValueOf(name);
 }
-

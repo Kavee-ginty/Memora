@@ -12,11 +12,13 @@ part 'update_learning_update_request.g.dart';
 /// UpdateLearningUpdateRequest
 ///
 /// Properties:
-/// * [learnedAt] 
-/// * [manualText] 
-/// * [version] 
+/// * [learnedAt]
+/// * [manualText]
+/// * [version]
 @BuiltValue()
-abstract class UpdateLearningUpdateRequest implements Built<UpdateLearningUpdateRequest, UpdateLearningUpdateRequestBuilder> {
+abstract class UpdateLearningUpdateRequest
+    implements
+        Built<UpdateLearningUpdateRequest, UpdateLearningUpdateRequestBuilder> {
   @BuiltValueField(wireName: r'learned_at')
   Optional<DateTime?> get learnedAt;
 
@@ -28,20 +30,27 @@ abstract class UpdateLearningUpdateRequest implements Built<UpdateLearningUpdate
 
   UpdateLearningUpdateRequest._();
 
-  factory UpdateLearningUpdateRequest([void updates(UpdateLearningUpdateRequestBuilder b)]) = _$UpdateLearningUpdateRequest;
+  factory UpdateLearningUpdateRequest(
+          [void updates(UpdateLearningUpdateRequestBuilder b)]) =
+      _$UpdateLearningUpdateRequest;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(UpdateLearningUpdateRequestBuilder b) => b
-      ..learnedAt = Optional.absent()
-      ..manualText = Optional.absent();
+    ..learnedAt = Optional.absent()
+    ..manualText = Optional.absent();
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<UpdateLearningUpdateRequest> get serializer => _$UpdateLearningUpdateRequestSerializer();
+  static Serializer<UpdateLearningUpdateRequest> get serializer =>
+      _$UpdateLearningUpdateRequestSerializer();
 }
 
-class _$UpdateLearningUpdateRequestSerializer implements PrimitiveSerializer<UpdateLearningUpdateRequest> {
+class _$UpdateLearningUpdateRequestSerializer
+    implements PrimitiveSerializer<UpdateLearningUpdateRequest> {
   @override
-  final Iterable<Type> types = const [UpdateLearningUpdateRequest, _$UpdateLearningUpdateRequest];
+  final Iterable<Type> types = const [
+    UpdateLearningUpdateRequest,
+    _$UpdateLearningUpdateRequest
+  ];
 
   @override
   final String wireName = r'UpdateLearningUpdateRequest';
@@ -88,7 +97,9 @@ class _$UpdateLearningUpdateRequestSerializer implements PrimitiveSerializer<Upd
     UpdateLearningUpdateRequest object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -152,5 +163,3 @@ class _$UpdateLearningUpdateRequestSerializer implements PrimitiveSerializer<Upd
     return result.build();
   }
 }
-
-

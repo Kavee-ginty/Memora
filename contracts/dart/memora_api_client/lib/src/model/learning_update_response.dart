@@ -16,22 +16,23 @@ part 'learning_update_response.g.dart';
 /// LearningUpdateResponse
 ///
 /// Properties:
-/// * [createdAt] 
-/// * [curriculumVersionId] 
-/// * [expiresAt] 
-/// * [failureCode] 
-/// * [hasManualText] 
-/// * [id] 
-/// * [inputType] 
-/// * [learnedAt] 
-/// * [rowVersion] 
-/// * [sourceDeletionStatus] 
-/// * [status] 
-/// * [subjectId] 
-/// * [updatedAt] 
-/// * [uploads] 
+/// * [createdAt]
+/// * [curriculumVersionId]
+/// * [expiresAt]
+/// * [failureCode]
+/// * [hasManualText]
+/// * [id]
+/// * [inputType]
+/// * [learnedAt]
+/// * [rowVersion]
+/// * [sourceDeletionStatus]
+/// * [status]
+/// * [subjectId]
+/// * [updatedAt]
+/// * [uploads]
 @BuiltValue()
-abstract class LearningUpdateResponse implements Built<LearningUpdateResponse, LearningUpdateResponseBuilder> {
+abstract class LearningUpdateResponse
+    implements Built<LearningUpdateResponse, LearningUpdateResponseBuilder> {
   @BuiltValueField(wireName: r'created_at')
   String get createdAt;
 
@@ -79,18 +80,25 @@ abstract class LearningUpdateResponse implements Built<LearningUpdateResponse, L
 
   LearningUpdateResponse._();
 
-  factory LearningUpdateResponse([void updates(LearningUpdateResponseBuilder b)]) = _$LearningUpdateResponse;
+  factory LearningUpdateResponse(
+          [void updates(LearningUpdateResponseBuilder b)]) =
+      _$LearningUpdateResponse;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(LearningUpdateResponseBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<LearningUpdateResponse> get serializer => _$LearningUpdateResponseSerializer();
+  static Serializer<LearningUpdateResponse> get serializer =>
+      _$LearningUpdateResponseSerializer();
 }
 
-class _$LearningUpdateResponseSerializer implements PrimitiveSerializer<LearningUpdateResponse> {
+class _$LearningUpdateResponseSerializer
+    implements PrimitiveSerializer<LearningUpdateResponse> {
   @override
-  final Iterable<Type> types = const [LearningUpdateResponse, _$LearningUpdateResponse];
+  final Iterable<Type> types = const [
+    LearningUpdateResponse,
+    _$LearningUpdateResponse
+  ];
 
   @override
   final String wireName = r'LearningUpdateResponse';
@@ -111,15 +119,19 @@ class _$LearningUpdateResponseSerializer implements PrimitiveSerializer<Learning
       specifiedType: const FullType(String),
     );
     yield r'expires_at';
-    yield object.expiresAt == null ? null : serializers.serialize(
-      object.expiresAt,
-      specifiedType: const FullType.nullable(String),
-    );
+    yield object.expiresAt == null
+        ? null
+        : serializers.serialize(
+            object.expiresAt,
+            specifiedType: const FullType.nullable(String),
+          );
     yield r'failure_code';
-    yield object.failureCode == null ? null : serializers.serialize(
-      object.failureCode,
-      specifiedType: const FullType.nullable(String),
-    );
+    yield object.failureCode == null
+        ? null
+        : serializers.serialize(
+            object.failureCode,
+            specifiedType: const FullType.nullable(String),
+          );
     yield r'has_manual_text';
     yield serializers.serialize(
       object.hasManualText,
@@ -178,7 +190,9 @@ class _$LearningUpdateResponseSerializer implements PrimitiveSerializer<Learning
     LearningUpdateResponse object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -289,7 +303,8 @@ class _$LearningUpdateResponseSerializer implements PrimitiveSerializer<Learning
         case r'uploads':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(BuiltList, [FullType(SourceUploadSummary)]),
+            specifiedType:
+                const FullType(BuiltList, [FullType(SourceUploadSummary)]),
           ) as BuiltList<SourceUploadSummary>;
           result.uploads.replace(valueDes);
           break;
@@ -321,5 +336,3 @@ class _$LearningUpdateResponseSerializer implements PrimitiveSerializer<Learning
     return result.build();
   }
 }
-
-

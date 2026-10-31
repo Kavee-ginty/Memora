@@ -133,12 +133,15 @@ Serializers _$serializers = (Serializers().toBuilder()
           const FullType(BuiltList, const [const FullType(SubjectSummary)]),
           () => ListBuilder<SubjectSummary>())
       ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(DeclaredFile)]),
+          () => ListBuilder<DeclaredFile>())
+      ..addBuilderFactory(
           const FullType(
               BuiltList, const [const FullType(DeletionProofSummary)]),
           () => ListBuilder<DeletionProofSummary>())
       ..addBuilderFactory(
-          const FullType(BuiltList, const [const FullType(DeclaredFile)]),
-          () => ListBuilder<DeclaredFile>())
+          const FullType(BuiltList, const [const FullType(String)]),
+          () => ListBuilder<String>())
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(FieldError)]),
           () => ListBuilder<FieldError>())

@@ -15,7 +15,6 @@ import 'package:memora_api_client/src/model/question_report_create_request.dart'
 import 'package:memora_api_client/src/model/question_report_response.dart';
 
 class ReportsApi {
-
   final Dio _dio;
 
   final Serializers _serializers;
@@ -26,13 +25,13 @@ class ReportsApi {
   /// Idempotently records a bounded report without changing historical content or grading, and states whether disputed evidence is limited pending review.
   ///
   /// Parameters:
-  /// * [questionVersionId] 
-  /// * [xCorrelationID] 
-  /// * [xClientVersion] 
-  /// * [xPlatform] 
-  /// * [idempotencyKey] 
-  /// * [questionReportCreateRequest] 
-  /// * [acceptLanguage] 
+  /// * [questionVersionId]
+  /// * [xCorrelationID]
+  /// * [xClientVersion]
+  /// * [xPlatform]
+  /// * [idempotencyKey]
+  /// * [questionReportCreateRequest]
+  /// * [acceptLanguage]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -42,7 +41,7 @@ class ReportsApi {
   ///
   /// Returns a [Future] containing a [Response] with a [QuestionReportResponse] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<QuestionReportResponse>> createQuestionReport({ 
+  Future<Response<QuestionReportResponse>> createQuestionReport({
     required String questionVersionId,
     required String xCorrelationID,
     required String xClientVersion,
@@ -57,7 +56,11 @@ class ReportsApi {
     ProgressCallback? onSendProgress,
     ProgressCallback? onReceiveProgress,
   }) async {
-    final _path = r'/v1/questions/{question_version_id}/reports'.replaceAll('{' r'question_version_id' '}', encodeQueryParameter(_serializers, questionVersionId, const FullType(String)).toString());
+    final _path = r'/v1/questions/{question_version_id}/reports'.replaceAll(
+        '{' r'question_version_id' '}',
+        encodeQueryParameter(
+                _serializers, questionVersionId, const FullType(String))
+            .toString());
     final _options = Options(
       method: r'POST',
       headers: <String, dynamic>{
@@ -86,11 +89,11 @@ class ReportsApi {
 
     try {
       const _type = FullType(QuestionReportCreateRequest);
-      _bodyData = _serializers.serialize(questionReportCreateRequest, specifiedType: _type);
-
-    } catch(error, stackTrace) {
+      _bodyData = _serializers.serialize(questionReportCreateRequest,
+          specifiedType: _type);
+    } catch (error, stackTrace) {
       throw DioException(
-         requestOptions: _options.compose(
+        requestOptions: _options.compose(
           _dio.options,
           _path,
         ),
@@ -113,11 +116,12 @@ class ReportsApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(QuestionReportResponse),
-      ) as QuestionReportResponse;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(QuestionReportResponse),
+            ) as QuestionReportResponse;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -144,11 +148,11 @@ class ReportsApi {
   /// Returns only the authenticated owner&#39;s report, status and safe resolution code. Reviewer identity, internal notes and report text are never returned.
   ///
   /// Parameters:
-  /// * [reportId] 
-  /// * [xCorrelationID] 
-  /// * [xClientVersion] 
-  /// * [xPlatform] 
-  /// * [acceptLanguage] 
+  /// * [reportId]
+  /// * [xCorrelationID]
+  /// * [xClientVersion]
+  /// * [xPlatform]
+  /// * [acceptLanguage]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -158,7 +162,7 @@ class ReportsApi {
   ///
   /// Returns a [Future] containing a [Response] with a [QuestionReportResponse] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<QuestionReportResponse>> getQuestionReport({ 
+  Future<Response<QuestionReportResponse>> getQuestionReport({
     required String reportId,
     required String xCorrelationID,
     required String xClientVersion,
@@ -171,7 +175,10 @@ class ReportsApi {
     ProgressCallback? onSendProgress,
     ProgressCallback? onReceiveProgress,
   }) async {
-    final _path = r'/v1/question-reports/{report_id}'.replaceAll('{' r'report_id' '}', encodeQueryParameter(_serializers, reportId, const FullType(String)).toString());
+    final _path = r'/v1/question-reports/{report_id}'.replaceAll(
+        '{' r'report_id' '}',
+        encodeQueryParameter(_serializers, reportId, const FullType(String))
+            .toString());
     final _options = Options(
       method: r'GET',
       headers: <String, dynamic>{
@@ -206,11 +213,12 @@ class ReportsApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(QuestionReportResponse),
-      ) as QuestionReportResponse;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(QuestionReportResponse),
+            ) as QuestionReportResponse;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -237,12 +245,12 @@ class ReportsApi {
   /// Returns owner-scoped reports in stable reverse submission order.
   ///
   /// Parameters:
-  /// * [xCorrelationID] 
-  /// * [xClientVersion] 
-  /// * [xPlatform] 
-  /// * [limit] 
-  /// * [cursor] 
-  /// * [acceptLanguage] 
+  /// * [xCorrelationID]
+  /// * [xClientVersion]
+  /// * [xPlatform]
+  /// * [limit]
+  /// * [cursor]
+  /// * [acceptLanguage]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -252,7 +260,7 @@ class ReportsApi {
   ///
   /// Returns a [Future] containing a [Response] with a [PageQuestionReportSummary] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<PageQuestionReportSummary>> listQuestionReports({ 
+  Future<Response<PageQuestionReportSummary>> listQuestionReports({
     required String xCorrelationID,
     required String xClientVersion,
     required String xPlatform,
@@ -290,8 +298,12 @@ class ReportsApi {
     );
 
     final _queryParameters = <String, dynamic>{
-      if (limit != null) r'limit': encodeQueryParameter(_serializers, limit, const FullType(int)),
-      if (cursor != null) r'cursor': encodeQueryParameter(_serializers, cursor, const FullType(String)),
+      if (limit != null)
+        r'limit':
+            encodeQueryParameter(_serializers, limit, const FullType(int)),
+      if (cursor != null)
+        r'cursor':
+            encodeQueryParameter(_serializers, cursor, const FullType(String)),
     };
 
     final _response = await _dio.request<Object>(
@@ -307,11 +319,12 @@ class ReportsApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(PageQuestionReportSummary),
-      ) as PageQuestionReportSummary;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(PageQuestionReportSummary),
+            ) as PageQuestionReportSummary;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -333,5 +346,4 @@ class ReportsApi {
       extra: _response.extra,
     );
   }
-
 }

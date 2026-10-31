@@ -11,12 +11,13 @@ part 'upload_grant_request.g.dart';
 /// UploadGrantRequest
 ///
 /// Properties:
-/// * [byteSize] 
-/// * [contentSha256] 
-/// * [declaredMediaType] 
-/// * [declaredName] 
+/// * [byteSize]
+/// * [contentSha256]
+/// * [declaredMediaType]
+/// * [declaredName]
 @BuiltValue()
-abstract class UploadGrantRequest implements Built<UploadGrantRequest, UploadGrantRequestBuilder> {
+abstract class UploadGrantRequest
+    implements Built<UploadGrantRequest, UploadGrantRequestBuilder> {
   @BuiltValueField(wireName: r'byte_size')
   int get byteSize;
 
@@ -31,16 +32,19 @@ abstract class UploadGrantRequest implements Built<UploadGrantRequest, UploadGra
 
   UploadGrantRequest._();
 
-  factory UploadGrantRequest([void updates(UploadGrantRequestBuilder b)]) = _$UploadGrantRequest;
+  factory UploadGrantRequest([void updates(UploadGrantRequestBuilder b)]) =
+      _$UploadGrantRequest;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(UploadGrantRequestBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<UploadGrantRequest> get serializer => _$UploadGrantRequestSerializer();
+  static Serializer<UploadGrantRequest> get serializer =>
+      _$UploadGrantRequestSerializer();
 }
 
-class _$UploadGrantRequestSerializer implements PrimitiveSerializer<UploadGrantRequest> {
+class _$UploadGrantRequestSerializer
+    implements PrimitiveSerializer<UploadGrantRequest> {
   @override
   final Iterable<Type> types = const [UploadGrantRequest, _$UploadGrantRequest];
 
@@ -80,7 +84,9 @@ class _$UploadGrantRequestSerializer implements PrimitiveSerializer<UploadGrantR
     UploadGrantRequest object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -151,5 +157,3 @@ class _$UploadGrantRequestSerializer implements PrimitiveSerializer<UploadGrantR
     return result.build();
   }
 }
-
-

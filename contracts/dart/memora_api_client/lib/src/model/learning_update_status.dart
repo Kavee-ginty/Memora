@@ -10,7 +10,6 @@ import 'package:built_value/serializer.dart';
 part 'learning_update_status.g.dart';
 
 class LearningUpdateStatus extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'draft')
   static const LearningUpdateStatus draft = _$draft;
   @BuiltValueEnumConst(wireName: r'uploading')
@@ -18,7 +17,8 @@ class LearningUpdateStatus extends EnumClass {
   @BuiltValueEnumConst(wireName: r'processing')
   static const LearningUpdateStatus processing = _$processing;
   @BuiltValueEnumConst(wireName: r'verification_required')
-  static const LearningUpdateStatus verificationRequired = _$verificationRequired;
+  static const LearningUpdateStatus verificationRequired =
+      _$verificationRequired;
   @BuiltValueEnumConst(wireName: r'committed')
   static const LearningUpdateStatus committed = _$committed;
   @BuiltValueEnumConst(wireName: r'failed')
@@ -28,11 +28,13 @@ class LearningUpdateStatus extends EnumClass {
   @BuiltValueEnumConst(wireName: r'deleted')
   static const LearningUpdateStatus deleted = _$deleted;
   @BuiltValueEnumConst(wireName: r'unknown_default_open_api', fallback: true)
-  static const LearningUpdateStatus unknownDefaultOpenApi = _$unknownDefaultOpenApi;
+  static const LearningUpdateStatus unknownDefaultOpenApi =
+      _$unknownDefaultOpenApi;
 
-  static Serializer<LearningUpdateStatus> get serializer => _$learningUpdateStatusSerializer;
+  static Serializer<LearningUpdateStatus> get serializer =>
+      _$learningUpdateStatusSerializer;
 
-  const LearningUpdateStatus._(String name): super(name);
+  const LearningUpdateStatus._(String name) : super(name);
 
   static BuiltSet<LearningUpdateStatus> get values => _$values;
   static LearningUpdateStatus valueOf(String name) => _$valueOf(name);
@@ -44,5 +46,5 @@ class LearningUpdateStatus extends EnumClass {
 /// corresponding Angular template.
 ///
 /// Trigger mixin generation by writing a line like this one next to your enum.
-abstract class LearningUpdateStatusMixin = Object with _$LearningUpdateStatusMixin;
-
+abstract class LearningUpdateStatusMixin = Object
+    with _$LearningUpdateStatusMixin;

@@ -14,18 +14,19 @@ part 'candidate_response.g.dart';
 /// CandidateResponse
 ///
 /// Properties:
-/// * [candidateType] 
-/// * [candidateVersion] 
-/// * [confidence] 
-/// * [confidenceBand] 
-/// * [displaySummary] 
-/// * [displayTitle] 
-/// * [id] 
-/// * [requiresVerification] 
-/// * [sourceLocator] 
-/// * [status] 
+/// * [candidateType]
+/// * [candidateVersion]
+/// * [confidence]
+/// * [confidenceBand]
+/// * [displaySummary]
+/// * [displayTitle]
+/// * [id]
+/// * [requiresVerification]
+/// * [sourceLocator]
+/// * [status]
 @BuiltValue()
-abstract class CandidateResponse implements Built<CandidateResponse, CandidateResponseBuilder> {
+abstract class CandidateResponse
+    implements Built<CandidateResponse, CandidateResponseBuilder> {
   @BuiltValueField(wireName: r'candidate_type')
   String get candidateType;
 
@@ -60,16 +61,19 @@ abstract class CandidateResponse implements Built<CandidateResponse, CandidateRe
 
   CandidateResponse._();
 
-  factory CandidateResponse([void updates(CandidateResponseBuilder b)]) = _$CandidateResponse;
+  factory CandidateResponse([void updates(CandidateResponseBuilder b)]) =
+      _$CandidateResponse;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(CandidateResponseBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<CandidateResponse> get serializer => _$CandidateResponseSerializer();
+  static Serializer<CandidateResponse> get serializer =>
+      _$CandidateResponseSerializer();
 }
 
-class _$CandidateResponseSerializer implements PrimitiveSerializer<CandidateResponse> {
+class _$CandidateResponseSerializer
+    implements PrimitiveSerializer<CandidateResponse> {
   @override
   final Iterable<Type> types = const [CandidateResponse, _$CandidateResponse];
 
@@ -124,7 +128,8 @@ class _$CandidateResponseSerializer implements PrimitiveSerializer<CandidateResp
     yield r'source_locator';
     yield serializers.serialize(
       object.sourceLocator,
-      specifiedType: const FullType(BuiltMap, [FullType(String), FullType.nullable(JsonObject)]),
+      specifiedType: const FullType(
+          BuiltMap, [FullType(String), FullType.nullable(JsonObject)]),
     );
     yield r'status';
     yield serializers.serialize(
@@ -139,7 +144,9 @@ class _$CandidateResponseSerializer implements PrimitiveSerializer<CandidateResp
     CandidateResponse object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -213,7 +220,8 @@ class _$CandidateResponseSerializer implements PrimitiveSerializer<CandidateResp
         case r'source_locator':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(BuiltMap, [FullType(String), FullType.nullable(JsonObject)]),
+            specifiedType: const FullType(
+                BuiltMap, [FullType(String), FullType.nullable(JsonObject)]),
           ) as BuiltMap<String, JsonObject?>;
           result.sourceLocator.replace(valueDes);
           break;
@@ -253,23 +261,27 @@ class _$CandidateResponseSerializer implements PrimitiveSerializer<CandidateResp
   }
 }
 
-
 class CandidateResponseConfidenceBandEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'high')
-  static const CandidateResponseConfidenceBandEnum high = _$candidateResponseConfidenceBandEnum_high;
+  static const CandidateResponseConfidenceBandEnum high =
+      _$candidateResponseConfidenceBandEnum_high;
   @BuiltValueEnumConst(wireName: r'medium')
-  static const CandidateResponseConfidenceBandEnum medium = _$candidateResponseConfidenceBandEnum_medium;
+  static const CandidateResponseConfidenceBandEnum medium =
+      _$candidateResponseConfidenceBandEnum_medium;
   @BuiltValueEnumConst(wireName: r'low')
-  static const CandidateResponseConfidenceBandEnum low = _$candidateResponseConfidenceBandEnum_low;
+  static const CandidateResponseConfidenceBandEnum low =
+      _$candidateResponseConfidenceBandEnum_low;
   @BuiltValueEnumConst(wireName: r'unknown_default_open_api', fallback: true)
-  static const CandidateResponseConfidenceBandEnum unknownDefaultOpenApi = _$candidateResponseConfidenceBandEnum_unknownDefaultOpenApi;
+  static const CandidateResponseConfidenceBandEnum unknownDefaultOpenApi =
+      _$candidateResponseConfidenceBandEnum_unknownDefaultOpenApi;
 
-  static Serializer<CandidateResponseConfidenceBandEnum> get serializer => _$candidateResponseConfidenceBandEnumSerializer;
+  static Serializer<CandidateResponseConfidenceBandEnum> get serializer =>
+      _$candidateResponseConfidenceBandEnumSerializer;
 
-  const CandidateResponseConfidenceBandEnum._(String name): super(name);
+  const CandidateResponseConfidenceBandEnum._(String name) : super(name);
 
-  static BuiltSet<CandidateResponseConfidenceBandEnum> get values => _$candidateResponseConfidenceBandEnumValues;
-  static CandidateResponseConfidenceBandEnum valueOf(String name) => _$candidateResponseConfidenceBandEnumValueOf(name);
+  static BuiltSet<CandidateResponseConfidenceBandEnum> get values =>
+      _$candidateResponseConfidenceBandEnumValues;
+  static CandidateResponseConfidenceBandEnum valueOf(String name) =>
+      _$candidateResponseConfidenceBandEnumValueOf(name);
 }
-

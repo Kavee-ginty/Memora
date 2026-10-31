@@ -12,21 +12,24 @@ part 'error_envelope.g.dart';
 /// ErrorEnvelope
 ///
 /// Properties:
-/// * [error] 
+/// * [error]
 @BuiltValue()
-abstract class ErrorEnvelope implements Built<ErrorEnvelope, ErrorEnvelopeBuilder> {
+abstract class ErrorEnvelope
+    implements Built<ErrorEnvelope, ErrorEnvelopeBuilder> {
   @BuiltValueField(wireName: r'error')
   ErrorDetail get error;
 
   ErrorEnvelope._();
 
-  factory ErrorEnvelope([void updates(ErrorEnvelopeBuilder b)]) = _$ErrorEnvelope;
+  factory ErrorEnvelope([void updates(ErrorEnvelopeBuilder b)]) =
+      _$ErrorEnvelope;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(ErrorEnvelopeBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<ErrorEnvelope> get serializer => _$ErrorEnvelopeSerializer();
+  static Serializer<ErrorEnvelope> get serializer =>
+      _$ErrorEnvelopeSerializer();
 }
 
 class _$ErrorEnvelopeSerializer implements PrimitiveSerializer<ErrorEnvelope> {
@@ -54,7 +57,9 @@ class _$ErrorEnvelopeSerializer implements PrimitiveSerializer<ErrorEnvelope> {
     ErrorEnvelope object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -104,5 +109,3 @@ class _$ErrorEnvelopeSerializer implements PrimitiveSerializer<ErrorEnvelope> {
     return result.build();
   }
 }
-
-

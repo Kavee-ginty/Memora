@@ -13,23 +13,24 @@ part 'concept_progress_item.g.dart';
 /// One concept's progress and due reason for a subject.
 ///
 /// Properties:
-/// * [conceptId] 
-/// * [conceptVersionId] 
-/// * [confidenceBand] 
-/// * [dueReason] 
-/// * [eligibleReviewCount] 
-/// * [exposureCount] 
-/// * [isComeback] 
-/// * [isNewConcept] 
-/// * [lapseCount] 
-/// * [lastReviewedAt] 
-/// * [nextReviewAt] 
-/// * [reviewWindow] 
-/// * [stableCode] 
-/// * [stateBand] 
-/// * [title] 
+/// * [conceptId]
+/// * [conceptVersionId]
+/// * [confidenceBand]
+/// * [dueReason]
+/// * [eligibleReviewCount]
+/// * [exposureCount]
+/// * [isComeback]
+/// * [isNewConcept]
+/// * [lapseCount]
+/// * [lastReviewedAt]
+/// * [nextReviewAt]
+/// * [reviewWindow]
+/// * [stableCode]
+/// * [stateBand]
+/// * [title]
 @BuiltValue()
-abstract class ConceptProgressItem implements Built<ConceptProgressItem, ConceptProgressItemBuilder> {
+abstract class ConceptProgressItem
+    implements Built<ConceptProgressItem, ConceptProgressItemBuilder> {
   @BuiltValueField(wireName: r'concept_id')
   String get conceptId;
 
@@ -80,18 +81,24 @@ abstract class ConceptProgressItem implements Built<ConceptProgressItem, Concept
 
   ConceptProgressItem._();
 
-  factory ConceptProgressItem([void updates(ConceptProgressItemBuilder b)]) = _$ConceptProgressItem;
+  factory ConceptProgressItem([void updates(ConceptProgressItemBuilder b)]) =
+      _$ConceptProgressItem;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(ConceptProgressItemBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<ConceptProgressItem> get serializer => _$ConceptProgressItemSerializer();
+  static Serializer<ConceptProgressItem> get serializer =>
+      _$ConceptProgressItemSerializer();
 }
 
-class _$ConceptProgressItemSerializer implements PrimitiveSerializer<ConceptProgressItem> {
+class _$ConceptProgressItemSerializer
+    implements PrimitiveSerializer<ConceptProgressItem> {
   @override
-  final Iterable<Type> types = const [ConceptProgressItem, _$ConceptProgressItem];
+  final Iterable<Type> types = const [
+    ConceptProgressItem,
+    _$ConceptProgressItem
+  ];
 
   @override
   final String wireName = r'ConceptProgressItem';
@@ -147,10 +154,12 @@ class _$ConceptProgressItemSerializer implements PrimitiveSerializer<ConceptProg
       specifiedType: const FullType(int),
     );
     yield r'last_reviewed_at';
-    yield object.lastReviewedAt == null ? null : serializers.serialize(
-      object.lastReviewedAt,
-      specifiedType: const FullType.nullable(String),
-    );
+    yield object.lastReviewedAt == null
+        ? null
+        : serializers.serialize(
+            object.lastReviewedAt,
+            specifiedType: const FullType.nullable(String),
+          );
     yield r'next_review_at';
     yield serializers.serialize(
       object.nextReviewAt,
@@ -184,7 +193,9 @@ class _$ConceptProgressItemSerializer implements PrimitiveSerializer<ConceptProg
     ConceptProgressItem object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -216,7 +227,8 @@ class _$ConceptProgressItemSerializer implements PrimitiveSerializer<ConceptProg
         case r'confidence_band':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(ConceptProgressItemConfidenceBandEnum),
+            specifiedType:
+                const FullType(ConceptProgressItemConfidenceBandEnum),
           ) as ConceptProgressItemConfidenceBandEnum;
           result.confidenceBand = valueDes;
           break;
@@ -334,63 +346,80 @@ class _$ConceptProgressItemSerializer implements PrimitiveSerializer<ConceptProg
   }
 }
 
-
 class ConceptProgressItemConfidenceBandEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'high')
-  static const ConceptProgressItemConfidenceBandEnum high = _$conceptProgressItemConfidenceBandEnum_high;
+  static const ConceptProgressItemConfidenceBandEnum high =
+      _$conceptProgressItemConfidenceBandEnum_high;
   @BuiltValueEnumConst(wireName: r'medium')
-  static const ConceptProgressItemConfidenceBandEnum medium = _$conceptProgressItemConfidenceBandEnum_medium;
+  static const ConceptProgressItemConfidenceBandEnum medium =
+      _$conceptProgressItemConfidenceBandEnum_medium;
   @BuiltValueEnumConst(wireName: r'low')
-  static const ConceptProgressItemConfidenceBandEnum low = _$conceptProgressItemConfidenceBandEnum_low;
+  static const ConceptProgressItemConfidenceBandEnum low =
+      _$conceptProgressItemConfidenceBandEnum_low;
   @BuiltValueEnumConst(wireName: r'unknown_default_open_api', fallback: true)
-  static const ConceptProgressItemConfidenceBandEnum unknownDefaultOpenApi = _$conceptProgressItemConfidenceBandEnum_unknownDefaultOpenApi;
+  static const ConceptProgressItemConfidenceBandEnum unknownDefaultOpenApi =
+      _$conceptProgressItemConfidenceBandEnum_unknownDefaultOpenApi;
 
-  static Serializer<ConceptProgressItemConfidenceBandEnum> get serializer => _$conceptProgressItemConfidenceBandEnumSerializer;
+  static Serializer<ConceptProgressItemConfidenceBandEnum> get serializer =>
+      _$conceptProgressItemConfidenceBandEnumSerializer;
 
-  const ConceptProgressItemConfidenceBandEnum._(String name): super(name);
+  const ConceptProgressItemConfidenceBandEnum._(String name) : super(name);
 
-  static BuiltSet<ConceptProgressItemConfidenceBandEnum> get values => _$conceptProgressItemConfidenceBandEnumValues;
-  static ConceptProgressItemConfidenceBandEnum valueOf(String name) => _$conceptProgressItemConfidenceBandEnumValueOf(name);
+  static BuiltSet<ConceptProgressItemConfidenceBandEnum> get values =>
+      _$conceptProgressItemConfidenceBandEnumValues;
+  static ConceptProgressItemConfidenceBandEnum valueOf(String name) =>
+      _$conceptProgressItemConfidenceBandEnumValueOf(name);
 }
 
 class ConceptProgressItemReviewWindowEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'overdue')
-  static const ConceptProgressItemReviewWindowEnum overdue = _$conceptProgressItemReviewWindowEnum_overdue;
+  static const ConceptProgressItemReviewWindowEnum overdue =
+      _$conceptProgressItemReviewWindowEnum_overdue;
   @BuiltValueEnumConst(wireName: r'due')
-  static const ConceptProgressItemReviewWindowEnum due = _$conceptProgressItemReviewWindowEnum_due;
+  static const ConceptProgressItemReviewWindowEnum due =
+      _$conceptProgressItemReviewWindowEnum_due;
   @BuiltValueEnumConst(wireName: r'near_due')
-  static const ConceptProgressItemReviewWindowEnum nearDue = _$conceptProgressItemReviewWindowEnum_nearDue;
+  static const ConceptProgressItemReviewWindowEnum nearDue =
+      _$conceptProgressItemReviewWindowEnum_nearDue;
   @BuiltValueEnumConst(wireName: r'unknown_default_open_api', fallback: true)
-  static const ConceptProgressItemReviewWindowEnum unknownDefaultOpenApi = _$conceptProgressItemReviewWindowEnum_unknownDefaultOpenApi;
+  static const ConceptProgressItemReviewWindowEnum unknownDefaultOpenApi =
+      _$conceptProgressItemReviewWindowEnum_unknownDefaultOpenApi;
 
-  static Serializer<ConceptProgressItemReviewWindowEnum> get serializer => _$conceptProgressItemReviewWindowEnumSerializer;
+  static Serializer<ConceptProgressItemReviewWindowEnum> get serializer =>
+      _$conceptProgressItemReviewWindowEnumSerializer;
 
-  const ConceptProgressItemReviewWindowEnum._(String name): super(name);
+  const ConceptProgressItemReviewWindowEnum._(String name) : super(name);
 
-  static BuiltSet<ConceptProgressItemReviewWindowEnum> get values => _$conceptProgressItemReviewWindowEnumValues;
-  static ConceptProgressItemReviewWindowEnum valueOf(String name) => _$conceptProgressItemReviewWindowEnumValueOf(name);
+  static BuiltSet<ConceptProgressItemReviewWindowEnum> get values =>
+      _$conceptProgressItemReviewWindowEnumValues;
+  static ConceptProgressItemReviewWindowEnum valueOf(String name) =>
+      _$conceptProgressItemReviewWindowEnumValueOf(name);
 }
 
 class ConceptProgressItemStateBandEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'fresh')
-  static const ConceptProgressItemStateBandEnum fresh = _$conceptProgressItemStateBandEnum_fresh;
+  static const ConceptProgressItemStateBandEnum fresh =
+      _$conceptProgressItemStateBandEnum_fresh;
   @BuiltValueEnumConst(wireName: r'settling')
-  static const ConceptProgressItemStateBandEnum settling = _$conceptProgressItemStateBandEnum_settling;
+  static const ConceptProgressItemStateBandEnum settling =
+      _$conceptProgressItemStateBandEnum_settling;
   @BuiltValueEnumConst(wireName: r'fading')
-  static const ConceptProgressItemStateBandEnum fading = _$conceptProgressItemStateBandEnum_fading;
+  static const ConceptProgressItemStateBandEnum fading =
+      _$conceptProgressItemStateBandEnum_fading;
   @BuiltValueEnumConst(wireName: r'critical')
-  static const ConceptProgressItemStateBandEnum critical = _$conceptProgressItemStateBandEnum_critical;
+  static const ConceptProgressItemStateBandEnum critical =
+      _$conceptProgressItemStateBandEnum_critical;
   @BuiltValueEnumConst(wireName: r'unknown_default_open_api', fallback: true)
-  static const ConceptProgressItemStateBandEnum unknownDefaultOpenApi = _$conceptProgressItemStateBandEnum_unknownDefaultOpenApi;
+  static const ConceptProgressItemStateBandEnum unknownDefaultOpenApi =
+      _$conceptProgressItemStateBandEnum_unknownDefaultOpenApi;
 
-  static Serializer<ConceptProgressItemStateBandEnum> get serializer => _$conceptProgressItemStateBandEnumSerializer;
+  static Serializer<ConceptProgressItemStateBandEnum> get serializer =>
+      _$conceptProgressItemStateBandEnumSerializer;
 
-  const ConceptProgressItemStateBandEnum._(String name): super(name);
+  const ConceptProgressItemStateBandEnum._(String name) : super(name);
 
-  static BuiltSet<ConceptProgressItemStateBandEnum> get values => _$conceptProgressItemStateBandEnumValues;
-  static ConceptProgressItemStateBandEnum valueOf(String name) => _$conceptProgressItemStateBandEnumValueOf(name);
+  static BuiltSet<ConceptProgressItemStateBandEnum> get values =>
+      _$conceptProgressItemStateBandEnumValues;
+  static ConceptProgressItemStateBandEnum valueOf(String name) =>
+      _$conceptProgressItemStateBandEnumValueOf(name);
 }
-

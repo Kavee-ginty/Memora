@@ -12,27 +12,37 @@ part 'privacy_deletion_cancel_request.g.dart';
 /// PrivacyDeletionCancelRequest
 ///
 /// Properties:
-/// * [reason] 
+/// * [reason]
 @BuiltValue()
-abstract class PrivacyDeletionCancelRequest implements Built<PrivacyDeletionCancelRequest, PrivacyDeletionCancelRequestBuilder> {
+abstract class PrivacyDeletionCancelRequest
+    implements
+        Built<PrivacyDeletionCancelRequest,
+            PrivacyDeletionCancelRequestBuilder> {
   @BuiltValueField(wireName: r'reason')
   Optional<String?> get reason;
 
   PrivacyDeletionCancelRequest._();
 
-  factory PrivacyDeletionCancelRequest([void updates(PrivacyDeletionCancelRequestBuilder b)]) = _$PrivacyDeletionCancelRequest;
+  factory PrivacyDeletionCancelRequest(
+          [void updates(PrivacyDeletionCancelRequestBuilder b)]) =
+      _$PrivacyDeletionCancelRequest;
 
   @BuiltValueHook(initializeBuilder: true)
-  static void _defaults(PrivacyDeletionCancelRequestBuilder b) => b
-      ..reason = Optional.absent();
+  static void _defaults(PrivacyDeletionCancelRequestBuilder b) =>
+      b..reason = Optional.absent();
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<PrivacyDeletionCancelRequest> get serializer => _$PrivacyDeletionCancelRequestSerializer();
+  static Serializer<PrivacyDeletionCancelRequest> get serializer =>
+      _$PrivacyDeletionCancelRequestSerializer();
 }
 
-class _$PrivacyDeletionCancelRequestSerializer implements PrimitiveSerializer<PrivacyDeletionCancelRequest> {
+class _$PrivacyDeletionCancelRequestSerializer
+    implements PrimitiveSerializer<PrivacyDeletionCancelRequest> {
   @override
-  final Iterable<Type> types = const [PrivacyDeletionCancelRequest, _$PrivacyDeletionCancelRequest];
+  final Iterable<Type> types = const [
+    PrivacyDeletionCancelRequest,
+    _$PrivacyDeletionCancelRequest
+  ];
 
   @override
   final String wireName = r'PrivacyDeletionCancelRequest';
@@ -62,7 +72,9 @@ class _$PrivacyDeletionCancelRequestSerializer implements PrimitiveSerializer<Pr
     PrivacyDeletionCancelRequest object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -112,5 +124,3 @@ class _$PrivacyDeletionCancelRequestSerializer implements PrimitiveSerializer<Pr
     return result.build();
   }
 }
-
-

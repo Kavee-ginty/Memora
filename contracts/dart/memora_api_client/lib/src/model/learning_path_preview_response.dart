@@ -14,15 +14,17 @@ part 'learning_path_preview_response.g.dart';
 /// LearningPathPreviewResponse
 ///
 /// Properties:
-/// * [blockedReason] 
-/// * [canCommit] 
-/// * [conceptCount] 
-/// * [estimatedFirstMissionMinutes] 
-/// * [firstConcepts] 
-/// * [status] 
-/// * [updateId] 
+/// * [blockedReason]
+/// * [canCommit]
+/// * [conceptCount]
+/// * [estimatedFirstMissionMinutes]
+/// * [firstConcepts]
+/// * [status]
+/// * [updateId]
 @BuiltValue()
-abstract class LearningPathPreviewResponse implements Built<LearningPathPreviewResponse, LearningPathPreviewResponseBuilder> {
+abstract class LearningPathPreviewResponse
+    implements
+        Built<LearningPathPreviewResponse, LearningPathPreviewResponseBuilder> {
   @BuiltValueField(wireName: r'blocked_reason')
   String? get blockedReason;
 
@@ -47,18 +49,25 @@ abstract class LearningPathPreviewResponse implements Built<LearningPathPreviewR
 
   LearningPathPreviewResponse._();
 
-  factory LearningPathPreviewResponse([void updates(LearningPathPreviewResponseBuilder b)]) = _$LearningPathPreviewResponse;
+  factory LearningPathPreviewResponse(
+          [void updates(LearningPathPreviewResponseBuilder b)]) =
+      _$LearningPathPreviewResponse;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(LearningPathPreviewResponseBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<LearningPathPreviewResponse> get serializer => _$LearningPathPreviewResponseSerializer();
+  static Serializer<LearningPathPreviewResponse> get serializer =>
+      _$LearningPathPreviewResponseSerializer();
 }
 
-class _$LearningPathPreviewResponseSerializer implements PrimitiveSerializer<LearningPathPreviewResponse> {
+class _$LearningPathPreviewResponseSerializer
+    implements PrimitiveSerializer<LearningPathPreviewResponse> {
   @override
-  final Iterable<Type> types = const [LearningPathPreviewResponse, _$LearningPathPreviewResponse];
+  final Iterable<Type> types = const [
+    LearningPathPreviewResponse,
+    _$LearningPathPreviewResponse
+  ];
 
   @override
   final String wireName = r'LearningPathPreviewResponse';
@@ -69,10 +78,12 @@ class _$LearningPathPreviewResponseSerializer implements PrimitiveSerializer<Lea
     FullType specifiedType = FullType.unspecified,
   }) sync* {
     yield r'blocked_reason';
-    yield object.blockedReason == null ? null : serializers.serialize(
-      object.blockedReason,
-      specifiedType: const FullType.nullable(String),
-    );
+    yield object.blockedReason == null
+        ? null
+        : serializers.serialize(
+            object.blockedReason,
+            specifiedType: const FullType.nullable(String),
+          );
     yield r'can_commit';
     yield serializers.serialize(
       object.canCommit,
@@ -84,14 +95,17 @@ class _$LearningPathPreviewResponseSerializer implements PrimitiveSerializer<Lea
       specifiedType: const FullType(int),
     );
     yield r'estimated_first_mission_minutes';
-    yield object.estimatedFirstMissionMinutes == null ? null : serializers.serialize(
-      object.estimatedFirstMissionMinutes,
-      specifiedType: const FullType.nullable(int),
-    );
+    yield object.estimatedFirstMissionMinutes == null
+        ? null
+        : serializers.serialize(
+            object.estimatedFirstMissionMinutes,
+            specifiedType: const FullType.nullable(int),
+          );
     yield r'first_concepts';
     yield serializers.serialize(
       object.firstConcepts,
-      specifiedType: const FullType(BuiltList, [FullType(LearningPathPreviewConcept)]),
+      specifiedType:
+          const FullType(BuiltList, [FullType(LearningPathPreviewConcept)]),
     );
     yield r'status';
     yield serializers.serialize(
@@ -111,7 +125,9 @@ class _$LearningPathPreviewResponseSerializer implements PrimitiveSerializer<Lea
     LearningPathPreviewResponse object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -159,7 +175,8 @@ class _$LearningPathPreviewResponseSerializer implements PrimitiveSerializer<Lea
         case r'first_concepts':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(BuiltList, [FullType(LearningPathPreviewConcept)]),
+            specifiedType: const FullType(
+                BuiltList, [FullType(LearningPathPreviewConcept)]),
           ) as BuiltList<LearningPathPreviewConcept>;
           result.firstConcepts.replace(valueDes);
           break;
@@ -205,5 +222,3 @@ class _$LearningPathPreviewResponseSerializer implements PrimitiveSerializer<Lea
     return result.build();
   }
 }
-
-

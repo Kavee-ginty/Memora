@@ -10,7 +10,6 @@ import 'package:built_value/serializer.dart';
 part 'upload_status.g.dart';
 
 class UploadStatus extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'authorized')
   static const UploadStatus authorized = _$authorized;
   @BuiltValueEnumConst(wireName: r'uploaded')
@@ -32,7 +31,7 @@ class UploadStatus extends EnumClass {
 
   static Serializer<UploadStatus> get serializer => _$uploadStatusSerializer;
 
-  const UploadStatus._(String name): super(name);
+  const UploadStatus._(String name) : super(name);
 
   static BuiltSet<UploadStatus> get values => _$values;
   static UploadStatus valueOf(String name) => _$valueOf(name);
@@ -45,4 +44,3 @@ class UploadStatus extends EnumClass {
 ///
 /// Trigger mixin generation by writing a line like this one next to your enum.
 abstract class UploadStatusMixin = Object with _$UploadStatusMixin;
-

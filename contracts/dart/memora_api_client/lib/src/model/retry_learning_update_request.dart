@@ -12,27 +12,36 @@ part 'retry_learning_update_request.g.dart';
 /// RetryLearningUpdateRequest
 ///
 /// Properties:
-/// * [stage] 
+/// * [stage]
 @BuiltValue()
-abstract class RetryLearningUpdateRequest implements Built<RetryLearningUpdateRequest, RetryLearningUpdateRequestBuilder> {
+abstract class RetryLearningUpdateRequest
+    implements
+        Built<RetryLearningUpdateRequest, RetryLearningUpdateRequestBuilder> {
   @BuiltValueField(wireName: r'stage')
   RetryLearningUpdateRequestStageEnum get stage;
   // enum stageEnum {  extraction,  deletion,  };
 
   RetryLearningUpdateRequest._();
 
-  factory RetryLearningUpdateRequest([void updates(RetryLearningUpdateRequestBuilder b)]) = _$RetryLearningUpdateRequest;
+  factory RetryLearningUpdateRequest(
+          [void updates(RetryLearningUpdateRequestBuilder b)]) =
+      _$RetryLearningUpdateRequest;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(RetryLearningUpdateRequestBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<RetryLearningUpdateRequest> get serializer => _$RetryLearningUpdateRequestSerializer();
+  static Serializer<RetryLearningUpdateRequest> get serializer =>
+      _$RetryLearningUpdateRequestSerializer();
 }
 
-class _$RetryLearningUpdateRequestSerializer implements PrimitiveSerializer<RetryLearningUpdateRequest> {
+class _$RetryLearningUpdateRequestSerializer
+    implements PrimitiveSerializer<RetryLearningUpdateRequest> {
   @override
-  final Iterable<Type> types = const [RetryLearningUpdateRequest, _$RetryLearningUpdateRequest];
+  final Iterable<Type> types = const [
+    RetryLearningUpdateRequest,
+    _$RetryLearningUpdateRequest
+  ];
 
   @override
   final String wireName = r'RetryLearningUpdateRequest';
@@ -55,7 +64,9 @@ class _$RetryLearningUpdateRequestSerializer implements PrimitiveSerializer<Retr
     RetryLearningUpdateRequest object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -106,21 +117,24 @@ class _$RetryLearningUpdateRequestSerializer implements PrimitiveSerializer<Retr
   }
 }
 
-
 class RetryLearningUpdateRequestStageEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'extraction')
-  static const RetryLearningUpdateRequestStageEnum extraction = _$retryLearningUpdateRequestStageEnum_extraction;
+  static const RetryLearningUpdateRequestStageEnum extraction =
+      _$retryLearningUpdateRequestStageEnum_extraction;
   @BuiltValueEnumConst(wireName: r'deletion')
-  static const RetryLearningUpdateRequestStageEnum deletion = _$retryLearningUpdateRequestStageEnum_deletion;
+  static const RetryLearningUpdateRequestStageEnum deletion =
+      _$retryLearningUpdateRequestStageEnum_deletion;
   @BuiltValueEnumConst(wireName: r'unknown_default_open_api', fallback: true)
-  static const RetryLearningUpdateRequestStageEnum unknownDefaultOpenApi = _$retryLearningUpdateRequestStageEnum_unknownDefaultOpenApi;
+  static const RetryLearningUpdateRequestStageEnum unknownDefaultOpenApi =
+      _$retryLearningUpdateRequestStageEnum_unknownDefaultOpenApi;
 
-  static Serializer<RetryLearningUpdateRequestStageEnum> get serializer => _$retryLearningUpdateRequestStageEnumSerializer;
+  static Serializer<RetryLearningUpdateRequestStageEnum> get serializer =>
+      _$retryLearningUpdateRequestStageEnumSerializer;
 
-  const RetryLearningUpdateRequestStageEnum._(String name): super(name);
+  const RetryLearningUpdateRequestStageEnum._(String name) : super(name);
 
-  static BuiltSet<RetryLearningUpdateRequestStageEnum> get values => _$retryLearningUpdateRequestStageEnumValues;
-  static RetryLearningUpdateRequestStageEnum valueOf(String name) => _$retryLearningUpdateRequestStageEnumValueOf(name);
+  static BuiltSet<RetryLearningUpdateRequestStageEnum> get values =>
+      _$retryLearningUpdateRequestStageEnumValues;
+  static RetryLearningUpdateRequestStageEnum valueOf(String name) =>
+      _$retryLearningUpdateRequestStageEnumValueOf(name);
 }
-

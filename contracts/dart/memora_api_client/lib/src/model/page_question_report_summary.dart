@@ -13,11 +13,13 @@ part 'page_question_report_summary.g.dart';
 /// PageQuestionReportSummary
 ///
 /// Properties:
-/// * [hasMore] 
-/// * [items] 
-/// * [nextCursor] 
+/// * [hasMore]
+/// * [items]
+/// * [nextCursor]
 @BuiltValue()
-abstract class PageQuestionReportSummary implements Built<PageQuestionReportSummary, PageQuestionReportSummaryBuilder> {
+abstract class PageQuestionReportSummary
+    implements
+        Built<PageQuestionReportSummary, PageQuestionReportSummaryBuilder> {
   @BuiltValueField(wireName: r'has_more')
   bool get hasMore;
 
@@ -29,18 +31,25 @@ abstract class PageQuestionReportSummary implements Built<PageQuestionReportSumm
 
   PageQuestionReportSummary._();
 
-  factory PageQuestionReportSummary([void updates(PageQuestionReportSummaryBuilder b)]) = _$PageQuestionReportSummary;
+  factory PageQuestionReportSummary(
+          [void updates(PageQuestionReportSummaryBuilder b)]) =
+      _$PageQuestionReportSummary;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(PageQuestionReportSummaryBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<PageQuestionReportSummary> get serializer => _$PageQuestionReportSummarySerializer();
+  static Serializer<PageQuestionReportSummary> get serializer =>
+      _$PageQuestionReportSummarySerializer();
 }
 
-class _$PageQuestionReportSummarySerializer implements PrimitiveSerializer<PageQuestionReportSummary> {
+class _$PageQuestionReportSummarySerializer
+    implements PrimitiveSerializer<PageQuestionReportSummary> {
   @override
-  final Iterable<Type> types = const [PageQuestionReportSummary, _$PageQuestionReportSummary];
+  final Iterable<Type> types = const [
+    PageQuestionReportSummary,
+    _$PageQuestionReportSummary
+  ];
 
   @override
   final String wireName = r'PageQuestionReportSummary';
@@ -58,13 +67,16 @@ class _$PageQuestionReportSummarySerializer implements PrimitiveSerializer<PageQ
     yield r'items';
     yield serializers.serialize(
       object.items,
-      specifiedType: const FullType(BuiltList, [FullType(QuestionReportSummary)]),
+      specifiedType:
+          const FullType(BuiltList, [FullType(QuestionReportSummary)]),
     );
     yield r'next_cursor';
-    yield object.nextCursor == null ? null : serializers.serialize(
-      object.nextCursor,
-      specifiedType: const FullType.nullable(String),
-    );
+    yield object.nextCursor == null
+        ? null
+        : serializers.serialize(
+            object.nextCursor,
+            specifiedType: const FullType.nullable(String),
+          );
   }
 
   @override
@@ -73,7 +85,9 @@ class _$PageQuestionReportSummarySerializer implements PrimitiveSerializer<PageQ
     PageQuestionReportSummary object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -98,7 +112,8 @@ class _$PageQuestionReportSummarySerializer implements PrimitiveSerializer<PageQ
         case r'items':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(BuiltList, [FullType(QuestionReportSummary)]),
+            specifiedType:
+                const FullType(BuiltList, [FullType(QuestionReportSummary)]),
           ) as BuiltList<QuestionReportSummary>;
           result.items.replace(valueDes);
           break;
@@ -138,5 +153,3 @@ class _$PageQuestionReportSummarySerializer implements PrimitiveSerializer<PageQ
     return result.build();
   }
 }
-
-

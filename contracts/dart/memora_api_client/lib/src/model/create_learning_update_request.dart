@@ -15,14 +15,16 @@ part 'create_learning_update_request.g.dart';
 /// CreateLearningUpdateRequest
 ///
 /// Properties:
-/// * [clientOperationId] 
-/// * [files] 
-/// * [inputType] 
-/// * [learnedAt] 
-/// * [manualText] 
-/// * [subjectId] 
+/// * [clientOperationId]
+/// * [files]
+/// * [inputType]
+/// * [learnedAt]
+/// * [manualText]
+/// * [subjectId]
 @BuiltValue()
-abstract class CreateLearningUpdateRequest implements Built<CreateLearningUpdateRequest, CreateLearningUpdateRequestBuilder> {
+abstract class CreateLearningUpdateRequest
+    implements
+        Built<CreateLearningUpdateRequest, CreateLearningUpdateRequestBuilder> {
   @BuiltValueField(wireName: r'client_operation_id')
   String get clientOperationId;
 
@@ -44,20 +46,27 @@ abstract class CreateLearningUpdateRequest implements Built<CreateLearningUpdate
 
   CreateLearningUpdateRequest._();
 
-  factory CreateLearningUpdateRequest([void updates(CreateLearningUpdateRequestBuilder b)]) = _$CreateLearningUpdateRequest;
+  factory CreateLearningUpdateRequest(
+          [void updates(CreateLearningUpdateRequestBuilder b)]) =
+      _$CreateLearningUpdateRequest;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(CreateLearningUpdateRequestBuilder b) => b
-      ..files = ListBuilder()
-      ..manualText = Optional.absent();
+    ..files = ListBuilder()
+    ..manualText = Optional.absent();
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<CreateLearningUpdateRequest> get serializer => _$CreateLearningUpdateRequestSerializer();
+  static Serializer<CreateLearningUpdateRequest> get serializer =>
+      _$CreateLearningUpdateRequestSerializer();
 }
 
-class _$CreateLearningUpdateRequestSerializer implements PrimitiveSerializer<CreateLearningUpdateRequest> {
+class _$CreateLearningUpdateRequestSerializer
+    implements PrimitiveSerializer<CreateLearningUpdateRequest> {
   @override
-  final Iterable<Type> types = const [CreateLearningUpdateRequest, _$CreateLearningUpdateRequest];
+  final Iterable<Type> types = const [
+    CreateLearningUpdateRequest,
+    _$CreateLearningUpdateRequest
+  ];
 
   @override
   final String wireName = r'CreateLearningUpdateRequest';
@@ -112,7 +121,9 @@ class _$CreateLearningUpdateRequestSerializer implements PrimitiveSerializer<Cre
     CreateLearningUpdateRequest object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -197,5 +208,3 @@ class _$CreateLearningUpdateRequestSerializer implements PrimitiveSerializer<Cre
     return result.build();
   }
 }
-
-

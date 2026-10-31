@@ -17,7 +17,6 @@ import 'package:memora_api_client/src/model/submit_verification_decisions_reques
 import 'package:memora_api_client/src/model/submit_verification_decisions_response.dart';
 
 class VerificationApi {
-
   final Dio _dio;
 
   final Serializers _serializers;
@@ -25,15 +24,15 @@ class VerificationApi {
   const VerificationApi(this._dio, this._serializers);
 
   /// Commit accepted knowledge and exposure once
-  /// 
+  ///
   ///
   /// Parameters:
-  /// * [updateId] 
-  /// * [xCorrelationID] 
-  /// * [xClientVersion] 
-  /// * [xPlatform] 
-  /// * [idempotencyKey] 
-  /// * [acceptLanguage] 
+  /// * [updateId]
+  /// * [xCorrelationID]
+  /// * [xClientVersion]
+  /// * [xPlatform]
+  /// * [idempotencyKey]
+  /// * [acceptLanguage]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -43,7 +42,7 @@ class VerificationApi {
   ///
   /// Returns a [Future] containing a [Response] with a [KnowledgeCommitResponse] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<KnowledgeCommitResponse>> commitLearningUpdate({ 
+  Future<Response<KnowledgeCommitResponse>> commitLearningUpdate({
     required String updateId,
     required String xCorrelationID,
     required String xClientVersion,
@@ -57,7 +56,10 @@ class VerificationApi {
     ProgressCallback? onSendProgress,
     ProgressCallback? onReceiveProgress,
   }) async {
-    final _path = r'/v1/learning-updates/{update_id}/commit'.replaceAll('{' r'update_id' '}', encodeQueryParameter(_serializers, updateId, const FullType(String)).toString());
+    final _path = r'/v1/learning-updates/{update_id}/commit'.replaceAll(
+        '{' r'update_id' '}',
+        encodeQueryParameter(_serializers, updateId, const FullType(String))
+            .toString());
     final _options = Options(
       method: r'POST',
       headers: <String, dynamic>{
@@ -93,11 +95,12 @@ class VerificationApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(KnowledgeCommitResponse),
-      ) as KnowledgeCommitResponse;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(KnowledgeCommitResponse),
+            ) as KnowledgeCommitResponse;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -121,16 +124,16 @@ class VerificationApi {
   }
 
   /// List authorized extraction candidates
-  /// 
+  ///
   ///
   /// Parameters:
-  /// * [updateId] 
-  /// * [xCorrelationID] 
-  /// * [xClientVersion] 
-  /// * [xPlatform] 
-  /// * [cursor] 
-  /// * [limit] 
-  /// * [acceptLanguage] 
+  /// * [updateId]
+  /// * [xCorrelationID]
+  /// * [xClientVersion]
+  /// * [xPlatform]
+  /// * [cursor]
+  /// * [limit]
+  /// * [acceptLanguage]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -140,7 +143,7 @@ class VerificationApi {
   ///
   /// Returns a [Future] containing a [Response] with a [CandidateListResponse] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<CandidateListResponse>> listExtractionCandidates({ 
+  Future<Response<CandidateListResponse>> listExtractionCandidates({
     required String updateId,
     required String xCorrelationID,
     required String xClientVersion,
@@ -155,7 +158,10 @@ class VerificationApi {
     ProgressCallback? onSendProgress,
     ProgressCallback? onReceiveProgress,
   }) async {
-    final _path = r'/v1/learning-updates/{update_id}/candidates'.replaceAll('{' r'update_id' '}', encodeQueryParameter(_serializers, updateId, const FullType(String)).toString());
+    final _path = r'/v1/learning-updates/{update_id}/candidates'.replaceAll(
+        '{' r'update_id' '}',
+        encodeQueryParameter(_serializers, updateId, const FullType(String))
+            .toString());
     final _options = Options(
       method: r'GET',
       headers: <String, dynamic>{
@@ -179,8 +185,12 @@ class VerificationApi {
     );
 
     final _queryParameters = <String, dynamic>{
-      if (cursor != null) r'cursor': encodeQueryParameter(_serializers, cursor, const FullType(String)),
-      if (limit != null) r'limit': encodeQueryParameter(_serializers, limit, const FullType(int)),
+      if (cursor != null)
+        r'cursor':
+            encodeQueryParameter(_serializers, cursor, const FullType(String)),
+      if (limit != null)
+        r'limit':
+            encodeQueryParameter(_serializers, limit, const FullType(int)),
     };
 
     final _response = await _dio.request<Object>(
@@ -196,11 +206,12 @@ class VerificationApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(CandidateListResponse),
-      ) as CandidateListResponse;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(CandidateListResponse),
+            ) as CandidateListResponse;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -224,14 +235,14 @@ class VerificationApi {
   }
 
   /// Preview the validated learning path
-  /// 
+  ///
   ///
   /// Parameters:
-  /// * [updateId] 
-  /// * [xCorrelationID] 
-  /// * [xClientVersion] 
-  /// * [xPlatform] 
-  /// * [acceptLanguage] 
+  /// * [updateId]
+  /// * [xCorrelationID]
+  /// * [xClientVersion]
+  /// * [xPlatform]
+  /// * [acceptLanguage]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -241,7 +252,7 @@ class VerificationApi {
   ///
   /// Returns a [Future] containing a [Response] with a [LearningPathPreviewResponse] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<LearningPathPreviewResponse>> previewLearningPath({ 
+  Future<Response<LearningPathPreviewResponse>> previewLearningPath({
     required String updateId,
     required String xCorrelationID,
     required String xClientVersion,
@@ -254,7 +265,10 @@ class VerificationApi {
     ProgressCallback? onSendProgress,
     ProgressCallback? onReceiveProgress,
   }) async {
-    final _path = r'/v1/learning-updates/{update_id}/preview'.replaceAll('{' r'update_id' '}', encodeQueryParameter(_serializers, updateId, const FullType(String)).toString());
+    final _path = r'/v1/learning-updates/{update_id}/preview'.replaceAll(
+        '{' r'update_id' '}',
+        encodeQueryParameter(_serializers, updateId, const FullType(String))
+            .toString());
     final _options = Options(
       method: r'GET',
       headers: <String, dynamic>{
@@ -289,11 +303,12 @@ class VerificationApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(LearningPathPreviewResponse),
-      ) as LearningPathPreviewResponse;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(LearningPathPreviewResponse),
+            ) as LearningPathPreviewResponse;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -317,16 +332,16 @@ class VerificationApi {
   }
 
   /// Submit versioned concept verification decisions
-  /// 
+  ///
   ///
   /// Parameters:
-  /// * [updateId] 
-  /// * [xCorrelationID] 
-  /// * [xClientVersion] 
-  /// * [xPlatform] 
-  /// * [idempotencyKey] 
-  /// * [submitVerificationDecisionsRequest] 
-  /// * [acceptLanguage] 
+  /// * [updateId]
+  /// * [xCorrelationID]
+  /// * [xClientVersion]
+  /// * [xPlatform]
+  /// * [idempotencyKey]
+  /// * [submitVerificationDecisionsRequest]
+  /// * [acceptLanguage]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -336,13 +351,15 @@ class VerificationApi {
   ///
   /// Returns a [Future] containing a [Response] with a [SubmitVerificationDecisionsResponse] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<SubmitVerificationDecisionsResponse>> submitVerificationDecisions({ 
+  Future<Response<SubmitVerificationDecisionsResponse>>
+      submitVerificationDecisions({
     required String updateId,
     required String xCorrelationID,
     required String xClientVersion,
     required String xPlatform,
     required String idempotencyKey,
-    required SubmitVerificationDecisionsRequest submitVerificationDecisionsRequest,
+    required SubmitVerificationDecisionsRequest
+        submitVerificationDecisionsRequest,
     String? acceptLanguage,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
@@ -351,7 +368,11 @@ class VerificationApi {
     ProgressCallback? onSendProgress,
     ProgressCallback? onReceiveProgress,
   }) async {
-    final _path = r'/v1/learning-updates/{update_id}/verification-decisions'.replaceAll('{' r'update_id' '}', encodeQueryParameter(_serializers, updateId, const FullType(String)).toString());
+    final _path = r'/v1/learning-updates/{update_id}/verification-decisions'
+        .replaceAll(
+            '{' r'update_id' '}',
+            encodeQueryParameter(_serializers, updateId, const FullType(String))
+                .toString());
     final _options = Options(
       method: r'POST',
       headers: <String, dynamic>{
@@ -380,11 +401,11 @@ class VerificationApi {
 
     try {
       const _type = FullType(SubmitVerificationDecisionsRequest);
-      _bodyData = _serializers.serialize(submitVerificationDecisionsRequest, specifiedType: _type);
-
-    } catch(error, stackTrace) {
+      _bodyData = _serializers.serialize(submitVerificationDecisionsRequest,
+          specifiedType: _type);
+    } catch (error, stackTrace) {
       throw DioException(
-         requestOptions: _options.compose(
+        requestOptions: _options.compose(
           _dio.options,
           _path,
         ),
@@ -407,11 +428,13 @@ class VerificationApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(SubmitVerificationDecisionsResponse),
-      ) as SubmitVerificationDecisionsResponse;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType:
+                  const FullType(SubmitVerificationDecisionsResponse),
+            ) as SubmitVerificationDecisionsResponse;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -433,5 +456,4 @@ class VerificationApi {
       extra: _response.extra,
     );
   }
-
 }

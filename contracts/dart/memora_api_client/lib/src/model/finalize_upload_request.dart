@@ -11,11 +11,12 @@ part 'finalize_upload_request.g.dart';
 /// FinalizeUploadRequest
 ///
 /// Properties:
-/// * [clientOperationId] 
-/// * [contentSha256] 
-/// * [observedSize] 
+/// * [clientOperationId]
+/// * [contentSha256]
+/// * [observedSize]
 @BuiltValue()
-abstract class FinalizeUploadRequest implements Built<FinalizeUploadRequest, FinalizeUploadRequestBuilder> {
+abstract class FinalizeUploadRequest
+    implements Built<FinalizeUploadRequest, FinalizeUploadRequestBuilder> {
   @BuiltValueField(wireName: r'client_operation_id')
   String get clientOperationId;
 
@@ -27,18 +28,24 @@ abstract class FinalizeUploadRequest implements Built<FinalizeUploadRequest, Fin
 
   FinalizeUploadRequest._();
 
-  factory FinalizeUploadRequest([void updates(FinalizeUploadRequestBuilder b)]) = _$FinalizeUploadRequest;
+  factory FinalizeUploadRequest(
+      [void updates(FinalizeUploadRequestBuilder b)]) = _$FinalizeUploadRequest;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(FinalizeUploadRequestBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<FinalizeUploadRequest> get serializer => _$FinalizeUploadRequestSerializer();
+  static Serializer<FinalizeUploadRequest> get serializer =>
+      _$FinalizeUploadRequestSerializer();
 }
 
-class _$FinalizeUploadRequestSerializer implements PrimitiveSerializer<FinalizeUploadRequest> {
+class _$FinalizeUploadRequestSerializer
+    implements PrimitiveSerializer<FinalizeUploadRequest> {
   @override
-  final Iterable<Type> types = const [FinalizeUploadRequest, _$FinalizeUploadRequest];
+  final Iterable<Type> types = const [
+    FinalizeUploadRequest,
+    _$FinalizeUploadRequest
+  ];
 
   @override
   final String wireName = r'FinalizeUploadRequest';
@@ -71,7 +78,9 @@ class _$FinalizeUploadRequestSerializer implements PrimitiveSerializer<FinalizeU
     FinalizeUploadRequest object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -135,5 +144,3 @@ class _$FinalizeUploadRequestSerializer implements PrimitiveSerializer<FinalizeU
     return result.build();
   }
 }
-
-

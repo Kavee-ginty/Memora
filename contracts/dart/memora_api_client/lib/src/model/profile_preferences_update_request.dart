@@ -13,21 +13,24 @@ part 'profile_preferences_update_request.g.dart';
 /// ProfilePreferencesUpdateRequest
 ///
 /// Properties:
-/// * [accessibility] 
-/// * [lockScreenDetail] 
-/// * [maxDailyReminders] 
-/// * [missionEnabled] 
-/// * [notificationsEnabled] 
-/// * [preferredWindowEndLocal] 
-/// * [preferredWindowStartLocal] 
-/// * [quietEndLocal] 
-/// * [quietStartLocal] 
-/// * [rewardEnabled] 
-/// * [streakEnabled] 
-/// * [timezone] 
-/// * [version] 
+/// * [accessibility]
+/// * [lockScreenDetail]
+/// * [maxDailyReminders]
+/// * [missionEnabled]
+/// * [notificationsEnabled]
+/// * [preferredWindowEndLocal]
+/// * [preferredWindowStartLocal]
+/// * [quietEndLocal]
+/// * [quietStartLocal]
+/// * [rewardEnabled]
+/// * [streakEnabled]
+/// * [timezone]
+/// * [version]
 @BuiltValue()
-abstract class ProfilePreferencesUpdateRequest implements Built<ProfilePreferencesUpdateRequest, ProfilePreferencesUpdateRequestBuilder> {
+abstract class ProfilePreferencesUpdateRequest
+    implements
+        Built<ProfilePreferencesUpdateRequest,
+            ProfilePreferencesUpdateRequestBuilder> {
   @BuiltValueField(wireName: r'accessibility')
   Optional<AccessibilityPreferences?> get accessibility;
 
@@ -69,30 +72,37 @@ abstract class ProfilePreferencesUpdateRequest implements Built<ProfilePreferenc
 
   ProfilePreferencesUpdateRequest._();
 
-  factory ProfilePreferencesUpdateRequest([void updates(ProfilePreferencesUpdateRequestBuilder b)]) = _$ProfilePreferencesUpdateRequest;
+  factory ProfilePreferencesUpdateRequest(
+          [void updates(ProfilePreferencesUpdateRequestBuilder b)]) =
+      _$ProfilePreferencesUpdateRequest;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(ProfilePreferencesUpdateRequestBuilder b) => b
-      ..accessibility = Optional.absent()
-      ..lockScreenDetail = Optional.absent()
-      ..maxDailyReminders = Optional.absent()
-      ..missionEnabled = Optional.absent()
-      ..notificationsEnabled = Optional.absent()
-      ..preferredWindowEndLocal = Optional.absent()
-      ..preferredWindowStartLocal = Optional.absent()
-      ..quietEndLocal = Optional.absent()
-      ..quietStartLocal = Optional.absent()
-      ..rewardEnabled = Optional.absent()
-      ..streakEnabled = Optional.absent()
-      ..timezone = Optional.absent();
+    ..accessibility = Optional.absent()
+    ..lockScreenDetail = Optional.absent()
+    ..maxDailyReminders = Optional.absent()
+    ..missionEnabled = Optional.absent()
+    ..notificationsEnabled = Optional.absent()
+    ..preferredWindowEndLocal = Optional.absent()
+    ..preferredWindowStartLocal = Optional.absent()
+    ..quietEndLocal = Optional.absent()
+    ..quietStartLocal = Optional.absent()
+    ..rewardEnabled = Optional.absent()
+    ..streakEnabled = Optional.absent()
+    ..timezone = Optional.absent();
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<ProfilePreferencesUpdateRequest> get serializer => _$ProfilePreferencesUpdateRequestSerializer();
+  static Serializer<ProfilePreferencesUpdateRequest> get serializer =>
+      _$ProfilePreferencesUpdateRequestSerializer();
 }
 
-class _$ProfilePreferencesUpdateRequestSerializer implements PrimitiveSerializer<ProfilePreferencesUpdateRequest> {
+class _$ProfilePreferencesUpdateRequestSerializer
+    implements PrimitiveSerializer<ProfilePreferencesUpdateRequest> {
   @override
-  final Iterable<Type> types = const [ProfilePreferencesUpdateRequest, _$ProfilePreferencesUpdateRequest];
+  final Iterable<Type> types = const [
+    ProfilePreferencesUpdateRequest,
+    _$ProfilePreferencesUpdateRequest
+  ];
 
   @override
   final String wireName = r'ProfilePreferencesUpdateRequest';
@@ -259,7 +269,9 @@ class _$ProfilePreferencesUpdateRequestSerializer implements PrimitiveSerializer
     ProfilePreferencesUpdateRequest object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -393,5 +405,3 @@ class _$ProfilePreferencesUpdateRequestSerializer implements PrimitiveSerializer
     return result.build();
   }
 }
-
-

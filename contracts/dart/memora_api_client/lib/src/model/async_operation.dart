@@ -11,13 +11,14 @@ part 'async_operation.g.dart';
 /// AsyncOperation
 ///
 /// Properties:
-/// * [resourceId] 
-/// * [retryAfterSeconds] 
-/// * [status] 
-/// * [statusUrl] 
-/// * [updatedAt] 
+/// * [resourceId]
+/// * [retryAfterSeconds]
+/// * [status]
+/// * [statusUrl]
+/// * [updatedAt]
 @BuiltValue()
-abstract class AsyncOperation implements Built<AsyncOperation, AsyncOperationBuilder> {
+abstract class AsyncOperation
+    implements Built<AsyncOperation, AsyncOperationBuilder> {
   @BuiltValueField(wireName: r'resource_id')
   String get resourceId;
 
@@ -35,16 +36,19 @@ abstract class AsyncOperation implements Built<AsyncOperation, AsyncOperationBui
 
   AsyncOperation._();
 
-  factory AsyncOperation([void updates(AsyncOperationBuilder b)]) = _$AsyncOperation;
+  factory AsyncOperation([void updates(AsyncOperationBuilder b)]) =
+      _$AsyncOperation;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(AsyncOperationBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<AsyncOperation> get serializer => _$AsyncOperationSerializer();
+  static Serializer<AsyncOperation> get serializer =>
+      _$AsyncOperationSerializer();
 }
 
-class _$AsyncOperationSerializer implements PrimitiveSerializer<AsyncOperation> {
+class _$AsyncOperationSerializer
+    implements PrimitiveSerializer<AsyncOperation> {
   @override
   final Iterable<Type> types = const [AsyncOperation, _$AsyncOperation];
 
@@ -62,10 +66,12 @@ class _$AsyncOperationSerializer implements PrimitiveSerializer<AsyncOperation> 
       specifiedType: const FullType(String),
     );
     yield r'retry_after_seconds';
-    yield object.retryAfterSeconds == null ? null : serializers.serialize(
-      object.retryAfterSeconds,
-      specifiedType: const FullType.nullable(int),
-    );
+    yield object.retryAfterSeconds == null
+        ? null
+        : serializers.serialize(
+            object.retryAfterSeconds,
+            specifiedType: const FullType.nullable(int),
+          );
     yield r'status';
     yield serializers.serialize(
       object.status,
@@ -89,7 +95,9 @@ class _$AsyncOperationSerializer implements PrimitiveSerializer<AsyncOperation> 
     AsyncOperation object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -168,5 +176,3 @@ class _$AsyncOperationSerializer implements PrimitiveSerializer<AsyncOperation> 
     return result.build();
   }
 }
-
-

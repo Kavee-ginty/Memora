@@ -17,16 +17,17 @@ part 'knowledge_commit_response.g.dart';
 /// KnowledgeCommitResponse
 ///
 /// Properties:
-/// * [commitVersion] 
-/// * [committedCounts] 
-/// * [conceptMappings] 
-/// * [firstMission] 
-/// * [knowledgeCommitId] 
-/// * [learningUpdate] 
-/// * [privateKnowledgeCount] 
-/// * [sourceDeletionStatus] 
+/// * [commitVersion]
+/// * [committedCounts]
+/// * [conceptMappings]
+/// * [firstMission]
+/// * [knowledgeCommitId]
+/// * [learningUpdate]
+/// * [privateKnowledgeCount]
+/// * [sourceDeletionStatus]
 @BuiltValue()
-abstract class KnowledgeCommitResponse implements Built<KnowledgeCommitResponse, KnowledgeCommitResponseBuilder> {
+abstract class KnowledgeCommitResponse
+    implements Built<KnowledgeCommitResponse, KnowledgeCommitResponseBuilder> {
   @BuiltValueField(wireName: r'commit_version')
   int get commitVersion;
 
@@ -54,19 +55,26 @@ abstract class KnowledgeCommitResponse implements Built<KnowledgeCommitResponse,
 
   KnowledgeCommitResponse._();
 
-  factory KnowledgeCommitResponse([void updates(KnowledgeCommitResponseBuilder b)]) = _$KnowledgeCommitResponse;
+  factory KnowledgeCommitResponse(
+          [void updates(KnowledgeCommitResponseBuilder b)]) =
+      _$KnowledgeCommitResponse;
 
   @BuiltValueHook(initializeBuilder: true)
-  static void _defaults(KnowledgeCommitResponseBuilder b) => b
-      ..firstMission = Optional.absent();
+  static void _defaults(KnowledgeCommitResponseBuilder b) =>
+      b..firstMission = Optional.absent();
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<KnowledgeCommitResponse> get serializer => _$KnowledgeCommitResponseSerializer();
+  static Serializer<KnowledgeCommitResponse> get serializer =>
+      _$KnowledgeCommitResponseSerializer();
 }
 
-class _$KnowledgeCommitResponseSerializer implements PrimitiveSerializer<KnowledgeCommitResponse> {
+class _$KnowledgeCommitResponseSerializer
+    implements PrimitiveSerializer<KnowledgeCommitResponse> {
   @override
-  final Iterable<Type> types = const [KnowledgeCommitResponse, _$KnowledgeCommitResponse];
+  final Iterable<Type> types = const [
+    KnowledgeCommitResponse,
+    _$KnowledgeCommitResponse
+  ];
 
   @override
   final String wireName = r'KnowledgeCommitResponse';
@@ -84,12 +92,14 @@ class _$KnowledgeCommitResponseSerializer implements PrimitiveSerializer<Knowled
     yield r'committed_counts';
     yield serializers.serialize(
       object.committedCounts,
-      specifiedType: const FullType(BuiltMap, [FullType(String), FullType(int)]),
+      specifiedType:
+          const FullType(BuiltMap, [FullType(String), FullType(int)]),
     );
     yield r'concept_mappings';
     yield serializers.serialize(
       object.conceptMappings,
-      specifiedType: const FullType(BuiltList, [FullType(LearningPathPreviewConcept)]),
+      specifiedType:
+          const FullType(BuiltList, [FullType(LearningPathPreviewConcept)]),
     );
     if (object.firstMission.isPresent) {
       yield r'first_mission';
@@ -131,7 +141,9 @@ class _$KnowledgeCommitResponseSerializer implements PrimitiveSerializer<Knowled
     KnowledgeCommitResponse object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -156,14 +168,16 @@ class _$KnowledgeCommitResponseSerializer implements PrimitiveSerializer<Knowled
         case r'committed_counts':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(BuiltMap, [FullType(String), FullType(int)]),
+            specifiedType:
+                const FullType(BuiltMap, [FullType(String), FullType(int)]),
           ) as BuiltMap<String, int>;
           result.committedCounts.replace(valueDes);
           break;
         case r'concept_mappings':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(BuiltList, [FullType(LearningPathPreviewConcept)]),
+            specifiedType: const FullType(
+                BuiltList, [FullType(LearningPathPreviewConcept)]),
           ) as BuiltList<LearningPathPreviewConcept>;
           result.conceptMappings.replace(valueDes);
           break;
@@ -230,5 +244,3 @@ class _$KnowledgeCommitResponseSerializer implements PrimitiveSerializer<Knowled
     return result.build();
   }
 }
-
-

@@ -12,19 +12,20 @@ part 'question_report_response.g.dart';
 /// QuestionReportResponse
 ///
 /// Properties:
-/// * [attemptId] 
-/// * [descriptionPresent] 
-/// * [evidenceState] 
-/// * [id] 
-/// * [questionVersionId] 
-/// * [reportType] 
-/// * [resolutionCode] 
-/// * [resolvedAt] 
-/// * [reviewRequired] 
-/// * [status] 
-/// * [submittedAt] 
+/// * [attemptId]
+/// * [descriptionPresent]
+/// * [evidenceState]
+/// * [id]
+/// * [questionVersionId]
+/// * [reportType]
+/// * [resolutionCode]
+/// * [resolvedAt]
+/// * [reviewRequired]
+/// * [status]
+/// * [submittedAt]
 @BuiltValue()
-abstract class QuestionReportResponse implements Built<QuestionReportResponse, QuestionReportResponseBuilder> {
+abstract class QuestionReportResponse
+    implements Built<QuestionReportResponse, QuestionReportResponseBuilder> {
   @BuiltValueField(wireName: r'attempt_id')
   String? get attemptId;
 
@@ -63,18 +64,25 @@ abstract class QuestionReportResponse implements Built<QuestionReportResponse, Q
 
   QuestionReportResponse._();
 
-  factory QuestionReportResponse([void updates(QuestionReportResponseBuilder b)]) = _$QuestionReportResponse;
+  factory QuestionReportResponse(
+          [void updates(QuestionReportResponseBuilder b)]) =
+      _$QuestionReportResponse;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(QuestionReportResponseBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<QuestionReportResponse> get serializer => _$QuestionReportResponseSerializer();
+  static Serializer<QuestionReportResponse> get serializer =>
+      _$QuestionReportResponseSerializer();
 }
 
-class _$QuestionReportResponseSerializer implements PrimitiveSerializer<QuestionReportResponse> {
+class _$QuestionReportResponseSerializer
+    implements PrimitiveSerializer<QuestionReportResponse> {
   @override
-  final Iterable<Type> types = const [QuestionReportResponse, _$QuestionReportResponse];
+  final Iterable<Type> types = const [
+    QuestionReportResponse,
+    _$QuestionReportResponse
+  ];
 
   @override
   final String wireName = r'QuestionReportResponse';
@@ -85,10 +93,12 @@ class _$QuestionReportResponseSerializer implements PrimitiveSerializer<Question
     FullType specifiedType = FullType.unspecified,
   }) sync* {
     yield r'attempt_id';
-    yield object.attemptId == null ? null : serializers.serialize(
-      object.attemptId,
-      specifiedType: const FullType.nullable(String),
-    );
+    yield object.attemptId == null
+        ? null
+        : serializers.serialize(
+            object.attemptId,
+            specifiedType: const FullType.nullable(String),
+          );
     yield r'description_present';
     yield serializers.serialize(
       object.descriptionPresent,
@@ -115,15 +125,19 @@ class _$QuestionReportResponseSerializer implements PrimitiveSerializer<Question
       specifiedType: const FullType(QuestionReportResponseReportTypeEnum),
     );
     yield r'resolution_code';
-    yield object.resolutionCode == null ? null : serializers.serialize(
-      object.resolutionCode,
-      specifiedType: const FullType.nullable(String),
-    );
+    yield object.resolutionCode == null
+        ? null
+        : serializers.serialize(
+            object.resolutionCode,
+            specifiedType: const FullType.nullable(String),
+          );
     yield r'resolved_at';
-    yield object.resolvedAt == null ? null : serializers.serialize(
-      object.resolvedAt,
-      specifiedType: const FullType.nullable(String),
-    );
+    yield object.resolvedAt == null
+        ? null
+        : serializers.serialize(
+            object.resolvedAt,
+            specifiedType: const FullType.nullable(String),
+          );
     yield r'review_required';
     yield serializers.serialize(
       object.reviewRequired,
@@ -147,7 +161,9 @@ class _$QuestionReportResponseSerializer implements PrimitiveSerializer<Question
     QuestionReportResponse object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -180,7 +196,8 @@ class _$QuestionReportResponseSerializer implements PrimitiveSerializer<Question
         case r'evidence_state':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(QuestionReportResponseEvidenceStateEnum),
+            specifiedType:
+                const FullType(QuestionReportResponseEvidenceStateEnum),
           ) as QuestionReportResponseEvidenceStateEnum;
           result.evidenceState = valueDes;
           break;
@@ -271,67 +288,86 @@ class _$QuestionReportResponseSerializer implements PrimitiveSerializer<Question
   }
 }
 
-
 class QuestionReportResponseEvidenceStateEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'recorded')
-  static const QuestionReportResponseEvidenceStateEnum recorded = _$questionReportResponseEvidenceStateEnum_recorded;
+  static const QuestionReportResponseEvidenceStateEnum recorded =
+      _$questionReportResponseEvidenceStateEnum_recorded;
   @BuiltValueEnumConst(wireName: r'limited_pending_review')
-  static const QuestionReportResponseEvidenceStateEnum limitedPendingReview = _$questionReportResponseEvidenceStateEnum_limitedPendingReview;
+  static const QuestionReportResponseEvidenceStateEnum limitedPendingReview =
+      _$questionReportResponseEvidenceStateEnum_limitedPendingReview;
   @BuiltValueEnumConst(wireName: r'unknown_default_open_api', fallback: true)
-  static const QuestionReportResponseEvidenceStateEnum unknownDefaultOpenApi = _$questionReportResponseEvidenceStateEnum_unknownDefaultOpenApi;
+  static const QuestionReportResponseEvidenceStateEnum unknownDefaultOpenApi =
+      _$questionReportResponseEvidenceStateEnum_unknownDefaultOpenApi;
 
-  static Serializer<QuestionReportResponseEvidenceStateEnum> get serializer => _$questionReportResponseEvidenceStateEnumSerializer;
+  static Serializer<QuestionReportResponseEvidenceStateEnum> get serializer =>
+      _$questionReportResponseEvidenceStateEnumSerializer;
 
-  const QuestionReportResponseEvidenceStateEnum._(String name): super(name);
+  const QuestionReportResponseEvidenceStateEnum._(String name) : super(name);
 
-  static BuiltSet<QuestionReportResponseEvidenceStateEnum> get values => _$questionReportResponseEvidenceStateEnumValues;
-  static QuestionReportResponseEvidenceStateEnum valueOf(String name) => _$questionReportResponseEvidenceStateEnumValueOf(name);
+  static BuiltSet<QuestionReportResponseEvidenceStateEnum> get values =>
+      _$questionReportResponseEvidenceStateEnumValues;
+  static QuestionReportResponseEvidenceStateEnum valueOf(String name) =>
+      _$questionReportResponseEvidenceStateEnumValueOf(name);
 }
 
 class QuestionReportResponseReportTypeEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'question_error')
-  static const QuestionReportResponseReportTypeEnum questionError = _$questionReportResponseReportTypeEnum_questionError;
+  static const QuestionReportResponseReportTypeEnum questionError =
+      _$questionReportResponseReportTypeEnum_questionError;
   @BuiltValueEnumConst(wireName: r'answer_error')
-  static const QuestionReportResponseReportTypeEnum answerError = _$questionReportResponseReportTypeEnum_answerError;
+  static const QuestionReportResponseReportTypeEnum answerError =
+      _$questionReportResponseReportTypeEnum_answerError;
   @BuiltValueEnumConst(wireName: r'explanation_error')
-  static const QuestionReportResponseReportTypeEnum explanationError = _$questionReportResponseReportTypeEnum_explanationError;
+  static const QuestionReportResponseReportTypeEnum explanationError =
+      _$questionReportResponseReportTypeEnum_explanationError;
   @BuiltValueEnumConst(wireName: r'grading_dispute')
-  static const QuestionReportResponseReportTypeEnum gradingDispute = _$questionReportResponseReportTypeEnum_gradingDispute;
+  static const QuestionReportResponseReportTypeEnum gradingDispute =
+      _$questionReportResponseReportTypeEnum_gradingDispute;
   @BuiltValueEnumConst(wireName: r'accessibility')
-  static const QuestionReportResponseReportTypeEnum accessibility = _$questionReportResponseReportTypeEnum_accessibility;
+  static const QuestionReportResponseReportTypeEnum accessibility =
+      _$questionReportResponseReportTypeEnum_accessibility;
   @BuiltValueEnumConst(wireName: r'unknown_default_open_api', fallback: true)
-  static const QuestionReportResponseReportTypeEnum unknownDefaultOpenApi = _$questionReportResponseReportTypeEnum_unknownDefaultOpenApi;
+  static const QuestionReportResponseReportTypeEnum unknownDefaultOpenApi =
+      _$questionReportResponseReportTypeEnum_unknownDefaultOpenApi;
 
-  static Serializer<QuestionReportResponseReportTypeEnum> get serializer => _$questionReportResponseReportTypeEnumSerializer;
+  static Serializer<QuestionReportResponseReportTypeEnum> get serializer =>
+      _$questionReportResponseReportTypeEnumSerializer;
 
-  const QuestionReportResponseReportTypeEnum._(String name): super(name);
+  const QuestionReportResponseReportTypeEnum._(String name) : super(name);
 
-  static BuiltSet<QuestionReportResponseReportTypeEnum> get values => _$questionReportResponseReportTypeEnumValues;
-  static QuestionReportResponseReportTypeEnum valueOf(String name) => _$questionReportResponseReportTypeEnumValueOf(name);
+  static BuiltSet<QuestionReportResponseReportTypeEnum> get values =>
+      _$questionReportResponseReportTypeEnumValues;
+  static QuestionReportResponseReportTypeEnum valueOf(String name) =>
+      _$questionReportResponseReportTypeEnumValueOf(name);
 }
 
 class QuestionReportResponseStatusEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'submitted')
-  static const QuestionReportResponseStatusEnum submitted = _$questionReportResponseStatusEnum_submitted;
+  static const QuestionReportResponseStatusEnum submitted =
+      _$questionReportResponseStatusEnum_submitted;
   @BuiltValueEnumConst(wireName: r'triaged')
-  static const QuestionReportResponseStatusEnum triaged = _$questionReportResponseStatusEnum_triaged;
+  static const QuestionReportResponseStatusEnum triaged =
+      _$questionReportResponseStatusEnum_triaged;
   @BuiltValueEnumConst(wireName: r'under_review')
-  static const QuestionReportResponseStatusEnum underReview = _$questionReportResponseStatusEnum_underReview;
+  static const QuestionReportResponseStatusEnum underReview =
+      _$questionReportResponseStatusEnum_underReview;
   @BuiltValueEnumConst(wireName: r'resolved')
-  static const QuestionReportResponseStatusEnum resolved = _$questionReportResponseStatusEnum_resolved;
+  static const QuestionReportResponseStatusEnum resolved =
+      _$questionReportResponseStatusEnum_resolved;
   @BuiltValueEnumConst(wireName: r'dismissed')
-  static const QuestionReportResponseStatusEnum dismissed = _$questionReportResponseStatusEnum_dismissed;
+  static const QuestionReportResponseStatusEnum dismissed =
+      _$questionReportResponseStatusEnum_dismissed;
   @BuiltValueEnumConst(wireName: r'unknown_default_open_api', fallback: true)
-  static const QuestionReportResponseStatusEnum unknownDefaultOpenApi = _$questionReportResponseStatusEnum_unknownDefaultOpenApi;
+  static const QuestionReportResponseStatusEnum unknownDefaultOpenApi =
+      _$questionReportResponseStatusEnum_unknownDefaultOpenApi;
 
-  static Serializer<QuestionReportResponseStatusEnum> get serializer => _$questionReportResponseStatusEnumSerializer;
+  static Serializer<QuestionReportResponseStatusEnum> get serializer =>
+      _$questionReportResponseStatusEnumSerializer;
 
-  const QuestionReportResponseStatusEnum._(String name): super(name);
+  const QuestionReportResponseStatusEnum._(String name) : super(name);
 
-  static BuiltSet<QuestionReportResponseStatusEnum> get values => _$questionReportResponseStatusEnumValues;
-  static QuestionReportResponseStatusEnum valueOf(String name) => _$questionReportResponseStatusEnumValueOf(name);
+  static BuiltSet<QuestionReportResponseStatusEnum> get values =>
+      _$questionReportResponseStatusEnumValues;
+  static QuestionReportResponseStatusEnum valueOf(String name) =>
+      _$questionReportResponseStatusEnumValueOf(name);
 }
-

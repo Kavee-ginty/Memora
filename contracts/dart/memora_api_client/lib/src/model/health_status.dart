@@ -10,7 +10,6 @@ import 'package:built_value/serializer.dart';
 part 'health_status.g.dart';
 
 class HealthStatus extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'ok')
   static const HealthStatus ok = _$ok;
   @BuiltValueEnumConst(wireName: r'unknown_default_open_api', fallback: true)
@@ -18,7 +17,7 @@ class HealthStatus extends EnumClass {
 
   static Serializer<HealthStatus> get serializer => _$healthStatusSerializer;
 
-  const HealthStatus._(String name): super(name);
+  const HealthStatus._(String name) : super(name);
 
   static BuiltSet<HealthStatus> get values => _$values;
   static HealthStatus valueOf(String name) => _$valueOf(name);
@@ -31,4 +30,3 @@ class HealthStatus extends EnumClass {
 ///
 /// Trigger mixin generation by writing a line like this one next to your enum.
 abstract class HealthStatusMixin = Object with _$HealthStatusMixin;
-

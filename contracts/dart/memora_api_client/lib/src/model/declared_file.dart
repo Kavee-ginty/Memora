@@ -11,12 +11,13 @@ part 'declared_file.g.dart';
 /// DeclaredFile
 ///
 /// Properties:
-/// * [byteSize] 
-/// * [contentSha256] 
-/// * [declaredMediaType] 
-/// * [declaredName] 
+/// * [byteSize]
+/// * [contentSha256]
+/// * [declaredMediaType]
+/// * [declaredName]
 @BuiltValue()
-abstract class DeclaredFile implements Built<DeclaredFile, DeclaredFileBuilder> {
+abstract class DeclaredFile
+    implements Built<DeclaredFile, DeclaredFileBuilder> {
   @BuiltValueField(wireName: r'byte_size')
   int get byteSize;
 
@@ -80,7 +81,9 @@ class _$DeclaredFileSerializer implements PrimitiveSerializer<DeclaredFile> {
     DeclaredFile object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -151,5 +154,3 @@ class _$DeclaredFileSerializer implements PrimitiveSerializer<DeclaredFile> {
     return result.build();
   }
 }
-
-

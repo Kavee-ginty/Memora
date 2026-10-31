@@ -12,11 +12,13 @@ part 'verification_decision_result.g.dart';
 /// VerificationDecisionResult
 ///
 /// Properties:
-/// * [candidateId] 
-/// * [candidateStatus] 
-/// * [requiresVerification] 
+/// * [candidateId]
+/// * [candidateStatus]
+/// * [requiresVerification]
 @BuiltValue()
-abstract class VerificationDecisionResult implements Built<VerificationDecisionResult, VerificationDecisionResultBuilder> {
+abstract class VerificationDecisionResult
+    implements
+        Built<VerificationDecisionResult, VerificationDecisionResultBuilder> {
   @BuiltValueField(wireName: r'candidate_id')
   String get candidateId;
 
@@ -29,18 +31,25 @@ abstract class VerificationDecisionResult implements Built<VerificationDecisionR
 
   VerificationDecisionResult._();
 
-  factory VerificationDecisionResult([void updates(VerificationDecisionResultBuilder b)]) = _$VerificationDecisionResult;
+  factory VerificationDecisionResult(
+          [void updates(VerificationDecisionResultBuilder b)]) =
+      _$VerificationDecisionResult;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(VerificationDecisionResultBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<VerificationDecisionResult> get serializer => _$VerificationDecisionResultSerializer();
+  static Serializer<VerificationDecisionResult> get serializer =>
+      _$VerificationDecisionResultSerializer();
 }
 
-class _$VerificationDecisionResultSerializer implements PrimitiveSerializer<VerificationDecisionResult> {
+class _$VerificationDecisionResultSerializer
+    implements PrimitiveSerializer<VerificationDecisionResult> {
   @override
-  final Iterable<Type> types = const [VerificationDecisionResult, _$VerificationDecisionResult];
+  final Iterable<Type> types = const [
+    VerificationDecisionResult,
+    _$VerificationDecisionResult
+  ];
 
   @override
   final String wireName = r'VerificationDecisionResult';
@@ -73,7 +82,9 @@ class _$VerificationDecisionResultSerializer implements PrimitiveSerializer<Veri
     VerificationDecisionResult object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -137,5 +148,3 @@ class _$VerificationDecisionResultSerializer implements PrimitiveSerializer<Veri
     return result.build();
   }
 }
-
-

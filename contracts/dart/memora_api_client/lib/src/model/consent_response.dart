@@ -13,24 +13,28 @@ part 'consent_response.g.dart';
 /// ConsentResponse
 ///
 /// Properties:
-/// * [policies] 
+/// * [policies]
 @BuiltValue()
-abstract class ConsentResponse implements Built<ConsentResponse, ConsentResponseBuilder> {
+abstract class ConsentResponse
+    implements Built<ConsentResponse, ConsentResponseBuilder> {
   @BuiltValueField(wireName: r'policies')
   BuiltList<ConsentStatus> get policies;
 
   ConsentResponse._();
 
-  factory ConsentResponse([void updates(ConsentResponseBuilder b)]) = _$ConsentResponse;
+  factory ConsentResponse([void updates(ConsentResponseBuilder b)]) =
+      _$ConsentResponse;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(ConsentResponseBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<ConsentResponse> get serializer => _$ConsentResponseSerializer();
+  static Serializer<ConsentResponse> get serializer =>
+      _$ConsentResponseSerializer();
 }
 
-class _$ConsentResponseSerializer implements PrimitiveSerializer<ConsentResponse> {
+class _$ConsentResponseSerializer
+    implements PrimitiveSerializer<ConsentResponse> {
   @override
   final Iterable<Type> types = const [ConsentResponse, _$ConsentResponse];
 
@@ -55,7 +59,9 @@ class _$ConsentResponseSerializer implements PrimitiveSerializer<ConsentResponse
     ConsentResponse object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -105,5 +111,3 @@ class _$ConsentResponseSerializer implements PrimitiveSerializer<ConsentResponse
     return result.build();
   }
 }
-
-

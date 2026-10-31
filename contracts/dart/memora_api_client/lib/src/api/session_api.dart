@@ -16,7 +16,6 @@ import 'package:memora_api_client/src/model/session_bootstrap_response.dart';
 import 'package:memora_api_client/src/model/session_revoke_request.dart';
 
 class SessionApi {
-
   final Dio _dio;
 
   final Serializers _serializers;
@@ -27,10 +26,10 @@ class SessionApi {
   /// Returns the bounded account, consent, subject, mission and pending-state summary.
   ///
   /// Parameters:
-  /// * [xCorrelationID] 
-  /// * [xClientVersion] 
-  /// * [xPlatform] 
-  /// * [acceptLanguage] 
+  /// * [xCorrelationID]
+  /// * [xClientVersion]
+  /// * [xPlatform]
+  /// * [acceptLanguage]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -40,7 +39,7 @@ class SessionApi {
   ///
   /// Returns a [Future] containing a [Response] with a [SessionBootstrapResponse] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<SessionBootstrapResponse>> bootstrapSession({ 
+  Future<Response<SessionBootstrapResponse>> bootstrapSession({
     required String xCorrelationID,
     required String xClientVersion,
     required String xPlatform,
@@ -87,11 +86,12 @@ class SessionApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(SessionBootstrapResponse),
-      ) as SessionBootstrapResponse;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(SessionBootstrapResponse),
+            ) as SessionBootstrapResponse;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -118,11 +118,11 @@ class SessionApi {
   /// Idempotently revokes an authenticated user&#39;s device registration.
   ///
   /// Parameters:
-  /// * [deviceId] 
-  /// * [xCorrelationID] 
-  /// * [xClientVersion] 
-  /// * [xPlatform] 
-  /// * [acceptLanguage] 
+  /// * [deviceId]
+  /// * [xCorrelationID]
+  /// * [xClientVersion]
+  /// * [xPlatform]
+  /// * [acceptLanguage]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -132,7 +132,7 @@ class SessionApi {
   ///
   /// Returns a [Future]
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<void>> deleteDevice({ 
+  Future<Response<void>> deleteDevice({
     required String deviceId,
     required String xCorrelationID,
     required String xClientVersion,
@@ -145,7 +145,10 @@ class SessionApi {
     ProgressCallback? onSendProgress,
     ProgressCallback? onReceiveProgress,
   }) async {
-    final _path = r'/v1/devices/{device_id}'.replaceAll('{' r'device_id' '}', encodeQueryParameter(_serializers, deviceId, const FullType(String)).toString());
+    final _path = r'/v1/devices/{device_id}'.replaceAll(
+        '{' r'device_id' '}',
+        encodeQueryParameter(_serializers, deviceId, const FullType(String))
+            .toString());
     final _options = Options(
       method: r'DELETE',
       headers: <String, dynamic>{
@@ -183,12 +186,12 @@ class SessionApi {
   /// Idempotently stores an encrypted push token for the authenticated installation.
   ///
   /// Parameters:
-  /// * [xCorrelationID] 
-  /// * [xClientVersion] 
-  /// * [xPlatform] 
-  /// * [idempotencyKey] 
-  /// * [deviceRegistrationRequest] 
-  /// * [acceptLanguage] 
+  /// * [xCorrelationID]
+  /// * [xClientVersion]
+  /// * [xPlatform]
+  /// * [idempotencyKey]
+  /// * [deviceRegistrationRequest]
+  /// * [acceptLanguage]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -198,7 +201,7 @@ class SessionApi {
   ///
   /// Returns a [Future] containing a [Response] with a [DeviceRegistrationResponse] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<DeviceRegistrationResponse>> registerDevice({ 
+  Future<Response<DeviceRegistrationResponse>> registerDevice({
     required String xCorrelationID,
     required String xClientVersion,
     required String xPlatform,
@@ -241,11 +244,11 @@ class SessionApi {
 
     try {
       const _type = FullType(DeviceRegistrationRequest);
-      _bodyData = _serializers.serialize(deviceRegistrationRequest, specifiedType: _type);
-
-    } catch(error, stackTrace) {
+      _bodyData = _serializers.serialize(deviceRegistrationRequest,
+          specifiedType: _type);
+    } catch (error, stackTrace) {
       throw DioException(
-         requestOptions: _options.compose(
+        requestOptions: _options.compose(
           _dio.options,
           _path,
         ),
@@ -268,11 +271,12 @@ class SessionApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(DeviceRegistrationResponse),
-      ) as DeviceRegistrationResponse;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(DeviceRegistrationResponse),
+            ) as DeviceRegistrationResponse;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -299,12 +303,12 @@ class SessionApi {
   /// Idempotently revokes the requested Supabase session scope after recent authentication.
   ///
   /// Parameters:
-  /// * [xCorrelationID] 
-  /// * [xClientVersion] 
-  /// * [xPlatform] 
-  /// * [idempotencyKey] 
-  /// * [sessionRevokeRequest] 
-  /// * [acceptLanguage] 
+  /// * [xCorrelationID]
+  /// * [xClientVersion]
+  /// * [xPlatform]
+  /// * [idempotencyKey]
+  /// * [sessionRevokeRequest]
+  /// * [acceptLanguage]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -314,7 +318,7 @@ class SessionApi {
   ///
   /// Returns a [Future]
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<void>> revokeSession({ 
+  Future<Response<void>> revokeSession({
     required String xCorrelationID,
     required String xClientVersion,
     required String xPlatform,
@@ -357,11 +361,11 @@ class SessionApi {
 
     try {
       const _type = FullType(SessionRevokeRequest);
-      _bodyData = _serializers.serialize(sessionRevokeRequest, specifiedType: _type);
-
-    } catch(error, stackTrace) {
+      _bodyData =
+          _serializers.serialize(sessionRevokeRequest, specifiedType: _type);
+    } catch (error, stackTrace) {
       throw DioException(
-         requestOptions: _options.compose(
+        requestOptions: _options.compose(
           _dio.options,
           _path,
         ),
@@ -382,5 +386,4 @@ class SessionApi {
 
     return _response;
   }
-
 }

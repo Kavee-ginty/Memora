@@ -14,12 +14,13 @@ part 'verification_decision.g.dart';
 /// VerificationDecision
 ///
 /// Properties:
-/// * [candidateId] 
-/// * [candidateVersion] 
-/// * [correctedPayload] 
-/// * [decision] 
+/// * [candidateId]
+/// * [candidateVersion]
+/// * [correctedPayload]
+/// * [decision]
 @BuiltValue()
-abstract class VerificationDecision implements Built<VerificationDecision, VerificationDecisionBuilder> {
+abstract class VerificationDecision
+    implements Built<VerificationDecision, VerificationDecisionBuilder> {
   @BuiltValueField(wireName: r'candidate_id')
   String get candidateId;
 
@@ -35,18 +36,24 @@ abstract class VerificationDecision implements Built<VerificationDecision, Verif
 
   VerificationDecision._();
 
-  factory VerificationDecision([void updates(VerificationDecisionBuilder b)]) = _$VerificationDecision;
+  factory VerificationDecision([void updates(VerificationDecisionBuilder b)]) =
+      _$VerificationDecision;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(VerificationDecisionBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<VerificationDecision> get serializer => _$VerificationDecisionSerializer();
+  static Serializer<VerificationDecision> get serializer =>
+      _$VerificationDecisionSerializer();
 }
 
-class _$VerificationDecisionSerializer implements PrimitiveSerializer<VerificationDecision> {
+class _$VerificationDecisionSerializer
+    implements PrimitiveSerializer<VerificationDecision> {
   @override
-  final Iterable<Type> types = const [VerificationDecision, _$VerificationDecision];
+  final Iterable<Type> types = const [
+    VerificationDecision,
+    _$VerificationDecision
+  ];
 
   @override
   final String wireName = r'VerificationDecision';
@@ -69,7 +76,8 @@ class _$VerificationDecisionSerializer implements PrimitiveSerializer<Verificati
     yield r'corrected_payload';
     yield serializers.serialize(
       object.correctedPayload,
-      specifiedType: const FullType(BuiltMap, [FullType(String), FullType.nullable(JsonObject)]),
+      specifiedType: const FullType(
+          BuiltMap, [FullType(String), FullType.nullable(JsonObject)]),
     );
     yield r'decision';
     yield serializers.serialize(
@@ -84,7 +92,9 @@ class _$VerificationDecisionSerializer implements PrimitiveSerializer<Verificati
     VerificationDecision object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -116,7 +126,8 @@ class _$VerificationDecisionSerializer implements PrimitiveSerializer<Verificati
         case r'corrected_payload':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(BuiltMap, [FullType(String), FullType.nullable(JsonObject)]),
+            specifiedType: const FullType(
+                BuiltMap, [FullType(String), FullType.nullable(JsonObject)]),
           ) as BuiltMap<String, JsonObject?>;
           result.correctedPayload.replace(valueDes);
           break;
@@ -155,5 +166,3 @@ class _$VerificationDecisionSerializer implements PrimitiveSerializer<Verificati
     return result.build();
   }
 }
-
-

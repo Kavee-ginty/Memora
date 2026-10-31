@@ -12,11 +12,12 @@ part 'capability_flags.g.dart';
 /// CapabilityFlags
 ///
 /// Properties:
-/// * [canAddLearningMaterial] 
-/// * [canRegisterNotifications] 
-/// * [canStartMission] 
+/// * [canAddLearningMaterial]
+/// * [canRegisterNotifications]
+/// * [canStartMission]
 @BuiltValue()
-abstract class CapabilityFlags implements Built<CapabilityFlags, CapabilityFlagsBuilder> {
+abstract class CapabilityFlags
+    implements Built<CapabilityFlags, CapabilityFlagsBuilder> {
   @BuiltValueField(wireName: r'can_add_learning_material')
   bool get canAddLearningMaterial;
 
@@ -28,17 +29,20 @@ abstract class CapabilityFlags implements Built<CapabilityFlags, CapabilityFlags
 
   CapabilityFlags._();
 
-  factory CapabilityFlags([void updates(CapabilityFlagsBuilder b)]) = _$CapabilityFlags;
+  factory CapabilityFlags([void updates(CapabilityFlagsBuilder b)]) =
+      _$CapabilityFlags;
 
   @BuiltValueHook(initializeBuilder: true)
-  static void _defaults(CapabilityFlagsBuilder b) => b
-      ..canRegisterNotifications = Optional.absent();
+  static void _defaults(CapabilityFlagsBuilder b) =>
+      b..canRegisterNotifications = Optional.absent();
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<CapabilityFlags> get serializer => _$CapabilityFlagsSerializer();
+  static Serializer<CapabilityFlags> get serializer =>
+      _$CapabilityFlagsSerializer();
 }
 
-class _$CapabilityFlagsSerializer implements PrimitiveSerializer<CapabilityFlags> {
+class _$CapabilityFlagsSerializer
+    implements PrimitiveSerializer<CapabilityFlags> {
   @override
   final Iterable<Type> types = const [CapabilityFlags, _$CapabilityFlags];
 
@@ -80,7 +84,9 @@ class _$CapabilityFlagsSerializer implements PrimitiveSerializer<CapabilityFlags
     CapabilityFlags object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -144,5 +150,3 @@ class _$CapabilityFlagsSerializer implements PrimitiveSerializer<CapabilityFlags
     return result.build();
   }
 }
-
-

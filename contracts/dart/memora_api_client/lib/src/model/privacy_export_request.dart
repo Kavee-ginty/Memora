@@ -12,27 +12,34 @@ part 'privacy_export_request.g.dart';
 /// PrivacyExportRequest
 ///
 /// Properties:
-/// * [format] 
+/// * [format]
 @BuiltValue()
-abstract class PrivacyExportRequest implements Built<PrivacyExportRequest, PrivacyExportRequestBuilder> {
+abstract class PrivacyExportRequest
+    implements Built<PrivacyExportRequest, PrivacyExportRequestBuilder> {
   @BuiltValueField(wireName: r'format')
   Optional<String?> get format;
 
   PrivacyExportRequest._();
 
-  factory PrivacyExportRequest([void updates(PrivacyExportRequestBuilder b)]) = _$PrivacyExportRequest;
+  factory PrivacyExportRequest([void updates(PrivacyExportRequestBuilder b)]) =
+      _$PrivacyExportRequest;
 
   @BuiltValueHook(initializeBuilder: true)
-  static void _defaults(PrivacyExportRequestBuilder b) => b
-      ..format = Optional.absent();
+  static void _defaults(PrivacyExportRequestBuilder b) =>
+      b..format = Optional.absent();
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<PrivacyExportRequest> get serializer => _$PrivacyExportRequestSerializer();
+  static Serializer<PrivacyExportRequest> get serializer =>
+      _$PrivacyExportRequestSerializer();
 }
 
-class _$PrivacyExportRequestSerializer implements PrimitiveSerializer<PrivacyExportRequest> {
+class _$PrivacyExportRequestSerializer
+    implements PrimitiveSerializer<PrivacyExportRequest> {
   @override
-  final Iterable<Type> types = const [PrivacyExportRequest, _$PrivacyExportRequest];
+  final Iterable<Type> types = const [
+    PrivacyExportRequest,
+    _$PrivacyExportRequest
+  ];
 
   @override
   final String wireName = r'PrivacyExportRequest';
@@ -62,7 +69,9 @@ class _$PrivacyExportRequestSerializer implements PrimitiveSerializer<PrivacyExp
     PrivacyExportRequest object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -112,5 +121,3 @@ class _$PrivacyExportRequestSerializer implements PrimitiveSerializer<PrivacyExp
     return result.build();
   }
 }
-
-

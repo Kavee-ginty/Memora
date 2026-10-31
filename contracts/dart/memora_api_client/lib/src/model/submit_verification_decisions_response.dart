@@ -14,10 +14,13 @@ part 'submit_verification_decisions_response.g.dart';
 /// SubmitVerificationDecisionsResponse
 ///
 /// Properties:
-/// * [learningUpdate] 
-/// * [results] 
+/// * [learningUpdate]
+/// * [results]
 @BuiltValue()
-abstract class SubmitVerificationDecisionsResponse implements Built<SubmitVerificationDecisionsResponse, SubmitVerificationDecisionsResponseBuilder> {
+abstract class SubmitVerificationDecisionsResponse
+    implements
+        Built<SubmitVerificationDecisionsResponse,
+            SubmitVerificationDecisionsResponseBuilder> {
   @BuiltValueField(wireName: r'learning_update')
   LearningUpdateResponse get learningUpdate;
 
@@ -26,18 +29,25 @@ abstract class SubmitVerificationDecisionsResponse implements Built<SubmitVerifi
 
   SubmitVerificationDecisionsResponse._();
 
-  factory SubmitVerificationDecisionsResponse([void updates(SubmitVerificationDecisionsResponseBuilder b)]) = _$SubmitVerificationDecisionsResponse;
+  factory SubmitVerificationDecisionsResponse(
+          [void updates(SubmitVerificationDecisionsResponseBuilder b)]) =
+      _$SubmitVerificationDecisionsResponse;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(SubmitVerificationDecisionsResponseBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<SubmitVerificationDecisionsResponse> get serializer => _$SubmitVerificationDecisionsResponseSerializer();
+  static Serializer<SubmitVerificationDecisionsResponse> get serializer =>
+      _$SubmitVerificationDecisionsResponseSerializer();
 }
 
-class _$SubmitVerificationDecisionsResponseSerializer implements PrimitiveSerializer<SubmitVerificationDecisionsResponse> {
+class _$SubmitVerificationDecisionsResponseSerializer
+    implements PrimitiveSerializer<SubmitVerificationDecisionsResponse> {
   @override
-  final Iterable<Type> types = const [SubmitVerificationDecisionsResponse, _$SubmitVerificationDecisionsResponse];
+  final Iterable<Type> types = const [
+    SubmitVerificationDecisionsResponse,
+    _$SubmitVerificationDecisionsResponse
+  ];
 
   @override
   final String wireName = r'SubmitVerificationDecisionsResponse';
@@ -55,7 +65,8 @@ class _$SubmitVerificationDecisionsResponseSerializer implements PrimitiveSerial
     yield r'results';
     yield serializers.serialize(
       object.results,
-      specifiedType: const FullType(BuiltList, [FullType(VerificationDecisionResult)]),
+      specifiedType:
+          const FullType(BuiltList, [FullType(VerificationDecisionResult)]),
     );
   }
 
@@ -65,7 +76,9 @@ class _$SubmitVerificationDecisionsResponseSerializer implements PrimitiveSerial
     SubmitVerificationDecisionsResponse object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -90,7 +103,8 @@ class _$SubmitVerificationDecisionsResponseSerializer implements PrimitiveSerial
         case r'results':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(BuiltList, [FullType(VerificationDecisionResult)]),
+            specifiedType: const FullType(
+                BuiltList, [FullType(VerificationDecisionResult)]),
           ) as BuiltList<VerificationDecisionResult>;
           result.results.replace(valueDes);
           break;
@@ -122,5 +136,3 @@ class _$SubmitVerificationDecisionsResponseSerializer implements PrimitiveSerial
     return result.build();
   }
 }
-
-

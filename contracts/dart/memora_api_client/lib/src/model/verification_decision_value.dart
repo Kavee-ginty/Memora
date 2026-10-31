@@ -10,7 +10,6 @@ import 'package:built_value/serializer.dart';
 part 'verification_decision_value.g.dart';
 
 class VerificationDecisionValue extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'accept')
   static const VerificationDecisionValue accept = _$accept;
   @BuiltValueEnumConst(wireName: r'edit')
@@ -20,11 +19,13 @@ class VerificationDecisionValue extends EnumClass {
   @BuiltValueEnumConst(wireName: r'merge')
   static const VerificationDecisionValue merge = _$merge;
   @BuiltValueEnumConst(wireName: r'unknown_default_open_api', fallback: true)
-  static const VerificationDecisionValue unknownDefaultOpenApi = _$unknownDefaultOpenApi;
+  static const VerificationDecisionValue unknownDefaultOpenApi =
+      _$unknownDefaultOpenApi;
 
-  static Serializer<VerificationDecisionValue> get serializer => _$verificationDecisionValueSerializer;
+  static Serializer<VerificationDecisionValue> get serializer =>
+      _$verificationDecisionValueSerializer;
 
-  const VerificationDecisionValue._(String name): super(name);
+  const VerificationDecisionValue._(String name) : super(name);
 
   static BuiltSet<VerificationDecisionValue> get values => _$values;
   static VerificationDecisionValue valueOf(String name) => _$valueOf(name);
@@ -36,5 +37,5 @@ class VerificationDecisionValue extends EnumClass {
 /// corresponding Angular template.
 ///
 /// Trigger mixin generation by writing a line like this one next to your enum.
-abstract class VerificationDecisionValueMixin = Object with _$VerificationDecisionValueMixin;
-
+abstract class VerificationDecisionValueMixin = Object
+    with _$VerificationDecisionValueMixin;

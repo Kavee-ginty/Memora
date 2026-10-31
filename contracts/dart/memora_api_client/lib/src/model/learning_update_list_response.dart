@@ -13,11 +13,13 @@ part 'learning_update_list_response.g.dart';
 /// LearningUpdateListResponse
 ///
 /// Properties:
-/// * [hasMore] 
-/// * [items] 
-/// * [nextCursor] 
+/// * [hasMore]
+/// * [items]
+/// * [nextCursor]
 @BuiltValue()
-abstract class LearningUpdateListResponse implements Built<LearningUpdateListResponse, LearningUpdateListResponseBuilder> {
+abstract class LearningUpdateListResponse
+    implements
+        Built<LearningUpdateListResponse, LearningUpdateListResponseBuilder> {
   @BuiltValueField(wireName: r'has_more')
   bool get hasMore;
 
@@ -29,18 +31,25 @@ abstract class LearningUpdateListResponse implements Built<LearningUpdateListRes
 
   LearningUpdateListResponse._();
 
-  factory LearningUpdateListResponse([void updates(LearningUpdateListResponseBuilder b)]) = _$LearningUpdateListResponse;
+  factory LearningUpdateListResponse(
+          [void updates(LearningUpdateListResponseBuilder b)]) =
+      _$LearningUpdateListResponse;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(LearningUpdateListResponseBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<LearningUpdateListResponse> get serializer => _$LearningUpdateListResponseSerializer();
+  static Serializer<LearningUpdateListResponse> get serializer =>
+      _$LearningUpdateListResponseSerializer();
 }
 
-class _$LearningUpdateListResponseSerializer implements PrimitiveSerializer<LearningUpdateListResponse> {
+class _$LearningUpdateListResponseSerializer
+    implements PrimitiveSerializer<LearningUpdateListResponse> {
   @override
-  final Iterable<Type> types = const [LearningUpdateListResponse, _$LearningUpdateListResponse];
+  final Iterable<Type> types = const [
+    LearningUpdateListResponse,
+    _$LearningUpdateListResponse
+  ];
 
   @override
   final String wireName = r'LearningUpdateListResponse';
@@ -58,13 +67,16 @@ class _$LearningUpdateListResponseSerializer implements PrimitiveSerializer<Lear
     yield r'items';
     yield serializers.serialize(
       object.items,
-      specifiedType: const FullType(BuiltList, [FullType(LearningUpdateResponse)]),
+      specifiedType:
+          const FullType(BuiltList, [FullType(LearningUpdateResponse)]),
     );
     yield r'next_cursor';
-    yield object.nextCursor == null ? null : serializers.serialize(
-      object.nextCursor,
-      specifiedType: const FullType.nullable(String),
-    );
+    yield object.nextCursor == null
+        ? null
+        : serializers.serialize(
+            object.nextCursor,
+            specifiedType: const FullType.nullable(String),
+          );
   }
 
   @override
@@ -73,7 +85,9 @@ class _$LearningUpdateListResponseSerializer implements PrimitiveSerializer<Lear
     LearningUpdateListResponse object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -98,7 +112,8 @@ class _$LearningUpdateListResponseSerializer implements PrimitiveSerializer<Lear
         case r'items':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(BuiltList, [FullType(LearningUpdateResponse)]),
+            specifiedType:
+                const FullType(BuiltList, [FullType(LearningUpdateResponse)]),
           ) as BuiltList<LearningUpdateResponse>;
           result.items.replace(valueDes);
           break;
@@ -138,5 +153,3 @@ class _$LearningUpdateListResponseSerializer implements PrimitiveSerializer<Lear
     return result.build();
   }
 }
-
-

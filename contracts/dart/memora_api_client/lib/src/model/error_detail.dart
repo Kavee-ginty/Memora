@@ -13,13 +13,13 @@ part 'error_detail.g.dart';
 /// ErrorDetail
 ///
 /// Properties:
-/// * [action] 
-/// * [code] 
-/// * [fieldErrors] 
-/// * [message] 
-/// * [requestId] 
-/// * [retryAfterSeconds] 
-/// * [retryable] 
+/// * [action]
+/// * [code]
+/// * [fieldErrors]
+/// * [message]
+/// * [requestId]
+/// * [retryAfterSeconds]
+/// * [retryable]
 @BuiltValue()
 abstract class ErrorDetail implements Built<ErrorDetail, ErrorDetailBuilder> {
   @BuiltValueField(wireName: r'action')
@@ -67,10 +67,12 @@ class _$ErrorDetailSerializer implements PrimitiveSerializer<ErrorDetail> {
     FullType specifiedType = FullType.unspecified,
   }) sync* {
     yield r'action';
-    yield object.action == null ? null : serializers.serialize(
-      object.action,
-      specifiedType: const FullType.nullable(String),
-    );
+    yield object.action == null
+        ? null
+        : serializers.serialize(
+            object.action,
+            specifiedType: const FullType.nullable(String),
+          );
     yield r'code';
     yield serializers.serialize(
       object.code,
@@ -92,10 +94,12 @@ class _$ErrorDetailSerializer implements PrimitiveSerializer<ErrorDetail> {
       specifiedType: const FullType(String),
     );
     yield r'retry_after_seconds';
-    yield object.retryAfterSeconds == null ? null : serializers.serialize(
-      object.retryAfterSeconds,
-      specifiedType: const FullType.nullable(int),
-    );
+    yield object.retryAfterSeconds == null
+        ? null
+        : serializers.serialize(
+            object.retryAfterSeconds,
+            specifiedType: const FullType.nullable(int),
+          );
     yield r'retryable';
     yield serializers.serialize(
       object.retryable,
@@ -109,7 +113,9 @@ class _$ErrorDetailSerializer implements PrimitiveSerializer<ErrorDetail> {
     ErrorDetail object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -203,5 +209,3 @@ class _$ErrorDetailSerializer implements PrimitiveSerializer<ErrorDetail> {
     return result.build();
   }
 }
-
-

@@ -12,27 +12,35 @@ part 'privacy_deletion_request.g.dart';
 /// PrivacyDeletionRequest
 ///
 /// Properties:
-/// * [confirmed] 
+/// * [confirmed]
 @BuiltValue()
-abstract class PrivacyDeletionRequest implements Built<PrivacyDeletionRequest, PrivacyDeletionRequestBuilder> {
+abstract class PrivacyDeletionRequest
+    implements Built<PrivacyDeletionRequest, PrivacyDeletionRequestBuilder> {
   @BuiltValueField(wireName: r'confirmed')
   Optional<bool?> get confirmed;
 
   PrivacyDeletionRequest._();
 
-  factory PrivacyDeletionRequest([void updates(PrivacyDeletionRequestBuilder b)]) = _$PrivacyDeletionRequest;
+  factory PrivacyDeletionRequest(
+          [void updates(PrivacyDeletionRequestBuilder b)]) =
+      _$PrivacyDeletionRequest;
 
   @BuiltValueHook(initializeBuilder: true)
-  static void _defaults(PrivacyDeletionRequestBuilder b) => b
-      ..confirmed = Optional.absent();
+  static void _defaults(PrivacyDeletionRequestBuilder b) =>
+      b..confirmed = Optional.absent();
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<PrivacyDeletionRequest> get serializer => _$PrivacyDeletionRequestSerializer();
+  static Serializer<PrivacyDeletionRequest> get serializer =>
+      _$PrivacyDeletionRequestSerializer();
 }
 
-class _$PrivacyDeletionRequestSerializer implements PrimitiveSerializer<PrivacyDeletionRequest> {
+class _$PrivacyDeletionRequestSerializer
+    implements PrimitiveSerializer<PrivacyDeletionRequest> {
   @override
-  final Iterable<Type> types = const [PrivacyDeletionRequest, _$PrivacyDeletionRequest];
+  final Iterable<Type> types = const [
+    PrivacyDeletionRequest,
+    _$PrivacyDeletionRequest
+  ];
 
   @override
   final String wireName = r'PrivacyDeletionRequest';
@@ -62,7 +70,9 @@ class _$PrivacyDeletionRequestSerializer implements PrimitiveSerializer<PrivacyD
     PrivacyDeletionRequest object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -112,5 +122,3 @@ class _$PrivacyDeletionRequestSerializer implements PrimitiveSerializer<PrivacyD
     return result.build();
   }
 }
-
-

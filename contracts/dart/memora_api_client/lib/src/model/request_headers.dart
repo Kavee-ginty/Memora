@@ -13,12 +13,13 @@ part 'request_headers.g.dart';
 /// RequestHeaders
 ///
 /// Properties:
-/// * [acceptLanguage] 
-/// * [xClientVersion] 
-/// * [xCorrelationID] 
-/// * [xPlatform] 
+/// * [acceptLanguage]
+/// * [xClientVersion]
+/// * [xCorrelationID]
+/// * [xPlatform]
 @BuiltValue()
-abstract class RequestHeaders implements Built<RequestHeaders, RequestHeadersBuilder> {
+abstract class RequestHeaders
+    implements Built<RequestHeaders, RequestHeadersBuilder> {
   @BuiltValueField(wireName: r'Accept-Language')
   Optional<String?> get acceptLanguage;
 
@@ -34,17 +35,20 @@ abstract class RequestHeaders implements Built<RequestHeaders, RequestHeadersBui
 
   RequestHeaders._();
 
-  factory RequestHeaders([void updates(RequestHeadersBuilder b)]) = _$RequestHeaders;
+  factory RequestHeaders([void updates(RequestHeadersBuilder b)]) =
+      _$RequestHeaders;
 
   @BuiltValueHook(initializeBuilder: true)
-  static void _defaults(RequestHeadersBuilder b) => b
-      ..acceptLanguage = Optional.absent();
+  static void _defaults(RequestHeadersBuilder b) =>
+      b..acceptLanguage = Optional.absent();
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<RequestHeaders> get serializer => _$RequestHeadersSerializer();
+  static Serializer<RequestHeaders> get serializer =>
+      _$RequestHeadersSerializer();
 }
 
-class _$RequestHeadersSerializer implements PrimitiveSerializer<RequestHeaders> {
+class _$RequestHeadersSerializer
+    implements PrimitiveSerializer<RequestHeaders> {
   @override
   final Iterable<Type> types = const [RequestHeaders, _$RequestHeaders];
 
@@ -91,7 +95,9 @@ class _$RequestHeadersSerializer implements PrimitiveSerializer<RequestHeaders> 
     RequestHeaders object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -163,21 +169,24 @@ class _$RequestHeadersSerializer implements PrimitiveSerializer<RequestHeaders> 
   }
 }
 
-
 class RequestHeadersXPlatformEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'android')
-  static const RequestHeadersXPlatformEnum android = _$requestHeadersXPlatformEnum_android;
+  static const RequestHeadersXPlatformEnum android =
+      _$requestHeadersXPlatformEnum_android;
   @BuiltValueEnumConst(wireName: r'ios')
-  static const RequestHeadersXPlatformEnum ios = _$requestHeadersXPlatformEnum_ios;
+  static const RequestHeadersXPlatformEnum ios =
+      _$requestHeadersXPlatformEnum_ios;
   @BuiltValueEnumConst(wireName: r'unknown_default_open_api', fallback: true)
-  static const RequestHeadersXPlatformEnum unknownDefaultOpenApi = _$requestHeadersXPlatformEnum_unknownDefaultOpenApi;
+  static const RequestHeadersXPlatformEnum unknownDefaultOpenApi =
+      _$requestHeadersXPlatformEnum_unknownDefaultOpenApi;
 
-  static Serializer<RequestHeadersXPlatformEnum> get serializer => _$requestHeadersXPlatformEnumSerializer;
+  static Serializer<RequestHeadersXPlatformEnum> get serializer =>
+      _$requestHeadersXPlatformEnumSerializer;
 
-  const RequestHeadersXPlatformEnum._(String name): super(name);
+  const RequestHeadersXPlatformEnum._(String name) : super(name);
 
-  static BuiltSet<RequestHeadersXPlatformEnum> get values => _$requestHeadersXPlatformEnumValues;
-  static RequestHeadersXPlatformEnum valueOf(String name) => _$requestHeadersXPlatformEnumValueOf(name);
+  static BuiltSet<RequestHeadersXPlatformEnum> get values =>
+      _$requestHeadersXPlatformEnumValues;
+  static RequestHeadersXPlatformEnum valueOf(String name) =>
+      _$requestHeadersXPlatformEnumValueOf(name);
 }
-

@@ -12,14 +12,16 @@ part 'accessibility_preferences.g.dart';
 /// AccessibilityPreferences
 ///
 /// Properties:
-/// * [hapticsEnabled] 
-/// * [highContrast] 
-/// * [reducedMotion] 
-/// * [schemaVersion] 
-/// * [soundEnabled] 
-/// * [timerVisible] 
+/// * [hapticsEnabled]
+/// * [highContrast]
+/// * [reducedMotion]
+/// * [schemaVersion]
+/// * [soundEnabled]
+/// * [timerVisible]
 @BuiltValue()
-abstract class AccessibilityPreferences implements Built<AccessibilityPreferences, AccessibilityPreferencesBuilder> {
+abstract class AccessibilityPreferences
+    implements
+        Built<AccessibilityPreferences, AccessibilityPreferencesBuilder> {
   @BuiltValueField(wireName: r'haptics_enabled')
   Optional<bool?> get hapticsEnabled;
 
@@ -40,24 +42,31 @@ abstract class AccessibilityPreferences implements Built<AccessibilityPreference
 
   AccessibilityPreferences._();
 
-  factory AccessibilityPreferences([void updates(AccessibilityPreferencesBuilder b)]) = _$AccessibilityPreferences;
+  factory AccessibilityPreferences(
+          [void updates(AccessibilityPreferencesBuilder b)]) =
+      _$AccessibilityPreferences;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(AccessibilityPreferencesBuilder b) => b
-      ..hapticsEnabled = Optional.absent()
-      ..highContrast = Optional.absent()
-      ..reducedMotion = Optional.absent()
-      ..schemaVersion = Optional.absent()
-      ..soundEnabled = Optional.absent()
-      ..timerVisible = Optional.absent();
+    ..hapticsEnabled = Optional.absent()
+    ..highContrast = Optional.absent()
+    ..reducedMotion = Optional.absent()
+    ..schemaVersion = Optional.absent()
+    ..soundEnabled = Optional.absent()
+    ..timerVisible = Optional.absent();
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<AccessibilityPreferences> get serializer => _$AccessibilityPreferencesSerializer();
+  static Serializer<AccessibilityPreferences> get serializer =>
+      _$AccessibilityPreferencesSerializer();
 }
 
-class _$AccessibilityPreferencesSerializer implements PrimitiveSerializer<AccessibilityPreferences> {
+class _$AccessibilityPreferencesSerializer
+    implements PrimitiveSerializer<AccessibilityPreferences> {
   @override
-  final Iterable<Type> types = const [AccessibilityPreferences, _$AccessibilityPreferences];
+  final Iterable<Type> types = const [
+    AccessibilityPreferences,
+    _$AccessibilityPreferences
+  ];
 
   @override
   final String wireName = r'AccessibilityPreferences';
@@ -147,7 +156,9 @@ class _$AccessibilityPreferencesSerializer implements PrimitiveSerializer<Access
     AccessibilityPreferences object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -232,5 +243,3 @@ class _$AccessibilityPreferencesSerializer implements PrimitiveSerializer<Access
     return result.build();
   }
 }
-
-

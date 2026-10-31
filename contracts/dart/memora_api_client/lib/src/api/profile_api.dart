@@ -18,7 +18,6 @@ import 'package:memora_api_client/src/model/profile_response.dart';
 import 'package:memora_api_client/src/model/profile_update_request.dart';
 
 class ProfileApi {
-
   final Dio _dio;
 
   final Serializers _serializers;
@@ -29,12 +28,12 @@ class ProfileApi {
   /// Idempotently appends evidence for the authenticated user&#39;s current policy version.
   ///
   /// Parameters:
-  /// * [xCorrelationID] 
-  /// * [xClientVersion] 
-  /// * [xPlatform] 
-  /// * [idempotencyKey] 
-  /// * [consentAcceptanceRequest] 
-  /// * [acceptLanguage] 
+  /// * [xCorrelationID]
+  /// * [xClientVersion]
+  /// * [xPlatform]
+  /// * [idempotencyKey]
+  /// * [consentAcceptanceRequest]
+  /// * [acceptLanguage]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -44,7 +43,7 @@ class ProfileApi {
   ///
   /// Returns a [Future] containing a [Response] with a [ConsentAcceptanceResponse] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<ConsentAcceptanceResponse>> acceptConsent({ 
+  Future<Response<ConsentAcceptanceResponse>> acceptConsent({
     required String xCorrelationID,
     required String xClientVersion,
     required String xPlatform,
@@ -87,11 +86,11 @@ class ProfileApi {
 
     try {
       const _type = FullType(ConsentAcceptanceRequest);
-      _bodyData = _serializers.serialize(consentAcceptanceRequest, specifiedType: _type);
-
-    } catch(error, stackTrace) {
+      _bodyData = _serializers.serialize(consentAcceptanceRequest,
+          specifiedType: _type);
+    } catch (error, stackTrace) {
       throw DioException(
-         requestOptions: _options.compose(
+        requestOptions: _options.compose(
           _dio.options,
           _path,
         ),
@@ -114,11 +113,12 @@ class ProfileApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(ConsentAcceptanceResponse),
-      ) as ConsentAcceptanceResponse;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(ConsentAcceptanceResponse),
+            ) as ConsentAcceptanceResponse;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -145,10 +145,10 @@ class ProfileApi {
   /// Returns configured policy versions and the authenticated user&#39;s latest decisions.
   ///
   /// Parameters:
-  /// * [xCorrelationID] 
-  /// * [xClientVersion] 
-  /// * [xPlatform] 
-  /// * [acceptLanguage] 
+  /// * [xCorrelationID]
+  /// * [xClientVersion]
+  /// * [xPlatform]
+  /// * [acceptLanguage]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -158,7 +158,7 @@ class ProfileApi {
   ///
   /// Returns a [Future] containing a [Response] with a [ConsentResponse] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<ConsentResponse>> getConsent({ 
+  Future<Response<ConsentResponse>> getConsent({
     required String xCorrelationID,
     required String xClientVersion,
     required String xPlatform,
@@ -205,11 +205,12 @@ class ProfileApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(ConsentResponse),
-      ) as ConsentResponse;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(ConsentResponse),
+            ) as ConsentResponse;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -236,10 +237,10 @@ class ProfileApi {
   /// Returns the owner-scoped profile with its optimistic concurrency version.
   ///
   /// Parameters:
-  /// * [xCorrelationID] 
-  /// * [xClientVersion] 
-  /// * [xPlatform] 
-  /// * [acceptLanguage] 
+  /// * [xCorrelationID]
+  /// * [xClientVersion]
+  /// * [xPlatform]
+  /// * [acceptLanguage]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -249,7 +250,7 @@ class ProfileApi {
   ///
   /// Returns a [Future] containing a [Response] with a [ProfileResponse] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<ProfileResponse>> getProfile({ 
+  Future<Response<ProfileResponse>> getProfile({
     required String xCorrelationID,
     required String xClientVersion,
     required String xPlatform,
@@ -296,11 +297,12 @@ class ProfileApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(ProfileResponse),
-      ) as ProfileResponse;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(ProfileResponse),
+            ) as ProfileResponse;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -327,10 +329,10 @@ class ProfileApi {
   /// Returns confirmed notification, accessibility and mission settings.
   ///
   /// Parameters:
-  /// * [xCorrelationID] 
-  /// * [xClientVersion] 
-  /// * [xPlatform] 
-  /// * [acceptLanguage] 
+  /// * [xCorrelationID]
+  /// * [xClientVersion]
+  /// * [xPlatform]
+  /// * [acceptLanguage]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -340,7 +342,7 @@ class ProfileApi {
   ///
   /// Returns a [Future] containing a [Response] with a [ProfilePreferencesResponse] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<ProfilePreferencesResponse>> getProfilePreferences({ 
+  Future<Response<ProfilePreferencesResponse>> getProfilePreferences({
     required String xCorrelationID,
     required String xClientVersion,
     required String xPlatform,
@@ -387,11 +389,12 @@ class ProfileApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(ProfilePreferencesResponse),
-      ) as ProfilePreferencesResponse;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(ProfilePreferencesResponse),
+            ) as ProfilePreferencesResponse;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -418,12 +421,12 @@ class ProfileApi {
   /// Idempotently updates allowlisted profile fields when the supplied version is current.
   ///
   /// Parameters:
-  /// * [xCorrelationID] 
-  /// * [xClientVersion] 
-  /// * [xPlatform] 
-  /// * [idempotencyKey] 
-  /// * [profileUpdateRequest] 
-  /// * [acceptLanguage] 
+  /// * [xCorrelationID]
+  /// * [xClientVersion]
+  /// * [xPlatform]
+  /// * [idempotencyKey]
+  /// * [profileUpdateRequest]
+  /// * [acceptLanguage]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -433,7 +436,7 @@ class ProfileApi {
   ///
   /// Returns a [Future] containing a [Response] with a [ProfileResponse] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<ProfileResponse>> updateProfile({ 
+  Future<Response<ProfileResponse>> updateProfile({
     required String xCorrelationID,
     required String xClientVersion,
     required String xPlatform,
@@ -476,11 +479,11 @@ class ProfileApi {
 
     try {
       const _type = FullType(ProfileUpdateRequest);
-      _bodyData = _serializers.serialize(profileUpdateRequest, specifiedType: _type);
-
-    } catch(error, stackTrace) {
+      _bodyData =
+          _serializers.serialize(profileUpdateRequest, specifiedType: _type);
+    } catch (error, stackTrace) {
       throw DioException(
-         requestOptions: _options.compose(
+        requestOptions: _options.compose(
           _dio.options,
           _path,
         ),
@@ -503,11 +506,12 @@ class ProfileApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(ProfileResponse),
-      ) as ProfileResponse;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(ProfileResponse),
+            ) as ProfileResponse;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -534,12 +538,12 @@ class ProfileApi {
   /// Idempotently updates explicit settings when the supplied version is current.
   ///
   /// Parameters:
-  /// * [xCorrelationID] 
-  /// * [xClientVersion] 
-  /// * [xPlatform] 
-  /// * [idempotencyKey] 
-  /// * [profilePreferencesUpdateRequest] 
-  /// * [acceptLanguage] 
+  /// * [xCorrelationID]
+  /// * [xClientVersion]
+  /// * [xPlatform]
+  /// * [idempotencyKey]
+  /// * [profilePreferencesUpdateRequest]
+  /// * [acceptLanguage]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -549,7 +553,7 @@ class ProfileApi {
   ///
   /// Returns a [Future] containing a [Response] with a [ProfilePreferencesResponse] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<ProfilePreferencesResponse>> updateProfilePreferences({ 
+  Future<Response<ProfilePreferencesResponse>> updateProfilePreferences({
     required String xCorrelationID,
     required String xClientVersion,
     required String xPlatform,
@@ -592,11 +596,11 @@ class ProfileApi {
 
     try {
       const _type = FullType(ProfilePreferencesUpdateRequest);
-      _bodyData = _serializers.serialize(profilePreferencesUpdateRequest, specifiedType: _type);
-
-    } catch(error, stackTrace) {
+      _bodyData = _serializers.serialize(profilePreferencesUpdateRequest,
+          specifiedType: _type);
+    } catch (error, stackTrace) {
       throw DioException(
-         requestOptions: _options.compose(
+        requestOptions: _options.compose(
           _dio.options,
           _path,
         ),
@@ -619,11 +623,12 @@ class ProfileApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(ProfilePreferencesResponse),
-      ) as ProfilePreferencesResponse;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(ProfilePreferencesResponse),
+            ) as ProfilePreferencesResponse;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -645,5 +650,4 @@ class ProfileApi {
       extra: _response.extra,
     );
   }
-
 }

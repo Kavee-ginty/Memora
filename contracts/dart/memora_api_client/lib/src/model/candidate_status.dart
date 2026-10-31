@@ -10,7 +10,6 @@ import 'package:built_value/serializer.dart';
 part 'candidate_status.g.dart';
 
 class CandidateStatus extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'candidate')
   static const CandidateStatus candidate = _$candidate;
   @BuiltValueEnumConst(wireName: r'needs_verification')
@@ -26,9 +25,10 @@ class CandidateStatus extends EnumClass {
   @BuiltValueEnumConst(wireName: r'unknown_default_open_api', fallback: true)
   static const CandidateStatus unknownDefaultOpenApi = _$unknownDefaultOpenApi;
 
-  static Serializer<CandidateStatus> get serializer => _$candidateStatusSerializer;
+  static Serializer<CandidateStatus> get serializer =>
+      _$candidateStatusSerializer;
 
-  const CandidateStatus._(String name): super(name);
+  const CandidateStatus._(String name) : super(name);
 
   static BuiltSet<CandidateStatus> get values => _$values;
   static CandidateStatus valueOf(String name) => _$valueOf(name);
@@ -41,4 +41,3 @@ class CandidateStatus extends EnumClass {
 ///
 /// Trigger mixin generation by writing a line like this one next to your enum.
 abstract class CandidateStatusMixin = Object with _$CandidateStatusMixin;
-

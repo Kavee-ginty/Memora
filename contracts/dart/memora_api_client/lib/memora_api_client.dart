@@ -94,4 +94,3 @@ export 'package:memora_api_client/src/model/upload_status.dart';
 export 'package:memora_api_client/src/model/verification_decision.dart';
 export 'package:memora_api_client/src/model/verification_decision_result.dart';
 export 'package:memora_api_client/src/model/verification_decision_value.dart';
-

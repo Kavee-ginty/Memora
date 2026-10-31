@@ -13,11 +13,12 @@ part 'candidate_list_response.g.dart';
 /// CandidateListResponse
 ///
 /// Properties:
-/// * [hasMore] 
-/// * [items] 
-/// * [nextCursor] 
+/// * [hasMore]
+/// * [items]
+/// * [nextCursor]
 @BuiltValue()
-abstract class CandidateListResponse implements Built<CandidateListResponse, CandidateListResponseBuilder> {
+abstract class CandidateListResponse
+    implements Built<CandidateListResponse, CandidateListResponseBuilder> {
   @BuiltValueField(wireName: r'has_more')
   bool get hasMore;
 
@@ -29,18 +30,24 @@ abstract class CandidateListResponse implements Built<CandidateListResponse, Can
 
   CandidateListResponse._();
 
-  factory CandidateListResponse([void updates(CandidateListResponseBuilder b)]) = _$CandidateListResponse;
+  factory CandidateListResponse(
+      [void updates(CandidateListResponseBuilder b)]) = _$CandidateListResponse;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(CandidateListResponseBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<CandidateListResponse> get serializer => _$CandidateListResponseSerializer();
+  static Serializer<CandidateListResponse> get serializer =>
+      _$CandidateListResponseSerializer();
 }
 
-class _$CandidateListResponseSerializer implements PrimitiveSerializer<CandidateListResponse> {
+class _$CandidateListResponseSerializer
+    implements PrimitiveSerializer<CandidateListResponse> {
   @override
-  final Iterable<Type> types = const [CandidateListResponse, _$CandidateListResponse];
+  final Iterable<Type> types = const [
+    CandidateListResponse,
+    _$CandidateListResponse
+  ];
 
   @override
   final String wireName = r'CandidateListResponse';
@@ -61,10 +68,12 @@ class _$CandidateListResponseSerializer implements PrimitiveSerializer<Candidate
       specifiedType: const FullType(BuiltList, [FullType(CandidateResponse)]),
     );
     yield r'next_cursor';
-    yield object.nextCursor == null ? null : serializers.serialize(
-      object.nextCursor,
-      specifiedType: const FullType.nullable(String),
-    );
+    yield object.nextCursor == null
+        ? null
+        : serializers.serialize(
+            object.nextCursor,
+            specifiedType: const FullType.nullable(String),
+          );
   }
 
   @override
@@ -73,7 +82,9 @@ class _$CandidateListResponseSerializer implements PrimitiveSerializer<Candidate
     CandidateListResponse object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -98,7 +109,8 @@ class _$CandidateListResponseSerializer implements PrimitiveSerializer<Candidate
         case r'items':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(BuiltList, [FullType(CandidateResponse)]),
+            specifiedType:
+                const FullType(BuiltList, [FullType(CandidateResponse)]),
           ) as BuiltList<CandidateResponse>;
           result.items.replace(valueDes);
           break;
@@ -138,5 +150,3 @@ class _$CandidateListResponseSerializer implements PrimitiveSerializer<Candidate
     return result.build();
   }
 }
-
-
