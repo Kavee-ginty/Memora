@@ -1,34 +1,24 @@
-"""Durable worker entry point (T11 memory consumer).
+"""Durable ingestion and memory worker entry point.
 
-Runs the outbox-driven memory worker loop: poll ``memory.process_event``
-jobs, reconcile expired leases and unprocessed producer evidence
-periodically. Ingestion job consumers are introduced by their owning task
-(T09) on this same entry point.
+The memory loop owns polling and invokes the ingestion worker once per cycle.
+Each worker claims only its own job types from the shared durable queue.
 """
 
 import logging
 
-from sqlalchemy import Engine
-
 from memora.core.config import get_settings
-from memora.db.runtime import database_engine
+from memora.worker.ingestion import build_worker
 from memora.worker.memory import run_worker
 
 
-def build_worker_engine() -> Engine:
-    settings = get_settings()
-    database_url = settings.database_url
-    if not database_url:
-        raise RuntimeError("MEMORA_DATABASE_URL is required for the worker")
-    return database_engine(database_url)
-
-
 def main() -> None:
+    settings = get_settings()
     logging.basicConfig(
-        level=logging.INFO,
+        level=settings.log_level,
         format="%(asctime)s %(levelname)s %(name)s %(message)s",
     )
-    run_worker(build_worker_engine())
+    ingestion_worker = build_worker(settings)
+    run_worker(ingestion_worker.engine, cycle_callback=ingestion_worker.run_once)
 
 
 if __name__ == "__main__":

@@ -75,6 +75,14 @@ Class | Method | HTTP request | Description
 [*CurriculumApi*](doc/CurriculumApi.md) | [**listConceptProgress**](doc/CurriculumApi.md#listconceptprogress) | **GET** /v1/subjects/{subject_id}/concept-progress | List due and near-due concept progress for a subject
 [*HealthApi*](doc/HealthApi.md) | [**healthLive**](doc/HealthApi.md#healthlive) | **GET** /health/live | Live
 [*HealthApi*](doc/HealthApi.md) | [**healthReady**](doc/HealthApi.md#healthready) | **GET** /health/ready | Ready
+[*LearningUpdatesApi*](doc/LearningUpdatesApi.md) | [**createLearningUpdate**](doc/LearningUpdatesApi.md#createlearningupdate) | **POST** /v1/learning-updates | Create a text or upload-backed learning update
+[*LearningUpdatesApi*](doc/LearningUpdatesApi.md) | [**createUploadGrant**](doc/LearningUpdatesApi.md#createuploadgrant) | **POST** /v1/learning-updates/{update_id}/uploads | Request a temporary signed upload grant
+[*LearningUpdatesApi*](doc/LearningUpdatesApi.md) | [**deleteLearningUpdate**](doc/LearningUpdatesApi.md#deletelearningupdate) | **DELETE** /v1/learning-updates/{update_id} | Discard a draft or cancel an unfinished workflow
+[*LearningUpdatesApi*](doc/LearningUpdatesApi.md) | [**finalizeUpload**](doc/LearningUpdatesApi.md#finalizeupload) | **POST** /v1/learning-updates/{update_id}/uploads/{upload_id}/finalize | Verify an uploaded object and queue processing once
+[*LearningUpdatesApi*](doc/LearningUpdatesApi.md) | [**getLearningUpdate**](doc/LearningUpdatesApi.md#getlearningupdate) | **GET** /v1/learning-updates/{update_id} | Read processing and deletion status
+[*LearningUpdatesApi*](doc/LearningUpdatesApi.md) | [**listLearningUpdates**](doc/LearningUpdatesApi.md#listlearningupdates) | **GET** /v1/learning-updates | List the authenticated student&#39;s learning updates
+[*LearningUpdatesApi*](doc/LearningUpdatesApi.md) | [**retryLearningUpdate**](doc/LearningUpdatesApi.md#retrylearningupdate) | **POST** /v1/learning-updates/{update_id}/retry | Retry an eligible failed stage
+[*LearningUpdatesApi*](doc/LearningUpdatesApi.md) | [**updateLearningUpdate**](doc/LearningUpdatesApi.md#updatelearningupdate) | **PATCH** /v1/learning-updates/{update_id} | Edit an eligible draft update
 [*ProfileApi*](doc/ProfileApi.md) | [**acceptConsent**](doc/ProfileApi.md#acceptconsent) | **POST** /v1/consent/acceptances | Accept a current consent policy
 [*ProfileApi*](doc/ProfileApi.md) | [**getConsent**](doc/ProfileApi.md#getconsent) | **GET** /v1/consent | Get current consent status
 [*ProfileApi*](doc/ProfileApi.md) | [**getProfile**](doc/ProfileApi.md#getprofile) | **GET** /v1/profile | Get the authenticated profile
@@ -88,6 +96,10 @@ Class | Method | HTTP request | Description
 [*SessionApi*](doc/SessionApi.md) | [**deleteDevice**](doc/SessionApi.md#deletedevice) | **DELETE** /v1/devices/{device_id} | Remove a notification device
 [*SessionApi*](doc/SessionApi.md) | [**registerDevice**](doc/SessionApi.md#registerdevice) | **POST** /v1/devices | Register or refresh a notification device
 [*SessionApi*](doc/SessionApi.md) | [**revokeSession**](doc/SessionApi.md#revokesession) | **POST** /v1/session/revoke | Revoke authenticated sessions
+[*VerificationApi*](doc/VerificationApi.md) | [**commitLearningUpdate**](doc/VerificationApi.md#commitlearningupdate) | **POST** /v1/learning-updates/{update_id}/commit | Commit accepted knowledge and exposure once
+[*VerificationApi*](doc/VerificationApi.md) | [**listExtractionCandidates**](doc/VerificationApi.md#listextractioncandidates) | **GET** /v1/learning-updates/{update_id}/candidates | List authorized extraction candidates
+[*VerificationApi*](doc/VerificationApi.md) | [**previewLearningPath**](doc/VerificationApi.md#previewlearningpath) | **GET** /v1/learning-updates/{update_id}/preview | Preview the validated learning path
+[*VerificationApi*](doc/VerificationApi.md) | [**submitVerificationDecisions**](doc/VerificationApi.md#submitverificationdecisions) | **POST** /v1/learning-updates/{update_id}/verification-decisions | Submit versioned concept verification decisions
 
 
 ## Documentation For Models
@@ -96,6 +108,9 @@ Class | Method | HTTP request | Description
  - [AccountStatus](doc/AccountStatus.md)
  - [ActiveMissionSummary](doc/ActiveMissionSummary.md)
  - [AsyncOperation](doc/AsyncOperation.md)
+ - [CandidateListResponse](doc/CandidateListResponse.md)
+ - [CandidateResponse](doc/CandidateResponse.md)
+ - [CandidateStatus](doc/CandidateStatus.md)
  - [CapabilityFlags](doc/CapabilityFlags.md)
  - [ConceptHistoryResponse](doc/ConceptHistoryResponse.md)
  - [ConceptProgressItem](doc/ConceptProgressItem.md)
@@ -105,6 +120,9 @@ Class | Method | HTTP request | Description
  - [ConsentResponse](doc/ConsentResponse.md)
  - [ConsentStatus](doc/ConsentStatus.md)
  - [ConsentType](doc/ConsentType.md)
+ - [CreateLearningUpdateRequest](doc/CreateLearningUpdateRequest.md)
+ - [DeclaredFile](doc/DeclaredFile.md)
+ - [DeletionStatus](doc/DeletionStatus.md)
  - [DeviceRegistrationRequest](doc/DeviceRegistrationRequest.md)
  - [DeviceRegistrationResponse](doc/DeviceRegistrationResponse.md)
  - [DueReasonExplanation](doc/DueReasonExplanation.md)
@@ -112,9 +130,18 @@ Class | Method | HTTP request | Description
  - [ErrorEnvelope](doc/ErrorEnvelope.md)
  - [EvidenceSummary](doc/EvidenceSummary.md)
  - [FieldError](doc/FieldError.md)
+ - [FinalizeUploadRequest](doc/FinalizeUploadRequest.md)
+ - [FirstMissionSummary](doc/FirstMissionSummary.md)
  - [HealthResponse](doc/HealthResponse.md)
  - [HealthStatus](doc/HealthStatus.md)
  - [IdempotencyHeaders](doc/IdempotencyHeaders.md)
+ - [InputType](doc/InputType.md)
+ - [KnowledgeCommitResponse](doc/KnowledgeCommitResponse.md)
+ - [LearningPathPreviewConcept](doc/LearningPathPreviewConcept.md)
+ - [LearningPathPreviewResponse](doc/LearningPathPreviewResponse.md)
+ - [LearningUpdateListResponse](doc/LearningUpdateListResponse.md)
+ - [LearningUpdateResponse](doc/LearningUpdateResponse.md)
+ - [LearningUpdateStatus](doc/LearningUpdateStatus.md)
  - [PageConceptProgressItem](doc/PageConceptProgressItem.md)
  - [PageMeta](doc/PageMeta.md)
  - [PageParams](doc/PageParams.md)
@@ -129,11 +156,22 @@ Class | Method | HTTP request | Description
  - [QuestionReportResponse](doc/QuestionReportResponse.md)
  - [QuestionReportSummary](doc/QuestionReportSummary.md)
  - [RequestHeaders](doc/RequestHeaders.md)
+ - [RetryLearningUpdateRequest](doc/RetryLearningUpdateRequest.md)
  - [SchedulingExplanation](doc/SchedulingExplanation.md)
  - [SessionBootstrapResponse](doc/SessionBootstrapResponse.md)
  - [SessionRevocationScope](doc/SessionRevocationScope.md)
  - [SessionRevokeRequest](doc/SessionRevokeRequest.md)
+ - [SourceUploadSummary](doc/SourceUploadSummary.md)
  - [SubjectSummary](doc/SubjectSummary.md)
+ - [SubmitVerificationDecisionsRequest](doc/SubmitVerificationDecisionsRequest.md)
+ - [SubmitVerificationDecisionsResponse](doc/SubmitVerificationDecisionsResponse.md)
+ - [UpdateLearningUpdateRequest](doc/UpdateLearningUpdateRequest.md)
+ - [UploadGrantRequest](doc/UploadGrantRequest.md)
+ - [UploadGrantResponse](doc/UploadGrantResponse.md)
+ - [UploadStatus](doc/UploadStatus.md)
+ - [VerificationDecision](doc/VerificationDecision.md)
+ - [VerificationDecisionResult](doc/VerificationDecisionResult.md)
+ - [VerificationDecisionValue](doc/VerificationDecisionValue.md)
 
 
 ## Documentation For Authorization

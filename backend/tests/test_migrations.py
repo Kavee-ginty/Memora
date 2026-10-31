@@ -231,8 +231,10 @@ def create_test_engine(database_url: str) -> Engine:
     )
 
 
-def test_alembic_requires_database_url(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_alembic_requires_database_url(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     monkeypatch.delenv("MEMORA_DATABASE_URL", raising=False)
+    # A developer .env must not make this negative test pass by accident.
+    monkeypatch.setenv("MEMORA_ENV_FILE", str(tmp_path / "missing.env"))
     with pytest.raises(RuntimeError, match="MEMORA_DATABASE_URL is required"):
         command.current(Config(BACKEND_ROOT / "alembic.ini"))
 
@@ -933,6 +935,160 @@ def test_grading_authority_can_move_without_rewriting_evidence(
         connection.execute(
             text("DELETE FROM grading_results WHERE id=:result_id"),
             {"result_id": first_result_id},
+        )
+
+    engine.dispose()
+
+
+def test_ingestion_operations_migration_grants_and_indexes(
+    migration_database_url: str,
+) -> None:
+    command.upgrade(alembic_config(migration_database_url), "head")
+    engine = create_test_engine(migration_database_url)
+    with engine.connect() as connection:
+        # Worker table privileges
+        assert connection.scalar(
+            text("SELECT has_table_privilege('memora_worker', 'source_uploads', 'SELECT')")
+        )
+        assert connection.scalar(
+            text("SELECT has_table_privilege('memora_worker', 'source_uploads', 'UPDATE')")
+        )
+        assert connection.scalar(
+            text("SELECT has_table_privilege('memora_worker', 'extraction_candidates', 'INSERT')")
+        )
+        assert connection.scalar(
+            text("SELECT has_table_privilege('memora_worker', 'verification_requests', 'INSERT')")
+        )
+        assert connection.scalar(
+            text("SELECT has_table_privilege('memora_worker', 'deletion_proofs', 'INSERT')")
+        )
+        assert connection.scalar(
+            text("SELECT has_table_privilege('memora_worker', 'privacy_requests', 'SELECT')")
+        )
+        assert not connection.scalar(
+            text("SELECT has_table_privilege('memora_worker', 'learning_updates', 'SELECT')")
+        )
+        assert not connection.scalar(
+            text("SELECT has_table_privilege('memora_worker', 'learning_updates', 'UPDATE')")
+        )
+
+        # API background_jobs privileges
+        assert connection.scalar(
+            text("SELECT has_table_privilege('memora_api', 'background_jobs', 'INSERT')")
+        )
+        assert connection.scalar(
+            text("SELECT has_table_privilege('memora_api', 'background_jobs', 'UPDATE')")
+        )
+
+        # Worker security-definer function privileges
+        assert connection.scalar(
+            text(
+                "SELECT has_function_privilege("
+                "'memora_worker', 'memora_ingestion_context(uuid,uuid)', 'EXECUTE'"
+                ")"
+            )
+        )
+        assert connection.scalar(
+            text(
+                "SELECT has_function_privilege("
+                "'memora_worker', 'memora_ingestion_mark_update(uuid,uuid,text,text)', 'EXECUTE'"
+                ")"
+            )
+        )
+        assert connection.scalar(
+            text(
+                "SELECT has_function_privilege("
+                "'memora_worker', 'memora_expire_ingestion(timestamptz)', 'EXECUTE'"
+                ")"
+            )
+        )
+        assert not connection.scalar(
+            text(
+                "SELECT has_function_privilege("
+                "'public', 'memora_ingestion_context(uuid,uuid)', 'EXECUTE'"
+                ")"
+            )
+        )
+        assert not connection.scalar(
+            text(
+                "SELECT has_function_privilege("
+                "'public', 'memora_ingestion_mark_update(uuid,uuid,text,text)', 'EXECUTE'"
+                ")"
+            )
+        )
+        assert not connection.scalar(
+            text(
+                "SELECT has_function_privilege("
+                "'public', 'memora_expire_ingestion(timestamptz)', 'EXECUTE'"
+                ")"
+            )
+        )
+
+        # Indexes created by migration 0005
+        indexes = set(
+            connection.execute(
+                text("SELECT indexname FROM pg_indexes WHERE schemaname = 'public'")
+            ).scalars()
+        )
+        assert {
+            "ix_learning_updates_owner_updated",
+            "ix_source_uploads_update",
+            "ix_extraction_candidates_expiry",
+            "ix_verification_requests_update",
+            "ix_knowledge_commits_owner",
+            "uq_deletion_proofs_source_scope",
+        } <= indexes
+
+    # Verify uq_deletion_proofs_source_scope guard
+    with engine.begin() as connection:
+        user_id = connection.scalar(
+            text(
+                "INSERT INTO users(oidc_issuer, oidc_subject, default_timezone, locale, status) "
+                "VALUES ('test-iss-proof', 'test-sub-proof', 'Asia/Colombo', 'en-LK', 'active') "
+                "RETURNING id"
+            )
+        )
+        update_id = uuid4()
+        connection.execute(
+            INSERT_UPDATE_SQL,
+            {"id": update_id, "user_id": user_id},
+        )
+        upload_id = connection.scalar(
+            text(
+                "INSERT INTO source_uploads(learning_update_id, user_id, object_key, "
+                "declared_name, declared_media_type, byte_size, status, expires_at) "
+                "VALUES (:update_id, :user_id, 'proof-test-key', 'test.pdf', "
+                "'application/pdf', 100, 'uploaded', now() + interval '1 day') "
+                "RETURNING id"
+            ),
+            {"update_id": update_id, "user_id": user_id},
+        )
+        connection.execute(
+            text(
+                "INSERT INTO deletion_proofs("
+                "source_upload_id, scope, provider, target_fingerprint, "
+                "result, verified_at, reconciler_version"
+                ") VALUES ("
+                ":upload_id, 'temporary_raw', 's3', 'sha256-fingerprint', "
+                "'deleted', now(), 'v1'"
+                ")"
+            ),
+            {"upload_id": upload_id},
+        )
+
+    # Duplicate deletion proof with same source_upload_id, scope, and provider must fail
+    with pytest.raises(DBAPIError), engine.begin() as connection:
+        connection.execute(
+            text(
+                "INSERT INTO deletion_proofs("
+                "source_upload_id, scope, provider, target_fingerprint, "
+                "result, verified_at, reconciler_version"
+                ") VALUES ("
+                ":upload_id, 'temporary_raw', 's3', 'sha256-fingerprint', "
+                "'deleted', now(), 'v1'"
+                ")"
+            ),
+            {"upload_id": upload_id},
         )
 
     engine.dispose()
