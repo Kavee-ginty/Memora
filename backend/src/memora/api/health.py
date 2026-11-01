@@ -38,7 +38,11 @@ def readiness_engine(database_url: str) -> Engine:
 def database_is_ready() -> bool:
     try:
         with readiness_engine(get_settings().database_url).connect() as connection:
-            return connection.scalar(text("SELECT 1")) == 1
+            if connection.scalar(text("SELECT 1")) != 1:
+                return False
+            from memora.modules.privacy.repository import unreconciled_deletions_exist
+
+            return not unreconciled_deletions_exist(connection)
     except SQLAlchemyError:
         return False
 

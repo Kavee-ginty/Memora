@@ -83,6 +83,11 @@ Class | Method | HTTP request | Description
 [*LearningUpdatesApi*](doc/LearningUpdatesApi.md) | [**listLearningUpdates**](doc/LearningUpdatesApi.md#listlearningupdates) | **GET** /v1/learning-updates | List the authenticated student&#39;s learning updates
 [*LearningUpdatesApi*](doc/LearningUpdatesApi.md) | [**retryLearningUpdate**](doc/LearningUpdatesApi.md#retrylearningupdate) | **POST** /v1/learning-updates/{update_id}/retry | Retry an eligible failed stage
 [*LearningUpdatesApi*](doc/LearningUpdatesApi.md) | [**updateLearningUpdate**](doc/LearningUpdatesApi.md#updatelearningupdate) | **PATCH** /v1/learning-updates/{update_id} | Edit an eligible draft update
+[*PrivacyApi*](doc/PrivacyApi.md) | [**cancelPrivacyDeletion**](doc/PrivacyApi.md#cancelprivacydeletion) | **POST** /v1/privacy/deletions/{request_id}/cancel | Cancel pending account deletion
+[*PrivacyApi*](doc/PrivacyApi.md) | [**createPrivacyDeletion**](doc/PrivacyApi.md#createprivacydeletion) | **POST** /v1/privacy/deletions | Request account deletion
+[*PrivacyApi*](doc/PrivacyApi.md) | [**createPrivacyExport**](doc/PrivacyApi.md#createprivacyexport) | **POST** /v1/privacy/exports | Request account data export
+[*PrivacyApi*](doc/PrivacyApi.md) | [**getPrivacyDeletion**](doc/PrivacyApi.md#getprivacydeletion) | **GET** /v1/privacy/deletions/{request_id} | Get account deletion status
+[*PrivacyApi*](doc/PrivacyApi.md) | [**getPrivacyExport**](doc/PrivacyApi.md#getprivacyexport) | **GET** /v1/privacy/exports/{request_id} | Get privacy export status
 [*ProfileApi*](doc/ProfileApi.md) | [**acceptConsent**](doc/ProfileApi.md#acceptconsent) | **POST** /v1/consent/acceptances | Accept a current consent policy
 [*ProfileApi*](doc/ProfileApi.md) | [**getConsent**](doc/ProfileApi.md#getconsent) | **GET** /v1/consent | Get current consent status
 [*ProfileApi*](doc/ProfileApi.md) | [**getProfile**](doc/ProfileApi.md#getprofile) | **GET** /v1/profile | Get the authenticated profile
@@ -122,6 +127,7 @@ Class | Method | HTTP request | Description
  - [ConsentType](doc/ConsentType.md)
  - [CreateLearningUpdateRequest](doc/CreateLearningUpdateRequest.md)
  - [DeclaredFile](doc/DeclaredFile.md)
+ - [DeletionProofSummary](doc/DeletionProofSummary.md)
  - [DeletionStatus](doc/DeletionStatus.md)
  - [DeviceRegistrationRequest](doc/DeviceRegistrationRequest.md)
  - [DeviceRegistrationResponse](doc/DeviceRegistrationResponse.md)
@@ -147,6 +153,11 @@ Class | Method | HTTP request | Description
  - [PageParams](doc/PageParams.md)
  - [PageQuestionReportSummary](doc/PageQuestionReportSummary.md)
  - [PendingResourceSummary](doc/PendingResourceSummary.md)
+ - [PrivacyDeletionCancelRequest](doc/PrivacyDeletionCancelRequest.md)
+ - [PrivacyDeletionRequest](doc/PrivacyDeletionRequest.md)
+ - [PrivacyDeletionResponse](doc/PrivacyDeletionResponse.md)
+ - [PrivacyExportRequest](doc/PrivacyExportRequest.md)
+ - [PrivacyExportResponse](doc/PrivacyExportResponse.md)
  - [ProfilePreferencesResponse](doc/ProfilePreferencesResponse.md)
  - [ProfilePreferencesUpdateRequest](doc/ProfilePreferencesUpdateRequest.md)
  - [ProfileResponse](doc/ProfileResponse.md)

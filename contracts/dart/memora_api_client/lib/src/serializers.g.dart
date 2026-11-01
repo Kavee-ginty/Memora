@@ -31,6 +31,7 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(ConsentType.serializer)
       ..add(CreateLearningUpdateRequest.serializer)
       ..add(DeclaredFile.serializer)
+      ..add(DeletionProofSummary.serializer)
       ..add(DeletionStatus.serializer)
       ..add(DeviceRegistrationRequest.serializer)
       ..add(DeviceRegistrationRequestPlatformEnum.serializer)
@@ -61,6 +62,13 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(PageParams.serializer)
       ..add(PageQuestionReportSummary.serializer)
       ..add(PendingResourceSummary.serializer)
+      ..add(PrivacyDeletionCancelRequest.serializer)
+      ..add(PrivacyDeletionRequest.serializer)
+      ..add(PrivacyDeletionResponse.serializer)
+      ..add(PrivacyDeletionResponseStatusEnum.serializer)
+      ..add(PrivacyExportRequest.serializer)
+      ..add(PrivacyExportResponse.serializer)
+      ..add(PrivacyExportResponseStatusEnum.serializer)
       ..add(ProfilePreferencesResponse.serializer)
       ..add(ProfilePreferencesResponseLockScreenDetailEnum.serializer)
       ..add(ProfilePreferencesUpdateRequest.serializer)
@@ -127,6 +135,13 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(DeclaredFile)]),
           () => ListBuilder<DeclaredFile>())
+      ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(DeletionProofSummary)]),
+          () => ListBuilder<DeletionProofSummary>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(String)]),
+          () => ListBuilder<String>())
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(FieldError)]),
           () => ListBuilder<FieldError>())

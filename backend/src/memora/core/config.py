@@ -41,6 +41,7 @@ class Settings(BaseSettings):
     database_url: str | None = Field(default=None, repr=False)
     supabase_url: str | None = None
     supabase_publishable_key: SecretStr | None = Field(default=None, repr=False)
+    supabase_service_role_key: SecretStr | None = Field(default=None, repr=False)
     recent_auth_window_seconds: int = Field(default=600, ge=60, le=3600)
     default_timezone: str = "Asia/Colombo"
     default_locale: str = "en-LK"
@@ -113,6 +114,7 @@ class Settings(BaseSettings):
             required = {
                 "MEMORA_SUPABASE_URL": self.supabase_url,
                 "MEMORA_SUPABASE_PUBLISHABLE_KEY": self.supabase_publishable_key,
+                "MEMORA_SUPABASE_SERVICE_ROLE_KEY": self.supabase_service_role_key,
                 "MEMORA_DEVICE_ENCRYPTION_KEY": self.device_encryption_key,
                 "MEMORA_DEVICE_FINGERPRINT_KEY": self.device_fingerprint_key,
                 "MEMORA_CONSENT_TERMS_VERSION": self.consent_terms_version,
@@ -164,6 +166,27 @@ class Settings(BaseSettings):
             ]
             if unapproved:
                 raise ValueError(f"Unapproved consent policy versions: {', '.join(unapproved)}")
+            if self.object_storage_provider != "s3":
+                raise ValueError(
+                    "MEMORA_OBJECT_STORAGE_PROVIDER must be s3 in staging and production"
+                )
+            storage_required = {
+                "MEMORA_OBJECT_STORAGE_ENDPOINT": self.object_storage_endpoint,
+                "MEMORA_OBJECT_STORAGE_BUCKET": self.object_storage_bucket,
+                "MEMORA_OBJECT_STORAGE_ACCESS_KEY": self.object_storage_access_key,
+                "MEMORA_OBJECT_STORAGE_SECRET_KEY": self.object_storage_secret_key,
+            }
+            storage_missing = [
+                name
+                for name, value in storage_required.items()
+                if value is None
+                or (isinstance(value, SecretStr) and not value.get_secret_value().strip())
+                or (isinstance(value, str) and not value.strip())
+            ]
+            if storage_missing:
+                raise ValueError(
+                    f"Missing required object storage settings: {', '.join(storage_missing)}"
+                )
         return self
 
     @property

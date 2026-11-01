@@ -9,6 +9,7 @@ MANAGED_DATABASE_URL = "postgresql+psycopg://memora:managed-secret@db.staging.ex
 DEPLOYED_IDENTITY_SETTINGS = {
     "supabase_url": "https://example.supabase.co",
     "supabase_publishable_key": "synthetic-publishable-key",
+    "supabase_service_role_key": "synthetic-service-role-key",
     "device_encryption_key": "YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=",
     "device_fingerprint_key": "YmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmI=",
     "consent_terms_version": "test-v1",
@@ -16,6 +17,11 @@ DEPLOYED_IDENTITY_SETTINGS = {
     "consent_material_processing_version": "test-v1",
     "consent_model_processing_version": "test-v1",
     "consent_notifications_version": "test-v1",
+    "object_storage_provider": "s3",
+    "object_storage_endpoint": "https://storage.example.com",
+    "object_storage_bucket": "memora-private",
+    "object_storage_access_key": "synthetic-storage-access-key",
+    "object_storage_secret_key": "synthetic-storage-secret-key",
 }
 
 
@@ -138,6 +144,7 @@ def test_deployed_environment_requires_identity_settings() -> None:
     [
         "supabase_url",
         "supabase_publishable_key",
+        "supabase_service_role_key",
         "device_encryption_key",
         "device_fingerprint_key",
         "consent_terms_version",
@@ -184,6 +191,24 @@ def test_production_disables_api_documentation() -> None:
     )
 
     assert settings.docs_enabled is False
+
+
+def test_deployed_environment_requires_durable_object_storage() -> None:
+    with pytest.raises(ValidationError, match="OBJECT_STORAGE_PROVIDER must be s3"):
+        Settings(
+            _env_file=None,
+            environment="production",
+            database_url=MANAGED_DATABASE_URL,
+            **{**DEPLOYED_IDENTITY_SETTINGS, "object_storage_provider": "memory"},
+        )
+
+    with pytest.raises(ValidationError, match="OBJECT_STORAGE_BUCKET"):
+        Settings(
+            _env_file=None,
+            environment="production",
+            database_url=MANAGED_DATABASE_URL,
+            **{**DEPLOYED_IDENTITY_SETTINGS, "object_storage_bucket": ""},
+        )
 
 
 def test_invalid_environment_is_rejected() -> None:

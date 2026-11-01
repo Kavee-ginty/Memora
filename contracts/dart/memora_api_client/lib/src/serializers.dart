@@ -32,6 +32,7 @@ import 'package:memora_api_client/src/model/consent_status.dart';
 import 'package:memora_api_client/src/model/consent_type.dart';
 import 'package:memora_api_client/src/model/create_learning_update_request.dart';
 import 'package:memora_api_client/src/model/declared_file.dart';
+import 'package:memora_api_client/src/model/deletion_proof_summary.dart';
 import 'package:memora_api_client/src/model/deletion_status.dart';
 import 'package:memora_api_client/src/model/device_registration_request.dart';
 import 'package:memora_api_client/src/model/device_registration_response.dart';
@@ -57,6 +58,11 @@ import 'package:memora_api_client/src/model/page_meta.dart';
 import 'package:memora_api_client/src/model/page_params.dart';
 import 'package:memora_api_client/src/model/page_question_report_summary.dart';
 import 'package:memora_api_client/src/model/pending_resource_summary.dart';
+import 'package:memora_api_client/src/model/privacy_deletion_cancel_request.dart';
+import 'package:memora_api_client/src/model/privacy_deletion_request.dart';
+import 'package:memora_api_client/src/model/privacy_deletion_response.dart';
+import 'package:memora_api_client/src/model/privacy_export_request.dart';
+import 'package:memora_api_client/src/model/privacy_export_response.dart';
 import 'package:memora_api_client/src/model/profile_preferences_response.dart';
 import 'package:memora_api_client/src/model/profile_preferences_update_request.dart';
 import 'package:memora_api_client/src/model/profile_response.dart';
@@ -104,6 +110,7 @@ part 'serializers.g.dart';
   ConsentType,
   CreateLearningUpdateRequest,
   DeclaredFile,
+  DeletionProofSummary,
   DeletionStatus,
   DeviceRegistrationRequest,
   DeviceRegistrationResponse,
@@ -129,6 +136,11 @@ part 'serializers.g.dart';
   PageParams,
   PageQuestionReportSummary,
   PendingResourceSummary,
+  PrivacyDeletionCancelRequest,
+  PrivacyDeletionRequest,
+  PrivacyDeletionResponse,
+  PrivacyExportRequest,
+  PrivacyExportResponse,
   ProfilePreferencesResponse,
   ProfilePreferencesUpdateRequest,
   ProfileResponse,
@@ -187,6 +199,10 @@ Serializers serializers = (_$serializers.toBuilder()
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(LearningPathPreviewConcept)]),
         () => ListBuilder<LearningPathPreviewConcept>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(DeletionProofSummary)]),
+        () => ListBuilder<DeletionProofSummary>(),
       )
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(ConsentStatus)]),
