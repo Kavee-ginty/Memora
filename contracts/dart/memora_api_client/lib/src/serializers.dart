@@ -17,7 +17,9 @@ import 'package:memora_api_client/src/model/date.dart';
 import 'package:memora_api_client/src/model/accessibility_preferences.dart';
 import 'package:memora_api_client/src/model/account_status.dart';
 import 'package:memora_api_client/src/model/active_mission_summary.dart';
+import 'package:memora_api_client/src/model/answer_payload.dart';
 import 'package:memora_api_client/src/model/async_operation.dart';
+import 'package:memora_api_client/src/model/attempt_result.dart';
 import 'package:memora_api_client/src/model/candidate_list_response.dart';
 import 'package:memora_api_client/src/model/candidate_response.dart';
 import 'package:memora_api_client/src/model/candidate_status.dart';
@@ -53,6 +55,14 @@ import 'package:memora_api_client/src/model/learning_path_preview_response.dart'
 import 'package:memora_api_client/src/model/learning_update_list_response.dart';
 import 'package:memora_api_client/src/model/learning_update_response.dart';
 import 'package:memora_api_client/src/model/learning_update_status.dart';
+import 'package:memora_api_client/src/model/media_reference.dart';
+import 'package:memora_api_client/src/model/mission_completion_result.dart';
+import 'package:memora_api_client/src/model/mission_item_response.dart';
+import 'package:memora_api_client/src/model/mission_manifest.dart';
+import 'package:memora_api_client/src/model/mission_manifest_item.dart';
+import 'package:memora_api_client/src/model/mission_summary.dart';
+import 'package:memora_api_client/src/model/multiple_choice_answer.dart';
+import 'package:memora_api_client/src/model/numeric_answer.dart';
 import 'package:memora_api_client/src/model/page_concept_progress_item.dart';
 import 'package:memora_api_client/src/model/page_meta.dart';
 import 'package:memora_api_client/src/model/page_params.dart';
@@ -68,6 +78,9 @@ import 'package:memora_api_client/src/model/profile_preferences_update_request.d
 import 'package:memora_api_client/src/model/profile_response.dart';
 import 'package:memora_api_client/src/model/profile_summary.dart';
 import 'package:memora_api_client/src/model/profile_update_request.dart';
+import 'package:memora_api_client/src/model/public_question.dart';
+import 'package:memora_api_client/src/model/public_question_option.dart';
+import 'package:memora_api_client/src/model/public_response_config.dart';
 import 'package:memora_api_client/src/model/question_report_create_request.dart';
 import 'package:memora_api_client/src/model/question_report_response.dart';
 import 'package:memora_api_client/src/model/question_report_summary.dart';
@@ -77,14 +90,19 @@ import 'package:memora_api_client/src/model/scheduling_explanation.dart';
 import 'package:memora_api_client/src/model/session_bootstrap_response.dart';
 import 'package:memora_api_client/src/model/session_revocation_scope.dart';
 import 'package:memora_api_client/src/model/session_revoke_request.dart';
+import 'package:memora_api_client/src/model/short_answer_text.dart';
+import 'package:memora_api_client/src/model/single_choice_answer.dart';
 import 'package:memora_api_client/src/model/source_upload_summary.dart';
 import 'package:memora_api_client/src/model/subject_summary.dart';
+import 'package:memora_api_client/src/model/submit_attempt_request.dart';
 import 'package:memora_api_client/src/model/submit_verification_decisions_request.dart';
 import 'package:memora_api_client/src/model/submit_verification_decisions_response.dart';
+import 'package:memora_api_client/src/model/today_mission_response.dart';
 import 'package:memora_api_client/src/model/update_learning_update_request.dart';
 import 'package:memora_api_client/src/model/upload_grant_request.dart';
 import 'package:memora_api_client/src/model/upload_grant_response.dart';
 import 'package:memora_api_client/src/model/upload_status.dart';
+import 'package:memora_api_client/src/model/value.dart';
 import 'package:memora_api_client/src/model/verification_decision.dart';
 import 'package:memora_api_client/src/model/verification_decision_result.dart';
 import 'package:memora_api_client/src/model/verification_decision_value.dart';
@@ -95,7 +113,9 @@ part 'serializers.g.dart';
   AccessibilityPreferences,
   AccountStatus,
   ActiveMissionSummary,
+  AnswerPayload,
   AsyncOperation,
+  AttemptResult,
   CandidateListResponse,
   CandidateResponse,
   CandidateStatus,
@@ -131,6 +151,14 @@ part 'serializers.g.dart';
   LearningUpdateListResponse,
   LearningUpdateResponse,
   LearningUpdateStatus,
+  MediaReference,
+  MissionCompletionResult,
+  MissionItemResponse,
+  MissionManifest,
+  MissionManifestItem,
+  MissionSummary,
+  MultipleChoiceAnswer,
+  NumericAnswer,
   PageConceptProgressItem,
   PageMeta,
   PageParams,
@@ -146,6 +174,9 @@ part 'serializers.g.dart';
   ProfileResponse,
   ProfileSummary,
   ProfileUpdateRequest,
+  PublicQuestion,
+  PublicQuestionOption,
+  PublicResponseConfig,
   QuestionReportCreateRequest,
   QuestionReportResponse,
   QuestionReportSummary,
@@ -155,14 +186,19 @@ part 'serializers.g.dart';
   SessionBootstrapResponse,
   SessionRevocationScope,
   SessionRevokeRequest,
+  ShortAnswerText,
+  SingleChoiceAnswer,
   SourceUploadSummary,
   SubjectSummary,
+  SubmitAttemptRequest,
   SubmitVerificationDecisionsRequest,
   SubmitVerificationDecisionsResponse,
+  TodayMissionResponse,
   UpdateLearningUpdateRequest,
   UploadGrantRequest,
   UploadGrantResponse,
   UploadStatus,
+  Value,
   VerificationDecision,
   VerificationDecisionResult,
   VerificationDecisionValue,
@@ -175,6 +211,14 @@ Serializers serializers = (_$serializers.toBuilder()
       ..addBuilderFactory(
         const FullType(BuiltMap, [FullType(String), FullType(String)]),
         () => MapBuilder<String, String>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(MissionManifestItem)]),
+        () => ListBuilder<MissionManifestItem>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(PublicQuestionOption)]),
+        () => ListBuilder<PublicQuestionOption>(),
       )
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(FieldError)]),
@@ -213,6 +257,10 @@ Serializers serializers = (_$serializers.toBuilder()
         () => ListBuilder<VerificationDecisionResult>(),
       )
       ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(MediaReference)]),
+        () => ListBuilder<MediaReference>(),
+      )
+      ..addBuilderFactory(
         const FullType(BuiltList, [FullType(PendingResourceSummary)]),
         () => ListBuilder<PendingResourceSummary>(),
       )
@@ -230,12 +278,12 @@ Serializers serializers = (_$serializers.toBuilder()
         () => MapBuilder<String, int>(),
       )
       ..addBuilderFactory(
-        const FullType(BuiltList, [FullType(SchedulingExplanation)]),
-        () => ListBuilder<SchedulingExplanation>(),
-      )
-      ..addBuilderFactory(
         const FullType(BuiltList, [FullType(String)]),
         () => ListBuilder<String>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(SchedulingExplanation)]),
+        () => ListBuilder<SchedulingExplanation>(),
       )
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(SourceUploadSummary)]),

@@ -427,7 +427,7 @@ class PublicResponseConfig(BaseModel):
     min_selections: int | None = None
     max_selections: int | None = None
     unit_affordance: bool | None = None
-    unit_options: list[str] | None = None
+    unit_options: list[str]
     max_characters: int | None = None
     input_hint: str | None = None
 
@@ -509,6 +509,7 @@ class QuestionSnapshot:
                 max_selections=(
                     1 if content.selection_mode == "single" else max(1, len(self.options))
                 ),
+                unit_options=[],
                 input_hint=content.input_hint,
             )
         elif isinstance(content, NumericContent):
@@ -523,6 +524,7 @@ class QuestionSnapshot:
             question_type = "short_answer"
             response_config = PublicResponseConfig(
                 type="short_answer",
+                unit_options=[],
                 max_characters=content.max_characters,
                 input_hint=content.input_hint,
             )

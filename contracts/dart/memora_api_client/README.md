@@ -83,6 +83,15 @@ Class | Method | HTTP request | Description
 [*LearningUpdatesApi*](doc/LearningUpdatesApi.md) | [**listLearningUpdates**](doc/LearningUpdatesApi.md#listlearningupdates) | **GET** /v1/learning-updates | List the authenticated student&#39;s learning updates
 [*LearningUpdatesApi*](doc/LearningUpdatesApi.md) | [**retryLearningUpdate**](doc/LearningUpdatesApi.md#retrylearningupdate) | **POST** /v1/learning-updates/{update_id}/retry | Retry an eligible failed stage
 [*LearningUpdatesApi*](doc/LearningUpdatesApi.md) | [**updateLearningUpdate**](doc/LearningUpdatesApi.md#updatelearningupdate) | **PATCH** /v1/learning-updates/{update_id} | Edit an eligible draft update
+[*MissionsApi*](doc/MissionsApi.md) | [**completeMission**](doc/MissionsApi.md#completemission) | **POST** /v1/missions/{mission_id}/complete | Complete a mission from persisted eligible item states
+[*MissionsApi*](doc/MissionsApi.md) | [**getMission**](doc/MissionsApi.md#getmission) | **GET** /v1/missions/{mission_id} | Read a mission preview and authoritative progress
+[*MissionsApi*](doc/MissionsApi.md) | [**getMissionItem**](doc/MissionsApi.md#getmissionitem) | **GET** /v1/missions/{mission_id}/items/{item_id} | Read the authorized current mission item
+[*MissionsApi*](doc/MissionsApi.md) | [**getMissionResults**](doc/MissionsApi.md#getmissionresults) | **GET** /v1/missions/{mission_id}/results | Read stable mission completion results
+[*MissionsApi*](doc/MissionsApi.md) | [**getTodayMission**](doc/MissionsApi.md#gettodaymission) | **GET** /v1/missions/today | Read or assemble today&#39;s bounded Daily Mission
+[*MissionsApi*](doc/MissionsApi.md) | [**pauseMission**](doc/MissionsApi.md#pausemission) | **POST** /v1/missions/{mission_id}/pause | Pause an active mission without losing progress
+[*MissionsApi*](doc/MissionsApi.md) | [**skipMissionItem**](doc/MissionsApi.md#skipmissionitem) | **POST** /v1/missions/{mission_id}/items/{item_id}/skip | Record one permitted mission-item skip
+[*MissionsApi*](doc/MissionsApi.md) | [**startMission**](doc/MissionsApi.md#startmission) | **POST** /v1/missions/{mission_id}/start | Start or resume a mission with pinned question versions
+[*MissionsApi*](doc/MissionsApi.md) | [**submitAttempt**](doc/MissionsApi.md#submitattempt) | **POST** /v1/missions/{mission_id}/items/{item_id}/attempts | Submit and grade one answer envelope
 [*PrivacyApi*](doc/PrivacyApi.md) | [**cancelPrivacyDeletion**](doc/PrivacyApi.md#cancelprivacydeletion) | **POST** /v1/privacy/deletions/{request_id}/cancel | Cancel pending account deletion
 [*PrivacyApi*](doc/PrivacyApi.md) | [**createPrivacyDeletion**](doc/PrivacyApi.md#createprivacydeletion) | **POST** /v1/privacy/deletions | Request account deletion
 [*PrivacyApi*](doc/PrivacyApi.md) | [**createPrivacyExport**](doc/PrivacyApi.md#createprivacyexport) | **POST** /v1/privacy/exports | Request account data export
@@ -112,7 +121,9 @@ Class | Method | HTTP request | Description
  - [AccessibilityPreferences](doc/AccessibilityPreferences.md)
  - [AccountStatus](doc/AccountStatus.md)
  - [ActiveMissionSummary](doc/ActiveMissionSummary.md)
+ - [AnswerPayload](doc/AnswerPayload.md)
  - [AsyncOperation](doc/AsyncOperation.md)
+ - [AttemptResult](doc/AttemptResult.md)
  - [CandidateListResponse](doc/CandidateListResponse.md)
  - [CandidateResponse](doc/CandidateResponse.md)
  - [CandidateStatus](doc/CandidateStatus.md)
@@ -148,6 +159,14 @@ Class | Method | HTTP request | Description
  - [LearningUpdateListResponse](doc/LearningUpdateListResponse.md)
  - [LearningUpdateResponse](doc/LearningUpdateResponse.md)
  - [LearningUpdateStatus](doc/LearningUpdateStatus.md)
+ - [MediaReference](doc/MediaReference.md)
+ - [MissionCompletionResult](doc/MissionCompletionResult.md)
+ - [MissionItemResponse](doc/MissionItemResponse.md)
+ - [MissionManifest](doc/MissionManifest.md)
+ - [MissionManifestItem](doc/MissionManifestItem.md)
+ - [MissionSummary](doc/MissionSummary.md)
+ - [MultipleChoiceAnswer](doc/MultipleChoiceAnswer.md)
+ - [NumericAnswer](doc/NumericAnswer.md)
  - [PageConceptProgressItem](doc/PageConceptProgressItem.md)
  - [PageMeta](doc/PageMeta.md)
  - [PageParams](doc/PageParams.md)
@@ -163,6 +182,9 @@ Class | Method | HTTP request | Description
  - [ProfileResponse](doc/ProfileResponse.md)
  - [ProfileSummary](doc/ProfileSummary.md)
  - [ProfileUpdateRequest](doc/ProfileUpdateRequest.md)
+ - [PublicQuestion](doc/PublicQuestion.md)
+ - [PublicQuestionOption](doc/PublicQuestionOption.md)
+ - [PublicResponseConfig](doc/PublicResponseConfig.md)
  - [QuestionReportCreateRequest](doc/QuestionReportCreateRequest.md)
  - [QuestionReportResponse](doc/QuestionReportResponse.md)
  - [QuestionReportSummary](doc/QuestionReportSummary.md)
@@ -172,14 +194,19 @@ Class | Method | HTTP request | Description
  - [SessionBootstrapResponse](doc/SessionBootstrapResponse.md)
  - [SessionRevocationScope](doc/SessionRevocationScope.md)
  - [SessionRevokeRequest](doc/SessionRevokeRequest.md)
+ - [ShortAnswerText](doc/ShortAnswerText.md)
+ - [SingleChoiceAnswer](doc/SingleChoiceAnswer.md)
  - [SourceUploadSummary](doc/SourceUploadSummary.md)
  - [SubjectSummary](doc/SubjectSummary.md)
+ - [SubmitAttemptRequest](doc/SubmitAttemptRequest.md)
  - [SubmitVerificationDecisionsRequest](doc/SubmitVerificationDecisionsRequest.md)
  - [SubmitVerificationDecisionsResponse](doc/SubmitVerificationDecisionsResponse.md)
+ - [TodayMissionResponse](doc/TodayMissionResponse.md)
  - [UpdateLearningUpdateRequest](doc/UpdateLearningUpdateRequest.md)
  - [UploadGrantRequest](doc/UploadGrantRequest.md)
  - [UploadGrantResponse](doc/UploadGrantResponse.md)
  - [UploadStatus](doc/UploadStatus.md)
+ - [Value](doc/Value.md)
  - [VerificationDecision](doc/VerificationDecision.md)
  - [VerificationDecisionResult](doc/VerificationDecisionResult.md)
  - [VerificationDecisionValue](doc/VerificationDecisionValue.md)

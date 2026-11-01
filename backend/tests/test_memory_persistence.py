@@ -98,7 +98,7 @@ def create_user(engine: Engine) -> UUID:
     return UUID(str(user_id))
 
 
-def seed_concept(engine: Engine) -> tuple[UUID, UUID]:
+def seed_concept(engine: Engine, *, offset: int = 0) -> tuple[UUID, UUID]:
     with engine.begin() as connection:
         row = (
             connection.execute(
@@ -106,12 +106,17 @@ def seed_concept(engine: Engine) -> tuple[UUID, UUID]:
                     """
                     SELECT c.id AS concept_id, cv.id AS version_id
                     FROM concepts c
-                    JOIN concept_versions cv ON cv.concept_id = c.id
-                    WHERE c.status = 'approved' AND cv.content_status = 'approved'
-                    ORDER BY c.created_at, cv.version_no
-                    LIMIT 1
+                    JOIN LATERAL (
+                      SELECT id FROM concept_versions
+                      WHERE concept_id = c.id AND content_status = 'approved'
+                      ORDER BY version_no LIMIT 1
+                    ) cv ON true
+                    WHERE c.status = 'approved'
+                    ORDER BY c.created_at, c.id
+                    LIMIT 1 OFFSET :offset
                     """
-                )
+                ),
+                {"offset": offset},
             )
             .mappings()
             .one()
@@ -1206,7 +1211,7 @@ def test_stale_event_persists_without_moving_the_state(database: Engine) -> None
 def test_persistence_rejects_mismatched_concept_version_pair(database: Engine) -> None:
     user_id = create_user(database)
     concept_id, _version_id = seed_concept(database)
-    other_concept_id, other_version_id = seed_concept(database)
+    other_concept_id, other_version_id = seed_concept(database, offset=1)
     assert other_concept_id != concept_id
 
     event, source_id = exposure()

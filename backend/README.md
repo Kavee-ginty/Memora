@@ -250,3 +250,26 @@ The database-backed cases in `test_memory_persistence`, `test_memory_selection`,
 everywhere. `test_memory_simulation.py` replays the versioned calibration fixture
 in `backend/tests/fixtures/memory` across a simulated calendar for the four
 acceptance scenarios (new, overdue, weak prerequisite, comeback).
+
+## Study missions
+
+T13 assembles and runs owner-scoped daily missions under `/v1/missions`. Planning
+consumes T11 due-selection inputs and T12 approved question versions. It selects at
+most six planned questions and stops before the estimate would exceed seven minutes;
+it never pads a short mission. Short-answer questions are excluded from automatic
+selection for the initial release.
+
+Start, attempt, skip, pause and completion mutations are idempotent and serialize on
+the mission row. A mission pins immutable question versions, never exposes answer
+keys before submission, and can insert at most one high-confidence repair question.
+The repair counts toward a hard total of seven items. Grading and the corresponding
+`mission.attempt_graded` outbox event commit atomically. Completion stores a stable
+learning summary and emits one `mission.completed` event; T15 consumes that boundary
+to add authoritative XP, streak and reef results.
+
+Run the focused mission checks against a disposable database:
+
+```powershell
+$env:MEMORA_TEST_DATABASE_URL = 'postgresql+psycopg://memora:<local-password>@127.0.0.1:5432/memora_migration_test'
+backend\.venv\Scripts\python.exe -m pytest backend\tests\test_mission_ranking.py backend\tests\test_missions_integration.py
+```

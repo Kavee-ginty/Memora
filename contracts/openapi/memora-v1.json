@@ -121,6 +121,31 @@
         "title": "ActiveMissionSummary",
         "type": "object"
       },
+      "AnswerPayload": {
+        "discriminator": {
+          "mapping": {
+            "multiple_choice": "#/components/schemas/MultipleChoiceAnswer",
+            "numeric": "#/components/schemas/NumericAnswer",
+            "short_answer": "#/components/schemas/ShortAnswerText",
+            "single_choice": "#/components/schemas/SingleChoiceAnswer"
+          },
+          "propertyName": "type"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/SingleChoiceAnswer"
+          },
+          {
+            "$ref": "#/components/schemas/MultipleChoiceAnswer"
+          },
+          {
+            "$ref": "#/components/schemas/NumericAnswer"
+          },
+          {
+            "$ref": "#/components/schemas/ShortAnswerText"
+          }
+        ]
+      },
       "AsyncOperation": {
         "properties": {
           "resource_id": {
@@ -167,6 +192,104 @@
           "updated_at"
         ],
         "title": "AsyncOperation",
+        "type": "object"
+      },
+      "AttemptResult": {
+        "properties": {
+          "attempt_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attempt Id"
+          },
+          "can_complete": {
+            "title": "Can Complete",
+            "type": "boolean"
+          },
+          "explanation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Explanation"
+          },
+          "explanation_available": {
+            "title": "Explanation Available",
+            "type": "boolean"
+          },
+          "feedback": {
+            "title": "Feedback",
+            "type": "string"
+          },
+          "grading_status": {
+            "enum": [
+              "graded",
+              "skipped"
+            ],
+            "title": "Grading Status",
+            "type": "string"
+          },
+          "influence_limited": {
+            "title": "Influence Limited",
+            "type": "boolean"
+          },
+          "next_item_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Item Id"
+          },
+          "outcome": {
+            "enum": [
+              "recalled",
+              "partial",
+              "uncertain",
+              "weak",
+              "skipped"
+            ],
+            "title": "Outcome",
+            "type": "string"
+          },
+          "repair_action": {
+            "enum": [
+              "none",
+              "repair_inserted",
+              "review_concept",
+              "confirm_or_appeal"
+            ],
+            "title": "Repair Action",
+            "type": "string"
+          }
+        },
+        "required": [
+          "attempt_id",
+          "grading_status",
+          "outcome",
+          "feedback",
+          "explanation",
+          "explanation_available",
+          "repair_action",
+          "influence_limited",
+          "next_item_id",
+          "can_complete"
+        ],
+        "title": "AttemptResult",
         "type": "object"
       },
       "CandidateListResponse": {
@@ -1542,6 +1665,417 @@
         "title": "LearningUpdateStatus",
         "type": "string"
       },
+      "MediaReference": {
+        "additionalProperties": false,
+        "description": "Authorized media reference carried by question content.",
+        "properties": {
+          "alt_text": {
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Alt Text",
+            "type": "string"
+          },
+          "media_id": {
+            "maxLength": 100,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+            "title": "Media Id",
+            "type": "string"
+          },
+          "media_type": {
+            "enum": [
+              "image",
+              "diagram",
+              "audio"
+            ],
+            "title": "Media Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "media_id",
+          "alt_text",
+          "media_type"
+        ],
+        "title": "MediaReference",
+        "type": "object"
+      },
+      "MissionCompletionResult": {
+        "properties": {
+          "completed_at": {
+            "title": "Completed At",
+            "type": "string"
+          },
+          "engagement_status": {
+            "const": "pending",
+            "title": "Engagement Status",
+            "type": "string"
+          },
+          "mission_id": {
+            "format": "uuid",
+            "title": "Mission Id",
+            "type": "string"
+          },
+          "next_suggested_action": {
+            "enum": [
+              "home",
+              "progress"
+            ],
+            "title": "Next Suggested Action",
+            "type": "string"
+          },
+          "protected_count": {
+            "maximum": 7.0,
+            "minimum": 0.0,
+            "title": "Protected Count",
+            "type": "integer"
+          },
+          "repaired_count": {
+            "maximum": 7.0,
+            "minimum": 0.0,
+            "title": "Repaired Count",
+            "type": "integer"
+          },
+          "skipped_count": {
+            "maximum": 7.0,
+            "minimum": 0.0,
+            "title": "Skipped Count",
+            "type": "integer"
+          },
+          "status": {
+            "const": "completed",
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "mission_id",
+          "status",
+          "protected_count",
+          "repaired_count",
+          "skipped_count",
+          "completed_at",
+          "engagement_status",
+          "next_suggested_action"
+        ],
+        "title": "MissionCompletionResult",
+        "type": "object"
+      },
+      "MissionItemResponse": {
+        "properties": {
+          "due_reason": {
+            "title": "Due Reason",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "mission_id": {
+            "format": "uuid",
+            "title": "Mission Id",
+            "type": "string"
+          },
+          "mission_type": {
+            "enum": [
+              "protect",
+              "repair",
+              "recover",
+              "discover",
+              "challenge"
+            ],
+            "title": "Mission Type",
+            "type": "string"
+          },
+          "position": {
+            "maximum": 6.0,
+            "minimum": 0.0,
+            "title": "Position",
+            "type": "integer"
+          },
+          "question": {
+            "$ref": "#/components/schemas/PublicQuestion"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AttemptResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "selection_reason_codes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Selection Reason Codes",
+            "type": "array"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "presented",
+              "answered",
+              "skipped",
+              "cancelled"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "mission_id",
+          "position",
+          "mission_type",
+          "status",
+          "selection_reason_codes",
+          "due_reason",
+          "question",
+          "result"
+        ],
+        "title": "MissionItemResponse",
+        "type": "object"
+      },
+      "MissionManifest": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MissionManifestItem"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "mission": {
+            "$ref": "#/components/schemas/MissionSummary"
+          }
+        },
+        "required": [
+          "mission",
+          "items"
+        ],
+        "title": "MissionManifest",
+        "type": "object"
+      },
+      "MissionManifestItem": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "mission_type": {
+            "enum": [
+              "protect",
+              "repair",
+              "recover",
+              "discover",
+              "challenge"
+            ],
+            "title": "Mission Type",
+            "type": "string"
+          },
+          "position": {
+            "maximum": 6.0,
+            "minimum": 0.0,
+            "title": "Position",
+            "type": "integer"
+          },
+          "question_type": {
+            "enum": [
+              "single_choice",
+              "multiple_choice",
+              "numeric"
+            ],
+            "title": "Question Type",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "presented",
+              "answered",
+              "skipped",
+              "cancelled"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "position",
+          "mission_type",
+          "question_type",
+          "status"
+        ],
+        "title": "MissionManifestItem",
+        "type": "object"
+      },
+      "MissionSummary": {
+        "properties": {
+          "completed_item_count": {
+            "maximum": 7.0,
+            "minimum": 0.0,
+            "title": "Completed Item Count",
+            "type": "integer"
+          },
+          "current_item_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Item Id"
+          },
+          "due_reason": {
+            "title": "Due Reason",
+            "type": "string"
+          },
+          "estimated_minutes": {
+            "maximum": 7.0,
+            "minimum": 1.0,
+            "title": "Estimated Minutes",
+            "type": "integer"
+          },
+          "expires_at": {
+            "title": "Expires At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "mission_date": {
+            "format": "date",
+            "title": "Mission Date",
+            "type": "string"
+          },
+          "mission_timezone": {
+            "title": "Mission Timezone",
+            "type": "string"
+          },
+          "planned_item_count": {
+            "maximum": 7.0,
+            "minimum": 1.0,
+            "title": "Planned Item Count",
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "planned",
+              "started",
+              "paused",
+              "completed",
+              "expired",
+              "abandoned"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "subject_id": {
+            "format": "uuid",
+            "title": "Subject Id",
+            "type": "string"
+          },
+          "version": {
+            "minimum": 1.0,
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "subject_id",
+          "mission_date",
+          "mission_timezone",
+          "status",
+          "estimated_minutes",
+          "planned_item_count",
+          "completed_item_count",
+          "current_item_id",
+          "due_reason",
+          "expires_at",
+          "version"
+        ],
+        "title": "MissionSummary",
+        "type": "object"
+      },
+      "MultipleChoiceAnswer": {
+        "additionalProperties": false,
+        "properties": {
+          "option_keys": {
+            "items": {
+              "maxLength": 16,
+              "minLength": 1,
+              "pattern": "^[a-z0-9][a-z0-9_-]*$",
+              "type": "string"
+            },
+            "maxItems": 10,
+            "minItems": 1,
+            "title": "Option Keys",
+            "type": "array"
+          },
+          "type": {
+            "const": "multiple_choice",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "option_keys"
+        ],
+        "title": "MultipleChoiceAnswer",
+        "type": "object"
+      },
+      "NumericAnswer": {
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "const": "numeric",
+            "title": "Type",
+            "type": "string"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "type",
+          "value"
+        ],
+        "title": "NumericAnswer",
+        "type": "object"
+      },
       "PageMeta": {
         "properties": {
           "has_more": {
@@ -2322,6 +2856,179 @@
         "title": "ProfileUpdateRequest",
         "type": "object"
       },
+      "PublicQuestion": {
+        "description": "Pre-submission payload with no correctness or rubric data.",
+        "properties": {
+          "media": {
+            "items": {
+              "$ref": "#/components/schemas/MediaReference"
+            },
+            "title": "Media",
+            "type": "array"
+          },
+          "options": {
+            "items": {
+              "$ref": "#/components/schemas/PublicQuestionOption"
+            },
+            "title": "Options",
+            "type": "array"
+          },
+          "prompt": {
+            "title": "Prompt",
+            "type": "string"
+          },
+          "question_type": {
+            "enum": [
+              "single_choice",
+              "multiple_choice",
+              "numeric",
+              "short_answer"
+            ],
+            "title": "Question Type",
+            "type": "string"
+          },
+          "question_version_id": {
+            "format": "uuid",
+            "title": "Question Version Id",
+            "type": "string"
+          },
+          "response_config": {
+            "$ref": "#/components/schemas/PublicResponseConfig"
+          },
+          "trust_label": {
+            "title": "Trust Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "question_version_id",
+          "question_type",
+          "prompt",
+          "media",
+          "options",
+          "response_config",
+          "trust_label"
+        ],
+        "title": "PublicQuestion",
+        "type": "object"
+      },
+      "PublicQuestionOption": {
+        "properties": {
+          "accessible_image_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accessible Image Ref"
+          },
+          "display_order": {
+            "title": "Display Order",
+            "type": "integer"
+          },
+          "display_text": {
+            "title": "Display Text",
+            "type": "string"
+          },
+          "option_key": {
+            "title": "Option Key",
+            "type": "string"
+          }
+        },
+        "required": [
+          "option_key",
+          "display_text",
+          "accessible_image_ref",
+          "display_order"
+        ],
+        "title": "PublicQuestionOption",
+        "type": "object"
+      },
+      "PublicResponseConfig": {
+        "properties": {
+          "input_hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Input Hint"
+          },
+          "max_characters": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Characters"
+          },
+          "max_selections": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Selections"
+          },
+          "min_selections": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Selections"
+          },
+          "type": {
+            "enum": [
+              "single_choice",
+              "multiple_choice",
+              "numeric",
+              "short_answer"
+            ],
+            "title": "Type",
+            "type": "string"
+          },
+          "unit_affordance": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Affordance"
+          },
+          "unit_options": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Unit Options",
+            "type": "array"
+          }
+        },
+        "required": [
+          "type",
+          "unit_options"
+        ],
+        "title": "PublicResponseConfig",
+        "type": "object"
+      },
       "QuestionReportCreateRequest": {
         "additionalProperties": false,
         "properties": {
@@ -2801,6 +3508,56 @@
         "title": "SessionRevokeRequest",
         "type": "object"
       },
+      "ShortAnswerText": {
+        "additionalProperties": false,
+        "properties": {
+          "text": {
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          },
+          "type": {
+            "const": "short_answer",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "text"
+        ],
+        "title": "ShortAnswerText",
+        "type": "object"
+      },
+      "SingleChoiceAnswer": {
+        "additionalProperties": false,
+        "properties": {
+          "option_keys": {
+            "items": {
+              "maxLength": 16,
+              "minLength": 1,
+              "pattern": "^[a-z0-9][a-z0-9_-]*$",
+              "type": "string"
+            },
+            "maxItems": 1,
+            "minItems": 1,
+            "title": "Option Keys",
+            "type": "array"
+          },
+          "type": {
+            "const": "single_choice",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "option_keys"
+        ],
+        "title": "SingleChoiceAnswer",
+        "type": "object"
+      },
       "SourceUploadSummary": {
         "properties": {
           "byte_size": {
@@ -2902,6 +3659,55 @@
         "title": "SubjectSummary",
         "type": "object"
       },
+      "SubmitAttemptRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "answered_at": {
+            "format": "date-time",
+            "title": "Answered At",
+            "type": "string"
+          },
+          "client_operation_id": {
+            "format": "uuid",
+            "title": "Client Operation Id",
+            "type": "string"
+          },
+          "elapsed_ms": {
+            "anyOf": [
+              {
+                "maximum": 86400000.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Elapsed Ms"
+          },
+          "offline_submission": {
+            "default": false,
+            "title": "Offline Submission",
+            "type": "boolean"
+          },
+          "question_version_id": {
+            "format": "uuid",
+            "title": "Question Version Id",
+            "type": "string"
+          },
+          "response": {
+            "$ref": "#/components/schemas/AnswerPayload"
+          }
+        },
+        "required": [
+          "client_operation_id",
+          "question_version_id",
+          "response",
+          "answered_at"
+        ],
+        "title": "SubmitAttemptRequest",
+        "type": "object"
+      },
       "SubmitVerificationDecisionsRequest": {
         "additionalProperties": false,
         "properties": {
@@ -2939,6 +3745,36 @@
           "results"
         ],
         "title": "SubmitVerificationDecisionsResponse",
+        "type": "object"
+      },
+      "TodayMissionResponse": {
+        "properties": {
+          "mission": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MissionSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "state": {
+            "enum": [
+              "no_due",
+              "mission_ready",
+              "mission_in_progress",
+              "mission_complete"
+            ],
+            "title": "State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "state",
+          "mission"
+        ],
+        "title": "TodayMissionResponse",
         "type": "object"
       },
       "UpdateLearningUpdateRequest": {
@@ -9371,6 +10207,3171 @@
         "summary": "Submit versioned concept verification decisions",
         "tags": [
           "verification"
+        ]
+      }
+    },
+    "/v1/missions/today": {
+      "get": {
+        "description": "Returns one persisted, owner-scoped mission ranked from authoritative memory state, or an explicit no-due state. Hidden candidates and scores are not returned.",
+        "operationId": "getTodayMission",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Correlation-ID",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "X-Correlation-Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Client-Version",
+            "required": true,
+            "schema": {
+              "maxLength": 50,
+              "minLength": 1,
+              "title": "X-Client-Version",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Platform",
+            "required": true,
+            "schema": {
+              "enum": [
+                "android",
+                "ios"
+              ],
+              "title": "X-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 35,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TodayMissionResponse"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Malformed request, invalid cursor or invalid state.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Missing, invalid or expired access token.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Consent, recent authentication or operation not allowed.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Resource not found in the authenticated scope.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Version, idempotency or workflow conflict.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Payload too large.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unsupported media type.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Validation failed.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Rate limited.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Temporarily unavailable.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Read or assemble today's bounded Daily Mission",
+        "tags": [
+          "missions"
+        ]
+      }
+    },
+    "/v1/missions/{mission_id}": {
+      "get": {
+        "operationId": "getMission",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mission_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Mission Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Correlation-ID",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "X-Correlation-Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Client-Version",
+            "required": true,
+            "schema": {
+              "maxLength": 50,
+              "minLength": 1,
+              "title": "X-Client-Version",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Platform",
+            "required": true,
+            "schema": {
+              "enum": [
+                "android",
+                "ios"
+              ],
+              "title": "X-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 35,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MissionManifest"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Malformed request, invalid cursor or invalid state.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Missing, invalid or expired access token.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Consent, recent authentication or operation not allowed.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Resource not found in the authenticated scope.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Version, idempotency or workflow conflict.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Payload too large.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unsupported media type.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Validation failed.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Rate limited.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Temporarily unavailable.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Read a mission preview and authoritative progress",
+        "tags": [
+          "missions"
+        ]
+      }
+    },
+    "/v1/missions/{mission_id}/complete": {
+      "post": {
+        "description": "Stores one stable learning result and emits mission.completed. XP, streak and reef projection are applied by the T15 idempotent engagement consumer.",
+        "operationId": "completeMission",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mission_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Mission Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Correlation-ID",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "X-Correlation-Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Client-Version",
+            "required": true,
+            "schema": {
+              "maxLength": 50,
+              "minLength": 1,
+              "title": "X-Client-Version",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Platform",
+            "required": true,
+            "schema": {
+              "enum": [
+                "android",
+                "ios"
+              ],
+              "title": "X-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 35,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "maxLength": 255,
+              "minLength": 16,
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MissionCompletionResult"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Malformed request, invalid cursor or invalid state.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Missing, invalid or expired access token.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Consent, recent authentication or operation not allowed.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Resource not found in the authenticated scope.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Version, idempotency or workflow conflict.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Payload too large.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unsupported media type.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Validation failed.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Rate limited.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Temporarily unavailable.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Complete a mission from persisted eligible item states",
+        "tags": [
+          "missions"
+        ]
+      }
+    },
+    "/v1/missions/{mission_id}/items/{item_id}": {
+      "get": {
+        "description": "Returns the pinned question without an answer key or grading rubric.",
+        "operationId": "getMissionItem",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mission_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Mission Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "item_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Item Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Correlation-ID",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "X-Correlation-Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Client-Version",
+            "required": true,
+            "schema": {
+              "maxLength": 50,
+              "minLength": 1,
+              "title": "X-Client-Version",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Platform",
+            "required": true,
+            "schema": {
+              "enum": [
+                "android",
+                "ios"
+              ],
+              "title": "X-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 35,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MissionItemResponse"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Malformed request, invalid cursor or invalid state.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Missing, invalid or expired access token.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Consent, recent authentication or operation not allowed.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Resource not found in the authenticated scope.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Version, idempotency or workflow conflict.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Payload too large.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unsupported media type.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Validation failed.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Rate limited.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Temporarily unavailable.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Read the authorized current mission item",
+        "tags": [
+          "missions"
+        ]
+      }
+    },
+    "/v1/missions/{mission_id}/items/{item_id}/attempts": {
+      "post": {
+        "description": "Uses client_operation_id as the stable retry identity, grades only the pinned question, and publishes bounded memory evidence through the transactional outbox.",
+        "operationId": "submitAttempt",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mission_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Mission Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "item_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Item Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Correlation-ID",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "X-Correlation-Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Client-Version",
+            "required": true,
+            "schema": {
+              "maxLength": 50,
+              "minLength": 1,
+              "title": "X-Client-Version",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Platform",
+            "required": true,
+            "schema": {
+              "enum": [
+                "android",
+                "ios"
+              ],
+              "title": "X-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 35,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitAttemptRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttemptResult"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Malformed request, invalid cursor or invalid state.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Missing, invalid or expired access token.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Consent, recent authentication or operation not allowed.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Resource not found in the authenticated scope.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Version, idempotency or workflow conflict.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Payload too large.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unsupported media type.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Validation failed.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Rate limited.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Temporarily unavailable.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Submit and grade one answer envelope",
+        "tags": [
+          "missions"
+        ]
+      }
+    },
+    "/v1/missions/{mission_id}/items/{item_id}/skip": {
+      "post": {
+        "operationId": "skipMissionItem",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mission_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Mission Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "item_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Item Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Correlation-ID",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "X-Correlation-Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Client-Version",
+            "required": true,
+            "schema": {
+              "maxLength": 50,
+              "minLength": 1,
+              "title": "X-Client-Version",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Platform",
+            "required": true,
+            "schema": {
+              "enum": [
+                "android",
+                "ios"
+              ],
+              "title": "X-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 35,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "maxLength": 255,
+              "minLength": 16,
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttemptResult"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Malformed request, invalid cursor or invalid state.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Missing, invalid or expired access token.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Consent, recent authentication or operation not allowed.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Resource not found in the authenticated scope.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Version, idempotency or workflow conflict.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Payload too large.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unsupported media type.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Validation failed.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Rate limited.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Temporarily unavailable.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Record one permitted mission-item skip",
+        "tags": [
+          "missions"
+        ]
+      }
+    },
+    "/v1/missions/{mission_id}/pause": {
+      "post": {
+        "operationId": "pauseMission",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mission_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Mission Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Correlation-ID",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "X-Correlation-Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Client-Version",
+            "required": true,
+            "schema": {
+              "maxLength": 50,
+              "minLength": 1,
+              "title": "X-Client-Version",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Platform",
+            "required": true,
+            "schema": {
+              "enum": [
+                "android",
+                "ios"
+              ],
+              "title": "X-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 35,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "maxLength": 255,
+              "minLength": 16,
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MissionSummary"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Malformed request, invalid cursor or invalid state.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Missing, invalid or expired access token.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Consent, recent authentication or operation not allowed.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Resource not found in the authenticated scope.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Version, idempotency or workflow conflict.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Payload too large.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unsupported media type.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Validation failed.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Rate limited.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Temporarily unavailable.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Pause an active mission without losing progress",
+        "tags": [
+          "missions"
+        ]
+      }
+    },
+    "/v1/missions/{mission_id}/results": {
+      "get": {
+        "operationId": "getMissionResults",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mission_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Mission Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Correlation-ID",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "X-Correlation-Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Client-Version",
+            "required": true,
+            "schema": {
+              "maxLength": 50,
+              "minLength": 1,
+              "title": "X-Client-Version",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Platform",
+            "required": true,
+            "schema": {
+              "enum": [
+                "android",
+                "ios"
+              ],
+              "title": "X-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 35,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MissionCompletionResult"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Malformed request, invalid cursor or invalid state.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Missing, invalid or expired access token.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Consent, recent authentication or operation not allowed.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Resource not found in the authenticated scope.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Version, idempotency or workflow conflict.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Payload too large.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unsupported media type.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Validation failed.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Rate limited.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Temporarily unavailable.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Read stable mission completion results",
+        "tags": [
+          "missions"
+        ]
+      }
+    },
+    "/v1/missions/{mission_id}/start": {
+      "post": {
+        "operationId": "startMission",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mission_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Mission Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Correlation-ID",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "X-Correlation-Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Client-Version",
+            "required": true,
+            "schema": {
+              "maxLength": 50,
+              "minLength": 1,
+              "title": "X-Client-Version",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Platform",
+            "required": true,
+            "schema": {
+              "enum": [
+                "android",
+                "ios"
+              ],
+              "title": "X-Platform",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 35,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "maxLength": 255,
+              "minLength": 16,
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MissionManifest"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Malformed request, invalid cursor or invalid state.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Missing, invalid or expired access token.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Consent, recent authentication or operation not allowed.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Resource not found in the authenticated scope.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Version, idempotency or workflow conflict.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Payload too large.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unsupported media type.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Validation failed.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Rate limited.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Temporarily unavailable.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Effective correlation identifier echoed by the server.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Support and tracing identifier.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Start or resume a mission with pinned question versions",
+        "tags": [
+          "missions"
         ]
       }
     },
