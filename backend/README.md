@@ -13,17 +13,18 @@ uvicorn memora.main:app --reload
 
 Create or update the local database and apply foundational seeds:
 
-Set `MEMORA_DATABASE_URL` in the process environment first; Alembic has no committed
-credential fallback. Host commands must use the loopback host `127.0.0.1`; the Compose
-service name `postgres` resolves only inside the Compose network.
+Alembic reads `MEMORA_DATABASE_URL` from the process environment first. When that
+variable is absent it falls back to the repository `.env` file (override the path with
+`MEMORA_ENV_FILE`). Deployed jobs must still set the variable explicitly. Host commands
+must use the loopback host `127.0.0.1`; the Compose service name `postgres` resolves only
+inside the Compose network.
 
 ```powershell
-$env:MEMORA_DATABASE_URL = 'postgresql+psycopg://memora:<local-password>@127.0.0.1:5432/memora'
 alembic upgrade head
 python -m memora.db.seed
 ```
 
-The placeholder password is the synthetic `POSTGRES_PASSWORD` from your untracked `.env`.
+The `.env` value is the synthetic `POSTGRES_PASSWORD` from your untracked `.env`.
 
 Alembic waits at most 10 seconds for a database connection; set
 `MEMORA_DB_CONNECT_TIMEOUT_SECONDS` to change that bound. The seed command uses the same
@@ -108,3 +109,144 @@ Supabase logout revokes refresh material; an already issued access token remains
 valid until its short expiry. Keep the provider access-token lifetime short. Session
 revocation requires interactive authentication within the configured ten-minute
 window and records a safe audit event without the token.
+
+## Learning ingestion and background workers
+
+T09 provides the learning ingestion pipeline, extraction worker and temporary upload
+reconciler. Ingestion endpoints live under `/v1/learning-updates`:
+
+- Lifecycle: create, list, read, edit and discard learning updates.
+- Source uploads: generate single-use presigned PUT upload grants, validate uploaded
+  content bounds and SHA-256 digests, and finalize uploads for processing.
+- Extraction & candidates: worker executes text/document extraction (deterministic or
+  OpenRouter LLM), storing candidate concepts, questions and facts with confidence bands.
+- Verification: inspect candidates, accept/edit/reject/merge decisions, and preview the
+  learning path impact.
+- Knowledge commit & deletion: atomic commit transaction into retained knowledge tables,
+  outbox event creation, and background raw file deletion with cryptographic deletion proofs.
+
+### Background worker runners
+
+Ingestion and deletion jobs run asynchronously through the worker entry points:
+
+```powershell
+# Run extraction and source deletion background worker
+python -m memora.worker.ingestion
+
+# Run temporary source upload and expired update reconciler
+python -m memora.worker.reconciler
+```
+
+### Ingestion configuration
+
+Ingestion configuration keys in `.env` or the platform environment:
+
+- `MEMORA_INGESTION_ENCRYPTION_KEY`: Base64-encoded 32-byte AES-256-GCM key for manual text encryption.
+- `MEMORA_EXTRACTION_PROVIDER`: `deterministic` (default) or `openrouter`.
+- `MEMORA_OPENROUTER_API_KEY`: API key for OpenRouter model extraction.
+- `MEMORA_OPENROUTER_MODEL`: Model identifier for LLM extraction.
+- `MEMORA_OBJECT_STORAGE_PROVIDER`: `memory` (test/local default) or `s3`.
+- `MEMORA_OBJECT_STORAGE_BUCKET`: Target S3 bucket name for temporary source uploads.
+- `MEMORA_OBJECT_STORAGE_ENDPOINT`: S3 endpoint URL (when using MinIO, Cloudflare R2, etc.).
+- `MEMORA_OBJECT_STORAGE_REGION`: AWS region (defaults to `us-east-1`).
+- `MEMORA_OBJECT_STORAGE_ACCESS_KEY` & `MEMORA_OBJECT_STORAGE_SECRET_KEY`: S3 SigV4 credentials.
+- `MEMORA_UPLOAD_MAX_FILES`: Maximum files declared per update (defaults to 5, max 20).
+- `MEMORA_UPLOAD_MAX_BYTES`: Maximum byte size per upload (defaults to 25 MiB).
+- `MEMORA_UPLOAD_GRANT_TTL_SECONDS`: Presigned PUT grant validity window (defaults to 900s).
+- `MEMORA_INGESTION_EXPIRY_HOURS`: TTL before uncommitted updates expire (defaults to 72h).
+
+Privacy deletion additionally requires `MEMORA_SUPABASE_SERVICE_ROLE_KEY` for the
+server-only Supabase Auth Admin API. Staging and production require the `s3`
+storage provider so export archives and deletion verification are shared by the
+API and durable worker. Secrets belong in the runtime secret manager, not the
+Supabase SQL editor.
+
+## Memory engine
+
+T11 schedules reviews per learner-concept pair. The engine is deterministic code
+with no AI provider: a due date is produced only by
+`modules/memory/engine/decide.py`, never by a model. Same inputs plus the same
+engine and policy versions reproduce the identical decision.
+
+### Module map
+
+```text
+modules/memory/engine/config.py    frozen weights, bounds and the two versions
+modules/memory/engine/state.py     immutable LearnerConceptState + jsonb snapshots
+modules/memory/engine/fsrs.py      forgetting curve, difficulty/stability transitions
+modules/memory/engine/decide.py    pure decide(state, event, now) -> Decision
+modules/memory/engine/policy.py    first review, confidence damping, comeback, caps
+modules/memory/prerequisites.py    read-only weak-prerequisite signal from the graph
+modules/memory/repository.py       SECURITY DEFINER calls; event + decision + outbox
+modules/memory/selection.py        due-selection inputs for T13 (no ranking)
+modules/memory/service.py          owner-scoped reads for the two read endpoints
+modules/memory/explanations.py     reason codes and template keys -> safe copy
+modules/memory/constants.py        closed allowlists: event types, codes, keys, bands
+worker/memory.py                   outbox -> memory job handler, retries, reconcile
+worker/main.py                     worker entry point (runs the memory loop)
+api/v1/memory.py                   concept-progress and history routes
+```
+
+### Versions
+
+Every decision row and calibration fixture stamps its configuration identity:
+
+- `ENGINE_VERSION = fsrs-mvp-1.0.0` — the quantitative model and its weights.
+- `POLICY_VERSION = policy-mvp-1.0.0` — the expert rules layered on top.
+- `STATE_SNAPSHOT_SCHEMA_VERSION = memora.memory_state/1` — the
+  `previous_state` / `result_state` jsonb envelope.
+- `SELECTION_INPUT_VERSION = memory-selection-inputs/1` — the due-selection
+  contract T13 consumes.
+
+Change a weight or a rule and bump the matching version. Never mutate a stored
+snapshot: a version bump changes future decisions and leaves past rows readable.
+
+### Worker job type
+
+`memory.process_event` carries one `outbox_event_id` and nothing else. The worker
+reads the producer event, maps it to per-concept evidence and applies each concept
+in one transaction. Two producer envelopes are reserved:
+
+| Event type | Aggregate | Evidence |
+| --- | --- | --- |
+| `learning_update.committed` | `learning_update` | one `exposure` per committed concept |
+| `mission.attempt_graded` | `attempt` | one scored event per mapped concept |
+
+Unknown event types succeed as a skip. A known envelope with a malformed payload
+dead-letters immediately with `invalid_event_payload` and never blocks the queue.
+Retryable failures back off `15/60/180/600/1800` seconds across five attempts, then
+dead-letter. A reconcile pass re-enqueues producer events that have no job and
+recovers expired leases, so a restarted worker loses nothing; dead-lettered
+payloads stay quarantined until an operator fixes them.
+
+The job lifecycle runs as `memora_worker`. The evidence transaction runs as
+`memora_api` with `memora.user_id` set for the envelope's learner, so the
+prerequisite lookup is RLS-scoped. Memory writes go through the SECURITY DEFINER
+functions added by migration `20261031_0010`.
+
+### Read endpoints
+
+`GET /v1/subjects/{subject_id}/concept-progress` and
+`GET /v1/concepts/{concept_id}/history` are owner-scoped and `no-store`. They
+return bands, stable identifiers, counts and allowlisted codes — never raw
+retrievability, stability, forgetting risk, candidate scores or `event_payload`.
+The `due_reason` and explanation `template_key` values are the copy contract for
+T14; the server supplies a plain-language fallback message. Cursors are bound to
+the endpoint and filter that produced them, so a cursor cannot be replayed against
+another route or another concept.
+
+### Tests
+
+From the repository root, with the backend environment active:
+
+```powershell
+$env:MEMORA_TEST_DATABASE_URL = 'postgresql+psycopg://memora:<local-password>@127.0.0.1:5432/memora_migration_test'
+backend\.venv\Scripts\python.exe -m pytest backend\tests\test_memory_engine.py backend\tests\test_memory_policy.py backend\tests\test_memory_persistence.py backend\tests\test_memory_selection.py backend\tests\test_memory_simulation.py backend\tests\test_memory_worker.py backend\tests\test_memory_endpoints.py
+```
+
+The database-backed cases in `test_memory_persistence`, `test_memory_selection`,
+`test_memory_worker` and `test_memory_endpoints` skip without
+`MEMORA_TEST_DATABASE_URL`; the pure engine, policy and simulation suites run
+everywhere. `test_memory_simulation.py` replays the versioned calibration fixture
+in `backend/tests/fixtures/memory` across a simulated calendar for the four
+acceptance scenarios (new, overdue, weak prerequisite, comeback).

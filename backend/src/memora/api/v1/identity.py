@@ -13,12 +13,90 @@ from memora.api.v1.schemas.identity import (
     ConsentResponse,
     DeviceRegistrationRequest,
     DeviceRegistrationResponse,
+    ProfilePreferencesResponse,
+    ProfilePreferencesUpdateRequest,
+    ProfileResponse,
+    ProfileUpdateRequest,
     SessionBootstrapResponse,
     SessionRevokeRequest,
 )
 from memora.modules.identity.service import IdentityService, get_identity_service
 
 router = APIRouter()
+
+
+@router.get(
+    "/profile",
+    response_model=ProfileResponse,
+    operation_id=OperationId.GET_PROFILE,
+    tags=["profile"],
+    summary="Get the authenticated profile",
+    description="Returns the owner-scoped profile with its optimistic concurrency version.",
+    responses=COMMON_ERROR_RESPONSES,
+)
+def get_profile(
+    _: Annotated[RequestHeaders, Header()],
+    auth: Annotated[AuthenticatedRequest, Depends(get_authenticated_request)],
+    service: Annotated[IdentityService, Depends(get_identity_service)],
+) -> ProfileResponse:
+    return service.profile(auth)
+
+
+@router.patch(
+    "/profile",
+    response_model=ProfileResponse,
+    operation_id=OperationId.UPDATE_PROFILE,
+    tags=["profile"],
+    summary="Update the authenticated profile",
+    description=(
+        "Idempotently updates allowlisted profile fields when the supplied version is current."
+    ),
+    responses=COMMON_ERROR_RESPONSES,
+)
+def update_profile(
+    body: ProfileUpdateRequest,
+    _: Annotated[RequestHeaders, Header()],
+    idempotency: Annotated[IdempotencyHeaders, Header()],
+    auth: Annotated[AuthenticatedRequest, Depends(get_authenticated_request)],
+    service: Annotated[IdentityService, Depends(get_identity_service)],
+) -> ProfileResponse:
+    return service.update_profile(auth, body, idempotency_key=idempotency.idempotency_key)
+
+
+@router.get(
+    "/profile/preferences",
+    response_model=ProfilePreferencesResponse,
+    operation_id=OperationId.GET_PROFILE_PREFERENCES,
+    tags=["profile"],
+    summary="Get profile preferences",
+    description="Returns confirmed notification, accessibility and mission settings.",
+    responses=COMMON_ERROR_RESPONSES,
+)
+def get_profile_preferences(
+    _: Annotated[RequestHeaders, Header()],
+    auth: Annotated[AuthenticatedRequest, Depends(get_authenticated_request)],
+    service: Annotated[IdentityService, Depends(get_identity_service)],
+) -> ProfilePreferencesResponse:
+    return service.preferences(auth)
+
+
+@router.patch(
+    "/profile/preferences",
+    response_model=ProfilePreferencesResponse,
+    operation_id=OperationId.UPDATE_PROFILE_PREFERENCES,
+    tags=["profile"],
+    summary="Update profile preferences",
+    description="Idempotently updates explicit settings when the supplied version is current.",
+    responses=COMMON_ERROR_RESPONSES,
+)
+def update_profile_preferences(
+    body: ProfilePreferencesUpdateRequest,
+    _: Annotated[RequestHeaders, Header()],
+    idempotency: Annotated[IdempotencyHeaders, Header()],
+    auth: Annotated[AuthenticatedRequest, Depends(get_authenticated_request)],
+    service: Annotated[IdentityService, Depends(get_identity_service)],
+) -> ProfilePreferencesResponse:
+    return service.update_preferences(auth, body, idempotency_key=idempotency.idempotency_key)
 
 
 @router.get(
