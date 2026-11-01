@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-import contextlib
 import hashlib
 import hmac
 import io
 import logging
 import zipfile
 from datetime import UTC, datetime
+from functools import lru_cache
 from uuid import UUID
 
 from memora.core.config import get_settings
@@ -21,15 +21,22 @@ logger = logging.getLogger(__name__)
 _override_storage: ObjectStorage | None = None
 
 
+@lru_cache(maxsize=1)
+def _default_privacy_object_storage() -> ObjectStorage:
+    return build_object_storage(get_settings())
+
+
 def get_privacy_object_storage() -> ObjectStorage:
     if _override_storage is not None:
         return _override_storage
-    return build_object_storage(get_settings())
+    return _default_privacy_object_storage()
 
 
 def set_privacy_object_storage(storage: ObjectStorage | None) -> None:
     global _override_storage
     _override_storage = storage
+    if storage is None:
+        _default_privacy_object_storage.cache_clear()
 
 
 def export_object_key(request_id: UUID) -> str:
@@ -71,8 +78,9 @@ def write_export_archive(
 def delete_export_archive(request_id: UUID) -> None:
     key = export_object_key(request_id)
     storage = get_privacy_object_storage()
-    with contextlib.suppress(StorageUnavailable):
-        storage.delete_object(key)
+    storage.delete_object(key)
+    if storage.head_object(key) is not None:
+        raise StorageUnavailable(f"Export deletion verification failed for object: {key}")
 
 
 def purge_upload_object(object_key: str) -> bool:
@@ -94,7 +102,9 @@ def _signing_secret() -> bytes:
         return settings.device_encryption_key.get_secret_value().encode()
     if settings.device_fingerprint_key:
         return settings.device_fingerprint_key.get_secret_value().encode()
-    return b"memora-default-export-token-secret-32b"
+    if settings.environment == "local":
+        return b"memora-local-only-export-token-secret"
+    raise RuntimeError("MEMORA_DEVICE_FINGERPRINT_KEY is required for export download tokens")
 
 
 def generate_export_download_token(
@@ -106,7 +116,19 @@ def generate_export_download_token(
     exp = int(expires_at.timestamp())
     msg = f"{request_id}:{user_id}:export_download:{exp}".encode()
     sig = hmac.new(_signing_secret(), msg, hashlib.sha256).hexdigest()
-    return f"{exp}.{sig}"
+    return f"{user_id}.{exp}.{sig}"
+
+
+def export_download_token_user_id(token: str) -> UUID | None:
+    try:
+        return UUID(token.split(".", 1)[0])
+    except (ValueError, IndexError):
+        return None
+
+
+def privacy_requester_fingerprint(issuer: str, subject: str) -> str:
+    message = f"privacy_requester:{issuer}:{subject}".encode()
+    return hmac.new(_signing_secret(), message, hashlib.sha256).hexdigest()
 
 
 def verify_export_download_token(
@@ -115,10 +137,12 @@ def verify_export_download_token(
     token: str,
 ) -> bool:
     """Verifies that the provided token is signed, unexpired, and purpose-bound to this export."""
-    parts = token.split(".", 1)
-    if len(parts) != 2:
+    parts = token.split(".", 2)
+    if len(parts) != 3:
         return False
-    exp_str, sig = parts
+    token_user_id, exp_str, sig = parts
+    if token_user_id != str(user_id):
+        return False
     try:
         exp = int(exp_str)
     except ValueError:

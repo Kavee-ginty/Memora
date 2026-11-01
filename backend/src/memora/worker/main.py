@@ -218,15 +218,21 @@ def run_worker(
                 connection.execute(text(f"SET LOCAL ROLE {WORKER_ROLE}"))
                 recovered = recover_expired_leases(connection, now=now)
                 enqueued = enqueue_outbox_backlog(connection, now=now)
-                from memora.modules.privacy.repository import reconcile_privacy_deletions
+                from memora.modules.privacy.repository import (
+                    reconcile_expired_export_archives,
+                    reconcile_privacy_deletions,
+                )
 
                 privacy_reconciled = reconcile_privacy_deletions(connection, now=now)
-            if recovered or enqueued or privacy_reconciled:
+                exports_expired = reconcile_expired_export_archives(connection, now=now)
+            if recovered or enqueued or privacy_reconciled or exports_expired:
                 logger.info(
-                    "Worker reconcile: recovered=%s enqueued=%s privacy_reconciled=%s",
+                    "Worker reconcile: recovered=%s enqueued=%s privacy_reconciled=%s "
+                    "exports_expired=%s",
                     recovered,
                     enqueued,
                     privacy_reconciled,
+                    exports_expired,
                 )
             last_reconcile = time.monotonic()
 

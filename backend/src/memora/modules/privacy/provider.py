@@ -1,14 +1,11 @@
 from __future__ import annotations
 
-import logging
 import urllib.error
 import urllib.request
 from typing import Protocol
 from uuid import UUID
 
 from memora.core.config import Settings, get_settings
-
-logger = logging.getLogger(__name__)
 
 
 class AuthProviderError(Exception):
@@ -48,16 +45,16 @@ class SupabaseAuthProvider:
     def __init__(self, settings: Settings | None = None) -> None:
         self._settings = settings or get_settings()
 
-    def _get_admin_headers(self) -> dict[str, str] | None:
+    def _get_admin_headers(self) -> dict[str, str]:
         if not self._settings.supabase_url:
-            return None
+            raise AuthProviderError("Supabase URL is not configured", retryable=False)
         service_key = (
             self._settings.supabase_service_role_key.get_secret_value()
             if self._settings.supabase_service_role_key
             else None
         )
         if not service_key:
-            return None
+            raise AuthProviderError("Supabase service-role key is not configured", retryable=False)
         return {
             "apikey": service_key,
             "Authorization": f"Bearer {service_key}",
@@ -66,10 +63,6 @@ class SupabaseAuthProvider:
 
     def delete_user(self, user_id: UUID, oidc_subject: str) -> bool:
         headers = self._get_admin_headers()
-        if not headers or not self._settings.supabase_url:
-            logger.info("Simulated auth provider deletion for user %s (%s)", user_id, oidc_subject)
-            return True
-
         url = f"{self._settings.supabase_url}/auth/v1/admin/users/{oidc_subject}"
         request = urllib.request.Request(url, method="DELETE", headers=headers)
         try:
@@ -90,9 +83,6 @@ class SupabaseAuthProvider:
 
     def verify_user_absent(self, user_id: UUID, oidc_subject: str) -> bool:
         headers = self._get_admin_headers()
-        if not headers or not self._settings.supabase_url:
-            return True
-
         url = f"{self._settings.supabase_url}/auth/v1/admin/users/{oidc_subject}"
         request = urllib.request.Request(url, method="GET", headers=headers)
         try:
@@ -110,10 +100,20 @@ class SupabaseAuthProvider:
             ) from exc
 
 
-_default_provider: AuthProvider = SupabaseAuthProvider()
+def _build_default_provider() -> AuthProvider:
+    settings = get_settings()
+    if settings.environment == "local" and not settings.supabase_url:
+        return MemoryAuthProvider()
+    return SupabaseAuthProvider(settings)
+
+
+_default_provider: AuthProvider | None = None
 
 
 def get_auth_provider() -> AuthProvider:
+    global _default_provider
+    if _default_provider is None:
+        _default_provider = _build_default_provider()
     return _default_provider
 
 

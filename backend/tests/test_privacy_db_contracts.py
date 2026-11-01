@@ -23,8 +23,8 @@ from memora.api.v1.schemas.privacy import (
     PrivacyDeletionRequest,
     PrivacyExportRequest,
 )
-from memora.core.config import Settings
-from memora.db.seed import seed_database
+from memora.core.config import Settings, get_settings
+from memora.db.seed import PHYSICS_CURRICULUM_ID, PHYSICS_SUBJECT_ID, seed_database
 from memora.modules.privacy.constants import (
     SCOPE_AUTH_PROVIDER,
     SCOPE_DATABASE,
@@ -34,13 +34,14 @@ from memora.modules.privacy.provider import (
     get_auth_provider,
     set_auth_provider,
 )
-from memora.modules.privacy.repository import PrivacyRepository
+from memora.modules.privacy.repository import PrivacyRepository, reconcile_expired_export_archives
 from memora.modules.privacy.service import PrivacyService
 from memora.modules.privacy.storage import (
     export_archive_exists,
     get_export_archive_bytes,
+    get_privacy_object_storage,
 )
-from memora.worker.main import process_one_job, run_worker_once
+from memora.worker.main import process_next_job, run_worker_once
 from memora.worker.memory import recover_expired_leases
 
 BACKEND_ROOT = Path(__file__).parents[1]
@@ -74,6 +75,7 @@ def database(monkeypatch: pytest.MonkeyPatch) -> Iterator[Engine]:
         )
 
     monkeypatch.setenv("MEMORA_DATABASE_URL", database_url)
+    get_settings.cache_clear()
     command.upgrade(alembic_config(database_url), "head")
     seed_database(database_url)
     engine = create_engine(database_url, connect_args={"connect_timeout": 10})
@@ -81,6 +83,7 @@ def database(monkeypatch: pytest.MonkeyPatch) -> Iterator[Engine]:
         yield engine
     finally:
         engine.dispose()
+        get_settings.cache_clear()
 
 
 def make_user(engine: Engine, subject: str) -> tuple[UUID, AuthenticatedRequest]:
@@ -206,6 +209,24 @@ def test_privacy_export_end_to_end_with_worker_and_package_contents(
         assert "privacy.export.requested" in audits
         assert "privacy.export.completed" in audits
 
+    with database.begin() as conn:
+        conn.execute(text("SET LOCAL ROLE memora_worker"))
+        expired = reconcile_expired_export_archives(
+            conn,
+            now=completed_export.completed_at + timedelta(days=2),
+        )
+        assert expired == 1
+    assert not export_archive_exists(export.id)
+
+    with database.begin() as conn:
+        assert (
+            conn.scalar(
+                text("SELECT export_archive_deleted_at FROM privacy_requests WHERE id = :id"),
+                {"id": export.id},
+            )
+            is not None
+        )
+
 
 def test_concurrent_duplicate_requests_converge(database: Engine) -> None:
     user_id, auth = make_user(database, f"user-converge-{uuid4()}")
@@ -258,6 +279,16 @@ def test_privacy_deletion_deletes_learner_data_and_verifies_absence(database: En
     concept = CONCEPTS_DATA[0]
     concept_id = concept["concept_id"]
     version_id = concept["version_id"]
+    memory_event_id = uuid4()
+    question_id = uuid4()
+    question_version_id = uuid4()
+    rubric_id = uuid4()
+    mission_id = uuid4()
+    mission_item_id = uuid4()
+    attempt_id = uuid4()
+    learning_update_id = uuid4()
+    source_upload_id = uuid4()
+    object_key = f"uploads/privacy-test/{source_upload_id}.pdf"
 
     with database.begin() as conn:
         conn.execute(
@@ -273,6 +304,120 @@ def test_privacy_deletion_deletes_learner_data_and_verifies_absence(database: En
             ),
             {"user_id": user_id},
         )
+        private_history_params = {
+            "question_id": question_id,
+            "subject_id": PHYSICS_SUBJECT_ID,
+            "code": f"privacy.test.{question_id}",
+            "version_id": question_version_id,
+            "curriculum_id": PHYSICS_CURRICULUM_ID,
+            "rubric_id": rubric_id,
+            "mission_id": mission_id,
+            "user_id": user_id,
+            "item_id": mission_item_id,
+            "concept_id": concept_id,
+            "attempt_id": attempt_id,
+        }
+        for statement in (
+            """
+                INSERT INTO questions(id, subject_id, question_code, source_class, status)
+                VALUES (:question_id, :subject_id, :code, 'teacher_authored', 'draft')
+            """,
+            """
+                INSERT INTO question_versions(
+                    id, question_id, version_no, question_type, prompt, explanation,
+                    content_payload, trust_label, curriculum_version_id, validation_status
+                ) VALUES (
+                    :version_id, :question_id, 1, 'mcq', 'Synthetic?', 'Synthetic.',
+                    '{"schema_version":"1"}'::jsonb, 'draft', :curriculum_id, 'draft'
+                )
+            """,
+            """
+                INSERT INTO question_rubrics(
+                    id, question_version_id, rubric_type, rubric_version, rubric_payload,
+                    max_score, evidence_ceiling, status
+                ) VALUES (
+                    :rubric_id, :version_id, 'exact', 1, '{"schema_version":"1"}'::jsonb,
+                    1, 1, 'draft'
+                )
+            """,
+            """
+                INSERT INTO missions(
+                    id, user_id, subject_id, mission_date, mission_timezone, status,
+                    engine_version, candidate_snapshot_hash, estimated_minutes,
+                    planned_item_count, expires_at
+                ) VALUES (
+                    :mission_id, :user_id, :subject_id, current_date, 'Asia/Colombo',
+                    'started', 'v1', 'privacy-test', 3, 1, now() + interval '1 day'
+                )
+            """,
+            """
+                INSERT INTO mission_items(
+                    id, mission_id, user_id, position, mission_type, question_version_id,
+                    primary_concept_id, selection_reason_codes, priority_snapshot, status
+                ) VALUES (
+                    :item_id, :mission_id, :user_id, 0, 'discover', :version_id,
+                    :concept_id, ARRAY['privacy_test'], '{}', 'answered'
+                )
+            """,
+            """
+                INSERT INTO attempts(
+                    id, user_id, mission_item_id, attempt_no, client_operation_id,
+                    answer_payload, submitted_at, app_version
+                ) VALUES (
+                    :attempt_id, :user_id, :item_id, 1, gen_random_uuid(), '{}', now(), '1.0.0'
+                )
+            """,
+            """
+                INSERT INTO grading_results(
+                    attempt_id, result_version, grader_type, score, classification,
+                    confidence, rubric_id, grader_version, evidence_payload,
+                    is_authoritative, graded_at
+                ) VALUES (
+                    :attempt_id, 1, 'exact', 1, 'correct', 1, :rubric_id,
+                    'v1', '{}', true, now()
+                )
+            """,
+        ):
+            conn.execute(text(statement), private_history_params)
+        upload_params = {
+            "update_id": learning_update_id,
+            "user_id": user_id,
+            "subject_id": PHYSICS_SUBJECT_ID,
+            "curriculum_id": PHYSICS_CURRICULUM_ID,
+            "upload_id": source_upload_id,
+            "object_key": object_key,
+        }
+        for statement in (
+            """
+                INSERT INTO learning_updates(
+                    id, user_id, subject_id, curriculum_version_id, input_type, status,
+                    learned_at, client_operation_id, expires_at
+                ) VALUES (
+                    :update_id, :user_id, :subject_id, :curriculum_id, 'pdf', 'processing',
+                    now(), gen_random_uuid(), now() + interval '1 day'
+                )
+            """,
+            """
+                INSERT INTO source_uploads(
+                    id, learning_update_id, user_id, object_key, declared_name,
+                    declared_media_type, byte_size, status, expires_at
+                ) VALUES (
+                    :upload_id, :update_id, :user_id, :object_key, 'private.pdf',
+                    'application/pdf', 4, 'uploaded', now() + interval '1 day'
+                )
+            """,
+            """
+                INSERT INTO deletion_proofs(
+                    source_upload_id, scope, provider, target_fingerprint,
+                    result, verified_at, reconciler_version
+                ) VALUES (
+                    :upload_id, 'temporary_raw', 'memory', 'privacy-test-fingerprint',
+                    'deleted', now(), 'v1'
+                )
+            """,
+        ):
+            conn.execute(text(statement), upload_params)
+        get_privacy_object_storage().put_object(object_key, b"test", "application/pdf")
         conn.execute(
             text(
                 """
@@ -309,6 +454,68 @@ def test_privacy_deletion_deletes_learner_data_and_verifies_absence(database: En
             ),
             {"user_id": user_id, "concept_id": concept_id, "version_id": version_id},
         )
+        conn.execute(
+            text(
+                """
+                INSERT INTO memory_events(
+                    id, user_id, concept_id, event_type, source_type, source_id,
+                    observed_at, confidence, is_eligible, event_payload
+                ) VALUES (
+                    :id, :user_id, :concept_id, 'exposure', 'privacy_test', gen_random_uuid(),
+                    now(), 1, true, '{"schema_version":"1"}'::jsonb
+                )
+                """
+            ),
+            {"id": memory_event_id, "user_id": user_id, "concept_id": concept_id},
+        )
+        conn.execute(
+            text(
+                """
+                INSERT INTO memory_decisions(
+                    user_id, concept_id, trigger_event_id, previous_state, result_state,
+                    retrievability_at_decision, next_review_at, reason_codes,
+                    explanation_template_key, engine_version, policy_version, decided_at
+                ) VALUES (
+                    :user_id, :concept_id, :event_id, '{}', '{}', 0.9,
+                    now() + interval '1 day', ARRAY['state_initialized'],
+                    'memory.explanation.state_initialized',
+                    'v1', 'v1', now()
+                )
+                """
+            ),
+            {"user_id": user_id, "concept_id": concept_id, "event_id": memory_event_id},
+        )
+        conn.execute(
+            text(
+                """
+                INSERT INTO xp_ledger(
+                    user_id, amount, entry_type, source_event_type, source_event_id,
+                    reason_code, balance_after, earned_at
+                ) VALUES (
+                    :user_id, 10, 'earn', 'privacy_test', gen_random_uuid(),
+                    'test', 10, now()
+                )
+                """
+            ),
+            {"user_id": user_id},
+        )
+        conn.execute(
+            text(
+                """
+                INSERT INTO streak_days(user_id, local_date, timezone, qualification_type)
+                VALUES (:user_id, current_date, 'Asia/Colombo', 'mission_completed')
+                """
+            ),
+            {"user_id": user_id},
+        )
+
+    export = service.create_export(
+        auth,
+        PrivacyExportRequest(),
+        idempotency_key=f"export-before-delete-{uuid4()}",
+    )
+    assert run_worker_once(database, limit=5) >= 1
+    assert export_archive_exists(export.id)
 
     # Create deletion
     del_key = f"del-full-{uuid4()}"
@@ -337,6 +544,22 @@ def test_privacy_deletion_deletes_learner_data_and_verifies_absence(database: En
             )
             == 0
         )
+        for table in (
+            "memory_events",
+            "memory_decisions",
+            "attempts",
+            "missions",
+            "mission_items",
+            "xp_ledger",
+            "streak_days",
+        ):
+            assert (
+                conn.scalar(
+                    text(f"SELECT count(*) FROM {table} WHERE user_id = :u"),
+                    {"u": user_id},
+                )
+                == 0
+            )
         assert (
             conn.scalar(
                 text("SELECT count(*) FROM private_knowledge_items WHERE user_id = :u"),
@@ -378,6 +601,22 @@ def test_privacy_deletion_deletes_learner_data_and_verifies_absence(database: En
         assert user_row["deleted_at"] is not None
         assert user_row["oidc_subject"].startswith("deleted:")
         assert user_row["deleted_at"] is not None
+        source_proof = (
+            conn.execute(
+                text(
+                    """
+                    SELECT source_upload_id, target_fingerprint
+                    FROM deletion_proofs
+                    WHERE target_fingerprint = 'privacy-test-fingerprint'
+                    """
+                )
+            )
+            .mappings()
+            .one()
+        )
+        assert source_proof["source_upload_id"] is None
+    assert not export_archive_exists(export.id)
+    assert get_privacy_object_storage().head_object(object_key) is None
 
 
 def test_cancellation_sanitizes_audit_metadata_and_cancels_job(database: Engine) -> None:
@@ -390,6 +629,13 @@ def test_cancellation_sanitizes_audit_metadata_and_cancels_job(database: Engine)
     del_req = service.create_deletion(
         auth, PrivacyDeletionRequest(confirmed=True), idempotency_key=key
     )
+
+    with pytest.raises(ApiError, match="invalid_state"):
+        service.create_export(
+            auth,
+            PrivacyExportRequest(),
+            idempotency_key=f"export-during-delete-{uuid4()}",
+        )
 
     # Cancel with arbitrary unallowlisted text
     sensitive_input = "My private note: password123, formula E=mc^2"
@@ -462,8 +708,13 @@ def test_worker_job_retry_backoff_and_outage_recovery(database: Engine) -> None:
         )
 
         # 1. First execution fails due to provider outage
-        processed = process_one_job(database)
-        assert processed is True
+        outcome = process_next_job(
+            database,
+            now=datetime.now(UTC),
+            lease_owner=f"privacy-retry-{uuid4()}",
+            job_types=("privacy.deletion",),
+        )
+        assert outcome == "retry_wait"
 
         # Job enters retry_wait with attempt_count = 1
         with database.begin() as conn:
@@ -501,8 +752,13 @@ def test_worker_job_retry_backoff_and_outage_recovery(database: Engine) -> None:
             )
 
         # 3. Worker re-claims and succeeds
-        processed2 = process_one_job(database)
-        assert processed2 is True
+        outcome2 = process_next_job(
+            database,
+            now=datetime.now(UTC),
+            lease_owner=f"privacy-retry-{uuid4()}",
+            job_types=("privacy.deletion",),
+        )
+        assert outcome2 == "succeeded"
 
         with database.begin() as conn:
             job = (
@@ -642,9 +898,14 @@ def test_restore_reconciliation_rejects_traffic_until_reapplied(database: Engine
 
     # 3. Worker reconciliation runs and reapplies deletion state
     with database.begin() as conn:
+        conn.execute(text("SET LOCAL ROLE memora_worker"))
         reconciled = reconcile_privacy_deletions(conn)
         assert reconciled >= 1
         assert unreconciled_deletions_exist(conn) is False
+
+    with database.begin() as conn:
+        conn.execute(text("SET LOCAL ROLE memora_worker"))
+        assert reconcile_privacy_deletions(conn) == 0
 
     # 4. Traffic is now accepted
     assert database_is_ready() is True

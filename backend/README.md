@@ -155,6 +155,12 @@ Ingestion configuration keys in `.env` or the platform environment:
 - `MEMORA_UPLOAD_GRANT_TTL_SECONDS`: Presigned PUT grant validity window (defaults to 900s).
 - `MEMORA_INGESTION_EXPIRY_HOURS`: TTL before uncommitted updates expire (defaults to 72h).
 
+Privacy deletion additionally requires `MEMORA_SUPABASE_SERVICE_ROLE_KEY` for the
+server-only Supabase Auth Admin API. Staging and production require the `s3`
+storage provider so export archives and deletion verification are shared by the
+API and durable worker. Secrets belong in the runtime secret manager, not the
+Supabase SQL editor.
+
 ## Memory engine
 
 T11 schedules reviews per learner-concept pair. The engine is deterministic code

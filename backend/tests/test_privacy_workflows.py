@@ -6,6 +6,9 @@ import zipfile
 from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
+import pytest
+
+from memora.core.config import Settings
 from memora.modules.ingestion.storage import MemoryObjectStorage
 from memora.modules.privacy.constants import (
     ALL_DELETION_SCOPES,
@@ -18,12 +21,17 @@ from memora.modules.privacy.constants import (
     SCOPE_UPLOADS,
     WORKFLOW_VERSION,
 )
-from memora.modules.privacy.provider import MemoryAuthProvider
+from memora.modules.privacy.provider import (
+    AuthProviderError,
+    MemoryAuthProvider,
+    SupabaseAuthProvider,
+)
 from memora.modules.privacy.storage import (
     delete_export_archive,
     export_archive_exists,
     generate_export_download_token,
     get_export_archive_bytes,
+    get_privacy_object_storage,
     purge_upload_object,
     set_privacy_object_storage,
     verify_export_download_token,
@@ -79,6 +87,11 @@ def test_export_archive_packaging_and_readability() -> None:
         set_privacy_object_storage(None)
 
 
+def test_local_privacy_storage_is_shared_between_calls() -> None:
+    set_privacy_object_storage(None)
+    assert get_privacy_object_storage() is get_privacy_object_storage()
+
+
 def test_export_download_tokens_and_expiry() -> None:
     request_id = uuid4()
     user_id = uuid4()
@@ -130,6 +143,15 @@ def test_auth_provider_interface_and_memory_provider() -> None:
     assert provider.verify_user_absent(uid, "sub-123") is False
     assert provider.delete_user(uid, "sub-123") is True
     assert provider.verify_user_absent(uid, "sub-123") is True
+
+
+def test_supabase_provider_fails_closed_without_admin_credentials() -> None:
+    provider = SupabaseAuthProvider(Settings(_env_file=None, supabase_url=None))
+
+    with pytest.raises(AuthProviderError, match="URL is not configured"):
+        provider.delete_user(uuid4(), "provider-user-id")
+    with pytest.raises(AuthProviderError, match="URL is not configured"):
+        provider.verify_user_absent(uuid4(), "provider-user-id")
 
 
 def test_retry_backoff_schedule() -> None:

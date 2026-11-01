@@ -37,7 +37,8 @@ The data rules follow TRD 18.2. Production data must never be copied into local,
 | `MEMORA_DATABASE_URL` | Yes outside local | PostgreSQL SQLAlchemy URL with the required scheme `postgresql+psycopg://` |
 | `MEMORA_LOG_LEVEL` | No | Logging threshold; defaults to `INFO` |
 | `MEMORA_SUPABASE_URL` | Yes in staging and production | HTTPS Supabase project URL; the backend derives the OIDC issuer and JWKS URL |
-| `MEMORA_SUPABASE_PUBLISHABLE_KEY` | Yes in staging and production | Publishable Auth key used only for provider logout; never use the secret or service-role key |
+| `MEMORA_SUPABASE_PUBLISHABLE_KEY` | Yes in staging and production | Publishable Auth key used only for provider logout |
+| `MEMORA_SUPABASE_SERVICE_ROLE_KEY` | Yes in staging and production | Secret-manager value used server-side only for verified Auth Admin deletion; never expose it to mobile clients or SQL scripts |
 | `MEMORA_RECENT_AUTH_WINDOW_SECONDS` | No | Recent interactive authentication window; defaults to 600 seconds |
 | `MEMORA_DEVICE_ENCRYPTION_KEY` | Yes in staging and production | Secret-manager value containing a base64-encoded 32-byte AES-256-GCM key |
 | `MEMORA_DEVICE_FINGERPRINT_KEY` | Yes in staging and production | Independent secret-manager value containing a base64-encoded 32-byte HMAC key |
@@ -46,7 +47,7 @@ The data rules follow TRD 18.2. Production data must never be copied into local,
 | `MEMORA_EXTRACTION_PROVIDER` | No | One of `deterministic` or `openrouter`; defaults to `deterministic` |
 | `MEMORA_OPENROUTER_API_KEY` | When provider is `openrouter` | Secret-manager token for LLM candidate extraction |
 | `MEMORA_OPENROUTER_MODEL` | No | Model identifier on OpenRouter; e.g. `google/gemini-2.5-flash` |
-| `MEMORA_OBJECT_STORAGE_PROVIDER` | No | One of `memory` or `s3`; defaults to `memory` |
+| `MEMORA_OBJECT_STORAGE_PROVIDER` | Yes in staging and production | One of `memory` or `s3`; deployed environments require `s3` |
 | `MEMORA_OBJECT_STORAGE_BUCKET` | When provider is `s3` | S3 bucket name for temporary source uploads |
 | `MEMORA_OBJECT_STORAGE_ENDPOINT` | No | Custom S3 endpoint URL for MinIO, Cloudflare R2, etc. |
 | `MEMORA_OBJECT_STORAGE_REGION` | No | S3 region; defaults to `us-east-1` |
