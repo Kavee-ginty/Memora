@@ -11,7 +11,12 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(AccountStatus.serializer)
       ..add(ActiveMissionSummary.serializer)
       ..add(ActiveMissionSummaryStatusEnum.serializer)
+      ..add(AnswerPayload.serializer)
       ..add(AsyncOperation.serializer)
+      ..add(AttemptResult.serializer)
+      ..add(AttemptResultGradingStatusEnum.serializer)
+      ..add(AttemptResultOutcomeEnum.serializer)
+      ..add(AttemptResultRepairActionEnum.serializer)
       ..add(CandidateListResponse.serializer)
       ..add(CandidateResponse.serializer)
       ..add(CandidateResponseConfidenceBandEnum.serializer)
@@ -57,6 +62,26 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(LearningUpdateListResponse.serializer)
       ..add(LearningUpdateResponse.serializer)
       ..add(LearningUpdateStatus.serializer)
+      ..add(MediaReference.serializer)
+      ..add(MediaReferenceMediaTypeEnum.serializer)
+      ..add(MissionCompletionResult.serializer)
+      ..add(MissionCompletionResultEngagementStatusEnum.serializer)
+      ..add(MissionCompletionResultNextSuggestedActionEnum.serializer)
+      ..add(MissionCompletionResultStatusEnum.serializer)
+      ..add(MissionItemResponse.serializer)
+      ..add(MissionItemResponseMissionTypeEnum.serializer)
+      ..add(MissionItemResponseStatusEnum.serializer)
+      ..add(MissionManifest.serializer)
+      ..add(MissionManifestItem.serializer)
+      ..add(MissionManifestItemMissionTypeEnum.serializer)
+      ..add(MissionManifestItemQuestionTypeEnum.serializer)
+      ..add(MissionManifestItemStatusEnum.serializer)
+      ..add(MissionSummary.serializer)
+      ..add(MissionSummaryStatusEnum.serializer)
+      ..add(MultipleChoiceAnswer.serializer)
+      ..add(MultipleChoiceAnswerTypeEnum.serializer)
+      ..add(NumericAnswer.serializer)
+      ..add(NumericAnswerTypeEnum.serializer)
       ..add(PageConceptProgressItem.serializer)
       ..add(PageMeta.serializer)
       ..add(PageParams.serializer)
@@ -75,6 +100,11 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(ProfileResponse.serializer)
       ..add(ProfileSummary.serializer)
       ..add(ProfileUpdateRequest.serializer)
+      ..add(PublicQuestion.serializer)
+      ..add(PublicQuestionOption.serializer)
+      ..add(PublicQuestionQuestionTypeEnum.serializer)
+      ..add(PublicResponseConfig.serializer)
+      ..add(PublicResponseConfigTypeEnum.serializer)
       ..add(QuestionReportCreateRequest.serializer)
       ..add(QuestionReportCreateRequestReportTypeEnum.serializer)
       ..add(QuestionReportResponse.serializer)
@@ -96,15 +126,23 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(SessionBootstrapResponse.serializer)
       ..add(SessionRevocationScope.serializer)
       ..add(SessionRevokeRequest.serializer)
+      ..add(ShortAnswerText.serializer)
+      ..add(ShortAnswerTextTypeEnum.serializer)
+      ..add(SingleChoiceAnswer.serializer)
+      ..add(SingleChoiceAnswerTypeEnum.serializer)
       ..add(SourceUploadSummary.serializer)
       ..add(SubjectSummary.serializer)
+      ..add(SubmitAttemptRequest.serializer)
       ..add(SubmitVerificationDecisionsRequest.serializer)
       ..add(SubmitVerificationDecisionsResponse.serializer)
+      ..add(TodayMissionResponse.serializer)
+      ..add(TodayMissionResponseStateEnum.serializer)
       ..add(UpdateLearningUpdateRequest.serializer)
       ..add(UploadGrantRequest.serializer)
       ..add(UploadGrantResponse.serializer)
       ..add(UploadGrantResponseMethodEnum.serializer)
       ..add(UploadStatus.serializer)
+      ..add(Value.serializer)
       ..add(VerificationDecision.serializer)
       ..add(VerificationDecisionResult.serializer)
       ..add(VerificationDecisionValue.serializer)
@@ -154,6 +192,17 @@ Serializers _$serializers = (Serializers().toBuilder()
               BuiltList, const [const FullType(LearningUpdateResponse)]),
           () => ListBuilder<LearningUpdateResponse>())
       ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(MediaReference)]),
+          () => ListBuilder<MediaReference>())
+      ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(PublicQuestionOption)]),
+          () => ListBuilder<PublicQuestionOption>())
+      ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(MissionManifestItem)]),
+          () => ListBuilder<MissionManifestItem>())
+      ..addBuilderFactory(
           const FullType(
               BuiltList, const [const FullType(QuestionReportSummary)]),
           () => ListBuilder<QuestionReportSummary>())
@@ -169,6 +218,18 @@ Serializers _$serializers = (Serializers().toBuilder()
           const FullType(
               BuiltList, const [const FullType(SourceUploadSummary)]),
           () => ListBuilder<SourceUploadSummary>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(String)]),
+          () => ListBuilder<String>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(String)]),
+          () => ListBuilder<String>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(String)]),
+          () => ListBuilder<String>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(String)]),
+          () => ListBuilder<String>())
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(String)]),
           () => ListBuilder<String>())
