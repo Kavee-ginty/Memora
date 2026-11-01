@@ -42,18 +42,18 @@ If two sources appear inconsistent, stop implementation and resolve the conflict
 | T07 | Auth bootstrap mobile and guarded routes | **Done** | Ginodh | 5 | T03, T05, T06 | `task/T07-mobile-auth-routes` | Mobile navigation |
 | T08 | Curriculum and knowledge graph seed | **Done** | Dima | 5 | T04, T05 | `task/T08-curriculum-graph` | Data and knowledge |
 | T09 | Learning ingestion backend | **Done** | Dasun | 7 | T05, T06, T08 | `task/T09-ingestion-backend` | API and worker |
-| T10 | Learning ingestion mobile | **Ready** | - | 6 | T07, T09 | `task/T10-ingestion-mobile` | Mobile feature |
+| T10 | Learning ingestion mobile | **In Progress** | Dasun | 6 | T07, T09 | `task/T10-ingestion-mobile` | Mobile feature |
 | T11 | Memory engine v1 | **Done** | Dasun | 7 | T08 | `task/T11-memory-engine` | Learning engine |
 | T12 | Question bank and grading backend | **Done** | Neleesha | 7 | T08, T05 | `task/T12-questions-grading` | Backend learning |
-| T13 | Mission assembly and completion backend | **Ready** | - | 7 | T06, T11, T12 | `task/T13-mission-backend` | Backend learning |
+| T13 | Mission assembly and completion backend | **In Progress** | Ginodh | 7 | T06, T11, T12 | `task/T13-mission-backend` | Backend learning |
 | T14 | Mission mobile experience | Blocked | - | 7 | T07, T13 | `task/T14-mission-mobile` | Mobile feature |
 | T15 | Progress XP streak and reef backend | Blocked | - | 5 | T11, T13 | `task/T15-progress-backend` | Backend engagement |
 | T16 | Progress mobile experience | Blocked | - | 5 | T07, T15 | `task/T16-progress-mobile` | Mobile feature |
 | T17 | Profile preferences and notifications backend | **Done** | Harsha | 4 | T06 | `task/T17-profile-backend` | Backend account |
 | T18 | Profile and settings mobile | **Ready** | - | 4 | T07, T17 | `task/T18-profile-mobile` | Mobile feature |
 | T19 | Push notifications and deep links | **Ready** | - | 4 | T07, T17 | `task/T19-push-deep-links` | Mobile and backend |
-| T20 | Privacy export and deletion backend | **In Progress** | Dima | 5 | T06, T04 | `task/T20-privacy-backend` | Backend privacy |
-| T21 | Privacy mobile experience | Blocked | - | 3 | T07, T20 | `task/T21-privacy-mobile` | Mobile feature |
+| T20 | Privacy export and deletion backend | **Done** | Dima | 5 | T06, T04 | `task/T20-privacy-backend` | Backend privacy |
+| T21 | Privacy mobile experience | **Ready** | - | 3 | T07, T20 | `task/T21-privacy-mobile` | Mobile feature |
 | T22 | Offline sync and idempotency hardening | Blocked | - | 6 | T09, T13, T07 | `task/T22-offline-idempotency` | Cross-platform |
 | T23 | Observability and security hardening | Blocked | - | 5 | T02, T09, T13, T17, T20 | `task/T23-security-observability` | Platform |
 | T24 | Verified Physics pilot content | **In Progress** | Neleesha | 6 | T08, T12 | `task/T24-physics-content` | Academic content |
@@ -173,7 +173,7 @@ This expands the acceptance gate in Section 4 for T05. It does not replace the b
 
 ## 5 Remaining-task definitions of done
 
-These gates apply to every task not already Done: `T10`, `T13`-`T16` and `T18`-`T31`. The acceptance
+These gates apply to every task not already Done: `T10`, `T13`-`T16`, `T18`-`T19` and `T21`-`T31`. The acceptance
 gate in Section 4 defines the delivery boundary; this section defines the minimum evidence
 required to prove that boundary. A task may be marked **Done** only when all of the following
 are true:
@@ -285,5 +285,7 @@ This records the Section 6 checklist for T11. Pull request #37 was reviewed and 
 
 ## 7 Current next action
 
-T01-T09, T11-T12 and T17 are merged and Done. T20 and T24 are In Progress. T10, T13, T18 and T19 are Ready. T15 remains Blocked until T13 is Done; later tasks remain blocked until all listed dependencies are Done.
+T01-T09, T11-T12, T17 and T20 are merged and Done. T10, T13 and T24 are In Progress. T18, T19 and T21 are Ready. T14, T15, T22 and T23 remain Blocked until T13 is Done; later tasks remain blocked until all listed dependencies are Done.
+
+T20 completed through pull request #38, merged into `develop` at `a243e79`. All required CI checks passed. Its successors were recalculated: T21 is Ready because T07 and T20 are Done; T23 and T25 remain Blocked by their other incomplete dependencies.
 
