@@ -1,0 +1,207 @@
+{
+  "schema_version": "2.0",
+  "generated_at": "2026-11-02",
+  "root": "content/physics/source_documents",
+  "scope": "Selected sources used by the T24 Physics pilot. The source PDFs are gitignored and remain local-only.",
+  "inspection_method": "SHA-256 via Get-FileHash; page counts via pypdf; question text via page-image OCR followed by visual comparison with the rendered page; official MCQ keys read directly from the rendered marking-scheme page.",
+  "hash_policy": "Hashes identify the local source copies used for this pilot. They are not a claim of official publication, completeness or reproduction permission.",
+  "official_answer_keys": "content/physics/pilot/official_answer_keys.json",
+  "sources": [
+    {
+      "filename": "AL_Physics_Syllabus_2017.pdf",
+      "document_type": "syllabus",
+      "exam_year": 2017,
+      "exam_label": "2017",
+      "paper": "Physics syllabus",
+      "language": "English",
+      "pages": 72,
+      "bytes": 587437,
+      "sha256": "a9e1db067f9998a182d9a915434a0b9c557f9413c7c1ecc5fc980710cf19fdb9",
+      "text_layer": "no",
+      "selected_for_t24": false,
+      "notes": "NIE G.C.E. (A/L) Physics syllabus. Used for curriculum authority, not for question text.",
+      "used_for": "T08 curriculum, objective and concept authority"
+    },
+    {
+      "filename": "AL_Physics_2022_Combined_Paper_English.pdf",
+      "document_type": "past_paper",
+      "exam_year": 2022,
+      "exam_label": "2022(2023)",
+      "paper": "Paper I and Paper II (combined)",
+      "language": "English",
+      "pages": 19,
+      "bytes": 8212537,
+      "sha256": "931347c30d9c96068ae3df9e6d0db62f05c903f1a2abdb268a9a0e6bdb9956dc",
+      "text_layer": "none",
+      "selected_for_t24": true,
+      "notes": "Annotated CamScanner scan. Page 1 header reads 2022(2023). Handwritten ticks are not an official key."
+    },
+    {
+      "filename": "AL_Physics_2022_Combined_Marking_Scheme_English.pdf",
+      "document_type": "marking_scheme",
+      "exam_year": 2022,
+      "exam_label": "2022(2023)",
+      "paper": "Paper I and Paper II (combined)",
+      "language": "English",
+      "pages": 39,
+      "bytes": 30958716,
+      "sha256": "52b42bcdf22ce9f6cc8c071d0cd6ba3c6f9082183d455d4fe43ef29143ee2ca7",
+      "text_layer": "none",
+      "selected_for_t24": true,
+      "notes": "Page 2 is the official Paper I MCQ answer grid; 50 entries. The grid is printed in Sinhala/Tamil/English headings and was read visually.",
+      "mcq_answer_grid": {
+        "present": true,
+        "pdf_page": 2,
+        "format": "Five question-number/answer column pairs; odd column is the question number, the next column is the answer.",
+        "entry_count": 50,
+        "verified_by": "visual inspection of the rendered PDF page"
+      }
+    },
+    {
+      "filename": "AL_Physics_2024_Combined_Paper_English.pdf",
+      "document_type": "past_paper",
+      "exam_year": 2024,
+      "exam_label": "2024",
+      "paper": "Paper I and Paper II (combined)",
+      "language": "English",
+      "pages": 27,
+      "bytes": 2123887,
+      "sha256": "1d628ae65f32d97ce495a244176a7aa2db31e2b1a57f698a6fe3b028772c18c2",
+      "text_layer": "none",
+      "selected_for_t24": true,
+      "notes": "Image scan; question text was read from page images."
+    },
+    {
+      "filename": "AL_Physics_2024_Combined_Marking_Scheme_English.pdf",
+      "document_type": "marking_scheme",
+      "exam_year": 2024,
+      "exam_label": "2024",
+      "paper": "Paper I and Paper II (combined)",
+      "language": "English",
+      "pages": 48,
+      "bytes": 5308110,
+      "sha256": "2e77a2fd58a9213ea0cf025a11a72babedef363b66126c9d7830c8dcec9394b2",
+      "text_layer": "none",
+      "selected_for_t24": true,
+      "notes": "Page 5 is the official Paper I MCQ answer grid; 50 entries. The grid was read visually.",
+      "mcq_answer_grid": {
+        "present": true,
+        "pdf_page": 5,
+        "format": "Five question-number/answer column pairs; odd column is the question number, the next column is the answer.",
+        "entry_count": 50,
+        "verified_by": "visual inspection of the rendered PDF page"
+      }
+    },
+    {
+      "filename": "AL_Physics_2025_Combined_Paper_English.pdf",
+      "document_type": "past_paper",
+      "exam_year": 2025,
+      "exam_label": "2025",
+      "paper": "Paper I and Paper II (combined)",
+      "language": "English",
+      "pages": 17,
+      "bytes": 9600159,
+      "sha256": "6572aead08a0cc5fd9feed0db0a3e56fc2c125fca8fccb7e178a2c59729bae49",
+      "text_layer": "none",
+      "selected_for_t24": true,
+      "notes": "Image scan; question text was read from page images."
+    },
+    {
+      "filename": "AL_Physics_2025_Combined_Marking_Scheme_English.pdf",
+      "document_type": "marking_scheme",
+      "exam_year": 2025,
+      "exam_label": "2025",
+      "paper": "Paper I and Paper II (combined)",
+      "language": "English",
+      "pages": 40,
+      "bytes": 8555105,
+      "sha256": "39d58f8f5a272614b984f78156663e0fe1bb9afc0461013989e7e50df18fceb3",
+      "text_layer": "none",
+      "selected_for_t24": true,
+      "notes": "Page 2 is the official Paper I MCQ answer grid; 50 entries. Question 15 is printed as 02/04 and is excluded.",
+      "mcq_answer_grid": {
+        "present": true,
+        "pdf_page": 2,
+        "format": "Five question-number/answer column pairs; odd column is the question number, the next column is the answer.",
+        "entry_count": 50,
+        "verified_by": "visual inspection of the rendered PDF page"
+      }
+    }
+  ],
+  "selected_questions": [
+    {
+      "pilot_id": "PILOT-PHYS-2022-P1-Q01",
+      "exam_year": 2022,
+      "question_number": 1,
+      "paper_pdf_page": 1,
+      "marking_scheme_pdf_page": 2,
+      "official_key": 4
+    },
+    {
+      "pilot_id": "PILOT-PHYS-2022-P1-Q17",
+      "exam_year": 2022,
+      "question_number": 17,
+      "paper_pdf_page": 3,
+      "marking_scheme_pdf_page": 2,
+      "official_key": 4
+    },
+    {
+      "pilot_id": "PILOT-PHYS-2024-P1-Q01",
+      "exam_year": 2024,
+      "question_number": 1,
+      "paper_pdf_page": 1,
+      "marking_scheme_pdf_page": 5,
+      "official_key": 5
+    },
+    {
+      "pilot_id": "PILOT-PHYS-2024-P1-Q04",
+      "exam_year": 2024,
+      "question_number": 4,
+      "paper_pdf_page": 1,
+      "marking_scheme_pdf_page": 5,
+      "official_key": 1
+    },
+    {
+      "pilot_id": "PILOT-PHYS-2024-P1-Q05",
+      "exam_year": 2024,
+      "question_number": 5,
+      "paper_pdf_page": 1,
+      "marking_scheme_pdf_page": 5,
+      "official_key": 5
+    },
+    {
+      "pilot_id": "PILOT-PHYS-2025-P1-Q01",
+      "exam_year": 2025,
+      "question_number": 1,
+      "paper_pdf_page": 1,
+      "marking_scheme_pdf_page": 2,
+      "official_key": 5
+    },
+    {
+      "pilot_id": "PILOT-PHYS-2025-P1-Q03",
+      "exam_year": 2025,
+      "question_number": 3,
+      "paper_pdf_page": 1,
+      "marking_scheme_pdf_page": 2,
+      "official_key": 1
+    },
+    {
+      "pilot_id": "PILOT-PHYS-2025-P1-Q45",
+      "exam_year": 2025,
+      "question_number": 45,
+      "paper_pdf_page": 8,
+      "marking_scheme_pdf_page": 2,
+      "official_key": 5
+    }
+  ],
+  "excluded_years": [
+    {
+      "exam_year": 2021,
+      "reason": "The local 2021 paper copy is Tamil-medium despite the English filename, and no English paper or usable MCQ grid was confirmed for this pilot."
+    },
+    {
+      "exam_year": 2023,
+      "reason": "No 2023 source pair is present in the local inventory."
+    }
+  ]
+}
