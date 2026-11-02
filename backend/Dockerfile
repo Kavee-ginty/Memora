@@ -5,6 +5,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 COPY pyproject.toml README.md requirements.lock ./
+COPY alembic.ini ./
+COPY migrations ./migrations
 COPY src ./src
 RUN python -m pip install --no-cache-dir --require-hashes -r requirements.lock \
     && python -m pip install --no-cache-dir --no-deps .

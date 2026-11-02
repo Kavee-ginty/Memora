@@ -5,6 +5,7 @@ import hashlib
 import hmac
 import json
 import os
+import re
 import urllib.error
 import urllib.request
 from datetime import UTC, datetime
@@ -25,7 +26,11 @@ from memora.api.v1.schemas.identity import (
     ConsentStatus,
     DeviceRegistrationRequest,
     DeviceRegistrationResponse,
+    ProfilePreferencesResponse,
+    ProfilePreferencesUpdateRequest,
+    ProfileResponse,
     ProfileSummary,
+    ProfileUpdateRequest,
     SessionBootstrapResponse,
     SessionRevokeRequest,
 )
@@ -37,6 +42,7 @@ _REQUIRED_ACCOUNT_CONSENTS = frozenset({"terms", "privacy"})
 _REQUIRED_INGESTION_CONSENTS = frozenset(
     {"terms", "privacy", "material_processing", "model_processing"}
 )
+_LOCALE_PATTERN = re.compile(r"^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$")
 
 
 class DeviceTokenProtector:
@@ -147,6 +153,60 @@ class IdentityService:
             policies=self._consent_status(self.repository.consent_records(request.context))
         )
 
+    def profile(self, request: AuthenticatedRequest) -> ProfileResponse:
+        return ProfileResponse.model_validate(self.repository.profile(request.context))
+
+    def update_profile(
+        self,
+        request: AuthenticatedRequest,
+        body: ProfileUpdateRequest,
+        *,
+        idempotency_key: str,
+    ) -> ProfileResponse:
+        values = body.model_dump(exclude_unset=True, exclude={"version"})
+        if "timezone" in values:
+            self._validate_timezone(values["timezone"])
+        if "locale" in values and not _LOCALE_PATTERN.fullmatch(values["locale"]):
+            raise ApiError(
+                422,
+                "validation_failed",
+                "Enter a valid locale.",
+                "correct_input",
+            )
+        return ProfileResponse.model_validate(
+            self.repository.update_profile(
+                request.context,
+                version=body.version,
+                idempotency_key=idempotency_key,
+                values=values,
+            )
+        )
+
+    def preferences(self, request: AuthenticatedRequest) -> ProfilePreferencesResponse:
+        return ProfilePreferencesResponse.model_validate(
+            self.repository.preferences(request.context, default_reminders=1)
+        )
+
+    def update_preferences(
+        self,
+        request: AuthenticatedRequest,
+        body: ProfilePreferencesUpdateRequest,
+        *,
+        idempotency_key: str,
+    ) -> ProfilePreferencesResponse:
+        values = body.model_dump(mode="json", exclude_unset=True, exclude={"version"})
+        if "timezone" in values:
+            self._validate_timezone(values["timezone"])
+        return ProfilePreferencesResponse.model_validate(
+            self.repository.update_preferences(
+                request.context,
+                version=body.version,
+                idempotency_key=idempotency_key,
+                values=values,
+                default_reminders=1,
+            )
+        )
+
     def accept_consent(
         self,
         request: AuthenticatedRequest,
@@ -187,15 +247,9 @@ class IdentityService:
         *,
         idempotency_key: str,
     ) -> tuple[DeviceRegistrationResponse, bool]:
-        try:
-            ZoneInfo(body.timezone)
-        except ZoneInfoNotFoundError as exc:
-            raise ApiError(
-                422,
-                "validation_failed",
-                "Enter a valid timezone.",
-                "correct_input",
-            ) from exc
+        self._validate_timezone(body.timezone)
+        if not _LOCALE_PATTERN.fullmatch(body.locale):
+            raise ApiError(422, "validation_failed", "Enter a valid locale.", "correct_input")
         protector = self._protector()
         ciphertext, fingerprint = protector.protect(
             body.push_token.get_secret_value(),
@@ -317,6 +371,18 @@ class IdentityService:
                 "Device registration is temporarily unavailable.",
                 "retry",
                 retryable=True,
+            ) from exc
+
+    @staticmethod
+    def _validate_timezone(value: str) -> None:
+        try:
+            ZoneInfo(value)
+        except (ValueError, ZoneInfoNotFoundError) as exc:
+            raise ApiError(
+                422,
+                "validation_failed",
+                "Enter a valid timezone.",
+                "correct_input",
             ) from exc
 
 

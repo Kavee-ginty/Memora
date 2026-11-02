@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from functools import lru_cache
 from typing import Annotated, Any
 from uuid import UUID
@@ -24,6 +24,7 @@ bearer_auth = HTTPBearer(
 )
 
 _INTERACTIVE_AUTH_METHODS = frozenset({"oauth", "password", "otp", "totp", "magiclink", "sso/saml"})
+_ISSUED_AT_CLOCK_SKEW = timedelta(seconds=30)
 
 
 @dataclass(frozen=True, slots=True)
@@ -56,7 +57,10 @@ class SupabaseTokenValidator:
                 algorithms=["RS256", "ES256", "EdDSA"],
                 audience="authenticated",
                 issuer=self.issuer,
-                options={"require": ["iss", "aud", "exp", "iat", "sub", "role", "session_id"]},
+                options={
+                    "require": ["iss", "aud", "exp", "iat", "sub", "role", "session_id"],
+                    "verify_iat": False,
+                },
             )
         except jwt.ExpiredSignatureError as exc:
             raise ApiError(
@@ -84,6 +88,7 @@ class SupabaseTokenValidator:
         try:
             session_id = UUID(str(claims["session_id"]))
             expires_at = datetime.fromtimestamp(int(claims["exp"]), UTC)
+            issued_at = datetime.fromtimestamp(int(claims["iat"]), UTC)
         except (TypeError, ValueError) as exc:
             raise ApiError(
                 401,
@@ -91,6 +96,14 @@ class SupabaseTokenValidator:
                 "Your session could not be verified. Sign in again.",
                 "reauthenticate",
             ) from exc
+
+        if issued_at > datetime.now(UTC) + _ISSUED_AT_CLOCK_SKEW:
+            raise ApiError(
+                401,
+                "token_invalid",
+                "Your session could not be verified. Sign in again.",
+                "reauthenticate",
+            )
 
         authenticated_at = _interactive_auth_time(claims.get("amr"))
         return AuthContext(

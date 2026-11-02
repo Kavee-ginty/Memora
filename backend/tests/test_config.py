@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import pytest
-from pydantic import ValidationError
+from pydantic import SecretStr, ValidationError
 
 from memora.core.config import LOCAL_DATABASE_URL, Settings
 
@@ -9,6 +9,7 @@ MANAGED_DATABASE_URL = "postgresql+psycopg://memora:managed-secret@db.staging.ex
 DEPLOYED_IDENTITY_SETTINGS = {
     "supabase_url": "https://example.supabase.co",
     "supabase_publishable_key": "synthetic-publishable-key",
+    "supabase_service_role_key": "synthetic-service-role-key",
     "device_encryption_key": "YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=",
     "device_fingerprint_key": "YmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmI=",
     "consent_terms_version": "test-v1",
@@ -16,6 +17,11 @@ DEPLOYED_IDENTITY_SETTINGS = {
     "consent_material_processing_version": "test-v1",
     "consent_model_processing_version": "test-v1",
     "consent_notifications_version": "test-v1",
+    "object_storage_provider": "s3",
+    "object_storage_endpoint": "https://storage.example.com",
+    "object_storage_bucket": "memora-private",
+    "object_storage_access_key": "synthetic-storage-access-key",
+    "object_storage_secret_key": "synthetic-storage-secret-key",
 }
 
 
@@ -138,6 +144,7 @@ def test_deployed_environment_requires_identity_settings() -> None:
     [
         "supabase_url",
         "supabase_publishable_key",
+        "supabase_service_role_key",
         "device_encryption_key",
         "device_fingerprint_key",
         "consent_terms_version",
@@ -184,6 +191,24 @@ def test_production_disables_api_documentation() -> None:
     )
 
     assert settings.docs_enabled is False
+
+
+def test_deployed_environment_requires_durable_object_storage() -> None:
+    with pytest.raises(ValidationError, match="OBJECT_STORAGE_PROVIDER must be s3"):
+        Settings(
+            _env_file=None,
+            environment="production",
+            database_url=MANAGED_DATABASE_URL,
+            **{**DEPLOYED_IDENTITY_SETTINGS, "object_storage_provider": "memory"},
+        )
+
+    with pytest.raises(ValidationError, match="OBJECT_STORAGE_BUCKET"):
+        Settings(
+            _env_file=None,
+            environment="production",
+            database_url=MANAGED_DATABASE_URL,
+            **{**DEPLOYED_IDENTITY_SETTINGS, "object_storage_bucket": ""},
+        )
 
 
 def test_invalid_environment_is_rejected() -> None:
@@ -263,3 +288,48 @@ def test_app_docs_follow_environment_boundary(
 
     assert app.docs_url == expected_docs_url
     assert app.redoc_url is None
+
+
+def test_storage_and_ingestion_secrets_are_not_exposed_in_repr() -> None:
+    settings = Settings(
+        _env_file=None,
+        environment="local",
+        database_url=LOCAL_DATABASE_URL,
+        ingestion_encryption_key=SecretStr("super-secret-ingestion-key"),
+        openrouter_api_key=SecretStr("super-secret-openrouter-key"),
+        object_storage_access_key=SecretStr("super-secret-s3-access"),
+        object_storage_secret_key=SecretStr("super-secret-s3-secret"),
+    )
+
+    text_repr = repr(settings)
+    assert "super-secret-ingestion-key" not in text_repr
+    assert "super-secret-openrouter-key" not in text_repr
+    assert "super-secret-s3-access" not in text_repr
+    assert "super-secret-s3-secret" not in text_repr
+
+
+def test_upload_and_storage_bounds() -> None:
+    # Valid bounds
+    settings = Settings(
+        _env_file=None,
+        environment="local",
+        database_url=LOCAL_DATABASE_URL,
+        upload_max_files=10,
+        upload_max_bytes=50 * 1024 * 1024,
+        upload_grant_ttl_seconds=1800,
+        object_storage_provider="memory",
+    )
+    assert settings.upload_max_files == 10
+    assert settings.upload_max_bytes == 50 * 1024 * 1024
+    assert settings.upload_grant_ttl_seconds == 1800
+    assert settings.object_storage_provider == "memory"
+
+    # Out of bounds
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None, database_url=LOCAL_DATABASE_URL, upload_max_files=0)
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None, database_url=LOCAL_DATABASE_URL, upload_max_files=25)
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None, database_url=LOCAL_DATABASE_URL, upload_max_bytes=500)
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None, database_url=LOCAL_DATABASE_URL, upload_grant_ttl_seconds=30)

@@ -217,6 +217,14 @@ class QuestionReportRepository:
             return self._load_snapshot(connection, question_version_id)
 
     @staticmethod
+    def load_snapshot_from_connection(
+        connection: Connection, question_version_id: UUID
+    ) -> QuestionSnapshot:
+        """Load a pinned snapshot inside another domain's atomic transaction."""
+
+        return QuestionReportRepository._load_snapshot(connection, question_version_id)
+
+    @staticmethod
     def _assert_report_target(
         connection: Connection,
         user_id: UUID,

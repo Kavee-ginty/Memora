@@ -104,23 +104,23 @@ class IdentityRepository:
                     text("SELECT set_config('memora.user_id', :user_id, true)"),
                     {"user_id": str(user_id)},
                 )
-                connection.execute(
-                    text(
-                        """
-                        UPDATE users
-                        SET last_authenticated_at = :authenticated_at,
-                            updated_at = now(),
-                            row_version = row_version + 1
-                        WHERE id = :user_id
-                          AND :authenticated_at IS NOT NULL
-                          AND (
-                              last_authenticated_at IS NULL
-                              OR last_authenticated_at < :authenticated_at
-                          )
-                        """
-                    ),
-                    {"user_id": user_id, "authenticated_at": auth.authenticated_at},
-                )
+                if auth.authenticated_at is not None:
+                    connection.execute(
+                        text(
+                            """
+                            UPDATE users
+                            SET last_authenticated_at = :authenticated_at,
+                                updated_at = now(),
+                                row_version = row_version + 1
+                            WHERE id = :user_id
+                              AND (
+                                  last_authenticated_at IS NULL
+                                  OR last_authenticated_at < :authenticated_at
+                              )
+                            """
+                        ),
+                        {"user_id": user_id, "authenticated_at": auth.authenticated_at},
+                    )
             yield connection, user_id
 
     def bootstrap(
@@ -208,6 +208,171 @@ class IdentityRepository:
                     user_id,
                 ),
             }
+
+    def profile(self, auth: AuthContext) -> dict[str, Any]:
+        with self._connection(auth) as (connection, user_id):
+            return self._profile_row(connection, user_id)
+
+    def update_profile(
+        self,
+        auth: AuthContext,
+        *,
+        version: int,
+        idempotency_key: str,
+        values: dict[str, Any],
+    ) -> dict[str, Any]:
+        request_hash = _request_hash({"version": version, **values})
+        with self._connection(auth) as (connection, user_id):
+            replay = self._claim_idempotency(
+                connection, user_id, "updateProfile", idempotency_key, request_hash
+            )
+            if replay:
+                return json.loads(replay)
+            current_version = connection.scalar(
+                text("SELECT row_version FROM user_profiles WHERE user_id=:user_id FOR UPDATE"),
+                {"user_id": user_id},
+            )
+            if current_version != version:
+                raise ApiError(
+                    409,
+                    "version_conflict",
+                    "The profile changed. Refresh it and try again.",
+                    "refresh_state",
+                )
+            connection.execute(
+                text(
+                    """
+                    UPDATE user_profiles
+                    SET display_name = CASE WHEN :set_display_name THEN :display_name
+                                            ELSE display_name END,
+                        updated_at = now(), row_version = row_version + 1
+                    WHERE user_id = :user_id
+                    """
+                ),
+                {
+                    "user_id": user_id,
+                    "set_display_name": "display_name" in values,
+                    "display_name": values.get("display_name"),
+                },
+            )
+            connection.execute(
+                text(
+                    """
+                    UPDATE users
+                    SET locale = CASE WHEN :set_locale THEN :locale ELSE locale END,
+                        default_timezone = CASE WHEN :set_timezone THEN :timezone
+                                                ELSE default_timezone END,
+                        updated_at = now(), row_version = row_version + 1
+                    WHERE id = :user_id
+                    """
+                ),
+                {
+                    "user_id": user_id,
+                    "set_locale": "locale" in values,
+                    "locale": values.get("locale"),
+                    "set_timezone": "timezone" in values,
+                    "timezone": values.get("timezone"),
+                },
+            )
+            result = json.loads(json.dumps(self._profile_row(connection, user_id), default=str))
+            self._complete_idempotency(
+                connection,
+                user_id,
+                "updateProfile",
+                idempotency_key,
+                json.dumps(result, default=str, sort_keys=True),
+            )
+            return result
+
+    def preferences(self, auth: AuthContext, *, default_reminders: int) -> dict[str, Any]:
+        with self._connection(auth) as (connection, user_id):
+            self._ensure_preferences(connection, user_id, default_reminders)
+            return self._preferences_row(connection, user_id)
+
+    def update_preferences(
+        self,
+        auth: AuthContext,
+        *,
+        version: int,
+        idempotency_key: str,
+        values: dict[str, Any],
+        default_reminders: int,
+    ) -> dict[str, Any]:
+        request_hash = _request_hash({"version": version, **values})
+        notification_fields = {
+            "notifications_enabled",
+            "mission_enabled",
+            "reward_enabled",
+            "streak_enabled",
+            "quiet_start_local",
+            "quiet_end_local",
+            "preferred_window_start_local",
+            "preferred_window_end_local",
+            "timezone",
+            "lock_screen_detail",
+            "max_daily_reminders",
+        }
+        with self._connection(auth) as (connection, user_id):
+            self._ensure_preferences(connection, user_id, default_reminders)
+            replay = self._claim_idempotency(
+                connection, user_id, "updateProfilePreferences", idempotency_key, request_hash
+            )
+            if replay:
+                return json.loads(replay)
+            current_version = connection.scalar(
+                text(
+                    "SELECT row_version FROM notification_preferences "
+                    "WHERE user_id=:user_id FOR UPDATE"
+                ),
+                {"user_id": user_id},
+            )
+            if current_version != version:
+                raise ApiError(
+                    409,
+                    "version_conflict",
+                    "The preferences changed. Refresh them and try again.",
+                    "refresh_state",
+                )
+            parameters: dict[str, Any] = {"user_id": user_id}
+            assignments: list[str] = []
+            for field in sorted(notification_fields & values.keys()):
+                assignments.append(f"{field} = :{field}")
+                parameters[field] = values[field]
+            assignments.extend(["updated_at = now()", "row_version = row_version + 1"])
+            connection.execute(
+                text(
+                    "UPDATE notification_preferences SET "
+                    + ", ".join(assignments)
+                    + " WHERE user_id=:user_id"
+                ),
+                parameters,
+            )
+            if "accessibility" in values:
+                connection.execute(
+                    text(
+                        """
+                        UPDATE user_profiles
+                        SET accessibility_preferences=(
+                                accessibility_preferences || CAST(:accessibility AS jsonb)
+                            ),
+                            updated_at=now(), row_version=row_version+1
+                        WHERE user_id=:user_id
+                        """
+                    ),
+                    {
+                        "user_id": user_id,
+                        "accessibility": json.dumps(values["accessibility"], sort_keys=True),
+                    },
+                )
+            result = json.loads(json.dumps(self._preferences_row(connection, user_id), default=str))
+            self._complete_idempotency(
+                connection,
+                user_id,
+                "updateProfilePreferences",
+                idempotency_key,
+                json.dumps(result, default=str, sort_keys=True),
+            )
+            return result
 
     def consent_records(self, auth: AuthContext) -> list[dict[str, Any]]:
         with self._connection(auth) as (connection, user_id):
@@ -305,10 +470,18 @@ class IdentityRepository:
                 body_hash,
             )
             if replay:
-                result = self._device_by_id(connection, user_id, UUID(replay))
-                result.update({"locale": locale, "timezone": timezone})
+                try:
+                    result = json.loads(replay)
+                except json.JSONDecodeError:
+                    # Compatibility for registrations written before response snapshots.
+                    result = self._device_by_id(connection, user_id, UUID(replay))
+                    result.update({"locale": locale, "timezone": timezone})
                 return result, False
 
+            connection.execute(
+                text("SELECT memora_transfer_device_token(:fingerprint)"),
+                {"fingerprint": fingerprint},
+            )
             existing = connection.scalar(
                 text(
                     "SELECT id FROM device_registrations "
@@ -354,6 +527,13 @@ class IdentityRepository:
             )
             connection.execute(
                 text(
+                    "UPDATE user_profiles SET updated_at=now(), row_version=row_version+1 "
+                    "WHERE user_id=:user_id"
+                ),
+                {"user_id": user_id},
+            )
+            connection.execute(
+                text(
                     """
                     UPDATE users SET locale = :locale, default_timezone = :timezone,
                                      updated_at = now(), row_version = row_version + 1
@@ -362,10 +542,7 @@ class IdentityRepository:
                 ),
                 {"user_id": user_id, "locale": locale, "timezone": timezone},
             )
-            self._complete_idempotency(
-                connection, user_id, "registerDevice", idempotency_key, str(device_id)
-            )
-            return {
+            result = {
                 "id": device_id,
                 "installation_id": installation_id,
                 "platform": platform,
@@ -373,7 +550,15 @@ class IdentityRepository:
                 "timezone": timezone,
                 "app_version": app_version,
                 "last_seen_at": last_seen_at,
-            }, existing is None
+            }
+            self._complete_idempotency(
+                connection,
+                user_id,
+                "registerDevice",
+                idempotency_key,
+                json.dumps(result, default=str, sort_keys=True),
+            )
+            return result, existing is None
 
     def delete_device(self, auth: AuthContext, device_id: UUID) -> None:
         with self._connection(auth) as (connection, user_id):
@@ -390,6 +575,70 @@ class IdentityRepository:
                 ),
                 {"device_id": device_id, "user_id": user_id},
             )
+
+    @staticmethod
+    def _profile_row(connection: Connection, user_id: UUID) -> dict[str, Any]:
+        row = (
+            connection.execute(
+                text(
+                    """
+                    SELECT u.id AS user_id, p.display_name, u.locale,
+                           u.default_timezone AS timezone, p.active_subject_id,
+                           p.curriculum_version_id, p.row_version AS version
+                    FROM users u JOIN user_profiles p ON p.user_id=u.id
+                    WHERE u.id=:user_id
+                    """
+                ),
+                {"user_id": user_id},
+            )
+            .mappings()
+            .one()
+        )
+        return dict(row)
+
+    @staticmethod
+    def _ensure_preferences(connection: Connection, user_id: UUID, default_reminders: int) -> None:
+        connection.execute(
+            text(
+                """
+                INSERT INTO notification_preferences(
+                    user_id, notifications_enabled, mission_enabled,
+                    reward_enabled, streak_enabled, timezone,
+                    lock_screen_detail, max_daily_reminders
+                )
+                SELECT id, false, true, true, true, default_timezone, 'minimal', :reminders
+                FROM users WHERE id=:user_id
+                ON CONFLICT (user_id) DO NOTHING
+                """
+            ),
+            {"user_id": user_id, "reminders": default_reminders},
+        )
+
+    @staticmethod
+    def _preferences_row(connection: Connection, user_id: UUID) -> dict[str, Any]:
+        row = (
+            connection.execute(
+                text(
+                    """
+                    SELECT n.notifications_enabled, n.mission_enabled,
+                           n.reward_enabled, n.streak_enabled,
+                           n.quiet_start_local, n.quiet_end_local,
+                           n.preferred_window_start_local,
+                           n.preferred_window_end_local, n.timezone,
+                           n.lock_screen_detail, n.max_daily_reminders,
+                           p.accessibility_preferences AS accessibility,
+                           n.row_version AS version
+                    FROM notification_preferences n
+                    JOIN user_profiles p ON p.user_id=n.user_id
+                    WHERE n.user_id=:user_id
+                    """
+                ),
+                {"user_id": user_id},
+            )
+            .mappings()
+            .one()
+        )
+        return dict(row)
 
     def claim_revocation(
         self,

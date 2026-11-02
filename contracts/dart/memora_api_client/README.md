@@ -47,13 +47,20 @@ Please follow the [installation procedure](#installation--usage) and then run th
 import 'package:memora_api_client/memora_api_client.dart';
 
 
-final api = MemoraApiClient().getHealthApi();
+final api = MemoraApiClient().getCurriculumApi();
+final String conceptId = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+final String xCorrelationID = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+final String xClientVersion = xClientVersion_example; // String | 
+final String xPlatform = xPlatform_example; // String | 
+final int limit = 56; // int | 
+final String cursor = cursor_example; // String | 
+final String acceptLanguage = acceptLanguage_example; // String | 
 
 try {
-    final response = await api.healthLive();
+    final response = await api.getConceptHistory(conceptId, xCorrelationID, xClientVersion, xPlatform, limit, cursor, acceptLanguage);
     print(response);
 } on DioException catch (e) {
-    print("Exception when calling HealthApi->healthLive: $e\n");
+    print("Exception when calling CurriculumApi->getConceptHistory: $e\n");
 }
 
 ```
@@ -64,10 +71,38 @@ All URIs are relative to *http://localhost*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
+[*CurriculumApi*](doc/CurriculumApi.md) | [**getConceptHistory**](doc/CurriculumApi.md#getconcepthistory) | **GET** /v1/concepts/{concept_id}/history | Read a concept&#39;s evidence summary and scheduling history
+[*CurriculumApi*](doc/CurriculumApi.md) | [**listConceptProgress**](doc/CurriculumApi.md#listconceptprogress) | **GET** /v1/subjects/{subject_id}/concept-progress | List due and near-due concept progress for a subject
 [*HealthApi*](doc/HealthApi.md) | [**healthLive**](doc/HealthApi.md#healthlive) | **GET** /health/live | Live
 [*HealthApi*](doc/HealthApi.md) | [**healthReady**](doc/HealthApi.md#healthready) | **GET** /health/ready | Ready
+[*LearningUpdatesApi*](doc/LearningUpdatesApi.md) | [**createLearningUpdate**](doc/LearningUpdatesApi.md#createlearningupdate) | **POST** /v1/learning-updates | Create a text or upload-backed learning update
+[*LearningUpdatesApi*](doc/LearningUpdatesApi.md) | [**createUploadGrant**](doc/LearningUpdatesApi.md#createuploadgrant) | **POST** /v1/learning-updates/{update_id}/uploads | Request a temporary signed upload grant
+[*LearningUpdatesApi*](doc/LearningUpdatesApi.md) | [**deleteLearningUpdate**](doc/LearningUpdatesApi.md#deletelearningupdate) | **DELETE** /v1/learning-updates/{update_id} | Discard a draft or cancel an unfinished workflow
+[*LearningUpdatesApi*](doc/LearningUpdatesApi.md) | [**finalizeUpload**](doc/LearningUpdatesApi.md#finalizeupload) | **POST** /v1/learning-updates/{update_id}/uploads/{upload_id}/finalize | Verify an uploaded object and queue processing once
+[*LearningUpdatesApi*](doc/LearningUpdatesApi.md) | [**getLearningUpdate**](doc/LearningUpdatesApi.md#getlearningupdate) | **GET** /v1/learning-updates/{update_id} | Read processing and deletion status
+[*LearningUpdatesApi*](doc/LearningUpdatesApi.md) | [**listLearningUpdates**](doc/LearningUpdatesApi.md#listlearningupdates) | **GET** /v1/learning-updates | List the authenticated student&#39;s learning updates
+[*LearningUpdatesApi*](doc/LearningUpdatesApi.md) | [**retryLearningUpdate**](doc/LearningUpdatesApi.md#retrylearningupdate) | **POST** /v1/learning-updates/{update_id}/retry | Retry an eligible failed stage
+[*LearningUpdatesApi*](doc/LearningUpdatesApi.md) | [**updateLearningUpdate**](doc/LearningUpdatesApi.md#updatelearningupdate) | **PATCH** /v1/learning-updates/{update_id} | Edit an eligible draft update
+[*MissionsApi*](doc/MissionsApi.md) | [**completeMission**](doc/MissionsApi.md#completemission) | **POST** /v1/missions/{mission_id}/complete | Complete a mission from persisted eligible item states
+[*MissionsApi*](doc/MissionsApi.md) | [**getMission**](doc/MissionsApi.md#getmission) | **GET** /v1/missions/{mission_id} | Read a mission preview and authoritative progress
+[*MissionsApi*](doc/MissionsApi.md) | [**getMissionItem**](doc/MissionsApi.md#getmissionitem) | **GET** /v1/missions/{mission_id}/items/{item_id} | Read the authorized current mission item
+[*MissionsApi*](doc/MissionsApi.md) | [**getMissionResults**](doc/MissionsApi.md#getmissionresults) | **GET** /v1/missions/{mission_id}/results | Read stable mission completion results
+[*MissionsApi*](doc/MissionsApi.md) | [**getTodayMission**](doc/MissionsApi.md#gettodaymission) | **GET** /v1/missions/today | Read or assemble today&#39;s bounded Daily Mission
+[*MissionsApi*](doc/MissionsApi.md) | [**pauseMission**](doc/MissionsApi.md#pausemission) | **POST** /v1/missions/{mission_id}/pause | Pause an active mission without losing progress
+[*MissionsApi*](doc/MissionsApi.md) | [**skipMissionItem**](doc/MissionsApi.md#skipmissionitem) | **POST** /v1/missions/{mission_id}/items/{item_id}/skip | Record one permitted mission-item skip
+[*MissionsApi*](doc/MissionsApi.md) | [**startMission**](doc/MissionsApi.md#startmission) | **POST** /v1/missions/{mission_id}/start | Start or resume a mission with pinned question versions
+[*MissionsApi*](doc/MissionsApi.md) | [**submitAttempt**](doc/MissionsApi.md#submitattempt) | **POST** /v1/missions/{mission_id}/items/{item_id}/attempts | Submit and grade one answer envelope
+[*PrivacyApi*](doc/PrivacyApi.md) | [**cancelPrivacyDeletion**](doc/PrivacyApi.md#cancelprivacydeletion) | **POST** /v1/privacy/deletions/{request_id}/cancel | Cancel pending account deletion
+[*PrivacyApi*](doc/PrivacyApi.md) | [**createPrivacyDeletion**](doc/PrivacyApi.md#createprivacydeletion) | **POST** /v1/privacy/deletions | Request account deletion
+[*PrivacyApi*](doc/PrivacyApi.md) | [**createPrivacyExport**](doc/PrivacyApi.md#createprivacyexport) | **POST** /v1/privacy/exports | Request account data export
+[*PrivacyApi*](doc/PrivacyApi.md) | [**getPrivacyDeletion**](doc/PrivacyApi.md#getprivacydeletion) | **GET** /v1/privacy/deletions/{request_id} | Get account deletion status
+[*PrivacyApi*](doc/PrivacyApi.md) | [**getPrivacyExport**](doc/PrivacyApi.md#getprivacyexport) | **GET** /v1/privacy/exports/{request_id} | Get privacy export status
 [*ProfileApi*](doc/ProfileApi.md) | [**acceptConsent**](doc/ProfileApi.md#acceptconsent) | **POST** /v1/consent/acceptances | Accept a current consent policy
 [*ProfileApi*](doc/ProfileApi.md) | [**getConsent**](doc/ProfileApi.md#getconsent) | **GET** /v1/consent | Get current consent status
+[*ProfileApi*](doc/ProfileApi.md) | [**getProfile**](doc/ProfileApi.md#getprofile) | **GET** /v1/profile | Get the authenticated profile
+[*ProfileApi*](doc/ProfileApi.md) | [**getProfilePreferences**](doc/ProfileApi.md#getprofilepreferences) | **GET** /v1/profile/preferences | Get profile preferences
+[*ProfileApi*](doc/ProfileApi.md) | [**updateProfile**](doc/ProfileApi.md#updateprofile) | **PATCH** /v1/profile | Update the authenticated profile
+[*ProfileApi*](doc/ProfileApi.md) | [**updateProfilePreferences**](doc/ProfileApi.md#updateprofilepreferences) | **PATCH** /v1/profile/preferences | Update profile preferences
 [*ReportsApi*](doc/ReportsApi.md) | [**createQuestionReport**](doc/ReportsApi.md#createquestionreport) | **POST** /v1/questions/{question_version_id}/reports | Report a question, answer, explanation or grading issue
 [*ReportsApi*](doc/ReportsApi.md) | [**getQuestionReport**](doc/ReportsApi.md#getquestionreport) | **GET** /v1/question-reports/{report_id} | Read a question report and its safe resolution state
 [*ReportsApi*](doc/ReportsApi.md) | [**listQuestionReports**](doc/ReportsApi.md#listquestionreports) | **GET** /v1/question-reports | List the authenticated student&#39;s question reports
@@ -75,41 +110,106 @@ Class | Method | HTTP request | Description
 [*SessionApi*](doc/SessionApi.md) | [**deleteDevice**](doc/SessionApi.md#deletedevice) | **DELETE** /v1/devices/{device_id} | Remove a notification device
 [*SessionApi*](doc/SessionApi.md) | [**registerDevice**](doc/SessionApi.md#registerdevice) | **POST** /v1/devices | Register or refresh a notification device
 [*SessionApi*](doc/SessionApi.md) | [**revokeSession**](doc/SessionApi.md#revokesession) | **POST** /v1/session/revoke | Revoke authenticated sessions
+[*VerificationApi*](doc/VerificationApi.md) | [**commitLearningUpdate**](doc/VerificationApi.md#commitlearningupdate) | **POST** /v1/learning-updates/{update_id}/commit | Commit accepted knowledge and exposure once
+[*VerificationApi*](doc/VerificationApi.md) | [**listExtractionCandidates**](doc/VerificationApi.md#listextractioncandidates) | **GET** /v1/learning-updates/{update_id}/candidates | List authorized extraction candidates
+[*VerificationApi*](doc/VerificationApi.md) | [**previewLearningPath**](doc/VerificationApi.md#previewlearningpath) | **GET** /v1/learning-updates/{update_id}/preview | Preview the validated learning path
+[*VerificationApi*](doc/VerificationApi.md) | [**submitVerificationDecisions**](doc/VerificationApi.md#submitverificationdecisions) | **POST** /v1/learning-updates/{update_id}/verification-decisions | Submit versioned concept verification decisions
 
 
 ## Documentation For Models
 
+ - [AccessibilityPreferences](doc/AccessibilityPreferences.md)
  - [AccountStatus](doc/AccountStatus.md)
  - [ActiveMissionSummary](doc/ActiveMissionSummary.md)
+ - [AnswerPayload](doc/AnswerPayload.md)
  - [AsyncOperation](doc/AsyncOperation.md)
+ - [AttemptResult](doc/AttemptResult.md)
+ - [CandidateListResponse](doc/CandidateListResponse.md)
+ - [CandidateResponse](doc/CandidateResponse.md)
+ - [CandidateStatus](doc/CandidateStatus.md)
  - [CapabilityFlags](doc/CapabilityFlags.md)
+ - [ConceptHistoryResponse](doc/ConceptHistoryResponse.md)
+ - [ConceptProgressItem](doc/ConceptProgressItem.md)
  - [ConsentAcceptanceRequest](doc/ConsentAcceptanceRequest.md)
  - [ConsentAcceptanceResponse](doc/ConsentAcceptanceResponse.md)
  - [ConsentDecision](doc/ConsentDecision.md)
  - [ConsentResponse](doc/ConsentResponse.md)
  - [ConsentStatus](doc/ConsentStatus.md)
  - [ConsentType](doc/ConsentType.md)
+ - [CreateLearningUpdateRequest](doc/CreateLearningUpdateRequest.md)
+ - [DeclaredFile](doc/DeclaredFile.md)
+ - [DeletionProofSummary](doc/DeletionProofSummary.md)
+ - [DeletionStatus](doc/DeletionStatus.md)
  - [DeviceRegistrationRequest](doc/DeviceRegistrationRequest.md)
  - [DeviceRegistrationResponse](doc/DeviceRegistrationResponse.md)
+ - [DueReasonExplanation](doc/DueReasonExplanation.md)
  - [ErrorDetail](doc/ErrorDetail.md)
  - [ErrorEnvelope](doc/ErrorEnvelope.md)
+ - [EvidenceSummary](doc/EvidenceSummary.md)
  - [FieldError](doc/FieldError.md)
+ - [FinalizeUploadRequest](doc/FinalizeUploadRequest.md)
+ - [FirstMissionSummary](doc/FirstMissionSummary.md)
  - [HealthResponse](doc/HealthResponse.md)
  - [HealthStatus](doc/HealthStatus.md)
  - [IdempotencyHeaders](doc/IdempotencyHeaders.md)
+ - [InputType](doc/InputType.md)
+ - [KnowledgeCommitResponse](doc/KnowledgeCommitResponse.md)
+ - [LearningPathPreviewConcept](doc/LearningPathPreviewConcept.md)
+ - [LearningPathPreviewResponse](doc/LearningPathPreviewResponse.md)
+ - [LearningUpdateListResponse](doc/LearningUpdateListResponse.md)
+ - [LearningUpdateResponse](doc/LearningUpdateResponse.md)
+ - [LearningUpdateStatus](doc/LearningUpdateStatus.md)
+ - [MediaReference](doc/MediaReference.md)
+ - [MissionCompletionResult](doc/MissionCompletionResult.md)
+ - [MissionItemResponse](doc/MissionItemResponse.md)
+ - [MissionManifest](doc/MissionManifest.md)
+ - [MissionManifestItem](doc/MissionManifestItem.md)
+ - [MissionSummary](doc/MissionSummary.md)
+ - [MultipleChoiceAnswer](doc/MultipleChoiceAnswer.md)
+ - [NumericAnswer](doc/NumericAnswer.md)
+ - [PageConceptProgressItem](doc/PageConceptProgressItem.md)
  - [PageMeta](doc/PageMeta.md)
  - [PageParams](doc/PageParams.md)
  - [PageQuestionReportSummary](doc/PageQuestionReportSummary.md)
  - [PendingResourceSummary](doc/PendingResourceSummary.md)
+ - [PrivacyDeletionCancelRequest](doc/PrivacyDeletionCancelRequest.md)
+ - [PrivacyDeletionRequest](doc/PrivacyDeletionRequest.md)
+ - [PrivacyDeletionResponse](doc/PrivacyDeletionResponse.md)
+ - [PrivacyExportRequest](doc/PrivacyExportRequest.md)
+ - [PrivacyExportResponse](doc/PrivacyExportResponse.md)
+ - [ProfilePreferencesResponse](doc/ProfilePreferencesResponse.md)
+ - [ProfilePreferencesUpdateRequest](doc/ProfilePreferencesUpdateRequest.md)
+ - [ProfileResponse](doc/ProfileResponse.md)
  - [ProfileSummary](doc/ProfileSummary.md)
+ - [ProfileUpdateRequest](doc/ProfileUpdateRequest.md)
+ - [PublicQuestion](doc/PublicQuestion.md)
+ - [PublicQuestionOption](doc/PublicQuestionOption.md)
+ - [PublicResponseConfig](doc/PublicResponseConfig.md)
  - [QuestionReportCreateRequest](doc/QuestionReportCreateRequest.md)
  - [QuestionReportResponse](doc/QuestionReportResponse.md)
  - [QuestionReportSummary](doc/QuestionReportSummary.md)
  - [RequestHeaders](doc/RequestHeaders.md)
+ - [RetryLearningUpdateRequest](doc/RetryLearningUpdateRequest.md)
+ - [SchedulingExplanation](doc/SchedulingExplanation.md)
  - [SessionBootstrapResponse](doc/SessionBootstrapResponse.md)
  - [SessionRevocationScope](doc/SessionRevocationScope.md)
  - [SessionRevokeRequest](doc/SessionRevokeRequest.md)
+ - [ShortAnswerText](doc/ShortAnswerText.md)
+ - [SingleChoiceAnswer](doc/SingleChoiceAnswer.md)
+ - [SourceUploadSummary](doc/SourceUploadSummary.md)
  - [SubjectSummary](doc/SubjectSummary.md)
+ - [SubmitAttemptRequest](doc/SubmitAttemptRequest.md)
+ - [SubmitVerificationDecisionsRequest](doc/SubmitVerificationDecisionsRequest.md)
+ - [SubmitVerificationDecisionsResponse](doc/SubmitVerificationDecisionsResponse.md)
+ - [TodayMissionResponse](doc/TodayMissionResponse.md)
+ - [UpdateLearningUpdateRequest](doc/UpdateLearningUpdateRequest.md)
+ - [UploadGrantRequest](doc/UploadGrantRequest.md)
+ - [UploadGrantResponse](doc/UploadGrantResponse.md)
+ - [UploadStatus](doc/UploadStatus.md)
+ - [Value](doc/Value.md)
+ - [VerificationDecision](doc/VerificationDecision.md)
+ - [VerificationDecisionResult](doc/VerificationDecisionResult.md)
+ - [VerificationDecisionValue](doc/VerificationDecisionValue.md)
 
 
 ## Documentation For Authorization

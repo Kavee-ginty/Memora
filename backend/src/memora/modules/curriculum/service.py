@@ -216,7 +216,10 @@ class CurriculumService:
             JOIN concepts c ON c.id = cv.concept_id
             WHERE c.status = 'approved'
               AND cv.content_status = 'approved'
-              AND (:subject_id IS NULL OR c.subject_id = :subject_id)
+              AND (
+                  CAST(:subject_id AS uuid) IS NULL
+                  OR c.subject_id = CAST(:subject_id AS uuid)
+              )
             ORDER BY p.depth, c.stable_code
             LIMIT :result_limit
             """

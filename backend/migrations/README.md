@@ -22,6 +22,10 @@ Session bootstrap resolves an internal user ID through a security-definer functi
 
 Product values that remain open are intentionally not guessed in T04. T09 owns upload limits, T11 owns initial memory and policy versions, T13 owns the mission item cap, T15 owns reward definitions and XP thresholds, and T17 owns the reminder cap. Each task must add its approved value through a reviewed forward migration when the corresponding contract is finalized.
 
+T17 finalizes notification frequency at a maximum of three reminders per user-local day,
+with one reminder per day as the default. A student may set the value to zero or disable
+notifications and individual categories without blocking normal application use.
+
 ## Recovery
 
 The production recovery path is roll-forward: correct the migration in a new reviewed revision and run `alembic upgrade head`. Do not downgrade a database containing user data. The initial downgrade drops the complete `public` schema and exists only for empty/local migration testing where data loss is explicitly acceptable.

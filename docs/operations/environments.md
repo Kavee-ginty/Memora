@@ -19,6 +19,10 @@ The data rules follow TRD 18.2. Production data must never be copied into local,
 
 - `.env` is local-only, ignored by Git and must never be committed.
 - `.env.example` is committed and contains synthetic local placeholders only.
+- Host tools (Alembic, seed) read `MEMORA_DATABASE_URL` from the process environment
+  first, then fall back to the repository `.env` (override with `MEMORA_ENV_FILE`).
+  Compose builds the API and worker database URL from `POSTGRES_*` and the service
+  host `postgres`, so the loopback URL in `.env` is for host commands only.
 - Development, staging and production receive configuration from the platform's environment or secret manager. The deployment image contains no repository `.env` file.
 - `MEMORA_DATABASE_URL` contains credentials and is treated as a secret. It is excluded from configuration representations and must not be logged.
 - The API database login must be permitted to `SET ROLE memora_api`; migrations use the owning migration login separately. Runtime identity transactions explicitly select the restricted role before setting the authenticated user RLS context.
@@ -33,11 +37,27 @@ The data rules follow TRD 18.2. Production data must never be copied into local,
 | `MEMORA_DATABASE_URL` | Yes outside local | PostgreSQL SQLAlchemy URL with the required scheme `postgresql+psycopg://` |
 | `MEMORA_LOG_LEVEL` | No | Logging threshold; defaults to `INFO` |
 | `MEMORA_SUPABASE_URL` | Yes in staging and production | HTTPS Supabase project URL; the backend derives the OIDC issuer and JWKS URL |
-| `MEMORA_SUPABASE_PUBLISHABLE_KEY` | Yes in staging and production | Publishable Auth key used only for provider logout; never use the secret or service-role key |
+| `MEMORA_SUPABASE_PUBLISHABLE_KEY` | Yes in staging and production | Publishable Auth key used only for provider logout |
+| `MEMORA_SUPABASE_SERVICE_ROLE_KEY` | Yes in staging and production | Secret-manager value used server-side only for verified Auth Admin deletion; never expose it to mobile clients or SQL scripts |
 | `MEMORA_RECENT_AUTH_WINDOW_SECONDS` | No | Recent interactive authentication window; defaults to 600 seconds |
 | `MEMORA_DEVICE_ENCRYPTION_KEY` | Yes in staging and production | Secret-manager value containing a base64-encoded 32-byte AES-256-GCM key |
 | `MEMORA_DEVICE_FINGERPRINT_KEY` | Yes in staging and production | Independent secret-manager value containing a base64-encoded 32-byte HMAC key |
 | `MEMORA_CONSENT_*_VERSION` | Yes in staging and production | Approved current policy versions; `unapproved-*` placeholders are rejected |
+| `MEMORA_INGESTION_ENCRYPTION_KEY` | No (defaults to deterministic local fallback) | Base64-encoded 32-byte AES-256-GCM key for manual text encryption |
+| `MEMORA_EXTRACTION_PROVIDER` | No | One of `deterministic` or `openrouter`; defaults to `deterministic` |
+| `MEMORA_OPENROUTER_API_KEY` | When provider is `openrouter` | Secret-manager token for LLM candidate extraction |
+| `MEMORA_OPENROUTER_MODEL` | No | Model identifier on OpenRouter; e.g. `google/gemini-2.5-flash` |
+| `MEMORA_OBJECT_STORAGE_PROVIDER` | Yes in staging and production | One of `memory` or `s3`; deployed environments require `s3` |
+| `MEMORA_OBJECT_STORAGE_BUCKET` | When provider is `s3` | S3 bucket name for temporary source uploads |
+| `MEMORA_OBJECT_STORAGE_ENDPOINT` | No | Custom S3 endpoint URL for MinIO, Cloudflare R2, etc. |
+| `MEMORA_OBJECT_STORAGE_REGION` | No | S3 region; defaults to `us-east-1` |
+| `MEMORA_OBJECT_STORAGE_ACCESS_KEY` | When provider is `s3` | S3 access key ID for presigning and verification |
+| `MEMORA_OBJECT_STORAGE_SECRET_KEY` | When provider is `s3` | S3 secret access key for presigning and verification |
+| `MEMORA_UPLOAD_MAX_FILES` | No | File upload count bound per update; defaults to 5 |
+| `MEMORA_UPLOAD_MAX_BYTES` | No | Max upload byte size; defaults to 26,214,400 (25 MiB) |
+| `MEMORA_UPLOAD_GRANT_TTL_SECONDS` | No | Presigned PUT grant validity duration; defaults to 900 seconds |
+| `MEMORA_INGESTION_EXPIRY_HOURS` | No | Inactive draft/uploading update TTL; defaults to 72 hours |
+| `MEMORA_VERIFICATION_EXPIRY_HOURS` | No | Verification candidate decision window; defaults to 72 hours |
 
 Local development falls back to a loopback PostgreSQL URL when `MEMORA_DATABASE_URL` is omitted. That fallback is not a deployed-environment default.
 

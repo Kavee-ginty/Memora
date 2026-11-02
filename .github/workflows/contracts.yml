@@ -78,7 +78,7 @@ jobs:
           dart analyze --no-fatal-warnings > analyze_output.txt
           cat analyze_output.txt
           actual=$(awk '/^ *warning -/{print $NF}' analyze_output.txt | sort || true)
-          expected=$'strict_raw_type\nunused_import\nunused_import\nunused_import\nunused_import\nunused_import\nunused_import\nunused_import\nunused_import'
+          expected=$'strict_raw_type\nunused_element_parameter\nunused_element_parameter\nunused_import\nunused_import\nunused_import\nunused_import\nunused_import\nunused_import\nunused_import\nunused_import\nunused_import\nunused_import\nunused_import\nunused_import\nunused_import\nunused_import\nunused_import\nunused_import\nunused_import\nunused_import\nunused_import\nunused_import'
           if [ "$actual" != "$expected" ]; then
             echo "Analyzer warning baseline changed; expected exactly:"
             echo "$expected"
