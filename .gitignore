@@ -26,7 +26,9 @@ plan_assets/
 # T24 academic source PDFs: local only pending reproduction/licence approval
 /content/physics/source_documents/
 
-# T24 local verbatim review pack: never track or redistribute source text
+# T24 local verbatim review pack (full transcriptions): local only.
+# The selected short excerpts in content/physics/pilot/questions/ are tracked
+# pilot evidence only and remain uncleared for redistribution.
 /content/physics/pilot/local_review/
 
 # Python
