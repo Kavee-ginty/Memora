@@ -2,79 +2,24 @@ from __future__ import annotations
 
 import copy
 import json
-from pathlib import Path
 
 import pytest
 
 from memora.modules.questions.pilot_validation import (
     PilotEnvelopeError,
     compute_pilot_content_hash,
+    load_pilot_envelopes,
+    seal_directory,
     to_validated_import,
     validate_pilot_envelope,
 )
-
-ROOT = Path(__file__).resolve().parents[2]
-EXAMPLE = ROOT / "content/physics/pilot/examples/synthetic_draft.json"
-SCHEMA = ROOT / "content/physics/pilot/pilot_question.schema.json"
-AUTHOR_ID = "40000000-0000-0000-0000-000000000001"
-REVIEWER_ID = "40000000-0000-0000-0000-000000000002"
-
-
-def draft() -> dict[str, object]:
-    return json.loads(EXAMPLE.read_text(encoding="utf-8"))
-
-
-def approved() -> dict[str, object]:
-    envelope = copy.deepcopy(draft())
-    question = envelope["question"]
-    review = envelope["review"]
-    answer = envelope["answer_verification"]
-    publication = envelope["publication"]
-
-    question["validation_status"] = "approved"
-    question["source_class"] = "expert_verified"
-    question["author_principal"] = AUTHOR_ID
-    question["author_qualification_ref"] = "author-qualification-record-synthetic-001"
-    question["reviewer_principal"] = REVIEWER_ID
-    question["rubric"]["status"] = "approved"
-    for mapping in question["concept_mappings"]:
-        mapping["provenance_type"] = "pilot_review"
-        mapping["provenance_ref"] = "review-record-synthetic-001:mapping"
-
-    answer["independent_review_status"] = "verified"
-    answer["reviewer_ref"] = "review-record-synthetic-001"
-
-    review["academic_review_status"] = "approved"
-    review["reviewer_principal"] = REVIEWER_ID
-    review["reviewer_qualification_ref"] = "qualification-record-synthetic-001"
-    review["reviewed_at"] = "2026-10-28T12:00:00+00:00"
-    review["ambiguity_status"] = "cleared"
-    review["duplicate_status"] = "cleared"
-    review["independence_declaration_ref"] = "independence-record-synthetic-001"
-    review["content_hash"] = None
-
-    publication["approved_for_import"] = True
-    publication["approved_by"] = "approval-record-synthetic-001"
-    publication["approved_at"] = "2026-10-28T12:05:00+00:00"
-    return envelope
-
-
-def past_paper_source() -> dict[str, object]:
-    return {
-        "source_id": "SL-DOE-AL-PHYS-2025-P1",
-        "source_type": "past_paper",
-        "document_filename": "AL_Physics_2025_Combined_Paper_English.pdf",
-        "document_sha256": "a" * 64,
-        "exam_year": 2025,
-        "exam_label": "2025",
-        "paper": "Paper I",
-        "question_number": 1,
-        "pdf_page": 1,
-        "official_key_status": "not_found",
-        "reproduction_status": "unapproved",
-        "reproduction_approval_ref": None,
-        "transcription_verified": False,
-    }
+from pilot_fixtures import (
+    AUTHOR_ID,
+    REVIEWER_ID,
+    mutate,
+    sealed_expert_envelope,
+    sealed_official_envelope,
+)
 
 
 def failure_code(envelope: dict[str, object]) -> str:
@@ -83,465 +28,285 @@ def failure_code(envelope: dict[str, object]) -> str:
     return exc_info.value.code
 
 
-def test_synthetic_draft_is_valid_and_not_approved() -> None:
-    envelope = draft()
+def test_official_marking_scheme_envelope_is_valid_and_blocked() -> None:
+    envelope = sealed_official_envelope()
 
     validated = validate_pilot_envelope(envelope)
 
-    assert validated["question"]["validation_status"] == "draft"
-    assert validated["question"]["source_class"] is None
-    assert validated["question"]["target_source_class"] == "expert_verified"
+    assert validated["verification_mode"] == "official_marking_scheme"
+    assert validated["question"]["validation_status"] == "approved"
+    assert validated["question"]["author_principal"] is None
+    assert validated["question"]["reviewer_principal"] is None
+    assert validated["answer_verification"]["independent_review_status"] == "not_required"
+    assert validated["review"]["academic_review_status"] == "not_required"
     assert validated["publication"]["approved_for_import"] is False
-    assert validated["review"]["academic_review_status"] == "pending"
+    assert validated["publication"]["import_status"] == "blocked_pending_t12_verification_mode"
+    assert len(validated["review"]["content_hash"]) == 64
 
 
-def test_draft_cannot_claim_expert_verified() -> None:
-    envelope = draft()
-    envelope["question"]["source_class"] = "expert_verified"
-
-    assert failure_code(envelope) == "pilot_draft_source_class"
-
-
-def test_draft_cannot_use_pilot_review_provenance() -> None:
-    envelope = draft()
-    envelope["question"]["concept_mappings"][0]["provenance_type"] = "pilot_review"
-
-    assert failure_code(envelope) == "pilot_provenance_unreviewed"
-
-
-def test_draft_may_record_a_partial_mapping_without_primary() -> None:
-    envelope = draft()
-    envelope["question"]["concept_mappings"][0]["mapping_role"] = "supporting"
-
-    validated = validate_pilot_envelope(envelope)
-
-    assert validated["question"]["validation_status"] == "draft"
-
-
-def test_approved_item_requires_a_primary_mapping() -> None:
-    envelope = approved()
-    envelope["question"]["concept_mappings"][0]["mapping_role"] = "supporting"
-
-    assert failure_code(envelope) == "pilot_mapping_invalid"
-
-
-def test_mapping_concept_must_exist_in_the_t08_seed() -> None:
-    envelope = draft()
-    envelope["question"]["concept_mappings"][0]["concept_version_id"] = (
-        "50000000-0000-0000-0000-000000009999"
+def test_official_mode_rejects_every_human_review_identity() -> None:
+    author = mutate(sealed_official_envelope(), ("question", "author_principal"), AUTHOR_ID)
+    author_qualification = mutate(
+        sealed_official_envelope(),
+        ("question", "author_qualification_ref"),
+        "synthetic-author-qualification",
+    )
+    reviewer = mutate(sealed_official_envelope(), ("question", "reviewer_principal"), REVIEWER_ID)
+    answer_review = mutate(
+        sealed_official_envelope(),
+        ("answer_verification", "independent_review_status"),
+        "verified",
+    )
+    answer_reviewer = mutate(
+        sealed_official_envelope(),
+        ("answer_verification", "reviewer_ref"),
+        "synthetic-answer-review",
+    )
+    academic_review = mutate(
+        sealed_official_envelope(),
+        ("review", "academic_review_status"),
+        "approved",
+    )
+    review_reviewer = mutate(
+        sealed_official_envelope(),
+        ("review", "reviewer_principal"),
+        REVIEWER_ID,
+    )
+    independence = mutate(
+        sealed_official_envelope(),
+        ("review", "independence_declaration_ref"),
+        "synthetic-independence",
     )
 
-    assert failure_code(envelope) == "pilot_mapping_unknown_concept"
+    for envelope in (
+        author,
+        author_qualification,
+        reviewer,
+        answer_review,
+        answer_reviewer,
+        academic_review,
+        review_reviewer,
+        independence,
+    ):
+        assert failure_code(envelope) == "pilot_reviewer_not_allowed"
 
 
-def test_mapping_objective_must_match_the_t08_concept_objective() -> None:
-    envelope = draft()
-    envelope["question"]["concept_mappings"][0]["learning_objective_id"] = (
-        "30000000-0000-0000-0000-000000000001"
+def test_official_mode_requires_the_recorded_deviation() -> None:
+    envelope = mutate(sealed_official_envelope(), ("review", "deviation_ref"), None)
+
+    assert failure_code(envelope) == "pilot_deviation_required"
+
+
+def test_official_mode_cannot_claim_import_approval() -> None:
+    approved = mutate(
+        sealed_official_envelope(),
+        ("publication", "approved_for_import"),
+        True,
+    )
+    approver = mutate(
+        sealed_official_envelope(),
+        ("publication", "approved_by"),
+        "synthetic-approver",
+    )
+    ready = mutate(
+        sealed_official_envelope(),
+        ("publication", "import_status"),
+        "ready_for_import",
     )
 
-    assert failure_code(envelope) == "pilot_mapping_objective_mismatch"
+    for envelope in (approved, approver, ready):
+        assert failure_code(envelope) == "pilot_import_blocked"
 
 
-def test_mapping_pairs_must_be_unique_per_concept_and_role() -> None:
-    envelope = draft()
-    envelope["question"]["concept_mappings"].append(
-        copy.deepcopy(envelope["question"]["concept_mappings"][0])
+def test_official_key_and_derived_option_must_agree() -> None:
+    source_mismatch = mutate(
+        sealed_official_envelope(),
+        ("answer_verification", "official_key"),
+        2,
+    )
+    derived_mismatch = mutate(
+        sealed_official_envelope(),
+        ("answer_verification", "derived_option_key"),
+        "2",
+    )
+    false_match = mutate(
+        sealed_official_envelope(),
+        ("answer_verification", "matches_official_key"),
+        False,
     )
 
-    assert failure_code(envelope) == "pilot_mapping_invalid"
+    assert failure_code(source_mismatch) == "pilot_official_key_mismatch"
+    assert failure_code(derived_mismatch) == "pilot_official_key_mismatch"
+    assert failure_code(false_match) == "pilot_official_key_mismatch"
 
 
-def test_draft_mapping_may_omit_the_objective_id() -> None:
-    envelope = draft()
-    envelope["question"]["concept_mappings"][0]["learning_objective_id"] = None
+def test_the_derived_option_must_be_the_marked_correct_option() -> None:
+    envelope = sealed_official_envelope()
+    for option in envelope["question"]["options"]:
+        option["is_correct"] = option["option_key"] == "2"
 
-    validated = validate_pilot_envelope(envelope)
-
-    assert validated["question"]["concept_mappings"][0]["learning_objective_id"] is None
-
-
-def test_approved_envelope_requires_reviewed_mapping_provenance() -> None:
-    envelope = approved()
-    envelope["question"]["concept_mappings"][0]["provenance_type"] = "analyst_mapping"
-
-    assert failure_code(envelope) == "pilot_provenance_not_reviewed"
+    assert failure_code(envelope) == "pilot_answer_invalid"
 
 
-def test_synthetic_item_cannot_claim_transcription() -> None:
-    envelope = draft()
-    envelope["source"]["transcription_verified"] = True
+def test_paper_i_mcq_needs_exactly_five_unique_options() -> None:
+    missing_option = sealed_official_envelope()
+    missing_option["question"]["options"].pop()
 
-    assert failure_code(envelope) == "pilot_source_invalid"
+    duplicate_text = sealed_official_envelope()
+    duplicate_text["question"]["options"][1]["display_text"] = duplicate_text["question"][
+        "options"
+    ][0]["display_text"]
 
+    duplicate_order = sealed_official_envelope()
+    duplicate_order["question"]["options"][1]["display_order"] = 0
 
-def test_draft_cannot_carry_reviewer_or_approved_rubric() -> None:
-    reviewer = draft()
-    reviewer["question"]["reviewer_principal"] = REVIEWER_ID
+    two_correct = sealed_official_envelope()
+    two_correct["question"]["options"][1]["is_correct"] = True
 
-    rubric = draft()
-    rubric["question"]["rubric"]["status"] = "approved"
-
-    assert failure_code(reviewer) == "pilot_draft_reviewer"
-    assert failure_code(rubric) == "pilot_rubric_invalid"
-
-
-def test_answer_reviewer_reference_matches_review_state() -> None:
-    draft_with_reviewer = draft()
-    draft_with_reviewer["answer_verification"]["reviewer_ref"] = "review-record-synthetic-001"
-
-    approved_without_reviewer = approved()
-    approved_without_reviewer["answer_verification"]["reviewer_ref"] = None
-
-    assert failure_code(draft_with_reviewer) == "pilot_answer_invalid"
-    assert failure_code(approved_without_reviewer) == "pilot_answer_invalid"
+    assert failure_code(missing_option) == "pilot_options_invalid"
+    assert failure_code(duplicate_text) == "pilot_options_invalid"
+    assert failure_code(duplicate_order) == "pilot_options_invalid"
+    assert failure_code(two_correct) == "pilot_answer_invalid"
 
 
-def test_draft_cannot_carry_approved_review_or_publication() -> None:
-    reviewed = draft()
-    reviewed["review"]["academic_review_status"] = "approved"
+def test_concept_mappings_must_resolve_to_the_t08_seed() -> None:
+    unknown_concept = mutate(
+        sealed_official_envelope(),
+        ("question", "concept_mappings", 0, "concept_version_id"),
+        "50000000-0000-0000-0000-000000009999",
+    )
+    wrong_objective = mutate(
+        sealed_official_envelope(),
+        ("question", "concept_mappings", 0, "learning_objective_id"),
+        "30000000-0000-0000-0000-000000000001",
+    )
+    no_primary = mutate(
+        sealed_official_envelope(),
+        ("question", "concept_mappings", 0, "mapping_role"),
+        "supporting",
+    )
 
-    published = draft()
-    published["publication"]["approved_for_import"] = True
-    published["publication"]["approved_by"] = "approval-record-synthetic-001"
-    published["publication"]["approved_at"] = "2026-10-28T12:05:00+00:00"
-
-    assert failure_code(reviewed) == "pilot_review_state_mismatch"
-    assert failure_code(published) == "pilot_publication_mismatch"
+    assert failure_code(unknown_concept) == "pilot_mapping_unknown_concept"
+    assert failure_code(wrong_objective) == "pilot_mapping_objective_mismatch"
+    assert failure_code(no_primary) == "pilot_mapping_invalid"
 
 
-def test_to_validated_import_refuses_drafts() -> None:
+def test_unknown_top_level_fields_are_rejected() -> None:
+    envelope = sealed_official_envelope()
+    envelope["reviewer_identity"] = "smuggled-outside-review"
+
+    assert failure_code(envelope) == "pilot_envelope_invalid"
+
+
+def test_content_hash_binds_question_but_not_publication_state() -> None:
+    envelope = sealed_official_envelope()
+    original = compute_pilot_content_hash(envelope)
+
+    changed_prompt = mutate(
+        envelope,
+        ("question", "prompt"),
+        "A changed synthetic validator fixture prompt.",
+    )
+    changed_publication = mutate(
+        envelope,
+        ("publication", "approved_by"),
+        "synthetic-approver",
+    )
+
+    assert compute_pilot_content_hash(changed_prompt) != original
+    assert compute_pilot_content_hash(changed_publication) == original
+    assert envelope["review"]["content_hash"] == original
+
+
+def test_content_hash_mismatch_is_a_build_failure() -> None:
+    envelope = mutate(sealed_official_envelope(), ("review", "content_hash"), "f" * 64)
+
+    assert failure_code(envelope) == "pilot_content_hash_mismatch"
+
+
+def test_official_mode_cannot_be_converted_to_the_t12_import_path() -> None:
     with pytest.raises(PilotEnvelopeError) as exc_info:
-        to_validated_import(draft())
+        to_validated_import(sealed_official_envelope())
 
-    assert exc_info.value.code == "pilot_approval_required"
+    assert exc_info.value.code == "pilot_import_blocked"
 
 
-def test_approved_envelope_converts_with_bound_hash() -> None:
-    envelope = approved()
-    envelope["review"]["content_hash"] = compute_pilot_content_hash(envelope)
+def test_expert_review_envelope_is_importable() -> None:
+    envelope = sealed_expert_envelope()
 
     validated = to_validated_import(envelope)
 
     assert validated.bundle.validation_status == "approved"
     assert validated.bundle.source_class == "expert_verified"
-    assert validated.content_hash == envelope["review"]["content_hash"]
     assert validated.trust_label == "Expert verified"
+    assert len(validated.content_hash) == 64
+    # The T12 hash covers the persisted import bundle, not the pilot envelope.
+    assert validated.content_hash != envelope["review"]["content_hash"]
 
 
-def test_approved_envelope_requires_author_and_reviewer_principals() -> None:
-    missing_author = approved()
-    missing_author["question"]["author_principal"] = None
-
-    missing_reviewer = approved()
-    missing_reviewer["question"]["reviewer_principal"] = None
-
-    assert failure_code(missing_author) == "pilot_principals_required"
-    assert failure_code(missing_reviewer) == "pilot_principals_required"
-
-
-def test_review_identity_must_match_question_reviewer() -> None:
-    mismatch = approved()
-    mismatch["review"]["reviewer_principal"] = AUTHOR_ID
-
-    missing = approved()
-    missing["review"]["reviewer_principal"] = None
-
-    assert failure_code(mismatch) == "pilot_reviewer_mismatch"
-    assert failure_code(missing) == "pilot_reviewer_required"
-
-
-def test_author_qualification_matches_approval_state() -> None:
-    missing = approved()
-    missing["question"]["author_qualification_ref"] = None
-
-    asserted_in_draft = draft()
-    asserted_in_draft["question"]["author_qualification_ref"] = (
-        "author-qualification-record-synthetic-001"
+def test_expert_review_requires_identity_qualification_and_independence() -> None:
+    no_reviewer = mutate(sealed_expert_envelope(), ("review", "reviewer_principal"), None)
+    no_qualification = mutate(
+        sealed_expert_envelope(),
+        ("review", "reviewer_qualification_ref"),
+        None,
+    )
+    no_independence = mutate(
+        sealed_expert_envelope(),
+        ("review", "independence_declaration_ref"),
+        None,
+    )
+    pending = mutate(
+        sealed_expert_envelope(),
+        ("review", "academic_review_status"),
+        "pending",
     )
 
-    assert failure_code(missing) == "pilot_author_qualification_required"
-    assert failure_code(asserted_in_draft) == "pilot_draft_author_qualification"
+    for envelope in (no_reviewer, no_qualification, no_independence, pending):
+        assert failure_code(envelope) == "pilot_review_required"
 
 
-def test_pilot_only_author_qualification_is_not_sent_to_t12() -> None:
-    envelope = approved()
-    envelope["review"]["content_hash"] = compute_pilot_content_hash(envelope)
-
-    validated = to_validated_import(envelope)
-
-    assert "author_qualification_ref" not in validated.bundle.model_dump()
-    assert "target_source_class" not in validated.bundle.model_dump()
-
-
-def test_approved_item_requires_approved_review_answer_and_rubric() -> None:
-    review = approved()
-    review["review"]["academic_review_status"] = "pending"
-
-    answer = approved()
-    answer["answer_verification"]["independent_review_status"] = "pending"
-
-    rubric = approved()
-    rubric["question"]["rubric"]["status"] = "draft"
-
-    assert failure_code(review) == "pilot_review_not_approved"
-    assert failure_code(answer) == "pilot_answer_not_verified"
-    assert failure_code(rubric) == "pilot_rubric_not_approved"
-
-
-def test_approved_item_requires_cleared_ambiguity_and_duplicate() -> None:
-    ambiguity = approved()
-    ambiguity["review"]["ambiguity_status"] = "pending"
-
-    duplicate = approved()
-    duplicate["review"]["duplicate_status"] = "duplicate"
-
-    assert failure_code(ambiguity) == "pilot_ambiguity_not_cleared"
-    assert failure_code(duplicate) == "pilot_duplicate_not_cleared"
-
-
-def test_approved_item_requires_publication_approval_and_source_ref() -> None:
-    no_approver = approved()
-    no_approver["review"]["content_hash"] = compute_pilot_content_hash(no_approver)
-    no_approver["publication"]["approved_by"] = None
-
-    not_marked = approved()
-    not_marked["review"]["content_hash"] = compute_pilot_content_hash(not_marked)
-    not_marked["publication"]["approved_for_import"] = False
-
-    no_source = approved()
-    no_source["review"]["content_hash"] = compute_pilot_content_hash(no_source)
-    no_source["review"]["source_ref"] = None
-
-    assert failure_code(no_approver) == "pilot_approval_required"
-    assert failure_code(not_marked) == "pilot_publication_mismatch"
-    assert failure_code(no_source) == "pilot_source_ref_required"
-
-
-def test_approved_envelope_requires_reviewer_independence() -> None:
-    envelope = approved()
-    envelope["question"]["author_principal"] = REVIEWER_ID
-
-    assert failure_code(envelope) == "pilot_reviewer_independence"
-
-
-def test_approved_envelope_requires_review_hash_and_source_ref() -> None:
-    missing_hash = approved()
-    assert failure_code(missing_hash) == "pilot_content_hash_required"
-
-    wrong_hash = approved()
-    wrong_hash["review"]["content_hash"] = "0" * 64
-    assert failure_code(wrong_hash) == "pilot_content_hash_mismatch"
-
-    wrong_source = approved()
-    wrong_source["review"]["content_hash"] = compute_pilot_content_hash(wrong_source)
-    wrong_source["review"]["source_ref"] = "SL-DOE-AL-PHYS-2025-P1|" + "0" * 64 + "|1|1"
-    assert failure_code(wrong_source) == "pilot_source_ref_mismatch"
-
-
-def test_approved_item_requires_review_and_approval_dates() -> None:
-    no_review_date = approved()
-    no_review_date["review"]["content_hash"] = compute_pilot_content_hash(no_review_date)
-    no_review_date["review"]["reviewed_at"] = None
-
-    no_approval_date = approved()
-    no_approval_date["review"]["content_hash"] = compute_pilot_content_hash(no_approval_date)
-    no_approval_date["publication"]["approved_at"] = None
-
-    assert failure_code(no_review_date) == "pilot_review_date_required"
-    assert failure_code(no_approval_date) == "pilot_approval_date_required"
-
-
-def test_approval_cannot_precede_review() -> None:
-    envelope = approved()
-    envelope["review"]["content_hash"] = compute_pilot_content_hash(envelope)
-    envelope["publication"]["approved_at"] = "2026-10-27T12:00:00+00:00"
-
-    assert failure_code(envelope) == "pilot_approval_before_review"
-
-
-def test_approved_item_rejects_rejected_review_or_answer() -> None:
-    rejected_review = approved()
-    rejected_review["review"]["academic_review_status"] = "rejected"
-
-    rejected_answer = approved()
-    rejected_answer["answer_verification"]["independent_review_status"] = "rejected"
-
-    assert failure_code(rejected_review) == "pilot_review_not_approved"
-    assert failure_code(rejected_answer) == "pilot_answer_not_verified"
-
-
-def test_approved_past_paper_requires_reproduction_and_transcription_gates() -> None:
-    envelope = approved()
-    source = envelope["source"]
-    source.update(
-        {
-            "source_id": "SL-DOE-AL-PHYS-2025-P1",
-            "source_type": "past_paper",
-            "document_filename": "AL_Physics_2025_Combined_Paper_English.pdf",
-            "document_sha256": "a" * 64,
-            "exam_year": 2025,
-            "exam_label": "2025",
-            "paper": "Paper I",
-            "question_number": 1,
-            "pdf_page": 1,
-            "official_key_status": "marking_scheme_not_mcq_key",
-            "reproduction_status": "unapproved",
-            "reproduction_approval_ref": None,
-            "transcription_verified": False,
-        }
+def test_expert_review_requires_a_verified_answer_review() -> None:
+    envelope = mutate(
+        sealed_expert_envelope(),
+        ("answer_verification", "reviewer_ref"),
+        None,
     )
 
-    assert failure_code(envelope) == "pilot_reproduction_not_approved"
-
-    source["reproduction_status"] = "approved"
-    source["reproduction_approval_ref"] = "reproduction-approval-synthetic-001"
-    assert failure_code(envelope) == "pilot_transcription_not_verified"
+    assert failure_code(envelope) == "pilot_answer_review_required"
 
 
-def test_approved_envelope_requires_qualification_and_scope() -> None:
-    no_qualification = approved()
-    no_qualification["review"]["content_hash"] = compute_pilot_content_hash(no_qualification)
-    no_qualification["review"]["reviewer_qualification_ref"] = None
+def test_load_pilot_envelopes_rejects_duplicate_ids_and_codes(tmp_path) -> None:
+    first = sealed_official_envelope()
+    second = copy.deepcopy(first)
+    second["question"]["question_code"] = "pilot-phys-synthetic-second"
+    second["review"]["content_hash"] = compute_pilot_content_hash(second)
+    (tmp_path / "first.json").write_text(json.dumps(first), encoding="utf-8")
+    (tmp_path / "second.json").write_text(json.dumps(second), encoding="utf-8")
 
-    missing_scope = approved()
-    missing_scope["review"]["content_hash"] = compute_pilot_content_hash(missing_scope)
-    missing_scope["review"]["review_scope"] = ["derivation"]
+    with pytest.raises(PilotEnvelopeError) as exc_info:
+        load_pilot_envelopes(tmp_path)
+    assert exc_info.value.code == "pilot_id_duplicate"
 
-    assert failure_code(no_qualification) == "pilot_qualification_required"
-    assert failure_code(missing_scope) == "pilot_review_scope_incomplete"
+    second = copy.deepcopy(first)
+    second["pilot_id"] = "PILOT-PHYS-2025-P1-Q02"
+    second["source"]["question_number"] = 2
+    second["review"]["content_hash"] = compute_pilot_content_hash(second)
+    (tmp_path / "second.json").write_text(json.dumps(second), encoding="utf-8")
 
-
-def test_pilot_scope_is_paper_one_only() -> None:
-    pilot_two = draft()
-    pilot_two["pilot_id"] = "PILOT-PHYS-2025-P2-Q01"
-
-    source_two = draft()
-    source = past_paper_source()
-    source["source_id"] = "SL-DOE-AL-PHYS-2025-P2"
-    source_two["source"].update(source)
-
-    assert failure_code(pilot_two) == "pilot_envelope_invalid"
-    assert failure_code(source_two) == "pilot_source_invalid"
+    with pytest.raises(PilotEnvelopeError) as exc_info:
+        load_pilot_envelopes(tmp_path)
+    assert exc_info.value.code == "pilot_question_code_duplicate"
 
 
-def test_past_paper_source_year_must_match_source_id() -> None:
-    envelope = draft()
-    source = past_paper_source()
-    source["exam_year"] = 2022
-    source["exam_label"] = "2022"
-    envelope["source"].update(source)
+def test_seal_directory_writes_the_computed_hash(tmp_path) -> None:
+    envelope = sealed_official_envelope()
+    envelope["review"]["content_hash"] = "0" * 64
+    path = tmp_path / "item.json"
+    path.write_text(json.dumps(envelope), encoding="utf-8")
 
-    assert failure_code(envelope) == "pilot_source_invalid"
+    changed = seal_directory(tmp_path)
 
-
-def test_synthetic_schema_is_parseable_and_draft_only() -> None:
-    schema = json.loads(SCHEMA.read_text(encoding="utf-8"))
-
-    question = schema["$defs"]["question"]
-    review = schema["$defs"]["review"]
-    answer = schema["$defs"]["answerVerification"]
-    source = schema["$defs"]["source"]
-
-    assert "target_source_class" in question["required"]
-    assert "author_qualification_ref" in question["required"]
-    assert "content_hash" in review["required"]
-    assert "source_ref" in review["required"]
-    assert "independence_declaration_ref" in review["required"]
-    assert "reviewer_ref" in answer["required"]
-    assert "synthetic" in source["properties"]["source_type"]["enum"]
-    assert schema["description"].startswith("A review envelope")
-
-
-def _walk_schema(node: object):
-    if isinstance(node, dict):
-        yield node
-        for value in node.values():
-            yield from _walk_schema(value)
-    elif isinstance(node, list):
-        for item in node:
-            yield from _walk_schema(item)
-
-
-def test_schema_references_and_required_fields_resolve() -> None:
-    schema = json.loads(SCHEMA.read_text(encoding="utf-8"))
-    defs = schema["$defs"]
-
-    for node in _walk_schema(schema):
-        ref = node.get("$ref")
-        if isinstance(ref, str):
-            assert ref.startswith("#/$defs/")
-            assert ref.removeprefix("#/$defs/") in defs
-
-        properties = node.get("properties")
-        required = node.get("required")
-        if isinstance(properties, dict) and isinstance(required, list):
-            assert set(required) <= set(properties)
-
-
-def test_official_key_claim_is_unsupported() -> None:
-    envelope = draft()
-    envelope["answer_verification"]["official_key_claimed"] = True
-
-    assert failure_code(envelope) == "pilot_official_key_unsupported"
-
-
-def test_derived_answer_must_match_correct_option() -> None:
-    envelope = draft()
-    envelope["answer_verification"]["derived_option_keys"] = ["a"]
-
-    assert failure_code(envelope) == "pilot_answer_mismatch"
-
-
-def test_pilot_content_payload_must_not_contain_extra_fields() -> None:
-    envelope = draft()
-    envelope["question"]["content"]["source_class"] = "expert_verified"
-
-    assert failure_code(envelope) == "pilot_content_invalid"
-
-
-def test_approved_envelope_requires_independence_declaration() -> None:
-    envelope = approved()
-    envelope["review"]["content_hash"] = compute_pilot_content_hash(envelope)
-    envelope["review"]["independence_declaration_ref"] = None
-
-    assert failure_code(envelope) == "pilot_independence_required"
-
-
-def test_unsupported_schema_version_is_rejected() -> None:
-    envelope = draft()
-    envelope["schema_version"] = "2.0"
-
-    assert failure_code(envelope) == "pilot_schema_version"
-
-
-def test_target_and_approved_source_class_must_be_expert_verified() -> None:
-    invalid_target = draft()
-    invalid_target["question"]["target_source_class"] = "teacher_authored"
-    assert failure_code(invalid_target) == "pilot_source_class_invalid"
-
-    invalid_approved = approved()
-    invalid_approved["review"]["content_hash"] = compute_pilot_content_hash(invalid_approved)
-    invalid_approved["question"]["source_class"] = "teacher_authored"
-    assert failure_code(invalid_approved) == "pilot_source_class_invalid"
-
-
-def test_invalid_academic_review_status_is_rejected() -> None:
-    envelope = draft()
-    envelope["review"]["academic_review_status"] = "unknown_status"
-
-    assert failure_code(envelope) == "pilot_review_invalid"
-
-
-def test_question_type_must_be_mcq() -> None:
-    envelope = draft()
-    envelope["question"]["question_type"] = "numeric"
-
-    assert failure_code(envelope) == "pilot_question_invalid"
-
-
-def test_non_english_medium_is_rejected_by_validator() -> None:
-    envelope = draft()
-    envelope["source"]["medium"] = "Tamil"
-
-    assert failure_code(envelope) == "pilot_source_invalid"
+    assert changed == ["item.json"]
+    sealed = json.loads(path.read_text(encoding="utf-8"))
+    assert sealed["review"]["content_hash"] == compute_pilot_content_hash(sealed)

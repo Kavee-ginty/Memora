@@ -1,20 +1,23 @@
 from __future__ import annotations
 
-import copy
 import json
 from pathlib import Path
+from typing import Any
 
 from jsonschema import Draft202012Validator
 
+from pilot_fixtures import (
+    AUTHOR_ID,
+    REVIEWER_ID,
+    expert_envelope,
+    official_envelope,
+)
+
 ROOT = Path(__file__).resolve().parents[2]
-EXAMPLE = ROOT / "content/physics/pilot/examples/synthetic_draft.json"
 SCHEMA = ROOT / "content/physics/pilot/pilot_question.schema.json"
-AUTHOR_ID = "40000000-0000-0000-0000-000000000001"
-REVIEWER_ID = "40000000-0000-0000-0000-000000000002"
-CONTENT_HASH = "a" * 64
 
 
-def load(path: Path) -> dict[str, object]:
+def load(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
@@ -24,128 +27,134 @@ def validator() -> Draft202012Validator:
     return Draft202012Validator(schema)
 
 
-def errors(payload: dict[str, object]) -> list[object]:
+def errors(payload: dict[str, Any]) -> list[object]:
     return sorted(validator().iter_errors(payload), key=lambda error: list(error.path))
 
 
-def assert_valid(payload: dict[str, object]) -> None:
+def assert_valid(payload: dict[str, Any]) -> None:
     found = errors(payload)
     assert not found, [f"{list(error.path)}: {error.message}" for error in found]
 
 
-def assert_invalid(payload: dict[str, object]) -> None:
+def assert_invalid(payload: dict[str, Any]) -> None:
     assert errors(payload), "Expected the payload to fail the JSON Schema."
-
-
-def approved_payload() -> dict[str, object]:
-    payload = copy.deepcopy(load(EXAMPLE))
-    question = payload["question"]
-    answer = payload["answer_verification"]
-    review = payload["review"]
-    publication = payload["publication"]
-
-    question["validation_status"] = "approved"
-    question["source_class"] = "expert_verified"
-    question["author_principal"] = AUTHOR_ID
-    question["author_qualification_ref"] = "author-qualification-record-synthetic-001"
-    question["reviewer_principal"] = REVIEWER_ID
-    question["rubric"]["status"] = "approved"
-    for mapping in question["concept_mappings"]:
-        mapping["provenance_type"] = "pilot_review"
-        mapping["provenance_ref"] = "review-record-synthetic-001:mapping"
-
-    answer["independent_review_status"] = "verified"
-    answer["reviewer_ref"] = "review-record-synthetic-001"
-
-    review["academic_review_status"] = "approved"
-    review["reviewer_principal"] = REVIEWER_ID
-    review["reviewer_qualification_ref"] = "qualification-record-synthetic-001"
-    review["reviewed_at"] = "2026-10-28T12:00:00+00:00"
-    review["ambiguity_status"] = "cleared"
-    review["duplicate_status"] = "cleared"
-    review["independence_declaration_ref"] = "independence-record-synthetic-001"
-    review["content_hash"] = CONTENT_HASH
-    review["source_ref"] = "SYNTHETIC-T24-KINEMATICS-001"
-
-    publication["approved_for_import"] = True
-    publication["approved_by"] = "approval-record-synthetic-001"
-    publication["approved_at"] = "2026-10-28T12:05:00+00:00"
-    return payload
 
 
 def test_schema_is_valid_against_the_draft_2020_12_metaschema() -> None:
     Draft202012Validator.check_schema(load(SCHEMA))
 
 
-def test_synthetic_draft_validates() -> None:
-    assert_valid(load(EXAMPLE))
+def test_official_marking_scheme_envelope_matches_the_schema() -> None:
+    assert_valid(official_envelope())
 
 
-def test_draft_contradictions_are_rejected() -> None:
-    verified = load(EXAMPLE)
-    verified["question"]["source_class"] = "expert_verified"
+def test_expert_review_envelope_matches_the_schema() -> None:
+    assert_valid(expert_envelope())
 
-    reviewed = load(EXAMPLE)
-    reviewed["question"]["reviewer_principal"] = REVIEWER_ID
 
-    approved_rubric = load(EXAMPLE)
-    approved_rubric["question"]["rubric"]["status"] = "approved"
+def test_missing_top_level_sections_are_rejected() -> None:
+    for section in (
+        "schema_version",
+        "pilot_id",
+        "verification_mode",
+        "source",
+        "question",
+        "answer_verification",
+        "review",
+        "publication",
+    ):
+        payload = official_envelope()
+        payload.pop(section)
+        assert_invalid(payload)
 
-    published = load(EXAMPLE)
-    published["publication"]["approved_for_import"] = True
 
-    asserted_transcription = load(EXAMPLE)
-    asserted_transcription["source"]["transcription_verified"] = True
+def test_unknown_properties_are_rejected_at_every_level() -> None:
+    top_level = official_envelope()
+    top_level["source_licence"] = "claimed-in-the-wrong-place"
 
-    claimed_document = load(EXAMPLE)
-    claimed_document["source"]["document_filename"] = "not-synthetic.pdf"
+    source = official_envelope()
+    source["source"]["reproduction_approval_ref"] = "not-part-of-v2"
 
-    paper_two = load(EXAMPLE)
-    paper_two["pilot_id"] = "PILOT-PHYS-2025-P2-Q01"
+    question = official_envelope()
+    question["question"]["content"]["source_ref"] = "smuggled-metadata"
+
+    option = official_envelope()
+    option["question"]["options"][0]["feedback"] = "not-part-of-v2"
+
+    for payload in (top_level, source, question, option):
+        assert_invalid(payload)
+
+
+def test_official_mode_rejects_human_review_and_import_claims() -> None:
+    author = official_envelope()
+    author["question"]["author_principal"] = AUTHOR_ID
+
+    reviewer = official_envelope()
+    reviewer["question"]["reviewer_principal"] = REVIEWER_ID
+
+    answer_review = official_envelope()
+    answer_review["answer_verification"]["independent_review_status"] = "verified"
+
+    academic_review = official_envelope()
+    academic_review["review"]["academic_review_status"] = "approved"
+
+    approved = official_envelope()
+    approved["publication"]["approved_for_import"] = True
+
+    independence = official_envelope()
+    independence["review"]["independence_declaration_ref"] = "synthetic-independence"
+
+    for payload in (author, reviewer, answer_review, academic_review, approved, independence):
+        assert_invalid(payload)
+
+
+def test_official_mode_requires_the_marking_scheme_evidence() -> None:
+    missing_key = official_envelope()
+    missing_key["source"]["official_key"] = None
+
+    unverified_key = official_envelope()
+    unverified_key["source"]["official_key_status"] = "not_found"
+
+    unverified_transcription = official_envelope()
+    unverified_transcription["source"]["transcription_status"] = "unverified"
+
+    missing_deviation = official_envelope()
+    missing_deviation["review"]["deviation_ref"] = None
+
+    missing_a_scope = official_envelope()
+    missing_a_scope["review"]["review_scope"].pop()
 
     for payload in (
-        verified,
-        reviewed,
-        approved_rubric,
-        published,
-        asserted_transcription,
-        claimed_document,
-        paper_two,
+        missing_key,
+        unverified_key,
+        unverified_transcription,
+        missing_deviation,
+        missing_a_scope,
     ):
         assert_invalid(payload)
 
 
-def test_approved_payload_validates() -> None:
-    assert_valid(approved_payload())
-
-
-def test_approved_payload_rejects_missing_evidence() -> None:
-    no_author = approved_payload()
+def test_expert_mode_requires_human_review_evidence() -> None:
+    no_author = expert_envelope()
     no_author["question"]["author_principal"] = None
 
-    no_author_qualification = approved_payload()
+    no_author_qualification = expert_envelope()
     no_author_qualification["question"]["author_qualification_ref"] = None
 
-    no_reviewer = approved_payload()
-    no_reviewer["question"]["reviewer_principal"] = None
+    no_reviewer = expert_envelope()
+    no_reviewer["review"]["reviewer_principal"] = None
 
-    no_qualification = approved_payload()
+    no_qualification = expert_envelope()
     no_qualification["review"]["reviewer_qualification_ref"] = None
 
-    no_independence = approved_payload()
+    no_independence = expert_envelope()
     no_independence["review"]["independence_declaration_ref"] = None
 
-    no_hash = approved_payload()
-    no_hash["review"]["content_hash"] = None
+    pending_answer = expert_envelope()
+    pending_answer["answer_verification"]["independent_review_status"] = "pending"
 
-    no_source_ref = approved_payload()
-    no_source_ref["review"]["source_ref"] = None
-
-    no_approver = approved_payload()
-    no_approver["publication"]["approved_by"] = None
-
-    no_approval_date = approved_payload()
-    no_approval_date["publication"]["approved_at"] = None
+    pending_review = expert_envelope()
+    pending_review["review"]["academic_review_status"] = "pending"
 
     for payload in (
         no_author,
@@ -153,108 +162,38 @@ def test_approved_payload_rejects_missing_evidence() -> None:
         no_reviewer,
         no_qualification,
         no_independence,
-        no_hash,
-        no_source_ref,
-        no_approver,
-        no_approval_date,
-    ):
-        assert_invalid(payload)
-
-
-def test_author_qualification_is_approval_only() -> None:
-    draft_with_qualification = load(EXAMPLE)
-    draft_with_qualification["question"]["author_qualification_ref"] = (
-        "author-qualification-record-synthetic-001"
-    )
-
-    assert_invalid(draft_with_qualification)
-    assert_valid(approved_payload())
-
-
-def test_approved_payload_rejects_unapproved_or_contradictory_states() -> None:
-    pending_review = approved_payload()
-    pending_review["review"]["academic_review_status"] = "pending"
-
-    pending_answer = approved_payload()
-    pending_answer["answer_verification"]["independent_review_status"] = "pending"
-
-    official_key = approved_payload()
-    official_key["answer_verification"]["official_key_claimed"] = True
-
-    not_published = approved_payload()
-    not_published["publication"]["approved_for_import"] = False
-
-    draft_rubric = approved_payload()
-    draft_rubric["question"]["rubric"]["status"] = "draft"
-
-    for payload in (
-        pending_review,
         pending_answer,
-        official_key,
-        not_published,
-        draft_rubric,
+        pending_review,
     ):
         assert_invalid(payload)
 
 
-def test_approved_payload_requires_a_primary_reviewed_mapping() -> None:
-    supporting_only = approved_payload()
-    supporting_only["question"]["concept_mappings"][0]["mapping_role"] = "supporting"
+def test_source_identity_fields_are_constrained() -> None:
+    bad_hash = official_envelope()
+    bad_hash["source"]["document_sha256"] = "not-a-sha256"
 
-    analyst_provenance = approved_payload()
-    analyst_provenance["question"]["concept_mappings"][0]["provenance_type"] = "analyst_mapping"
+    bad_year = official_envelope()
+    bad_year["source"]["exam_year"] = 2016
 
-    assert_invalid(supporting_only)
-    assert_invalid(analyst_provenance)
+    paper_two = official_envelope()
+    paper_two["pilot_id"] = "PILOT-PHYS-2025-P2-Q01"
 
+    sinhala = official_envelope()
+    sinhala["source"]["medium"] = "Sinhala"
 
-def test_approved_past_paper_requires_reproduction_and_transcription_evidence() -> None:
-    payload = approved_payload()
-    payload["source"].update(
-        {
-            "source_id": "SL-DOE-AL-PHYS-2025-P1",
-            "source_type": "past_paper",
-            "document_filename": "AL_Physics_2025_Combined_Paper_English.pdf",
-            "document_sha256": CONTENT_HASH,
-            "exam_year": 2025,
-            "exam_label": "2025",
-            "paper": "Paper I",
-            "question_number": 1,
-            "pdf_page": 1,
-            "official_key_status": "not_found",
-            "reproduction_status": "unapproved",
-            "reproduction_approval_ref": None,
-            "transcription_verified": False,
-        }
-    )
-    payload["review"]["source_ref"] = f"SL-DOE-AL-PHYS-2025-P1|{CONTENT_HASH}|1|1"
-
-    assert_invalid(payload)
-
-    payload["source"]["reproduction_status"] = "approved"
-    payload["source"]["reproduction_approval_ref"] = "reproduction-approval-synthetic-001"
-    assert_invalid(payload)
-
-    payload["source"]["transcription_verified"] = True
-    assert_valid(payload)
+    for payload in (bad_hash, bad_year, paper_two, sinhala):
+        assert_invalid(payload)
 
 
-def test_source_metadata_cannot_be_smuggled_into_content() -> None:
-    payload = approved_payload()
-    payload["question"]["content"]["source_ref"] = "SL-DOE-AL-PHYS-2025-P1"
+def test_publication_and_answer_values_are_constrained() -> None:
+    false_match = official_envelope()
+    false_match["answer_verification"]["matches_official_key"] = False
 
-    assert_invalid(payload)
+    bad_key = official_envelope()
+    bad_key["answer_verification"]["official_key"] = 6
 
+    bad_publication = official_envelope()
+    bad_publication["publication"]["import_status"] = "ready_for_import"
 
-def test_unknown_top_level_properties_are_rejected() -> None:
-    payload = approved_payload()
-    payload["source_licence"] = "claimed-in-the-wrong-place"
-
-    assert_invalid(payload)
-
-
-def test_non_english_medium_is_rejected() -> None:
-    payload = approved_payload()
-    payload["source"]["medium"] = "Sinhala"
-
-    assert_invalid(payload)
+    for payload in (false_match, bad_key, bad_publication):
+        assert_invalid(payload)
