@@ -1,0 +1,167 @@
+{
+  "schema_version": "2.0",
+  "generated_at": "2026-11-02",
+  "source": "sealed envelopes under content/physics/pilot/questions/",
+  "question_count": 8,
+  "threshold": 0.9,
+  "status": "clear",
+  "summary": {
+    "pairs_compared": 28,
+    "exact_duplicate_groups": 0,
+    "near_duplicate_pairs": 0,
+    "duplicate_source_questions": 0,
+    "duplicate_question_codes": 0,
+    "highest_similarity": 0.469136,
+    "highest_similarity_pair": [
+      "PILOT-PHYS-2022-P1-Q01",
+      "PILOT-PHYS-2024-P1-Q01"
+    ]
+  },
+  "exact_duplicate_groups": [],
+  "near_duplicate_pairs": [],
+  "duplicate_source_questions": [],
+  "duplicate_question_codes": [],
+  "pairs": [
+    {
+      "left": "PILOT-PHYS-2022-P1-Q01",
+      "right": "PILOT-PHYS-2024-P1-Q01",
+      "prompt_similarity": 0.469136
+    },
+    {
+      "left": "PILOT-PHYS-2022-P1-Q17",
+      "right": "PILOT-PHYS-2025-P1-Q03",
+      "prompt_similarity": 0.385542
+    },
+    {
+      "left": "PILOT-PHYS-2022-P1-Q01",
+      "right": "PILOT-PHYS-2025-P1-Q01",
+      "prompt_similarity": 0.342466
+    },
+    {
+      "left": "PILOT-PHYS-2024-P1-Q01",
+      "right": "PILOT-PHYS-2025-P1-Q01",
+      "prompt_similarity": 0.327869
+    },
+    {
+      "left": "PILOT-PHYS-2024-P1-Q01",
+      "right": "PILOT-PHYS-2025-P1-Q03",
+      "prompt_similarity": 0.318966
+    },
+    {
+      "left": "PILOT-PHYS-2022-P1-Q01",
+      "right": "PILOT-PHYS-2025-P1-Q03",
+      "prompt_similarity": 0.304688
+    },
+    {
+      "left": "PILOT-PHYS-2024-P1-Q05",
+      "right": "PILOT-PHYS-2025-P1-Q03",
+      "prompt_similarity": 0.257692
+    },
+    {
+      "left": "PILOT-PHYS-2025-P1-Q01",
+      "right": "PILOT-PHYS-2025-P1-Q03",
+      "prompt_similarity": 0.231481
+    },
+    {
+      "left": "PILOT-PHYS-2024-P1-Q04",
+      "right": "PILOT-PHYS-2025-P1-Q03",
+      "prompt_similarity": 0.173469
+    },
+    {
+      "left": "PILOT-PHYS-2022-P1-Q17",
+      "right": "PILOT-PHYS-2024-P1-Q01",
+      "prompt_similarity": 0.168224
+    },
+    {
+      "left": "PILOT-PHYS-2024-P1-Q05",
+      "right": "PILOT-PHYS-2025-P1-Q01",
+      "prompt_similarity": 0.160976
+    },
+    {
+      "left": "PILOT-PHYS-2022-P1-Q17",
+      "right": "PILOT-PHYS-2025-P1-Q01",
+      "prompt_similarity": 0.15082
+    },
+    {
+      "left": "PILOT-PHYS-2024-P1-Q04",
+      "right": "PILOT-PHYS-2024-P1-Q05",
+      "prompt_similarity": 0.150171
+    },
+    {
+      "left": "PILOT-PHYS-2024-P1-Q04",
+      "right": "PILOT-PHYS-2025-P1-Q01",
+      "prompt_similarity": 0.148936
+    },
+    {
+      "left": "PILOT-PHYS-2022-P1-Q01",
+      "right": "PILOT-PHYS-2024-P1-Q04",
+      "prompt_similarity": 0.086957
+    },
+    {
+      "left": "PILOT-PHYS-2024-P1-Q04",
+      "right": "PILOT-PHYS-2025-P1-Q45",
+      "prompt_similarity": 0.086957
+    },
+    {
+      "left": "PILOT-PHYS-2024-P1-Q01",
+      "right": "PILOT-PHYS-2024-P1-Q05",
+      "prompt_similarity": 0.084507
+    },
+    {
+      "left": "PILOT-PHYS-2022-P1-Q01",
+      "right": "PILOT-PHYS-2024-P1-Q05",
+      "prompt_similarity": 0.08
+    },
+    {
+      "left": "PILOT-PHYS-2024-P1-Q01",
+      "right": "PILOT-PHYS-2024-P1-Q04",
+      "prompt_similarity": 0.067114
+    },
+    {
+      "left": "PILOT-PHYS-2022-P1-Q01",
+      "right": "PILOT-PHYS-2022-P1-Q17",
+      "prompt_similarity": 0.052174
+    },
+    {
+      "left": "PILOT-PHYS-2022-P1-Q17",
+      "right": "PILOT-PHYS-2024-P1-Q04",
+      "prompt_similarity": 0.045738
+    },
+    {
+      "left": "PILOT-PHYS-2024-P1-Q01",
+      "right": "PILOT-PHYS-2025-P1-Q45",
+      "prompt_similarity": 0.039046
+    },
+    {
+      "left": "PILOT-PHYS-2024-P1-Q05",
+      "right": "PILOT-PHYS-2025-P1-Q45",
+      "prompt_similarity": 0.037383
+    },
+    {
+      "left": "PILOT-PHYS-2022-P1-Q17",
+      "right": "PILOT-PHYS-2025-P1-Q45",
+      "prompt_similarity": 0.037267
+    },
+    {
+      "left": "PILOT-PHYS-2022-P1-Q01",
+      "right": "PILOT-PHYS-2025-P1-Q45",
+      "prompt_similarity": 0.028866
+    },
+    {
+      "left": "PILOT-PHYS-2025-P1-Q03",
+      "right": "PILOT-PHYS-2025-P1-Q45",
+      "prompt_similarity": 0.028829
+    },
+    {
+      "left": "PILOT-PHYS-2025-P1-Q01",
+      "right": "PILOT-PHYS-2025-P1-Q45",
+      "prompt_similarity": 0.017978
+    },
+    {
+      "left": "PILOT-PHYS-2022-P1-Q17",
+      "right": "PILOT-PHYS-2024-P1-Q05",
+      "prompt_similarity": 0.01642
+    }
+  ],
+  "note": "Prompt similarity is a screening signal only; it is not a semantic duplicate decision."
+}
