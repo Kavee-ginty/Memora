@@ -148,7 +148,7 @@ def test_inventory_names_every_selected_question_and_source() -> None:
         assert str(question["pilot_id"]) in text
     for filename in sources():
         assert filename in text
-    assert "not a human reviewer" in text
+    assert "REVIEW_RECORD.md" in text
 
 
 def test_manifest_does_not_embed_question_or_source_text() -> None:

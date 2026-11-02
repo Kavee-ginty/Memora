@@ -7,8 +7,11 @@ The pilot supports two verification modes:
   is required. The envelope records null human principals and an explicit
   deviation reference. This mode is pilot-only and is not importable through
   the T12 path, which still requires author and reviewer principals.
-* ``expert_review`` - the original T12-style path with an author, an independent
-  reviewer, a qualification reference and an independence declaration.
+* ``expert_review`` - the original T12-style path with an author and reviewer,
+  qualification references and an independence declaration. The answer review is
+  either an independent review (distinct principals, status ``verified``) or an
+  explicit self-review (same principal, status ``self_review``). A self-review
+  never claims independence.
 
 The JSON Schema is the structural contract. This module and the T08 seed data
 are the semantic authorities. The source PDFs are gitignored; hashes identify
@@ -755,7 +758,7 @@ def _validate_answer(
     status = _enum(
         data["independent_review_status"],
         "answer_verification.independent_review_status",
-        frozenset({"not_required", "pending", "verified", "rejected"}),
+        frozenset({"not_required", "pending", "verified", "rejected", "self_review"}),
     )
     reviewer_ref = _optional_text(
         data["reviewer_ref"], "answer_verification.reviewer_ref", max_length=300
@@ -768,10 +771,24 @@ def _validate_answer(
                 "answer_verification.independent_review_status",
             )
     else:
-        if status != "verified" or reviewer_ref is None:
+        if status not in {"verified", "self_review"} or reviewer_ref is None:
             _fail(
                 "pilot_answer_review_required",
-                "Expert-review mode needs a verified independent answer review.",
+                "Expert-review mode needs a verified or self-review answer review.",
+                "answer_verification.independent_review_status",
+            )
+        author = question.get("_validated_author")
+        reviewer = question.get("_validated_reviewer")
+        if status == "verified" and author == reviewer:
+            _fail(
+                "pilot_independence_claim_invalid",
+                "An independent answer review needs distinct author and reviewer principals.",
+                "answer_verification.independent_review_status",
+            )
+        if status == "self_review" and author != reviewer:
+            _fail(
+                "pilot_self_review_mismatch",
+                "A self-review needs the same author and reviewer principal.",
                 "answer_verification.independent_review_status",
             )
     _optional_text(data["notes"], "answer_verification.notes", max_length=2000)
@@ -1114,8 +1131,9 @@ def seal_directory(directory: str | Path) -> list[str]:
 def to_validated_import(envelope: Mapping[str, Any]) -> ValidatedQuestionImport:
     """Convert an expert-review envelope to the T12 import path.
 
-    Official marking-scheme envelopes are deliberately blocked: T12 and the
-    database trigger still require non-null author and reviewer principals.
+    Both independent reviews and explicit self-reviews are eligible. Official
+    marking-scheme envelopes are deliberately blocked: T12 and the database
+    trigger still require non-null author and reviewer principals.
     """
 
     validated = validate_pilot_envelope(envelope)

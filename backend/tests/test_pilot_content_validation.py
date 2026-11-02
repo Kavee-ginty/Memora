@@ -19,6 +19,7 @@ from pilot_fixtures import (
     mutate,
     sealed_expert_envelope,
     sealed_official_envelope,
+    sealed_self_review_envelope,
 )
 
 
@@ -274,6 +275,37 @@ def test_expert_review_requires_a_verified_answer_review() -> None:
     )
 
     assert failure_code(envelope) == "pilot_answer_review_required"
+
+
+def test_self_review_envelope_is_importable_without_claiming_independence() -> None:
+    envelope = sealed_self_review_envelope()
+
+    validated = to_validated_import(envelope)
+
+    assert validated.bundle.author_principal == validated.bundle.reviewer_principal
+    assert envelope["answer_verification"]["independent_review_status"] == "self_review"
+    assert envelope["review"]["independence_declaration_ref"] == (
+        "synthetic-self-review-declaration"
+    )
+    assert validated.trust_label == "Expert verified"
+
+
+def test_self_review_requires_the_same_author_and_reviewer_principal() -> None:
+    envelope = sealed_self_review_envelope()
+    envelope["question"]["reviewer_principal"] = REVIEWER_ID
+    envelope["review"]["reviewer_principal"] = REVIEWER_ID
+
+    assert failure_code(envelope) == "pilot_self_review_mismatch"
+
+
+def test_independent_review_requires_distinct_author_and_reviewer_principals() -> None:
+    envelope = mutate(
+        sealed_expert_envelope(),
+        ("question", "author_principal"),
+        REVIEWER_ID,
+    )
+
+    assert failure_code(envelope) == "pilot_independence_claim_invalid"
 
 
 def test_load_pilot_envelopes_rejects_duplicate_ids_and_codes(tmp_path) -> None:

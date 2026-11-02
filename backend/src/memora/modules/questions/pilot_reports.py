@@ -1,8 +1,9 @@
 """Deterministic T24 pilot coverage, duplicate and verification reports.
 
-The reports are read-only evidence. They do not approve content, create a human
-reviewer, or open the T12 import gate. They make the official-key verification,
-concept coverage and duplicate checks reproducible from the sealed envelopes.
+The reports are read-only evidence. They reflect the review and publication state
+recorded in the sealed envelopes; they do not create a reviewer or approval. They
+make the review status, official-key verification, concept coverage and duplicate
+checks reproducible from the envelopes.
 """
 
 from __future__ import annotations
@@ -275,7 +276,7 @@ def build_duplicate_report(envelopes: Sequence[Mapping[str, Any]]) -> dict[str, 
 
 
 def build_verification_report(envelopes: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
-    """Record official-key, hash and import-gate status for every envelope."""
+    """Record review, official-key, hash and import status for every envelope."""
 
     rows: list[dict[str, Any]] = []
     for envelope in envelopes:
@@ -296,6 +297,12 @@ def build_verification_report(envelopes: Sequence[Mapping[str, Any]]) -> dict[st
             {
                 "pilot_id": str(envelope["pilot_id"]),
                 "verification_mode": str(envelope["verification_mode"]),
+                "review_mode": str(review["review_mode"]),
+                "answer_review_status": str(answer["independent_review_status"]),
+                "academic_review_status": str(review["academic_review_status"]),
+                "reviewer_principal": review["reviewer_principal"],
+                "reviewer_qualification_ref": review["reviewer_qualification_ref"],
+                "independence_declaration_ref": review["independence_declaration_ref"],
                 "exam_year": int(source["exam_year"]),
                 "question_number": int(source["question_number"]),
                 "official_key": int(source["official_key"]),
@@ -313,38 +320,96 @@ def build_verification_report(envelopes: Sequence[Mapping[str, Any]]) -> dict[st
                 "content_hash_match": recomputed_hash == review["content_hash"],
                 "publication_import_status": str(publication["import_status"]),
                 "approved_for_import": bool(publication["approved_for_import"]),
+                "approved_by": publication["approved_by"],
+                "approved_at": publication["approved_at"],
+                "import_batch_id": publication["import_batch_id"],
                 "status": status,
             }
         )
     status_counts = Counter(row["status"] for row in rows)
     year_counts = Counter(str(row["exam_year"]) for row in rows)
+    modes = {row["verification_mode"] for row in rows}
+    human_review_claimed = any(row["review_mode"] == "expert_review" for row in rows)
+    independent_review_claimed = any(row["answer_review_status"] == "verified" for row in rows)
+    self_review_count = sum(1 for row in rows if row["answer_review_status"] == "self_review")
+    if modes == {"expert_review"}:
+        if independent_review_claimed and self_review_count == 0:
+            verification_authority = (
+                "named independent academic review plus the official Department of "
+                "Examinations marking-scheme MCQ grid"
+            )
+        elif self_review_count == len(rows):
+            verification_authority = (
+                "named teacher self-review plus the official Department of Examinations "
+                "marking-scheme MCQ grid"
+            )
+        else:
+            verification_authority = (
+                "mixed named teacher review (independent and self-review) plus the "
+                "official Department of Examinations marking-scheme MCQ grid"
+            )
+    elif modes == {"official_marking_scheme"}:
+        verification_authority = "official Department of Examinations marking-scheme MCQ grid"
+    else:
+        verification_authority = (
+            "mixed named teacher review and official Department of Examinations "
+            "marking-scheme MCQ grid"
+        )
+    all_import_ready = all(
+        row["approved_for_import"] and row["publication_import_status"] == "ready_for_import"
+        for row in rows
+    )
+    all_import_blocked = all(
+        row["publication_import_status"] == "blocked_pending_t12_verification_mode"
+        and not row["approved_for_import"]
+        for row in rows
+    )
+    if human_review_claimed:
+        notes = [
+            "A named reviewer approved the reviewed content. Self-review items use "
+            "`independent_review_status = self_review` and do not claim independence.",
+            "The official marking-scheme grid remains the answer-key authority.",
+        ]
+    else:
+        notes = [
+            "The official marking-scheme grid is the verification authority; "
+            "no teacher, reviewer or verifier identity is claimed.",
+        ]
+    notes.append(
+        "Content hashes bind the source claim, question and answer verification. "
+        "A mismatch is a build failure."
+    )
+    if all_import_ready:
+        notes.append("Every item is approved for the T12 offline/admin import path.")
+    elif all_import_blocked:
+        notes.append(
+            "Every item remains blocked from T12 import until the author/reviewer "
+            "gate is satisfied."
+        )
+    else:
+        notes.append(
+            "The bundle mixes blocked and import-ready items; check the per-item "
+            "publication status."
+        )
     return {
         "schema_version": REPORT_SCHEMA_VERSION,
         "generated_at": REPORT_DATE,
         "source": "sealed envelopes under content/physics/pilot/questions/",
-        "verification_authority": "official Department of Examinations marking-scheme MCQ grid",
-        "human_review_claimed": False,
+        "verification_authority": verification_authority,
+        "human_review_claimed": human_review_claimed,
+        "independent_review_claimed": independent_review_claimed,
+        "self_review_count": self_review_count,
         "question_count": len(envelopes),
         "summary": {
             "all_verified": all(row["status"] == "verified" for row in rows),
             "all_hashes_match": all(row["content_hash_match"] for row in rows),
-            "all_import_blocked": all(
-                row["publication_import_status"] == "blocked_pending_t12_verification_mode"
-                and not row["approved_for_import"]
-                for row in rows
-            ),
+            "all_import_ready": all_import_ready,
+            "all_import_blocked": all_import_blocked,
             "status_counts": dict(sorted(status_counts.items())),
             "question_counts_by_year": dict(sorted(year_counts.items())),
         },
         "questions": rows,
-        "notes": [
-            "The official marking-scheme grid is the verification authority; "
-            "no teacher, reviewer or verifier identity is claimed.",
-            "Content hashes bind the source claim, question and answer verification. "
-            "A mismatch is a build failure.",
-            "All items remain blocked from T12 import until T12 supports official "
-            "marking-scheme verification or a human review is added.",
-        ],
+        "notes": notes,
     }
 
 
@@ -352,6 +417,29 @@ def render_question_document(envelopes: Sequence[Mapping[str, Any]]) -> str:
     """Render the human-readable question and answer evidence document."""
 
     coverage = build_coverage_report(envelopes)
+    modes = {str(envelope["verification_mode"]) for envelope in envelopes}
+    if modes == {"expert_review"}:
+        intro = (
+            "The pilot uses **expert review plus official marking-scheme verification**. "
+            "Each answer was derived and then matched to the printed Department of "
+            "Examinations Paper I answer grid. The named reviewer approved the "
+            "transcription, derivation, explanation, mapping, ambiguity and duplicate "
+            "checks. Self-review items are marked as such and do not claim independence. "
+            "See `REVIEW_RECORD.md`."
+        )
+    elif modes == {"official_marking_scheme"}:
+        intro = (
+            "The pilot uses **official marking-scheme verification**. Each answer was "
+            "derived independently and then matched to the printed Department of "
+            "Examinations Paper I answer grid. No teacher, reviewer or verifier "
+            "identity is claimed. See `DEVIATION_REVIEW_MODE.md`."
+        )
+    else:
+        intro = (
+            "The pilot uses a mixture of official marking-scheme verification and "
+            "named academic review. See `REVIEW_RECORD.md` and the per-item review "
+            "status."
+        )
     lines = [
         "# T24 Physics pilot questions",
         "",
@@ -359,10 +447,7 @@ def render_question_document(envelopes: Sequence[Mapping[str, Any]]) -> str:
         "Do not edit it by hand; regenerate it with "
         "`python -m memora.modules.questions.pilot_reports --root content/physics/pilot --write`.",
         "",
-        "The pilot uses **official marking-scheme verification**. Each answer was derived "
-        "independently and then matched to the printed Department of Examinations Paper I "
-        "answer grid. No teacher, reviewer or verifier identity is claimed. See "
-        "`DEVIATION_REVIEW_MODE.md`.",
+        intro,
         "",
         "## Summary",
         "",
@@ -371,6 +456,7 @@ def render_question_document(envelopes: Sequence[Mapping[str, Any]]) -> str:
     ]
     for envelope in envelopes:
         source = envelope["source"]
+        answer = envelope["answer_verification"]
         primary = next(
             mapping
             for mapping in envelope["question"]["concept_mappings"]
@@ -380,10 +466,17 @@ def render_question_document(envelopes: Sequence[Mapping[str, Any]]) -> str:
         concept_code = (
             str(concept["stable_code"]) if concept else str(primary["concept_version_id"])
         )
+        if envelope["verification_mode"] == "expert_review":
+            if answer["independent_review_status"] == "self_review":
+                verification = "expert self-review; official key matched"
+            else:
+                verification = "expert review; official key matched"
+        else:
+            verification = "official key matched"
         lines.append(
             "| "
             f"`{envelope['pilot_id']}` | {source['exam_year']} Q{source['question_number']} "
-            f"| {source['official_key']} | `{concept_code}` | official key matched |"
+            f"| {source['official_key']} | `{concept_code}` | {verification} |"
         )
     summary = coverage["summary"]
     lines.extend(
@@ -409,6 +502,26 @@ def render_question_document(envelopes: Sequence[Mapping[str, Any]]) -> str:
         answer = envelope["answer_verification"]
         review = envelope["review"]
         publication = envelope["publication"]
+        if envelope["verification_mode"] == "expert_review":
+            review_line = (
+                f"**Review:** `{review['review_mode']}` / "
+                f"`{answer['independent_review_status']}` by the named reviewer; "
+                f"academic status `{review['academic_review_status']}`. "
+                f"See `{review['independence_declaration_ref']}`."
+            )
+        else:
+            review_line = (
+                f"**Review:** `{review['review_mode']}`; academic status "
+                f"`{review['academic_review_status']}`. "
+                f"See `{review['deviation_ref']}`."
+            )
+        if publication["approved_for_import"]:
+            import_line = (
+                f"Import status: `{publication['import_status']}`; approved by "
+                f"{publication['approved_by']} for batch `{publication['import_batch_id']}`."
+            )
+        else:
+            import_line = f"Import status: `{publication['import_status']}`."
         lines.extend(
             [
                 f"### {envelope['pilot_id']}",
@@ -419,7 +532,8 @@ def render_question_document(envelopes: Sequence[Mapping[str, Any]]) -> str:
                 "",
                 f"**Official key:** {answer['official_key']}  ",
                 f"**Derived key:** {answer['derived_option_key']}  ",
-                f"**Sealed content hash:** `{review['content_hash']}`",
+                f"**Sealed content hash:** `{review['content_hash']}`  ",
+                review_line,
                 "",
                 "**Prompt:**",
                 "",
@@ -455,7 +569,7 @@ def render_question_document(envelopes: Sequence[Mapping[str, Any]]) -> str:
                 "",
                 f"**Provenance:** `{answer['official_key_source_ref']}`. "
                 f"Reproduction status: `{source['reproduction_status']}`. "
-                f"Import status: `{publication['import_status']}`.",
+                f"{import_line}",
                 "",
                 f"**Coverage note:** {review['coverage_note']}",
             ]

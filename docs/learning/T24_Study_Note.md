@@ -1,34 +1,27 @@
 # T24 Verified Physics Pilot Content - Study Note
 
-## 1. The Core Analogy: The Official Answer Grid as a Reference Standard
+## 1. The Core Analogy: A Reference Standard and a Signed Review
 
-In T12, a question passed through a human review chain: an author wrote it, a
-qualified reviewer checked it, and the database recorded both identities. T24
-uses a different pilot route.
+An official past-paper marking scheme is a **reference standard**. It tells us
+which option the examination board marked correct. It does not, by itself,
+certify the explanation, the curriculum mapping, the accessibility of the
+wording or the absence of ambiguity.
 
-Think of an official past-paper marking scheme as a **reference standard in a
-metrology lab**. The lab does not ask a person to "approve" the metre bar; it
-compares the instrument against the standard and records the comparison. T24
-does the same for eight multiple-choice answers:
+T24 therefore uses two separate ideas:
 
-- the **question** is transcribed from the rendered paper page;
-- the **derivation** is worked independently;
-- the **official marking-scheme grid** is the reference answer;
-- the **sealed envelope** records the comparison, the source hashes and the
-  content hash;
-- the **T12 import gate** stays closed because the question bank still expects a
-  named human reviewer.
+- the **official grid** verifies the answer key;
+- a **named teacher review** verifies the surrounding content, and records
+  exactly who reviewed it and under what qualification claim.
 
-The reference standard is authoritative only for the narrow claim "this is the
-option the examination board marked correct". It does not certify the
-explanation, accessibility, syllabus fit or dispute handling. That distinction
-is the heart of the T24 deviation.
+For this pilot the reviewer is also the author. That is a **self-review**. The
+record says so instead of pretending a second person checked the work. The
+envelope uses `independent_review_status = "self_review"`, not `"verified"`.
 
 ## 2. Two Verification Modes
 
-### A. `official_marking_scheme`
+### A. `official_marking_scheme` (historical pilot mode)
 
-This is the T24 mode.
+This was the original T24 route and is retained for official-key-only content.
 
 - Source type must be a past paper.
 - The official key must be present in the printed marking-scheme grid.
@@ -36,25 +29,33 @@ This is the T24 mode.
 - The author, reviewer and qualification fields are null.
 - `independent_review_status` and `academic_review_status` are `not_required`.
 - The envelope must reference `DEVIATION_REVIEW_MODE.md`.
-- Import is blocked.
+- Import is blocked because T12 needs named author and reviewer principals.
 
-The Python validator is deliberately strict: a missing key, a mismatched derived
-option, an invented concept UUID, an open ambiguity flag or a stale content hash
-all stop the envelope.
+`DEVIATION_REVIEW_MODE.md` is now a superseded record. The active eight-item
+bundle no longer uses this mode.
 
-### B. `expert_review`
+### B. `expert_review` (active mode)
 
-This is the original T12-style path retained for future content.
+This is the T12-style path.
 
 - Non-null author and reviewer UUIDs.
 - Author and reviewer qualification references.
-- Independent answer review.
-- Approved academic review and independence declaration.
+- An approved academic review and an independence declaration.
 - A separate `review` reviewer identity that matches the question reviewer.
 - Import approval only with approval and batch evidence.
 
-T24 does not use this mode. Keeping it in the schema proves the official-mode
-waiver is a branch, not a silent weakening of every question.
+The answer review has two honest variants:
+
+| Status | Principal rule | Meaning |
+| --- | --- | --- |
+| `verified` | Author and reviewer must be different | An independent review is claimed |
+| `self_review` | Author and reviewer must be the same | The reviewer is the author; no independence is claimed |
+
+The validator rejects `verified` when the principals are equal and rejects
+`self_review` when they differ. This is a small rule with a large purpose: the
+envelope cannot accidentally claim an independence that did not happen.
+
+The active bundle uses `self_review`.
 
 ## 3. What the Envelope Binds
 
@@ -66,13 +67,13 @@ Each envelope stores:
 - the prompt, five options, explanation and exact rubric;
 - the T08 concept and objective mappings;
 - the ambiguity, duplicate and coverage notes;
-- the import blocker.
+- the reviewer identity, qualification reference and review date;
+- the import batch and approval fields.
 
 The content hash covers the source claim, question and answer verification. It
 does **not** cover `review.content_hash` or `publication`, so an import-state
-change does not invalidate the academic content. That separation is intentional:
-a blocked item can later become importable without pretending the question
-changed.
+change does not invalidate the academic content. The reviewed and sealed hashes
+for each item are recorded in `REVIEW_RECORD.md`.
 
 The T12 import path computes a different hash over the persisted bundle. The two
 hashes have different jobs and must not be compared as if they were the same.
@@ -109,35 +110,60 @@ Ambiguity is a human-language problem, not a hash problem. Two items carry notes
 A note is not a rewrite. The paper wording stays verbatim and the residual risk
 is visible to the reviewer.
 
-## 6. Why Import Is Still Blocked
+## 6. Self-Review and Import
 
 T12 requires an approved question to have a non-null author and reviewer. The
-database trigger enforces the same rule. An official marking-scheme envelope has
-neither, so it cannot pass T12's import validation.
+database trigger enforces the same rule. It does **not** require the two
+principals to be different.
 
-T24 therefore sets:
+That distinction matters:
+
+- the trigger is an **identity-presence gate**;
+- the pilot validator's `self_review` rule is an **honesty gate** about whether
+  independence is claimed.
+
+The active envelopes therefore carry the same pilot principal in both fields and
+set:
 
 ```text
-approved_for_import = false
-import_status = "blocked_pending_t12_verification_mode"
+approved_for_import = true
+import_status = "ready_for_import"
+import_batch_id = "T24-PHYS-PILOT-2026-11"
 ```
 
-This is not a bug to work around. It is the boundary between "the answer is
-verified against the official grid" and "the question bank has accepted a
-qualified human review". The second claim has not been made.
+The database import test loads the real envelopes, converts them through
+`to_validated_import()` and imports them through `QuestionImportRepository`. It
+then checks that all eight versions are approved and that the stored author and
+reviewer are non-null and equal.
 
-## 7. Technologies and Methods
+This is not a workaround. A fake second reviewer would be worse than an honest
+self-review. The limitation is recorded in `REVIEW_RECORD.md` and repeated in the
+evidence document.
+
+## 7. The Qualification Limitation
+
+The review record names Malshani Perera as a Physics Teacher with the
+qualification reference `PostGraduate`.
+
+That reference is self-declared. It does not contain a degree title, awarding
+institution, year or subject specialisation, and this branch does not verify the
+reviewer's identity or certificates. The record keeps the limitation visible
+instead of turning a short label into a stronger claim than the evidence
+supports.
+
+## 8. Technologies and Methods
 
 | Tool or method | Role in T24 |
 | --- | --- |
 | JSON Schema Draft 2020-12 | Structural contract, strict extra-field rejection and mode-specific required fields |
-| Python validator | Semantic checks against the T08 seed, official key, hash and import state |
+| Python validator | Semantic checks against the T08 seed, official key, hash, review status and import state |
 | SHA-256 content hash | Binds source, question and answer evidence; detects silent edits |
 | Pytest | Negative tests for identities, keys, mappings, hashes, duplicates and reports |
+| PostgreSQL integration test | Proves the real envelopes import through T12 with the recorded principals |
 | Deterministic reports | Coverage, duplicate and verification evidence generated from the envelopes |
-| Recorded deviation | Makes the PRD 9.3 gap explicit instead of hiding it |
+| Review record | Makes the reviewer, qualification claim, self-review limitation and per-item decisions explicit |
 
-## 8. Commands
+## 9. Commands
 
 From the repository root:
 
@@ -145,15 +171,22 @@ From the repository root:
 $env:PYTHONPATH = "backend/src"
 .\.venv\Scripts\python.exe -m memora.modules.questions.pilot_validation validate content/physics/pilot/questions
 .\.venv\Scripts\python.exe -m memora.modules.questions.pilot_reports --root content/physics/pilot --write
-.\.venv\Scripts\python.exe -m pytest backend/tests/test_pilot_content_validation.py backend/tests/test_pilot_schema_jsonschema.py backend/tests/test_pilot_evidence_status.py backend/tests/test_pilot_mapping_report.py backend/tests/test_pilot_coverage_report.py backend/tests/test_pilot_duplicate_report.py backend/tests/test_pilot_verification_report.py -q
+.\.venv\Scripts\python.exe -m pytest backend/tests -k pilot
 ```
 
-## 9. Summary Takeaway
+The database import test runs when `MEMORA_TEST_DATABASE_URL` points at a
+disposable database whose name ends in `_test` or `_ci`. Otherwise it skips.
 
-> **An official key can verify an answer without verifying the whole
-> question.**
+## 10. Summary Takeaway
 
-The pilot gets a reliable answer check from the marking scheme, records exactly
-what it did not review, and refuses to import content that the question bank's
-human-review contract cannot yet accept. That is safer than turning a missing
-reviewer into a silent approval.
+> **An official key can verify an answer. A named review can verify the
+> surrounding content. Neither claim should be stretched into a claim that was
+> never made.**
+
+The pilot gets a reliable answer check from the marking scheme, records a named
+teacher's self-review of the transcription, derivation, explanation, mapping,
+ambiguity and adaptation, and imports the result through the existing T12 path
+with the same principal in both identity fields. The record states plainly that
+this is not an independent review and that the qualification reference is
+self-declared. That is safer than turning a missing second reviewer into a silent
+approval.

@@ -1,9 +1,28 @@
 # T24-DEV-001: official marking-scheme verification mode
 
-**Status:** Recorded pilot deviation. Not a qualified academic review, not a
-T12 import approval and not a claim that T24 is Done.
+**Status:** **Superseded on 2026-11-02.** The active eight-item bundle now uses
+`expert_review` with the recorded self-review in `REVIEW_RECORD.md`. This file is
+retained as the historical record of the official-mode decision. The statements
+below describe the superseded state, not the current envelopes.
+
+**Original status:** Recorded pilot deviation. Not a qualified academic review,
+not a T12 import approval and not a claim that T24 is Done.
 
 **Date recorded:** 2026-11-02
+
+## Supersession
+
+Route A was completed on 2026-11-02:
+
+- all eight envelopes changed from `official_marking_scheme` to `expert_review`;
+- the named pilot reviewer approved all eight items in `REVIEW_RECORD.md`;
+- the review is an explicit self-review and does not claim independence;
+- `publication.approved_for_import` is `true` with batch
+  `T24-PHYS-PILOT-2026-11`;
+- the active envelopes no longer reference this file in `review.deviation_ref`.
+
+The official marking-scheme grid remains the answer-key authority. The controls
+described below still apply if an official-mode envelope is ever reintroduced.
 
 **Authority:** The T24 task instruction directed that this pilot use the
 official past-paper marking schemes and that no teacher, reviewer or verifier

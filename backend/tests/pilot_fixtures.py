@@ -137,7 +137,7 @@ def _base_review(*, mode: str, scopes: list[str]) -> dict[str, Any]:
         "academic_review_status": "not_required",
         "reviewer_principal": None,
         "reviewer_qualification_ref": None,
-        "review_scope": scopes,
+        "review_scope": list(scopes),
         "reviewed_at": "2026-11-02T00:00:00+00:00",
         "ambiguity_status": "cleared",
         "ambiguity_note": None,
@@ -212,7 +212,7 @@ def expert_envelope() -> dict[str, Any]:
     review["academic_review_status"] = "approved"
     review["reviewer_principal"] = REVIEWER_ID
     review["reviewer_qualification_ref"] = "synthetic-reviewer-qualification"
-    review["review_scope"] = EXPERT_SCOPES
+    review["review_scope"] = list(EXPERT_SCOPES)
     review["independence_declaration_ref"] = "synthetic-independence-declaration"
     review["deviation_ref"] = None
 
@@ -228,6 +228,33 @@ def expert_envelope() -> dict[str, Any]:
 
 def sealed_expert_envelope() -> dict[str, Any]:
     return seal_pilot_envelope(expert_envelope())
+
+
+def self_review_envelope() -> dict[str, Any]:
+    """Return an unsealed expert-review fixture with one principal as author and reviewer."""
+
+    envelope = expert_envelope()
+    envelope["pilot_id"] = "PILOT-PHYS-2025-P1-Q03"
+    envelope["source"]["question_number"] = 3
+    question = envelope["question"]
+    question["question_code"] = "pilot-phys-synthetic-self-003"
+    question["reviewer_principal"] = AUTHOR_ID
+
+    answer = envelope["answer_verification"]
+    answer["independent_review_status"] = "self_review"
+    answer["reviewer_ref"] = "synthetic-self-review-record"
+
+    review = envelope["review"]
+    review["reviewer_principal"] = AUTHOR_ID
+    review["reviewer_qualification_ref"] = "synthetic-author-qualification"
+    review["independence_declaration_ref"] = "synthetic-self-review-declaration"
+
+    envelope["publication"]["approved_by"] = "synthetic-self-review-approval"
+    return envelope
+
+
+def sealed_self_review_envelope() -> dict[str, Any]:
+    return seal_pilot_envelope(self_review_envelope())
 
 
 def mutate(envelope: dict[str, Any], path: tuple[str | int, ...], value: Any) -> dict[str, Any]:

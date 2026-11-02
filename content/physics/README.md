@@ -13,14 +13,17 @@ under `pilot/`.
 - `pilot/local_review/` - local-only full transcription workspace. Gitignored.
 
 The tracked files under `pilot/questions/` are short selected excerpts required
-for the pilot. They are not a redistribution licence and they are not import
-approval. Do not add private student content here.
+for the pilot. They are not a redistribution licence. The self-review and import
+approval do not grant redistribution rights. Do not add private student content
+here.
 
 ## Verification mode
 
-The pilot uses official marking-scheme verification, not a named human reviewer.
-The limitation is recorded in `pilot/DEVIATION_REVIEW_MODE.md`, and every item
-remains blocked from the T12 import path.
+The pilot uses `expert_review` with the named Physics teacher self-review
+recorded in `pilot/REVIEW_RECORD.md`. The printed official marking-scheme grid
+remains the answer-key authority. The review is a self-review; independence is
+not claimed, and the qualification reference is self-declared. Every item is
+approved for import batch `T24-PHYS-PILOT-2026-11`.
 
 ## Commands
 

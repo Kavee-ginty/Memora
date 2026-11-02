@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "pilot_id": "PILOT-PHYS-2024-P1-Q01",
-  "verification_mode": "official_marking_scheme",
+  "verification_mode": "expert_review",
   "source": {
     "source_id": "SL-DOE-AL-PHYS-2024-P1",
     "source_type": "past_paper",
@@ -34,9 +34,9 @@
     "prompt": "Which of the following physical quantity has a unit but no dimensions?",
     "explanation": "Sound intensity level is a logarithmic ratio of two intensities. It is reported in decibels (dB), but it has no base dimensions. Planck constant (J s), surface tension (N m^-1) and energy (J) all have dimensions; relative velocity has dimensions of velocity and a unit.",
     "validation_status": "approved",
-    "author_principal": null,
-    "author_qualification_ref": null,
-    "reviewer_principal": null,
+    "author_principal": "a2400000-0000-4000-8000-000000000001",
+    "author_qualification_ref": "PostGraduate",
+    "reviewer_principal": "a2400000-0000-4000-8000-000000000001",
     "content": {
       "kind": "choice",
       "schema_version": "1",
@@ -90,35 +90,35 @@
         "learning_objective_id": "30000000-0000-0000-0000-000000000003",
         "mapping_role": "primary",
         "weight": 1.0,
-        "provenance_type": "source_analysis",
-        "provenance_ref": "SL-DOE-AL-PHYS-2024-P1:Q1:official-key-and-derivation"
+        "provenance_type": "pilot_review",
+        "provenance_ref": "content/physics/pilot/REVIEW_RECORD.md#pilot-phys-2024-p1-q01"
       },
       {
         "concept_version_id": "50000000-0000-0000-0000-000000000001",
         "learning_objective_id": "30000000-0000-0000-0000-000000000002",
         "mapping_role": "supporting",
         "weight": 0.5,
-        "provenance_type": "source_analysis",
-        "provenance_ref": "SL-DOE-AL-PHYS-2024-P1:Q1:official-key-and-derivation"
+        "provenance_type": "pilot_review",
+        "provenance_ref": "content/physics/pilot/REVIEW_RECORD.md#pilot-phys-2024-p1-q01"
       }
     ]
   },
   "answer_verification": {
-    "mode": "official_marking_scheme",
+    "mode": "expert_review",
     "official_key": 5,
     "derived_option_key": "5",
     "matches_official_key": true,
     "derivation": "Check each option: Planck constant J s = kg m^2 s^-1 -> M L^2 T^-1; surface tension N m^-1 = kg s^-2 -> M T^-2; energy J = kg m^2 s^-2 -> M L^2 T^-2; relative velocity m s^-1 -> L T^-1. Sound intensity level is defined as 10 log10(I/I0), a ratio, so it has a unit label (dB) but no dimensions. The official key is 5.",
     "official_key_source_ref": "SL-DOE-AL-PHYS-2024-P1 Q1; AL_Physics_2024_Combined_Marking_Scheme_English.pdf p.5",
-    "independent_review_status": "not_required",
-    "reviewer_ref": null,
-    "notes": "Answer verified against the printed official marking-scheme grid; no human reviewer identity is claimed."
+    "independent_review_status": "self_review",
+    "reviewer_ref": "content/physics/pilot/REVIEW_RECORD.md#pilot-phys-2024-p1-q01",
+    "notes": "Self-reviewed by the named pilot reviewer; the printed official marking-scheme grid remains the answer-key authority. See content/physics/pilot/REVIEW_RECORD.md."
   },
   "review": {
-    "review_mode": "official_marking_scheme",
-    "academic_review_status": "not_required",
-    "reviewer_principal": null,
-    "reviewer_qualification_ref": null,
+    "review_mode": "expert_review",
+    "academic_review_status": "approved",
+    "reviewer_principal": "a2400000-0000-4000-8000-000000000001",
+    "reviewer_qualification_ref": "PostGraduate",
     "review_scope": [
       "official_key_match",
       "derivation",
@@ -127,22 +127,22 @@
       "ambiguity",
       "duplicate"
     ],
-    "reviewed_at": "2026-11-02T00:00:00+00:00",
+    "reviewed_at": "2026-11-02T13:30:00+00:00",
     "ambiguity_status": "cleared",
     "ambiguity_note": null,
     "duplicate_status": "cleared",
     "coverage_note": "Covers dimensionless quantities and the distinction between a unit and a dimension; supports SI unit literacy.",
-    "content_hash": "ce95afdaea900de52b6ec4921ef1cb6d7ef1244d744c15718a800d31f150c805",
+    "content_hash": "f4e89ffbbb74be8d8fa527823d6e87ebd998c65e75a38488d8d48ac34ef3e835",
     "source_ref": "SL-DOE-AL-PHYS-2024-P1 Q1; AL_Physics_2024_Combined_Marking_Scheme_English.pdf p.5",
-    "independence_declaration_ref": null,
-    "deviation_ref": "content/physics/pilot/DEVIATION_REVIEW_MODE.md"
+    "independence_declaration_ref": "content/physics/pilot/REVIEW_RECORD.md#independence-declaration",
+    "deviation_ref": null
   },
   "publication": {
-    "approved_for_import": false,
-    "approved_by": null,
-    "approved_at": null,
-    "import_batch_id": null,
-    "import_status": "blocked_pending_t12_verification_mode",
-    "blocker_ref": "content/physics/pilot/DEVIATION_REVIEW_MODE.md#t12-import-gate"
+    "approved_for_import": true,
+    "approved_by": "Malshani Perera",
+    "approved_at": "2026-11-02T13:30:00+00:00",
+    "import_batch_id": "T24-PHYS-PILOT-2026-11",
+    "import_status": "ready_for_import",
+    "blocker_ref": null
   }
 }

@@ -65,9 +65,10 @@ selected set.
   readable official MCQ answer grid.
 - They cover the T08 concepts used by the pilot: measurement units and
   dimensions, Newton's laws, momentum, energy, and simple harmonic motion.
-- Every selected answer was both derived independently and matched to the
-  printed official grid. The grid is the verification authority for this pilot,
-  not a human reviewer.
+- Every selected answer was both derived and matched to the printed official
+  grid. The grid is the answer-key authority. The named teacher's self-review of
+  transcription, derivation, explanation, mapping, ambiguity and adaptation is
+  recorded in `REVIEW_RECORD.md`.
 - 2021 was excluded because the local paper copy is Tamil-medium despite the
   `_English` filename and no English paper or usable MCQ grid was confirmed.
 - 2023 is not present in the local inventory.
@@ -88,9 +89,14 @@ selected set.
 ## Limitations and risks
 
 - Reproduction permission for the past-paper excerpts is not recorded. The
-  envelopes therefore use `reproduction_status = "unapproved"` and
-  `approved_for_import = false`. The excerpts are retained only for this
-  internal pilot; they are not cleared for redistribution.
+  envelopes use `reproduction_status = "unapproved"`. The pilot import approval
+  permits internal use only; it does not grant redistribution rights. The
+  excerpts are retained only for this internal pilot.
+- The reviewer qualification reference `PostGraduate` is self-declared and lacks
+  a degree title, awarding institution, year and subject specialisation. No
+  certificate was independently verified in this task.
+- The review is a self-review: the named author and reviewer are the same person.
+  No independent second-person review is claimed.
 - The 2022 paper is an annotated CamScanner scan. Handwritten ticks and notes
   are not evidence and were ignored.
 - OCR of the marking-scheme grids is unreliable because the headings are

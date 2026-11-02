@@ -4,23 +4,27 @@
 
 **Branch:** `task/T24-physics-content`
 
-**Status:** Review. The content bundle, validation, reports and tests are
-present. The task is not merged and not Done. The PRD 9.3 qualified-review
-requirement is replaced only by the recorded pilot deviation in
-`content/physics/pilot/DEVIATION_REVIEW_MODE.md`.
+**Status:** Review. Route A content, review and import verification are complete
+on the branch. The work is not merged and T24 is not Done. The review is an
+explicit self-review, not an independent second-person check.
 
 ## Scope completed
 
 - Eight text-only G.C.E. (A/L) Physics Paper I MCQs from 2022, 2024 and 2025.
 - Answer verification against the printed Department of Examinations marking
   scheme grids, with a recorded derivation for every item.
+- A named Physics teacher review record covering all eight items, with the
+  self-review limitation declared.
 - T08 concept and objective mappings for every item.
 - Fourteen-concept brief with formulas, units, dimensions, prerequisites,
   claims, aliases and coverage status.
 - Concept/objective coverage report with three explicit gaps.
 - Deterministic duplicate screening.
-- Official-key, content-hash and import-gate verification report.
-- Schema v2, a semantic validator, negative tests and a recorded deviation.
+- Review, official-key, content-hash and import-status verification report.
+- Schema v2, a semantic validator, negative tests and a recorded review mode.
+- All eight envelopes converted to the T12-compatible `expert_review` mode and
+  approved for import batch `T24-PHYS-PILOT-2026-11`.
+- A database-backed import test using the real envelopes.
 - No private student content.
 
 ## Source evidence
@@ -67,6 +71,39 @@ Seven items are verbatim text-only questions. `PILOT-PHYS-2024-P1-Q05`
 originally refers to a figure; the prompt states the same setup in words and
 records `text_only_adaptation = true`.
 
+## Review evidence
+
+| Field | Value |
+| --- | --- |
+| Author and reviewer | Malshani Perera |
+| Role | Physics Teacher |
+| Qualification reference | `PostGraduate` (self-declared) |
+| Relationship | Self-review: author and reviewer are the same person |
+| Review date | 2026-11-02T19:00:00+05:30 (`2026-11-02T13:30:00+00:00`) |
+| Pilot principal UUID | `a2400000-0000-4000-8000-000000000001` |
+| Decision | All eight items approved; no corrections requested |
+| Review record | `content/physics/pilot/REVIEW_RECORD.md` |
+
+Every envelope records:
+
+```text
+verification_mode = "expert_review"
+answer_verification.independent_review_status = "self_review"
+review.academic_review_status = "approved"
+question.author_principal == question.reviewer_principal
+```
+
+`REVIEW_RECORD.md` records the declaration, review scope, per-item decisions,
+the reviewed and sealed hashes, and the import approval. The declaration states
+that independence is not claimed.
+
+The qualification reference `PostGraduate` is self-declared. It does not name a
+degree, awarding institution, year or subject specialisation, and this branch
+does not independently verify the reviewer's identity or certificates. The
+name, role and qualification reference were supplied for this task. A later
+reviewer should treat the qualification claim as unverified until supporting
+evidence is produced.
+
 ## Verification evidence
 
 - Every envelope has a matching `source.official_key`,
@@ -75,27 +112,52 @@ records `text_only_adaptation = true`.
 - Every item is mapped to a real T08 concept and its owning objective, with one
   primary mapping.
 - `verification_report.json` records eight `verified` items,
-  `human_review_claimed: false` and eight blocked imports.
+  `human_review_claimed: true`, `independent_review_claimed: false`,
+  `self_review_count: 8` and `all_import_ready: true`.
 - `duplicate_report.json` compares all 28 prompt pairs. The highest similarity is
   0.469136, below the 0.9 screening threshold.
 - `coverage_report.json` records 11 of 14 concepts covered and six of six leaf
   objectives covered.
 - The three explicit gaps are `PHYS-MEC-DISPLACEMENT`, `PHYS-MEC-VELOCITY` and
   `PHYS-MEC-NEWTON1`.
+- The metadata-only conversion did not change the prompt, options, explanation,
+  derivation, source references, concept/objective IDs, mapping roles or
+  weights. `REVIEW_RECORD.md` records the reviewed and sealed hash for every
+  item.
+
+### Database import verification
+
+`backend/tests/test_question_db_contracts.py::test_t24_physics_pilot_envelopes_import_as_expert_self_review`
+loads the eight real envelopes, converts them through `to_validated_import()`,
+and imports each through `QuestionImportRepository` into a disposable
+PostgreSQL database. It verifies that:
+
+- all eight question codes receive distinct question rows;
+- `questions.author_principal` and `questions.reviewer_principal` are non-null
+  and equal to the recorded pilot principal;
+- the parent question and the imported version are `approved`;
+- the stored prompt matches the reviewed envelope;
+- the version carries the `Expert verified` trust label.
+
+The database trigger in `20261023_0005_question_bank_integrity.up.sql` accepts
+the same principal in both fields because it is an identity-presence gate, not
+an independence gate. No migration or T12 contract change was made.
 
 ## Commands run
 
 | Command | Result |
 | --- | --- |
 | `python -m memora.modules.questions.pilot_validation validate content/physics/pilot/questions` | `status: valid`, 8 envelopes |
-| `python -m memora.modules.questions.pilot_reports --root content/physics/pilot --write` | Wrote three reports and `PILOT_QUESTIONS.md` with LF endings; a second run was byte-identical |
-| `ruff format --check` on the T24 Python files | 10 files already formatted |
-| `ruff check` on the T24 Python files | All checks passed |
-| Focused `pytest` for the seven T24 test modules | 72 passed in 2.97s |
-| Adjacent question-bank tests (`test_questions_grading.py`, `test_questions_models.py`, `test_question_reports.py`) | 72 passed, one existing Starlette deprecation warning |
-| `jsonschema` Draft 2020-12 meta-schema check | `schema meta-valid` |
+| `python -m memora.modules.questions.pilot_reports --root content/physics/pilot --write` | Wrote three reports and `PILOT_QUESTIONS.md`; a second run was byte-identical |
+| `pytest backend/tests -k pilot` with `MEMORA_TEST_DATABASE_URL` | 78 passed |
+| `pytest backend/tests` with `MEMORA_TEST_DATABASE_URL` | 676 passed |
+| `pytest backend/tests` without `MEMORA_TEST_DATABASE_URL` | 517 passed, 159 skipped |
+| `pytest backend/tests/test_question_db_contracts.py::test_t24_physics_pilot_envelopes_import_as_expert_self_review` with `MEMORA_TEST_DATABASE_URL` | 1 passed |
+| `ruff format --check` on the affected T24 Python files | 9 files already formatted |
+| `ruff check` on the affected T24 Python files | All checks passed |
 
-The commands use the repository `.venv` and `PYTHONPATH=backend/src`.
+The commands use the repository `.venv` and `PYTHONPATH=backend/src`. The
+disposable database name ends in `_test`, as required by the test fixture.
 
 ## Acceptance gate mapping
 
@@ -109,22 +171,42 @@ The commands use the repository `.venv` and `PYTHONPATH=backend/src`.
 | Ambiguity and duplicate checks | Clean reports plus recorded notes | Met |
 | Gaps are explicit | Three named gaps | Met |
 | No private student content | Bundle contains only public past-paper excerpts and derived analysis | Met |
-| Qualified review is recorded | No teacher, reviewer or verifier identity; recorded deviation only | **Not met; deviation recorded** |
-| T12 import | Blocked by the T12 author/reviewer gate | **Blocked** |
+| Qualified review is recorded | Named Physics teacher self-review in `REVIEW_RECORD.md`; qualification reference is self-declared and underspecified | Recorded, with an open evidence limitation |
+| T12 import | Real envelopes imported through `QuestionImportRepository` into a disposable database | Verified |
 
-T24 therefore remains in **Review**. The pilot deviation does not satisfy the
-qualified-review clause and does not authorize import.
+The PRD 9.3 clause is "written or reviewed by qualified A/L Physics teachers or
+subject experts". A named Physics teacher performed the review. The record does
+not claim that the review was independent, and it does not present the
+self-declared qualification reference as independently verified evidence.
+
+T24 remains in **Review** until the branch is merged and the import evidence is
+part of the merged task. The branch content is ready for that review.
 
 ## Import gate
 
-`publication.approved_for_import = false` and
-`import_status = "blocked_pending_t12_verification_mode"` on all eight
-envelopes. T12 still requires non-null author and reviewer principals, and the
-database trigger rejects an approved question without them. No migration or T12
-contract change was made in T24.
+All eight envelopes record:
+
+```text
+approved_for_import = true
+import_status = "ready_for_import"
+import_batch_id = "T24-PHYS-PILOT-2026-11"
+approved_by = "Malshani Perera"
+approved_at = "2026-11-02T13:30:00+00:00"
+```
+
+The same non-null pilot principal is used as author and reviewer because the
+review is a self-review. The database import test proves that T12 and its
+trigger accept this honest representation. No fake distinct reviewer, disabled
+trigger, draft-import workaround or schema-mode bypass was used.
+
+`DEVIATION_REVIEW_MODE.md` is retained as the superseded record of the earlier
+official-marking-scheme-only pilot. The active envelopes no longer reference it.
 
 ## Known limitations
 
+- The review is a self-review, not an independent check.
+- The qualification reference is self-declared and lacks a degree title,
+  institution, year and subject specialisation.
 - Reproduction permission is not recorded. The excerpts are internal pilot
   evidence, not cleared for redistribution.
 - The 2022 paper is an annotated scan. Handwriting was ignored.
@@ -133,15 +215,20 @@ contract change was made in T24.
   records the risk.
 - The source PDFs are not committed, so hash checks skip when the local files
   are absent.
-- The official grid verifies the answer option, not the explanation or
-  accessibility quality. Those still need qualified review before public use.
+- The official grid verifies the answer option. The named reviewer approved the
+  explanation and mapping, but there is no second-person academic review of
+  those judgements.
 
-## Review evidence
+## Review evidence files
 
-- `content/physics/pilot/PILOT_QUESTIONS.md`: question, answer, derivation and
-  mapping evidence.
+- `content/physics/pilot/REVIEW_RECORD.md`: reviewer identity, self-review
+  declaration, per-item decisions, reviewed/sealed hashes and approval.
+- `content/physics/pilot/PILOT_QUESTIONS.md`: question, answer, derivation,
+  review and mapping evidence.
 - `content/physics/pilot/coverage_report.json`: concept and objective coverage.
 - `content/physics/pilot/duplicate_report.json`: deterministic duplicate screen.
-- `content/physics/pilot/verification_report.json`: key, hash and import status.
-- `content/physics/pilot/DEVIATION_REVIEW_MODE.md`: deviation scope and limits.
+- `content/physics/pilot/verification_report.json`: review, key, hash and import
+  status.
+- `content/physics/pilot/DEVIATION_REVIEW_MODE.md`: superseded historical
+  official-mode record.
 - `docs/learning/T24_Study_Note.md`: learning-oriented explanation.

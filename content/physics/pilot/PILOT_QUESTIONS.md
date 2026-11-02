@@ -2,20 +2,20 @@
 
 This file is generated from the sealed envelopes under `questions/`. Do not edit it by hand; regenerate it with `python -m memora.modules.questions.pilot_reports --root content/physics/pilot --write`.
 
-The pilot uses **official marking-scheme verification**. Each answer was derived independently and then matched to the printed Department of Examinations Paper I answer grid. No teacher, reviewer or verifier identity is claimed. See `DEVIATION_REVIEW_MODE.md`.
+The pilot uses **expert review plus official marking-scheme verification**. Each answer was derived and then matched to the printed Department of Examinations Paper I answer grid. The named reviewer approved the transcription, derivation, explanation, mapping, ambiguity and duplicate checks. Self-review items are marked as such and do not claim independence. See `REVIEW_RECORD.md`.
 
 ## Summary
 
 | Pilot ID | Year / question | Official key | Primary concept | Verification |
 | --- | --- | ---: | --- | --- |
-| `PILOT-PHYS-2022-P1-Q01` | 2022 Q1 | 4 | `PHYS-MEC-MOMENTUM` | official key matched |
-| `PILOT-PHYS-2022-P1-Q17` | 2022 Q17 | 4 | `PHYS-WAV-SHM` | official key matched |
-| `PILOT-PHYS-2024-P1-Q01` | 2024 Q1 | 5 | `PHYS-MEA-DIMENSIONS` | official key matched |
-| `PILOT-PHYS-2024-P1-Q04` | 2024 Q4 | 1 | `PHYS-MEC-NEWTON3` | official key matched |
-| `PILOT-PHYS-2024-P1-Q05` | 2024 Q5 | 5 | `PHYS-MEC-MOMENTUM` | official key matched |
-| `PILOT-PHYS-2025-P1-Q01` | 2025 Q1 | 5 | `PHYS-MEC-WORK` | official key matched |
-| `PILOT-PHYS-2025-P1-Q03` | 2025 Q3 | 1 | `PHYS-WAV-SHM` | official key matched |
-| `PILOT-PHYS-2025-P1-Q45` | 2025 Q45 | 5 | `PHYS-MEC-MOMENTUM` | official key matched |
+| `PILOT-PHYS-2022-P1-Q01` | 2022 Q1 | 4 | `PHYS-MEC-MOMENTUM` | expert self-review; official key matched |
+| `PILOT-PHYS-2022-P1-Q17` | 2022 Q17 | 4 | `PHYS-WAV-SHM` | expert self-review; official key matched |
+| `PILOT-PHYS-2024-P1-Q01` | 2024 Q1 | 5 | `PHYS-MEA-DIMENSIONS` | expert self-review; official key matched |
+| `PILOT-PHYS-2024-P1-Q04` | 2024 Q4 | 1 | `PHYS-MEC-NEWTON3` | expert self-review; official key matched |
+| `PILOT-PHYS-2024-P1-Q05` | 2024 Q5 | 5 | `PHYS-MEC-MOMENTUM` | expert self-review; official key matched |
+| `PILOT-PHYS-2025-P1-Q01` | 2025 Q1 | 5 | `PHYS-MEC-WORK` | expert self-review; official key matched |
+| `PILOT-PHYS-2025-P1-Q03` | 2025 Q3 | 1 | `PHYS-WAV-SHM` | expert self-review; official key matched |
+| `PILOT-PHYS-2025-P1-Q45` | 2025 Q45 | 5 | `PHYS-MEC-MOMENTUM` | expert self-review; official key matched |
 
 **Counts:** 8 questions; 11 of 14 T08 concepts covered; 3 explicit gaps.
 
@@ -33,7 +33,8 @@ The pilot uses **official marking-scheme verification**. Each answer was derived
 
 **Official key:** 4  
 **Derived key:** 4  
-**Sealed content hash:** `68fcec6747d61017fdb8931167e07708cd6708bc46adea8943ad0ff135614839`
+**Sealed content hash:** `88c6c0190e56546d8d3e5ec1dd2b4d57b7ba9c6d2a38c63720d63004c845edcd`  
+**Review:** `expert_review` / `self_review` by the named reviewer; academic status `approved`. See `content/physics/pilot/REVIEW_RECORD.md#independence-declaration`.
 
 **Prompt:**
 
@@ -56,7 +57,7 @@ The pilot uses **official marking-scheme verification**. Each answer was derived
 - Linear Momentum (`PHYS-MEC-MOMENTUM`, primary, weight 1)
 - Gravitational Potential Energy (`PHYS-MEC-GRAV-POT-ENERGY`, supporting, weight 0.7)
 
-**Provenance:** `SL-DOE-AL-PHYS-2022-P1 Q1; AL_Physics_2022_Combined_Marking_Scheme_English.pdf p.2`. Reproduction status: `unapproved`. Import status: `blocked_pending_t12_verification_mode`.
+**Provenance:** `SL-DOE-AL-PHYS-2022-P1 Q1; AL_Physics_2022_Combined_Marking_Scheme_English.pdf p.2`. Reproduction status: `unapproved`. Import status: `ready_for_import`; approved by Malshani Perera for batch `T24-PHYS-PILOT-2026-11`.
 
 **Coverage note:** Covers vector/scalar classification using momentum and potential energy as examples.
 
@@ -66,7 +67,8 @@ The pilot uses **official marking-scheme verification**. Each answer was derived
 
 **Official key:** 4  
 **Derived key:** 4  
-**Sealed content hash:** `37baa78305f9a24403ef3b37e0d203fe5a3c6d18d05bceebc6a5e9672d694f39`
+**Sealed content hash:** `f0526870c2e27ed13aa2dc8044343d8a22033da567a533c0a76e7dae5a47a9e8`  
+**Review:** `expert_review` / `self_review` by the named reviewer; academic status `approved`. See `content/physics/pilot/REVIEW_RECORD.md#independence-declaration`.
 
 **Prompt:**
 
@@ -90,7 +92,7 @@ The pilot uses **official marking-scheme verification**. Each answer was derived
 - Acceleration (`PHYS-MEC-ACCELERATION`, supporting, weight 0.5)
 - Newton's Second Law of Motion (`PHYS-MEC-NEWTON2`, supporting, weight 0.3)
 
-**Provenance:** `SL-DOE-AL-PHYS-2022-P1 Q17; AL_Physics_2022_Combined_Marking_Scheme_English.pdf p.2`. Reproduction status: `unapproved`. Import status: `blocked_pending_t12_verification_mode`.
+**Provenance:** `SL-DOE-AL-PHYS-2022-P1 Q17; AL_Physics_2022_Combined_Marking_Scheme_English.pdf p.2`. Reproduction status: `unapproved`. Import status: `ready_for_import`; approved by Malshani Perera for batch `T24-PHYS-PILOT-2026-11`.
 
 **Coverage note:** Covers the simple-pendulum period and effective gravity in an accelerating frame.
 
@@ -100,7 +102,8 @@ The pilot uses **official marking-scheme verification**. Each answer was derived
 
 **Official key:** 5  
 **Derived key:** 5  
-**Sealed content hash:** `ce95afdaea900de52b6ec4921ef1cb6d7ef1244d744c15718a800d31f150c805`
+**Sealed content hash:** `f4e89ffbbb74be8d8fa527823d6e87ebd998c65e75a38488d8d48ac34ef3e835`  
+**Review:** `expert_review` / `self_review` by the named reviewer; academic status `approved`. See `content/physics/pilot/REVIEW_RECORD.md#independence-declaration`.
 
 **Prompt:**
 
@@ -123,7 +126,7 @@ The pilot uses **official marking-scheme verification**. Each answer was derived
 - Dimensions of Physical Quantities (`PHYS-MEA-DIMENSIONS`, primary, weight 1)
 - International System of Units (SI) (`PHYS-MEA-SI-UNITS`, supporting, weight 0.5)
 
-**Provenance:** `SL-DOE-AL-PHYS-2024-P1 Q1; AL_Physics_2024_Combined_Marking_Scheme_English.pdf p.5`. Reproduction status: `unapproved`. Import status: `blocked_pending_t12_verification_mode`.
+**Provenance:** `SL-DOE-AL-PHYS-2024-P1 Q1; AL_Physics_2024_Combined_Marking_Scheme_English.pdf p.5`. Reproduction status: `unapproved`. Import status: `ready_for_import`; approved by Malshani Perera for batch `T24-PHYS-PILOT-2026-11`.
 
 **Coverage note:** Covers dimensionless quantities and the distinction between a unit and a dimension; supports SI unit literacy.
 
@@ -133,7 +136,8 @@ The pilot uses **official marking-scheme verification**. Each answer was derived
 
 **Official key:** 1  
 **Derived key:** 1  
-**Sealed content hash:** `dd094c6c584f5e4013d80cd4587c864c56bdf26d62dd868218e4d4cacd4a6c1a`
+**Sealed content hash:** `a9f113027d7e50b7d4b77d6eba2ba7821d846741a5a55436a1ac7eed014683b3`  
+**Review:** `expert_review` / `self_review` by the named reviewer; academic status `approved`. See `content/physics/pilot/REVIEW_RECORD.md#independence-declaration`.
 
 **Prompt:**
 
@@ -160,7 +164,7 @@ The pilot uses **official marking-scheme verification**. Each answer was derived
 - Newton's Third Law of Motion (`PHYS-MEC-NEWTON3`, primary, weight 1)
 - Newton's Second Law of Motion (`PHYS-MEC-NEWTON2`, supporting, weight 0.3)
 
-**Provenance:** `SL-DOE-AL-PHYS-2024-P1 Q4; AL_Physics_2024_Combined_Marking_Scheme_English.pdf p.5`. Reproduction status: `unapproved`. Import status: `blocked_pending_t12_verification_mode`.
+**Provenance:** `SL-DOE-AL-PHYS-2024-P1 Q4; AL_Physics_2024_Combined_Marking_Scheme_English.pdf p.5`. Reproduction status: `unapproved`. Import status: `ready_for_import`; approved by Malshani Perera for batch `T24-PHYS-PILOT-2026-11`.
 
 **Coverage note:** Covers Newton's third law and distinguishes action-reaction pairs from balanced forces on one body.
 
@@ -170,7 +174,8 @@ The pilot uses **official marking-scheme verification**. Each answer was derived
 
 **Official key:** 5  
 **Derived key:** 5  
-**Sealed content hash:** `af45f74e608cf3336eec4ee4b4df59932ed959888d100a7fb29652d249bd2e85`
+**Sealed content hash:** `daddcd8e44eba36b773a1ec7002a7eb0e760cdca93e9088fe257398a297f880d`  
+**Review:** `expert_review` / `self_review` by the named reviewer; academic status `approved`. See `content/physics/pilot/REVIEW_RECORD.md#independence-declaration`.
 
 **Prompt:**
 
@@ -198,7 +203,7 @@ The pilot uses **official marking-scheme verification**. Each answer was derived
 - Kinetic Energy (`PHYS-MEC-KINETIC-ENERGY`, supporting, weight 0.7)
 - Principle of Conservation of Mechanical Energy (`PHYS-MEC-CONSERV-ENERGY`, supporting, weight 0.5)
 
-**Provenance:** `SL-DOE-AL-PHYS-2024-P1 Q5; AL_Physics_2024_Combined_Marking_Scheme_English.pdf p.5`. Reproduction status: `unapproved`. Import status: `blocked_pending_t12_verification_mode`.
+**Provenance:** `SL-DOE-AL-PHYS-2024-P1 Q5; AL_Physics_2024_Combined_Marking_Scheme_English.pdf p.5`. Reproduction status: `unapproved`. Import status: `ready_for_import`; approved by Malshani Perera for batch `T24-PHYS-PILOT-2026-11`.
 
 **Coverage note:** Covers momentum conservation and energy accounting in a perfectly inelastic collision.
 
@@ -210,7 +215,8 @@ The pilot uses **official marking-scheme verification**. Each answer was derived
 
 **Official key:** 5  
 **Derived key:** 5  
-**Sealed content hash:** `c3dd6d4b2b3a9835e8a13a22d51c25d821d8c5f2e3939c37d62196583f9f4582`
+**Sealed content hash:** `f21d837f269c83ef067e465d6552f64479f4f12a16763184a065a6b17fb6cc90`  
+**Review:** `expert_review` / `self_review` by the named reviewer; academic status `approved`. See `content/physics/pilot/REVIEW_RECORD.md#independence-declaration`.
 
 **Prompt:**
 
@@ -234,7 +240,7 @@ The pilot uses **official marking-scheme verification**. Each answer was derived
 - International System of Units (SI) (`PHYS-MEA-SI-UNITS`, supporting, weight 0.6)
 - Kinetic Energy (`PHYS-MEC-KINETIC-ENERGY`, supporting, weight 0.4)
 
-**Provenance:** `SL-DOE-AL-PHYS-2025-P1 Q1; AL_Physics_2025_Combined_Marking_Scheme_English.pdf p.2`. Reproduction status: `unapproved`. Import status: `blocked_pending_t12_verification_mode`.
+**Provenance:** `SL-DOE-AL-PHYS-2025-P1 Q1; AL_Physics_2025_Combined_Marking_Scheme_English.pdf p.2`. Reproduction status: `unapproved`. Import status: `ready_for_import`; approved by Malshani Perera for batch `T24-PHYS-PILOT-2026-11`.
 
 **Coverage note:** Covers energy-unit equivalences and links work, SI units and kinetic energy.
 
@@ -244,7 +250,8 @@ The pilot uses **official marking-scheme verification**. Each answer was derived
 
 **Official key:** 1  
 **Derived key:** 1  
-**Sealed content hash:** `8df91967b94b8e572d2ba2a0a75eb2ea9fd037e5f110c060b8027f1b31a6354c`
+**Sealed content hash:** `2c308ce5a9e6918fc8260e12350c3f2068aa9c7d32313eb791364161c8ea91c5`  
+**Review:** `expert_review` / `self_review` by the named reviewer; academic status `approved`. See `content/physics/pilot/REVIEW_RECORD.md#independence-declaration`.
 
 **Prompt:**
 
@@ -267,7 +274,7 @@ The pilot uses **official marking-scheme verification**. Each answer was derived
 - Simple Harmonic Motion (`PHYS-WAV-SHM`, primary, weight 1)
 - Acceleration (`PHYS-MEC-ACCELERATION`, supporting, weight 0.3)
 
-**Provenance:** `SL-DOE-AL-PHYS-2025-P1 Q3; AL_Physics_2025_Combined_Marking_Scheme_English.pdf p.2`. Reproduction status: `unapproved`. Import status: `blocked_pending_t12_verification_mode`.
+**Provenance:** `SL-DOE-AL-PHYS-2025-P1 Q3; AL_Physics_2025_Combined_Marking_Scheme_English.pdf p.2`. Reproduction status: `unapproved`. Import status: `ready_for_import`; approved by Malshani Perera for batch `T24-PHYS-PILOT-2026-11`.
 
 **Coverage note:** Covers the spring-mass period and its dependence on mass and stiffness.
 
@@ -279,7 +286,8 @@ The pilot uses **official marking-scheme verification**. Each answer was derived
 
 **Official key:** 5  
 **Derived key:** 5  
-**Sealed content hash:** `7cc1167628f5ecdfe2e7e2b117eb8d35e2e8ec66dab03489de39b298f08f9a70`
+**Sealed content hash:** `6ba2ea48f2c41e3cf22fb6e46dda47aa19bd3ed2af37822d6c4ace55c49b2261`  
+**Review:** `expert_review` / `self_review` by the named reviewer; academic status `approved`. See `content/physics/pilot/REVIEW_RECORD.md#independence-declaration`.
 
 **Prompt:**
 
@@ -303,6 +311,6 @@ The pilot uses **official marking-scheme verification**. Each answer was derived
 - Kinetic Energy (`PHYS-MEC-KINETIC-ENERGY`, supporting, weight 0.8)
 - Principle of Conservation of Mechanical Energy (`PHYS-MEC-CONSERV-ENERGY`, supporting, weight 0.4)
 
-**Provenance:** `SL-DOE-AL-PHYS-2025-P1 Q45; AL_Physics_2025_Combined_Marking_Scheme_English.pdf p.2`. Reproduction status: `unapproved`. Import status: `blocked_pending_t12_verification_mode`.
+**Provenance:** `SL-DOE-AL-PHYS-2025-P1 Q45; AL_Physics_2025_Combined_Marking_Scheme_English.pdf p.2`. Reproduction status: `unapproved`. Import status: `ready_for_import`; approved by Malshani Perera for batch `T24-PHYS-PILOT-2026-11`.
 
 **Coverage note:** Covers one-dimensional collisions and compares perfectly inelastic and perfectly elastic outcomes.

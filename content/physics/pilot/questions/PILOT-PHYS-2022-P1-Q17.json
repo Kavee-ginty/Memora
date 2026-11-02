@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "pilot_id": "PILOT-PHYS-2022-P1-Q17",
-  "verification_mode": "official_marking_scheme",
+  "verification_mode": "expert_review",
   "source": {
     "source_id": "SL-DOE-AL-PHYS-2022-P1",
     "source_type": "past_paper",
@@ -34,9 +34,9 @@
     "prompt": "The period of oscillation of a simple pendulum of length l is T. Suppose a simple pendulum of length 2l is hung from the ceiling of an elevator. What will be the period of oscillations of this pendulum if the elevator accelerates vertically upward at g/2?",
     "explanation": "The period of a simple pendulum is T = 2π√(l/g). For length 2l the period is √2 T. In an elevator accelerating upward at g/2, the effective gravitational acceleration is g + g/2 = 3g/2, so the period becomes 2π√(2l/(3g/2)) = 2T/√3.",
     "validation_status": "approved",
-    "author_principal": null,
-    "author_qualification_ref": null,
-    "reviewer_principal": null,
+    "author_principal": "a2400000-0000-4000-8000-000000000001",
+    "author_qualification_ref": "PostGraduate",
+    "reviewer_principal": "a2400000-0000-4000-8000-000000000001",
     "content": {
       "kind": "choice",
       "schema_version": "1",
@@ -90,43 +90,43 @@
         "learning_objective_id": "30000000-0000-0000-0000-000000000009",
         "mapping_role": "primary",
         "weight": 1.0,
-        "provenance_type": "source_analysis",
-        "provenance_ref": "SL-DOE-AL-PHYS-2022-P1:Q17:official-key-and-derivation"
+        "provenance_type": "pilot_review",
+        "provenance_ref": "content/physics/pilot/REVIEW_RECORD.md#pilot-phys-2022-p1-q17"
       },
       {
         "concept_version_id": "50000000-0000-0000-0000-000000000005",
         "learning_objective_id": "30000000-0000-0000-0000-000000000005",
         "mapping_role": "supporting",
         "weight": 0.5,
-        "provenance_type": "source_analysis",
-        "provenance_ref": "SL-DOE-AL-PHYS-2022-P1:Q17:official-key-and-derivation"
+        "provenance_type": "pilot_review",
+        "provenance_ref": "content/physics/pilot/REVIEW_RECORD.md#pilot-phys-2022-p1-q17"
       },
       {
         "concept_version_id": "50000000-0000-0000-0000-000000000008",
         "learning_objective_id": "30000000-0000-0000-0000-000000000006",
         "mapping_role": "supporting",
         "weight": 0.3,
-        "provenance_type": "source_analysis",
-        "provenance_ref": "SL-DOE-AL-PHYS-2022-P1:Q17:official-key-and-derivation"
+        "provenance_type": "pilot_review",
+        "provenance_ref": "content/physics/pilot/REVIEW_RECORD.md#pilot-phys-2022-p1-q17"
       }
     ]
   },
   "answer_verification": {
-    "mode": "official_marking_scheme",
+    "mode": "expert_review",
     "official_key": 4,
     "derived_option_key": "4",
     "matches_official_key": true,
     "derivation": "Original period: T = 2π√(l/g). New length 2l: T0 = 2π√(2l/g) = √2 T. Effective gravity in an upward-accelerating elevator: g_eff = g + a = g + g/2 = 3g/2. New period: T' = 2π√(2l/(3g/2)) = 2π√(4l/(3g)) = (2/√3) 2π√(l/g) = 2T/√3. Option 4. The official key is 4.",
     "official_key_source_ref": "SL-DOE-AL-PHYS-2022-P1 Q17; AL_Physics_2022_Combined_Marking_Scheme_English.pdf p.2",
-    "independent_review_status": "not_required",
-    "reviewer_ref": null,
-    "notes": "Answer verified against the printed official marking-scheme grid; no human reviewer identity is claimed."
+    "independent_review_status": "self_review",
+    "reviewer_ref": "content/physics/pilot/REVIEW_RECORD.md#pilot-phys-2022-p1-q17",
+    "notes": "Self-reviewed by the named pilot reviewer; the printed official marking-scheme grid remains the answer-key authority. See content/physics/pilot/REVIEW_RECORD.md."
   },
   "review": {
-    "review_mode": "official_marking_scheme",
-    "academic_review_status": "not_required",
-    "reviewer_principal": null,
-    "reviewer_qualification_ref": null,
+    "review_mode": "expert_review",
+    "academic_review_status": "approved",
+    "reviewer_principal": "a2400000-0000-4000-8000-000000000001",
+    "reviewer_qualification_ref": "PostGraduate",
     "review_scope": [
       "official_key_match",
       "derivation",
@@ -135,22 +135,22 @@
       "ambiguity",
       "duplicate"
     ],
-    "reviewed_at": "2026-11-02T00:00:00+00:00",
+    "reviewed_at": "2026-11-02T13:30:00+00:00",
     "ambiguity_status": "cleared",
     "ambiguity_note": null,
     "duplicate_status": "cleared",
     "coverage_note": "Covers the simple-pendulum period and effective gravity in an accelerating frame.",
-    "content_hash": "37baa78305f9a24403ef3b37e0d203fe5a3c6d18d05bceebc6a5e9672d694f39",
+    "content_hash": "f0526870c2e27ed13aa2dc8044343d8a22033da567a533c0a76e7dae5a47a9e8",
     "source_ref": "SL-DOE-AL-PHYS-2022-P1 Q17; AL_Physics_2022_Combined_Marking_Scheme_English.pdf p.2",
-    "independence_declaration_ref": null,
-    "deviation_ref": "content/physics/pilot/DEVIATION_REVIEW_MODE.md"
+    "independence_declaration_ref": "content/physics/pilot/REVIEW_RECORD.md#independence-declaration",
+    "deviation_ref": null
   },
   "publication": {
-    "approved_for_import": false,
-    "approved_by": null,
-    "approved_at": null,
-    "import_batch_id": null,
-    "import_status": "blocked_pending_t12_verification_mode",
-    "blocker_ref": "content/physics/pilot/DEVIATION_REVIEW_MODE.md#t12-import-gate"
+    "approved_for_import": true,
+    "approved_by": "Malshani Perera",
+    "approved_at": "2026-11-02T13:30:00+00:00",
+    "import_batch_id": "T24-PHYS-PILOT-2026-11",
+    "import_status": "ready_for_import",
+    "blocker_ref": null
   }
 }

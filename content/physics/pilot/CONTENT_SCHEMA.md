@@ -16,11 +16,13 @@ class.
 
 | Mode | Authority | Human identities | Import status |
 | --- | --- | --- | --- |
-| `official_marking_scheme` | Printed Department of Examinations Paper I answer grid | None | Blocked pending T12 support |
-| `expert_review` | Independent named reviewer plus the official key | Author, reviewer, qualification and independence references | Eligible for the existing T12 path |
+| `official_marking_scheme` | Printed Department of Examinations Paper I answer grid | None | Blocked pending T12 support; historical pilot mode |
+| `expert_review` | Named reviewer plus the official key; independent or explicit self-review | Author, reviewer, qualification and independence references | Eligible for the existing T12 path |
 
-The T24 content uses `official_marking_scheme`. The `expert_review` branch is
-retained for a future task that supplies real reviewer evidence.
+The active T24 bundle uses `expert_review`. The named reviewer recorded in
+`REVIEW_RECORD.md` approved all eight items as a self-review. The
+`official_marking_scheme` branch remains supported for historical or other
+official-key-only content.
 
 ## Envelope sections
 
@@ -64,9 +66,20 @@ matching content hash.
 
 The `expert_review` branch keeps the original T12-style evidence: non-null
 author and reviewer UUIDs, qualification references, an approved academic
-review, a verified answer review, an independence declaration and, when
+review, an answer review, an independence declaration and, when
 `publication.approved_for_import` is true, approval and batch evidence. The
 reviewer in `review` must match the reviewer in `question`.
+
+The answer review is one of:
+
+- `independent_review_status = "verified"` with distinct author and reviewer
+  principals; or
+- `independent_review_status = "self_review"` with the same author and reviewer
+  principal. The declaration must state that independence is not claimed.
+
+The validator rejects `verified` when the principals are equal and rejects
+`self_review` when they differ. This prevents the envelope from claiming an
+independent review that did not happen.
 
 ## Content hash
 
@@ -114,10 +127,19 @@ author and reviewer principals for an approved question, and the database
 trigger in `20261023_0005_question_bank_integrity.up.sql` enforces the same
 rule. `to_validated_import()` raises `pilot_import_blocked` for this mode.
 
-Opening the gate requires one of:
+Expert-review envelopes are importable. The active eight envelopes carry the
+same non-null pilot principal as author and reviewer because the review is a
+self-review, and the database trigger accepts that. The trigger is an
+identity-presence gate, not an independence test. The self-review limitation is
+recorded in `REVIEW_RECORD.md`; it is not hidden in the database field names.
 
-1. a T12 verification-mode extension that accepts official marking-scheme
-   evidence and records the deviation at import time; or
-2. real named author and reviewer evidence added to every envelope.
+The active publication state is:
 
-Neither change belongs to T24.
+```text
+approved_for_import = true
+import_status = "ready_for_import"
+import_batch_id = "T24-PHYS-PILOT-2026-11"
+```
+
+Official-mode import would still require a separate T12 mode decision and does
+not belong to T24.

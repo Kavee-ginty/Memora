@@ -285,12 +285,21 @@ This records the Section 6 checklist for T11. Pull request #37 was reviewed and 
 
 ### T24 review evidence
 
-T24 is in **Review**, not Done. The eight-item content bundle, concept brief,
-schema, validator, deterministic reports and focused tests are complete. The
-PRD 9.3 qualified-review clause is not satisfied: the pilot uses the recorded
-official marking-scheme deviation in
-`content/physics/pilot/DEVIATION_REVIEW_MODE.md`. T12 import remains blocked by
-the existing author/reviewer requirement and database trigger. Full evidence is
+T24 is in **Review**, not Done. Route A is complete on
+`task/T24-physics-content`: all eight envelopes use `expert_review`, record an
+explicit self-review by Malshani Perera (Physics Teacher, qualification reference
+`PostGraduate`) and are approved for import batch `T24-PHYS-PILOT-2026-11`. The
+reviewer is also the author. Independence is not claimed, and the qualification
+reference is self-declared and underspecified.
+
+The conversion changed review and publication metadata only; prompts, options,
+explanations, derivations, source references and concept/objective mappings were
+preserved. `content/physics/pilot/REVIEW_RECORD.md` records the declaration,
+per-item decisions and reviewed/sealed hashes. The real envelopes were imported
+through `QuestionImportRepository` into a disposable PostgreSQL database; all
+eight rows carry the same non-null author and reviewer principal and an approved
+version. T24 remains Review until the Route A changes are committed, the branch is
+merged and the merged content is reviewed as part of `develop`. Full evidence is
 in `docs/evidence/T24_Content_Evidence.md`.
 
 ## 7 Current next action
@@ -300,9 +309,11 @@ T24 is in Review. T18, T19 and T21 are Ready. T14, T15, T22 and T23 remain
 Blocked until T13 is Done; later tasks remain blocked until all listed
 dependencies are Done.
 
-T24's next action is project review of the marking-scheme deviation and the
-remaining qualified-review/import gate. Do not mark T24 Done or import the
-envelopes until that gate is resolved.
+T24's next action is user commit, push, pull request and merge of the Route A
+changes. Do not mark T24 Done until that merge occurs. The qualified-review record
+is a self-review, and the qualification reference still lacks degree,
+institution, year and subject-specialisation evidence.
+
 
 T20 completed through pull request #38, merged into `develop` at `a243e79`. All required CI checks passed. Its successors were recalculated: T21 is Ready because T07 and T20 are Done; T23 and T25 remain Blocked by their other incomplete dependencies.
 

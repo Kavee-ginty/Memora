@@ -303,7 +303,10 @@
           "answer_verification": {
             "properties": {
               "independent_review_status": {
-                "const": "verified"
+                "enum": [
+                  "verified",
+                  "self_review"
+                ]
               },
               "reviewer_ref": {
                 "type": "string",
@@ -863,7 +866,8 @@
             "not_required",
             "pending",
             "verified",
-            "rejected"
+            "rejected",
+            "self_review"
           ]
         },
         "reviewer_ref": {

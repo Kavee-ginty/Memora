@@ -88,25 +88,28 @@ def test_every_mapping_resolves_to_a_t08_concept_and_objective() -> None:
             concept = concepts[str(mapping["concept_version_id"])]
             objective = objectives[str(mapping["learning_objective_id"])]
             assert objective["objective_code"] == concept["objective_code"]
-            assert mapping["provenance_type"] in {"analyst_mapping", "source_analysis"}
-            assert mapping["provenance_ref"].startswith(
-                f"SL-DOE-AL-PHYS-{envelope['source']['exam_year']}-P1"
-            )
+            assert mapping["provenance_type"] == "pilot_review"
+            assert mapping["provenance_ref"].startswith("content/physics/pilot/REVIEW_RECORD.md#")
             assert 0 <= mapping["weight"] <= 1
 
 
-def test_official_mode_envelopes_do_not_claim_human_review() -> None:
+def test_expert_mode_envelopes_record_the_self_review_honestly() -> None:
     for envelope in envelopes():
-        assert envelope["verification_mode"] == "official_marking_scheme"
-        assert envelope["question"]["author_principal"] is None
-        assert envelope["question"]["reviewer_principal"] is None
-        assert envelope["answer_verification"]["independent_review_status"] == "not_required"
-        assert envelope["review"]["academic_review_status"] == "not_required"
-        assert envelope["review"]["reviewer_principal"] is None
+        assert envelope["verification_mode"] == "expert_review"
+        assert envelope["question"]["author_principal"] is not None
         assert (
-            envelope["review"]["deviation_ref"] == "content/physics/pilot/DEVIATION_REVIEW_MODE.md"
+            envelope["question"]["author_principal"]
+            == envelope["question"]["reviewer_principal"]
+            == envelope["review"]["reviewer_principal"]
         )
-        assert envelope["publication"]["approved_for_import"] is False
+        assert envelope["answer_verification"]["independent_review_status"] == "self_review"
+        assert envelope["review"]["academic_review_status"] == "approved"
+        assert envelope["review"]["independence_declaration_ref"] == (
+            "content/physics/pilot/REVIEW_RECORD.md#independence-declaration"
+        )
+        assert envelope["review"]["deviation_ref"] is None
+        assert envelope["publication"]["approved_for_import"] is True
+        assert envelope["publication"]["import_status"] == "ready_for_import"
 
 
 def test_source_excerpts_are_short_enough_to_be_questions_not_papers() -> None:

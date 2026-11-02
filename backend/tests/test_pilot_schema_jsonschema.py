@@ -11,6 +11,7 @@ from pilot_fixtures import (
     REVIEWER_ID,
     expert_envelope,
     official_envelope,
+    self_review_envelope,
 )
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -50,6 +51,10 @@ def test_official_marking_scheme_envelope_matches_the_schema() -> None:
 
 def test_expert_review_envelope_matches_the_schema() -> None:
     assert_valid(expert_envelope())
+
+
+def test_self_review_envelope_matches_the_schema() -> None:
+    assert_valid(self_review_envelope())
 
 
 def test_missing_top_level_sections_are_rejected() -> None:
