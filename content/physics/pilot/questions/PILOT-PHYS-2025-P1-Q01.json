@@ -1,0 +1,156 @@
+{
+  "schema_version": "2.0",
+  "pilot_id": "PILOT-PHYS-2025-P1-Q01",
+  "verification_mode": "official_marking_scheme",
+  "source": {
+    "source_id": "SL-DOE-AL-PHYS-2025-P1",
+    "source_type": "past_paper",
+    "document_filename": "AL_Physics_2025_Combined_Paper_English.pdf",
+    "document_sha256": "6572aead08a0cc5fd9feed0db0a3e56fc2c125fca8fccb7e178a2c59729bae49",
+    "exam_year": 2025,
+    "exam_label": "2025",
+    "paper": "Paper I",
+    "question_number": 1,
+    "pdf_page": 1,
+    "medium": "English",
+    "marking_scheme_document": "AL_Physics_2025_Combined_Marking_Scheme_English.pdf",
+    "marking_scheme_sha256": "39d58f8f5a272614b984f78156663e0fe1bb9afc0461013989e7e50df18fceb3",
+    "marking_scheme_pdf_page": 2,
+    "official_key": 5,
+    "official_key_status": "verified_against_marking_scheme",
+    "transcription_status": "verified_visual",
+    "text_only_adaptation": false,
+    "transcription_note": null,
+    "reproduction_status": "unapproved",
+    "licence_note": "Department of Examinations past paper. Reproduction permission is not recorded; this short excerpt is retained only for the internal T24 pilot and is not cleared for redistribution."
+  },
+  "question": {
+    "question_code": "pilot-phys-2025-p1-q01",
+    "subject_id": "10000000-0000-0000-0000-000000000001",
+    "curriculum_version_id": "20000000-0000-0000-0000-000000000001",
+    "source_class": "expert_verified",
+    "target_source_class": "expert_verified",
+    "question_type": "mcq",
+    "prompt": "Which one below does not represent the unit of energy?",
+    "explanation": "The joule is kg m² s⁻². A watt-second (W s) and a kilowatt-hour (kW h) are energy units; V A s = W s is also energy. C V s⁻¹ = (C V) s⁻¹ = J s⁻¹ = W, which is power, not energy.",
+    "validation_status": "approved",
+    "author_principal": null,
+    "author_qualification_ref": null,
+    "reviewer_principal": null,
+    "content": {
+      "kind": "choice",
+      "schema_version": "1",
+      "selection_mode": "single"
+    },
+    "options": [
+      {
+        "option_key": "1",
+        "display_text": "kg m² s⁻²",
+        "is_correct": false,
+        "display_order": 0
+      },
+      {
+        "option_key": "2",
+        "display_text": "W s",
+        "is_correct": false,
+        "display_order": 1
+      },
+      {
+        "option_key": "3",
+        "display_text": "kW h",
+        "is_correct": false,
+        "display_order": 2
+      },
+      {
+        "option_key": "4",
+        "display_text": "V A s",
+        "is_correct": false,
+        "display_order": 3
+      },
+      {
+        "option_key": "5",
+        "display_text": "C V s⁻¹",
+        "is_correct": true,
+        "display_order": 4
+      }
+    ],
+    "rubric": {
+      "rubric_type": "exact",
+      "max_score": 1,
+      "evidence_ceiling": 0.9,
+      "status": "approved",
+      "payload": {
+        "kind": "exact",
+        "schema_version": "1"
+      }
+    },
+    "concept_mappings": [
+      {
+        "concept_version_id": "50000000-0000-0000-0000-000000000010",
+        "learning_objective_id": "30000000-0000-0000-0000-000000000007",
+        "mapping_role": "primary",
+        "weight": 1.0,
+        "provenance_type": "source_analysis",
+        "provenance_ref": "SL-DOE-AL-PHYS-2025-P1:Q1:official-key-and-derivation"
+      },
+      {
+        "concept_version_id": "50000000-0000-0000-0000-000000000001",
+        "learning_objective_id": "30000000-0000-0000-0000-000000000002",
+        "mapping_role": "supporting",
+        "weight": 0.6,
+        "provenance_type": "source_analysis",
+        "provenance_ref": "SL-DOE-AL-PHYS-2025-P1:Q1:official-key-and-derivation"
+      },
+      {
+        "concept_version_id": "50000000-0000-0000-0000-000000000011",
+        "learning_objective_id": "30000000-0000-0000-0000-000000000007",
+        "mapping_role": "supporting",
+        "weight": 0.4,
+        "provenance_type": "source_analysis",
+        "provenance_ref": "SL-DOE-AL-PHYS-2025-P1:Q1:official-key-and-derivation"
+      }
+    ]
+  },
+  "answer_verification": {
+    "mode": "official_marking_scheme",
+    "official_key": 5,
+    "derived_option_key": "5",
+    "matches_official_key": true,
+    "derivation": "1 J = 1 kg m^2 s^-2. W s = J. kW h = 3.6 x 10^6 J. V A = W, so V A s = J. C V = J, so C V s^-1 = J s^-1 = W. Therefore option 5 is a unit of power, not energy. The official key is 5.",
+    "official_key_source_ref": "SL-DOE-AL-PHYS-2025-P1 Q1; AL_Physics_2025_Combined_Marking_Scheme_English.pdf p.2",
+    "independent_review_status": "not_required",
+    "reviewer_ref": null,
+    "notes": "Answer verified against the printed official marking-scheme grid; no human reviewer identity is claimed."
+  },
+  "review": {
+    "review_mode": "official_marking_scheme",
+    "academic_review_status": "not_required",
+    "reviewer_principal": null,
+    "reviewer_qualification_ref": null,
+    "review_scope": [
+      "official_key_match",
+      "derivation",
+      "transcription",
+      "curriculum_mapping",
+      "ambiguity",
+      "duplicate"
+    ],
+    "reviewed_at": "2026-11-02T00:00:00+00:00",
+    "ambiguity_status": "cleared",
+    "ambiguity_note": null,
+    "duplicate_status": "cleared",
+    "coverage_note": "Covers energy-unit equivalences and links work, SI units and kinetic energy.",
+    "content_hash": "c3dd6d4b2b3a9835e8a13a22d51c25d821d8c5f2e3939c37d62196583f9f4582",
+    "source_ref": "SL-DOE-AL-PHYS-2025-P1 Q1; AL_Physics_2025_Combined_Marking_Scheme_English.pdf p.2",
+    "independence_declaration_ref": null,
+    "deviation_ref": "content/physics/pilot/DEVIATION_REVIEW_MODE.md"
+  },
+  "publication": {
+    "approved_for_import": false,
+    "approved_by": null,
+    "approved_at": null,
+    "import_batch_id": null,
+    "import_status": "blocked_pending_t12_verification_mode",
+    "blocker_ref": "content/physics/pilot/DEVIATION_REVIEW_MODE.md#t12-import-gate"
+  }
+}

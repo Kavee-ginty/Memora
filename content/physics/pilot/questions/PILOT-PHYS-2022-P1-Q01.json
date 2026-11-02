@@ -1,0 +1,148 @@
+{
+  "schema_version": "2.0",
+  "pilot_id": "PILOT-PHYS-2022-P1-Q01",
+  "verification_mode": "official_marking_scheme",
+  "source": {
+    "source_id": "SL-DOE-AL-PHYS-2022-P1",
+    "source_type": "past_paper",
+    "document_filename": "AL_Physics_2022_Combined_Paper_English.pdf",
+    "document_sha256": "931347c30d9c96068ae3df9e6d0db62f05c903f1a2abdb268a9a0e6bdb9956dc",
+    "exam_year": 2022,
+    "exam_label": "2022(2023)",
+    "paper": "Paper I",
+    "question_number": 1,
+    "pdf_page": 1,
+    "medium": "English",
+    "marking_scheme_document": "AL_Physics_2022_Combined_Marking_Scheme_English.pdf",
+    "marking_scheme_sha256": "52b42bcdf22ce9f6cc8c071d0cd6ba3c6f9082183d455d4fe43ef29143ee2ca7",
+    "marking_scheme_pdf_page": 2,
+    "official_key": 4,
+    "official_key_status": "verified_against_marking_scheme",
+    "transcription_status": "verified_visual",
+    "text_only_adaptation": false,
+    "transcription_note": null,
+    "reproduction_status": "unapproved",
+    "licence_note": "Department of Examinations past paper. Reproduction permission is not recorded; this short excerpt is retained only for the internal T24 pilot and is not cleared for redistribution."
+  },
+  "question": {
+    "question_code": "pilot-phys-2022-p1-q01",
+    "subject_id": "10000000-0000-0000-0000-000000000001",
+    "curriculum_version_id": "20000000-0000-0000-0000-000000000001",
+    "source_class": "expert_verified",
+    "target_source_class": "expert_verified",
+    "question_type": "mcq",
+    "prompt": "Which one of the following pairs of quantities consists of a vector and a scalar, respectively?",
+    "explanation": "Force is a vector and potential energy is a scalar. In the other pairs the order is either scalar-vector (Mass, Velocity), scalar-scalar (Power, Speed; Work, Distance), or vector-vector (Momentum, Torque).",
+    "validation_status": "approved",
+    "author_principal": null,
+    "author_qualification_ref": null,
+    "reviewer_principal": null,
+    "content": {
+      "kind": "choice",
+      "schema_version": "1",
+      "selection_mode": "single"
+    },
+    "options": [
+      {
+        "option_key": "1",
+        "display_text": "Mass, Velocity",
+        "is_correct": false,
+        "display_order": 0
+      },
+      {
+        "option_key": "2",
+        "display_text": "Power, Speed",
+        "is_correct": false,
+        "display_order": 1
+      },
+      {
+        "option_key": "3",
+        "display_text": "Work, Distance",
+        "is_correct": false,
+        "display_order": 2
+      },
+      {
+        "option_key": "4",
+        "display_text": "Force, Potential Energy",
+        "is_correct": true,
+        "display_order": 3
+      },
+      {
+        "option_key": "5",
+        "display_text": "Momentum, Torque",
+        "is_correct": false,
+        "display_order": 4
+      }
+    ],
+    "rubric": {
+      "rubric_type": "exact",
+      "max_score": 1,
+      "evidence_ceiling": 0.9,
+      "status": "approved",
+      "payload": {
+        "kind": "exact",
+        "schema_version": "1"
+      }
+    },
+    "concept_mappings": [
+      {
+        "concept_version_id": "50000000-0000-0000-0000-000000000006",
+        "learning_objective_id": "30000000-0000-0000-0000-000000000006",
+        "mapping_role": "primary",
+        "weight": 1.0,
+        "provenance_type": "source_analysis",
+        "provenance_ref": "SL-DOE-AL-PHYS-2022-P1:Q1:official-key-and-derivation"
+      },
+      {
+        "concept_version_id": "50000000-0000-0000-0000-000000000012",
+        "learning_objective_id": "30000000-0000-0000-0000-000000000007",
+        "mapping_role": "supporting",
+        "weight": 0.7,
+        "provenance_type": "source_analysis",
+        "provenance_ref": "SL-DOE-AL-PHYS-2022-P1:Q1:official-key-and-derivation"
+      }
+    ]
+  },
+  "answer_verification": {
+    "mode": "official_marking_scheme",
+    "official_key": 4,
+    "derived_option_key": "4",
+    "matches_official_key": true,
+    "derivation": "Check the requested order (vector, scalar): (1) mass scalar, velocity vector -> reversed; (2) power scalar, speed scalar -> both scalar; (3) work scalar, distance scalar -> both scalar; (4) force vector, potential energy scalar -> correct; (5) momentum vector, torque vector -> both vector. Option 4. The official key is 4.",
+    "official_key_source_ref": "SL-DOE-AL-PHYS-2022-P1 Q1; AL_Physics_2022_Combined_Marking_Scheme_English.pdf p.2",
+    "independent_review_status": "not_required",
+    "reviewer_ref": null,
+    "notes": "Answer verified against the printed official marking-scheme grid; no human reviewer identity is claimed."
+  },
+  "review": {
+    "review_mode": "official_marking_scheme",
+    "academic_review_status": "not_required",
+    "reviewer_principal": null,
+    "reviewer_qualification_ref": null,
+    "review_scope": [
+      "official_key_match",
+      "derivation",
+      "transcription",
+      "curriculum_mapping",
+      "ambiguity",
+      "duplicate"
+    ],
+    "reviewed_at": "2026-11-02T00:00:00+00:00",
+    "ambiguity_status": "cleared",
+    "ambiguity_note": null,
+    "duplicate_status": "cleared",
+    "coverage_note": "Covers vector/scalar classification using momentum and potential energy as examples.",
+    "content_hash": "68fcec6747d61017fdb8931167e07708cd6708bc46adea8943ad0ff135614839",
+    "source_ref": "SL-DOE-AL-PHYS-2022-P1 Q1; AL_Physics_2022_Combined_Marking_Scheme_English.pdf p.2",
+    "independence_declaration_ref": null,
+    "deviation_ref": "content/physics/pilot/DEVIATION_REVIEW_MODE.md"
+  },
+  "publication": {
+    "approved_for_import": false,
+    "approved_by": null,
+    "approved_at": null,
+    "import_batch_id": null,
+    "import_status": "blocked_pending_t12_verification_mode",
+    "blocker_ref": "content/physics/pilot/DEVIATION_REVIEW_MODE.md#t12-import-gate"
+  }
+}

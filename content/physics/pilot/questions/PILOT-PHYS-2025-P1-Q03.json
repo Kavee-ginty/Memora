@@ -1,0 +1,148 @@
+{
+  "schema_version": "2.0",
+  "pilot_id": "PILOT-PHYS-2025-P1-Q03",
+  "verification_mode": "official_marking_scheme",
+  "source": {
+    "source_id": "SL-DOE-AL-PHYS-2025-P1",
+    "source_type": "past_paper",
+    "document_filename": "AL_Physics_2025_Combined_Paper_English.pdf",
+    "document_sha256": "6572aead08a0cc5fd9feed0db0a3e56fc2c125fca8fccb7e178a2c59729bae49",
+    "exam_year": 2025,
+    "exam_label": "2025",
+    "paper": "Paper I",
+    "question_number": 3,
+    "pdf_page": 1,
+    "medium": "English",
+    "marking_scheme_document": "AL_Physics_2025_Combined_Marking_Scheme_English.pdf",
+    "marking_scheme_sha256": "39d58f8f5a272614b984f78156663e0fe1bb9afc0461013989e7e50df18fceb3",
+    "marking_scheme_pdf_page": 2,
+    "official_key": 1,
+    "official_key_status": "verified_against_marking_scheme",
+    "transcription_status": "verified_visual",
+    "text_only_adaptation": false,
+    "transcription_note": null,
+    "reproduction_status": "unapproved",
+    "licence_note": "Department of Examinations past paper. Reproduction permission is not recorded; this short excerpt is retained only for the internal T24 pilot and is not cleared for redistribution."
+  },
+  "question": {
+    "question_code": "pilot-phys-2025-p1-q03",
+    "subject_id": "10000000-0000-0000-0000-000000000001",
+    "curriculum_version_id": "20000000-0000-0000-0000-000000000001",
+    "source_class": "expert_verified",
+    "target_source_class": "expert_verified",
+    "question_type": "mcq",
+    "prompt": "A spring-mass system oscillates with period T. If the length of the spring is halved and the mass is reduced to half of its initial mass, what will be the new period?",
+    "explanation": "For a spring of stiffness k, T = 2π√(m/k). Halving the natural length doubles the stiffness, and halving the mass gives T' = 2π√((m/2)/(2k)) = T/2.",
+    "validation_status": "approved",
+    "author_principal": null,
+    "author_qualification_ref": null,
+    "reviewer_principal": null,
+    "content": {
+      "kind": "choice",
+      "schema_version": "1",
+      "selection_mode": "single"
+    },
+    "options": [
+      {
+        "option_key": "1",
+        "display_text": "T/2",
+        "is_correct": true,
+        "display_order": 0
+      },
+      {
+        "option_key": "2",
+        "display_text": "T/√2",
+        "is_correct": false,
+        "display_order": 1
+      },
+      {
+        "option_key": "3",
+        "display_text": "T",
+        "is_correct": false,
+        "display_order": 2
+      },
+      {
+        "option_key": "4",
+        "display_text": "√2 T",
+        "is_correct": false,
+        "display_order": 3
+      },
+      {
+        "option_key": "5",
+        "display_text": "2T",
+        "is_correct": false,
+        "display_order": 4
+      }
+    ],
+    "rubric": {
+      "rubric_type": "exact",
+      "max_score": 1,
+      "evidence_ceiling": 0.9,
+      "status": "approved",
+      "payload": {
+        "kind": "exact",
+        "schema_version": "1"
+      }
+    },
+    "concept_mappings": [
+      {
+        "concept_version_id": "50000000-0000-0000-0000-000000000014",
+        "learning_objective_id": "30000000-0000-0000-0000-000000000009",
+        "mapping_role": "primary",
+        "weight": 1.0,
+        "provenance_type": "source_analysis",
+        "provenance_ref": "SL-DOE-AL-PHYS-2025-P1:Q3:official-key-and-derivation"
+      },
+      {
+        "concept_version_id": "50000000-0000-0000-0000-000000000005",
+        "learning_objective_id": "30000000-0000-0000-0000-000000000005",
+        "mapping_role": "supporting",
+        "weight": 0.3,
+        "provenance_type": "source_analysis",
+        "provenance_ref": "SL-DOE-AL-PHYS-2025-P1:Q3:official-key-and-derivation"
+      }
+    ]
+  },
+  "answer_verification": {
+    "mode": "official_marking_scheme",
+    "official_key": 1,
+    "derived_option_key": "1",
+    "matches_official_key": true,
+    "derivation": "Let the original spring have natural length L, stiffness k and mass m: T = 2π√(m/k). A spring of the same material and coil geometry cut to L/2 has k' = 2k because stiffness is inversely proportional to natural length. With m' = m/2, T' = 2π√(m'/k') = 2π√((m/2)/(2k)) = 2π√(m/(4k)) = (1/2) 2π√(m/k) = T/2. Option 1. The official key is 1.",
+    "official_key_source_ref": "SL-DOE-AL-PHYS-2025-P1 Q3; AL_Physics_2025_Combined_Marking_Scheme_English.pdf p.2",
+    "independent_review_status": "not_required",
+    "reviewer_ref": null,
+    "notes": "Answer verified against the printed official marking-scheme grid; no human reviewer identity is claimed."
+  },
+  "review": {
+    "review_mode": "official_marking_scheme",
+    "academic_review_status": "not_required",
+    "reviewer_principal": null,
+    "reviewer_qualification_ref": null,
+    "review_scope": [
+      "official_key_match",
+      "derivation",
+      "transcription",
+      "curriculum_mapping",
+      "ambiguity",
+      "duplicate"
+    ],
+    "reviewed_at": "2026-11-02T00:00:00+00:00",
+    "ambiguity_status": "cleared",
+    "ambiguity_note": "The phrase 'length of the spring' could be read as the extension or amplitude rather than the natural length. The official key 1 selects the natural-length interpretation, under which halving the length doubles the stiffness. The verbatim prompt is retained and this residual wording risk is recorded rather than rewritten.",
+    "duplicate_status": "cleared",
+    "coverage_note": "Covers the spring-mass period and its dependence on mass and stiffness.",
+    "content_hash": "8df91967b94b8e572d2ba2a0a75eb2ea9fd037e5f110c060b8027f1b31a6354c",
+    "source_ref": "SL-DOE-AL-PHYS-2025-P1 Q3; AL_Physics_2025_Combined_Marking_Scheme_English.pdf p.2",
+    "independence_declaration_ref": null,
+    "deviation_ref": "content/physics/pilot/DEVIATION_REVIEW_MODE.md"
+  },
+  "publication": {
+    "approved_for_import": false,
+    "approved_by": null,
+    "approved_at": null,
+    "import_batch_id": null,
+    "import_status": "blocked_pending_t12_verification_mode",
+    "blocker_ref": "content/physics/pilot/DEVIATION_REVIEW_MODE.md#t12-import-gate"
+  }
+}
