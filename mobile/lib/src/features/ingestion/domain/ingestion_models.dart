@@ -159,6 +159,37 @@ enum PreviewBlockReason {
 /// What the student chose to do with one candidate (API §12).
 enum VerificationDecisionKind { accept, edit, reject, merge }
 
+/// Protected local draft for pasted text (Flow §9.1, D8).
+///
+/// The draft holds only the subject, the manual text and the learning time.
+/// File bytes and picked-file paths are never part of this model.
+@immutable
+class IngestionDraft {
+  final String subjectId;
+  final String manualText;
+  final DateTime learnedAt;
+
+  const IngestionDraft({
+    required this.subjectId,
+    required this.manualText,
+    required this.learnedAt,
+  });
+
+  bool get isEmpty => manualText.trim().isEmpty;
+
+  IngestionDraft copyWith({
+    String? subjectId,
+    String? manualText,
+    DateTime? learnedAt,
+  }) {
+    return IngestionDraft(
+      subjectId: subjectId ?? this.subjectId,
+      manualText: manualText ?? this.manualText,
+      learnedAt: learnedAt ?? this.learnedAt,
+    );
+  }
+}
+
 /// Server-side stage that a failed update can retry (API §11.1).
 enum IngestionRetryStage { extraction, deletion }
 
@@ -410,10 +441,7 @@ class FirstMissionInfo {
   final String missionId;
   final String status;
 
-  const FirstMissionInfo({
-    required this.missionId,
-    required this.status,
-  });
+  const FirstMissionInfo({required this.missionId, required this.status});
 }
 
 /// Authoritative result of an idempotent commit (API §12).
