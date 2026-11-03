@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:memora_api_client/memora_api_client.dart';
 import 'package:memora_mobile/src/features/ingestion/data/ingestion_error_mapper.dart';
 import 'package:memora_mobile/src/features/ingestion/domain/ingestion_failure.dart';
 

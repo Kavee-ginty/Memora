@@ -159,6 +159,85 @@ enum PreviewBlockReason {
 /// What the student chose to do with one candidate (API §12).
 enum VerificationDecisionKind { accept, edit, reject, merge }
 
+/// Server-side stage that a failed update can retry (API §11.1).
+enum IngestionRetryStage { extraction, deletion }
+
+/// One file the client declares before requesting an upload grant (API §11.1).
+///
+/// The checksum and size are computed from the exact bytes before the grant is
+/// requested; the bytes themselves are never persisted by the client.
+@immutable
+class DeclaredSource {
+  final String declaredName;
+  final String declaredMediaType;
+  final int byteSize;
+  final String contentSha256;
+
+  const DeclaredSource({
+    required this.declaredName,
+    required this.declaredMediaType,
+    required this.byteSize,
+    required this.contentSha256,
+  });
+}
+
+/// Short-lived, single-purpose permission to upload one temporary source
+/// object (API §11.2).
+@immutable
+class UploadGrant {
+  final String uploadId;
+  final String url;
+
+  /// HTTP method the storage endpoint accepts. The client only proceeds for
+  /// `PUT`; any other value is treated as an unsupported grant.
+  final String method;
+  final Map<String, String> requiredHeaders;
+  final int maxBytes;
+
+  /// Null when the server value could not be parsed. The upload client refuses
+  /// to start without a usable expiry.
+  final DateTime? expiresAt;
+  final String checksumRule;
+
+  UploadGrant({
+    required this.uploadId,
+    required this.url,
+    required this.method,
+    required Map<String, String> requiredHeaders,
+    required this.maxBytes,
+    required this.expiresAt,
+    required this.checksumRule,
+  }) : requiredHeaders = Map<String, String>.unmodifiable(requiredHeaders);
+}
+
+/// One page of the student's learning updates (API §5.2).
+@immutable
+class UpdatePage {
+  final List<UpdateSnapshot> items;
+  final bool hasMore;
+  final String? nextCursor;
+
+  const UpdatePage({
+    required this.items,
+    required this.hasMore,
+    this.nextCursor,
+  });
+}
+
+/// One page of extraction candidates (API §5.2).
+@immutable
+class CandidatePage {
+  final List<CandidateItem> items;
+  final bool hasMore;
+  final String? nextCursor;
+
+  const CandidatePage({
+    required this.items,
+    required this.hasMore,
+    this.nextCursor,
+  });
+}
+
 /// One temporary source upload shown in the source list.
 @immutable
 class SourceItem {
@@ -277,7 +356,8 @@ class CandidateItem {
   });
 
   /// Uncertain candidates must be resolved before preview can commit.
-  bool get needsReview => requiresVerification || status == needsVerification;
+  bool get needsReview =>
+      requiresVerification || status == CandidateState.needsVerification;
 }
 
 /// One concept in the learning-path preview (API §12).
@@ -404,4 +484,13 @@ class DecisionOutcome {
     required this.state,
     required this.requiresVerification,
   });
+}
+
+/// Authoritative result of submitting one batch of verification decisions.
+@immutable
+class VerificationOutcome {
+  final UpdateSnapshot update;
+  final List<DecisionOutcome> outcomes;
+
+  const VerificationOutcome({required this.update, required this.outcomes});
 }
