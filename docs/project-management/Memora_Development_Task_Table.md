@@ -42,7 +42,7 @@ If two sources appear inconsistent, stop implementation and resolve the conflict
 | T07 | Auth bootstrap mobile and guarded routes | **Done** | Ginodh | 5 | T03, T05, T06 | `task/T07-mobile-auth-routes` | Mobile navigation |
 | T08 | Curriculum and knowledge graph seed | **Done** | Dima | 5 | T04, T05 | `task/T08-curriculum-graph` | Data and knowledge |
 | T09 | Learning ingestion backend | **Done** | Dasun | 7 | T05, T06, T08 | `task/T09-ingestion-backend` | API and worker |
-| T10 | Learning ingestion mobile | **In Progress** | Dasun | 6 | T07, T09 | `task/T10-ingestion-mobile` | Mobile feature |
+| T10 | Learning ingestion mobile | **Review** | Dasun | 6 | T07, T09 | `task/T10-ingestion-mobile` | Mobile feature |
 | T11 | Memory engine v1 | **Done** | Dasun | 7 | T08 | `task/T11-memory-engine` | Learning engine |
 | T12 | Question bank and grading backend | **Done** | Neleesha | 7 | T08, T05 | `task/T12-questions-grading` | Backend learning |
 | T13 | Mission assembly and completion backend | **In Progress** | Ginodh | 7 | T06, T11, T12 | `task/T13-mission-backend` | Backend learning |
