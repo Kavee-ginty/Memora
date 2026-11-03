@@ -198,6 +198,8 @@ class _MaterialStatusBodyState extends State<_MaterialStatusBody> {
     final message = failure == null
         ? 'Memora could not load this material.'
         : _failureCopy(failure);
+    // The persistent offline banner already offers the retry action.
+    final canRetry = !state.isOffline;
 
     return ListView(
       padding: const EdgeInsets.symmetric(vertical: MemoraSpacing.space24),
@@ -230,8 +232,13 @@ class _MaterialStatusBodyState extends State<_MaterialStatusBody> {
             ],
           ),
         ),
-        const SizedBox(height: MemoraSpacing.space16),
-        MemoraButton(label: 'Try again', onPressed: widget.controller.refresh),
+        if (canRetry) ...<Widget>[
+          const SizedBox(height: MemoraSpacing.space16),
+          MemoraButton(
+            label: 'Try again',
+            onPressed: widget.controller.refresh,
+          ),
+        ],
         const SizedBox(height: MemoraSpacing.space8),
         MemoraButton(
           label: 'Back to Learning',

@@ -213,6 +213,8 @@ class _VerifyConceptsBodyState extends State<_VerifyConceptsBody> {
 
   Widget _buildLoadFailure(BuildContext context) {
     final failure = _state.failure;
+    // The persistent offline banner already offers the retry action.
+    final canRetry = !_state.isOffline && (failure?.retryable ?? true);
     return ListView(
       padding: const EdgeInsets.symmetric(vertical: MemoraSpacing.space24),
       children: <Widget>[
@@ -222,10 +224,8 @@ class _VerifyConceptsBodyState extends State<_VerifyConceptsBody> {
           message: failure == null
               ? 'Something went wrong. Please try again.'
               : _failureCopy(failure),
-          actionLabel: (failure?.retryable ?? true) ? 'Try again' : null,
-          onAction: (failure?.retryable ?? true)
-              ? widget.controller.refresh
-              : null,
+          actionLabel: canRetry ? 'Try again' : null,
+          onAction: canRetry ? widget.controller.refresh : null,
         ),
         const SizedBox(height: MemoraSpacing.space16),
         MemoraButton(

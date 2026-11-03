@@ -248,7 +248,8 @@ void main() {
     expect(find.text("You're offline"), findsOneWidget);
     expect(find.text('Could not load this material'), findsOneWidget);
     expect(find.text(_offline.message), findsWidgets);
-    expect(find.widgetWithText(MemoraButton, 'Try again'), findsOneWidget);
+    expect(find.widgetWithText(TextButton, 'Try again'), findsOneWidget);
+    expect(find.widgetWithText(MemoraButton, 'Try again'), findsNothing);
     expect(find.text('Back to Learning'), findsOneWidget);
     expect(find.text('Home'), findsOneWidget);
 
