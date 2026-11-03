@@ -81,6 +81,31 @@ UpdateSnapshot _updateSnapshot({
   );
 }
 
+List<CandidateItem> _candidates() {
+  return const <CandidateItem>[
+    CandidateItem(
+      id: 'candidate-high',
+      candidateType: 'concept',
+      displayTitle: 'Newton first law',
+      confidence: 0.94,
+      band: ConfidenceBand.high,
+      requiresVerification: false,
+      status: CandidateState.accepted,
+      candidateVersion: 1,
+    ),
+    CandidateItem(
+      id: 'candidate-review',
+      candidateType: 'concept',
+      displayTitle: 'Ohm law',
+      confidence: 0.62,
+      band: ConfidenceBand.medium,
+      requiresVerification: true,
+      status: CandidateState.needsVerification,
+      candidateVersion: 1,
+    ),
+  ];
+}
+
 void main() {
   group('Add-material route guard', () {
     test('an owned subject may open the add-material destination', () {
@@ -382,26 +407,68 @@ void main() {
       },
     );
 
-    testWidgets('verify and preview placeholders hide the bottom nav', (
+    testWidgets(
+      'the verify route renders the screen and hides the bottom nav',
+      (tester) async {
+        tester.view.physicalSize = const Size(800, 1600);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+
+        mockIngestion.seedUpdate(
+          _updateSnapshot(state: LearningUpdateState.verificationRequired),
+          candidates: _candidates(),
+        );
+        await tester.pumpWidget(createTestApp());
+        await tester.pumpAndSettle();
+
+        await goTo(tester, AppRoutes.verifyConceptsPath(_updateId));
+
+        expect(find.text('Verify concepts'), findsOneWidget);
+        expect(find.text('Review the concepts Memora found'), findsOneWidget);
+        expect(find.text('Newton first law'), findsOneWidget);
+        expect(find.text('Ohm law'), findsOneWidget);
+        expect(find.text('Preview learning path'), findsOneWidget);
+        expect(find.text('Back to status'), findsNothing);
+        expect(find.text('Home'), findsNothing);
+
+        await goTo(tester, AppRoutes.pathPreviewPath(_updateId));
+
+        expect(find.text('Learning path preview'), findsOneWidget);
+        expect(find.text('Back to status'), findsOneWidget);
+        expect(find.text('Home'), findsNothing);
+      },
+    );
+
+    testWidgets('a verify route in the wrong state redirects to status', (
       tester,
     ) async {
       mockIngestion.seedUpdate(
-        _updateSnapshot(state: LearningUpdateState.verificationRequired),
+        _updateSnapshot(state: LearningUpdateState.committed),
+        candidates: _candidates(),
       );
       await tester.pumpWidget(createTestApp());
       await tester.pumpAndSettle();
 
       await goTo(tester, AppRoutes.verifyConceptsPath(_updateId));
 
-      expect(find.text('Verify concepts'), findsOneWidget);
-      expect(find.text('Back to status'), findsOneWidget);
-      expect(find.text('Home'), findsNothing);
+      expect(find.text('Material status'), findsOneWidget);
+      expect(find.text('Learning path ready'), findsOneWidget);
+      expect(find.text('Verify concepts'), findsNothing);
+      expect(find.text('Home'), findsOneWidget);
+    });
 
-      await goTo(tester, AppRoutes.pathPreviewPath(_updateId));
+    testWidgets('a malformed verify id never reaches the repository', (
+      tester,
+    ) async {
+      await tester.pumpWidget(createTestApp());
+      await tester.pumpAndSettle();
 
-      expect(find.text('Learning path preview'), findsOneWidget);
-      expect(find.text('Back to status'), findsOneWidget);
-      expect(find.text('Home'), findsNothing);
+      await goTo(tester, '/learning/updates/not-a-uuid/verify');
+
+      expect(find.text('We could not find that page'), findsOneWidget);
+      expect(find.text('Verify concepts'), findsNothing);
+      expect(mockIngestion.operations, isEmpty);
     });
   });
 }

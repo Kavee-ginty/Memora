@@ -21,6 +21,7 @@ import '../features/consent/presentation/consent_review_screen.dart';
 import '../features/home/presentation/home_screen.dart';
 import '../features/ingestion/presentation/add_material_screen.dart';
 import '../features/ingestion/presentation/material_status_screen.dart';
+import '../features/ingestion/presentation/verify_concepts_screen.dart';
 import '../features/learning/presentation/learning_path_screen.dart';
 import '../features/profile/presentation/profile_entry_screen.dart';
 import '../features/progress/presentation/progress_entry_screen.dart';
@@ -184,20 +185,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.verifyConcepts,
         name: 'verifyConcepts',
-        pageBuilder: (context, state) {
-          final updateId = state.pathParameters['updateId'] ?? '';
-          return _buildPage(
-            context,
-            state,
-            AuthorizedPlaceholderScreen(
-              title: 'Verify concepts',
-              message:
-                  'Reviewing extracted concepts is the next step in this flow.',
-              backLabel: 'Back to status',
-              backPath: AppRoutes.materialStatusPath(updateId),
-            ),
-          );
-        },
+        pageBuilder: (context, state) => _buildPage(
+          context,
+          state,
+          VerifyConceptsScreen(updateId: state.pathParameters['updateId']),
+        ),
       ),
       GoRoute(
         path: AppRoutes.pathPreview,

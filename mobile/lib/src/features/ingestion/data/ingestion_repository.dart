@@ -576,7 +576,9 @@ class MemoraIngestionRepository implements IngestionRepository {
         _confidenceBandWire(candidate.confidenceBand),
       ),
       requiresVerification: candidate.requiresVerification,
-      status: CandidateState.fromWireName(_candidateStatusWire(candidate.status)),
+      status: CandidateState.fromWireName(
+        _candidateStatusWire(candidate.status),
+      ),
       candidateVersion: candidate.candidateVersion,
     );
   }
@@ -685,17 +687,15 @@ class MemoraIngestionRepository implements IngestionRepository {
 
   String _confidenceBandWire(CandidateResponseConfidenceBandEnum value) =>
       standardSerializers.serializeWith(
-            CandidateResponseConfidenceBandEnum.serializer,
-            value,
-          )
-          as String;
+        CandidateResponseConfidenceBandEnum.serializer,
+        value,
+      ) as String;
 
   String _grantMethodWire(UploadGrantResponseMethodEnum value) =>
       standardSerializers.serializeWith(
-            UploadGrantResponseMethodEnum.serializer,
-            value,
-          )
-          as String;
+        UploadGrantResponseMethodEnum.serializer,
+        value,
+      ) as String;
 
   DateTime? _parseDate(String? value) {
     if (value == null || value.isEmpty) return null;
@@ -744,7 +744,8 @@ class MockIngestionRepository implements IngestionRepository {
   final Map<String, VerificationOutcome> _decisionsByKey =
       <String, VerificationOutcome>{};
   final Map<String, CommitOutcome> _commitsByKey = <String, CommitOutcome>{};
-  final Map<String, CommitOutcome> _committedByUpdate = <String, CommitOutcome>{};
+  final Map<String, CommitOutcome> _committedByUpdate =
+      <String, CommitOutcome>{};
 
   /// Ordered log of operations the screens triggered.
   final List<IngestionOperation> operations = <IngestionOperation>[];
@@ -1044,12 +1045,14 @@ class MockIngestionRepository implements IngestionRepository {
 
     // Source deletion is independent of the retained update's state, so
     // cleanup recovery must also work for a committed update (D9).
-    final retriable = update.uploads.where((upload) {
-      return upload.deletedAt == null &&
-          (upload.status == SourceUploadState.deleting ||
-              upload.status == SourceUploadState.expired ||
-              upload.status == SourceUploadState.rejected);
-    }).toList(growable: false);
+    final retriable = update.uploads
+        .where((upload) {
+          return upload.deletedAt == null &&
+              (upload.status == SourceUploadState.deleting ||
+                  upload.status == SourceUploadState.expired ||
+                  upload.status == SourceUploadState.rejected);
+        })
+        .toList(growable: false);
     if (retriable.isEmpty) throw _invalidState();
 
     final now = DateTime.now().toUtc();
@@ -1147,19 +1150,23 @@ class MockIngestionRepository implements IngestionRepository {
         VerificationDecisionKind.accept => _copyCandidate(
           candidate,
           status: CandidateState.accepted,
+          requiresVerification: false,
         ),
         VerificationDecisionKind.reject => _copyCandidate(
           candidate,
           status: CandidateState.rejected,
+          requiresVerification: false,
         ),
         VerificationDecisionKind.edit => _copyCandidate(
           candidate,
           displayTitle: decision.editedTitle?.trim(),
           status: CandidateState.accepted,
+          requiresVerification: false,
         ),
         VerificationDecisionKind.merge => _copyCandidate(
           candidate,
           status: CandidateState.accepted,
+          requiresVerification: false,
         ),
       };
       nextCandidates[index] = updated;
@@ -1425,8 +1432,7 @@ class MockIngestionRepository implements IngestionRepository {
       createdAt: update.createdAt,
       updatedAt: updatedAt ?? update.updatedAt,
       rowVersion: rowVersion ?? update.rowVersion,
-      sourceDeletionStatus:
-          sourceDeletionStatus ?? update.sourceDeletionStatus,
+      sourceDeletionStatus: sourceDeletionStatus ?? update.sourceDeletionStatus,
       uploads: uploads ?? update.uploads,
     );
   }
@@ -1455,6 +1461,7 @@ class MockIngestionRepository implements IngestionRepository {
     CandidateItem candidate, {
     String? displayTitle,
     CandidateState? status,
+    bool? requiresVerification,
   }) {
     return CandidateItem(
       id: candidate.id,
@@ -1464,7 +1471,8 @@ class MockIngestionRepository implements IngestionRepository {
       sourceContext: candidate.sourceContext,
       confidence: candidate.confidence,
       band: candidate.band,
-      requiresVerification: candidate.requiresVerification,
+      requiresVerification:
+          requiresVerification ?? candidate.requiresVerification,
       status: status ?? candidate.status,
       candidateVersion: candidate.candidateVersion,
     );
