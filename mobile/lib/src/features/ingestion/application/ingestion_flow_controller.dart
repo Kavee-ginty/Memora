@@ -540,25 +540,49 @@ class IngestionFlowController extends StateNotifier<IngestionFlowState> {
       if (!mounted) return;
 
       if (state.updateId == null) {
-        final snapshot = await repository.createUpdate(
-          accessToken: token,
-          subjectId: state.subjectId,
-          inputType: _inputType,
-          learnedAt: state.learnedAt,
-          clientOperationId: await _operationKey(accountId, 'create_operation'),
-          idempotencyKey: await _operationKey(accountId, 'create'),
-          manualText: state.manualText.trim().isEmpty ? null : state.manualText,
-          files: prepared.values
-              .map((upload) => upload.declaration)
-              .toList(growable: false),
-        );
-        if (!mounted) return;
-        state = state.copyWith(
-          updateId: snapshot.id,
-          rowVersion: snapshot.rowVersion,
-          updateState: snapshot.state,
-          isLocked: snapshot.state != LearningUpdateState.draft,
-        );
+        try {
+          final snapshot = await repository.createUpdate(
+            accessToken: token,
+            subjectId: state.subjectId,
+            inputType: _inputType,
+            learnedAt: state.learnedAt,
+            clientOperationId: await _operationKey(accountId, 'create_operation'),
+            idempotencyKey: await _operationKey(accountId, 'create'),
+            manualText: state.manualText.trim().isEmpty ? null : state.manualText,
+            files: prepared.values
+                .map((upload) => upload.declaration)
+                .toList(growable: false),
+          );
+          if (!mounted) return;
+          state = state.copyWith(
+            updateId: snapshot.id,
+            rowVersion: snapshot.rowVersion,
+            updateState: snapshot.state,
+            isLocked: snapshot.state != LearningUpdateState.draft,
+          );
+        } on IngestionFailure catch (failure) {
+          if (failure.code != 'idempotency_key_reused') rethrow;
+          // The durable create identity collided with a changed body —
+          // possible when a process died between the server processing the
+          // create and this client restoring its state. Drop the stale
+          // identity so the next attempt starts a fresh update; the abandoned
+          // row expires server-side. The local draft is preserved (UIX-033).
+          await draftStore.clearOperationKey(
+            accountId: accountId,
+            operation: 'create',
+          );
+          await draftStore.clearOperationKey(
+            accountId: accountId,
+            operation: 'create_operation',
+          );
+          if (!mounted) return;
+          state = state.copyWith(
+            stage: IngestionFlowStage.editing,
+            failure: failure,
+            isOffline: false,
+          );
+          return;
+        }
       }
 
       final updateId = state.updateId;
@@ -869,9 +893,12 @@ class IngestionFlowController extends StateNotifier<IngestionFlowState> {
     required String accountId,
   }) async {
     final sha = upload.declaration.contentSha256;
-    final grantOperation = 'grant:$sha';
-    final finalizeOperation = 'finalize:$sha';
-    final finalizeClientOperation = 'finalize_operation:$sha';
+    // Keys are scoped per update and file so the same file can be attached to
+    // different updates without ever reusing one identity with a different
+    // body (D4, FLOW-002).
+    final grantOperation = 'grant:$updateId:$sha';
+    final finalizeOperation = 'finalize:$updateId:$sha';
+    final finalizeClientOperation = 'finalize_operation:$updateId:$sha';
 
     try {
       _updateSource(
@@ -960,6 +987,24 @@ class IngestionFlowController extends StateNotifier<IngestionFlowState> {
       );
     } on IngestionFailure catch (failure) {
       if (!mounted) return;
+      if (failure.code == 'idempotency_key_reused') {
+        // A durable key collided with a different body. Drop the stale keys so
+        // the retry issues a fresh single-purpose grant; finalize converges
+        // server-side per upload (D4).
+        await draftStore.clearOperationKey(
+          accountId: accountId,
+          operation: grantOperation,
+        );
+        await draftStore.clearOperationKey(
+          accountId: accountId,
+          operation: finalizeOperation,
+        );
+        await draftStore.clearOperationKey(
+          accountId: accountId,
+          operation: finalizeClientOperation,
+        );
+        if (!mounted) return;
+      }
       _updateSource(
         source.id,
         (current) =>

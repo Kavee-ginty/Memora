@@ -25,6 +25,7 @@ class IngestionDraftStore {
 
   static const String _draftPrefix = 'memora_ingestion_draft';
   static const String _operationsPrefix = 'memora_ingestion_operations';
+  static const String _decisionsPrefix = 'memora_ingestion_decisions';
 
   static final RegExp _uuidPattern = RegExp(
     r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-'
@@ -39,6 +40,12 @@ class IngestionDraftStore {
   @visibleForTesting
   static String operationsStorageKey(String accountId) =>
       '$_operationsPrefix:$accountId';
+
+  /// Storage key for [accountId]'s unsent verification decisions. Exposed for
+  /// tests.
+  @visibleForTesting
+  static String decisionsStorageKey(String accountId) =>
+      '$_decisionsPrefix:$accountId';
 
   /// Reads the protected draft for [accountId], or null when none is stored.
   ///
@@ -148,13 +155,182 @@ class IngestionDraftStore {
     await _keyStore.delete(operationsStorageKey(accountId));
   }
 
-  /// Clears the draft and every operation key for [accountId].
+  /// Reads the persisted, unsent verification decisions for [accountId],
+  /// keyed by update id.
+  ///
+  /// Decisions survive navigation and process death so concept edits persist
+  /// through ordinary interruptions (UIX-033). Invalid entries are dropped;
+  /// a malformed record is deleted and treated as absent.
+  Future<Map<String, Map<String, DecisionDraft>>> readDecisionDrafts(
+    String accountId,
+  ) async {
+    _requireAccount(accountId);
+    final storageKey = decisionsStorageKey(accountId);
+    final record = await _readRecord(storageKey);
+    if (record == null) return <String, Map<String, DecisionDraft>>{};
+
+    if (record['schema_version'] != schemaVersion) {
+      await _discard(storageKey);
+      return <String, Map<String, DecisionDraft>>{};
+    }
+
+    final raw = record['updates'];
+    if (raw is! Map) {
+      await _discard(storageKey);
+      return <String, Map<String, DecisionDraft>>{};
+    }
+
+    final updates = <String, Map<String, DecisionDraft>>{};
+    var changed = false;
+    for (final entry in raw.entries) {
+      final updateId = entry.key;
+      if (updateId is! String || !_uuidPattern.hasMatch(updateId)) {
+        changed = true;
+        continue;
+      }
+      final drafts = <String, DecisionDraft>{};
+      final items = entry.value is Map ? (entry.value as Map)['drafts'] : null;
+      if (items is List) {
+        for (final item in items) {
+          final draft = _decodeDecisionDraft(item);
+          if (draft == null) {
+            changed = true;
+            continue;
+          }
+          drafts[draft.candidateId] = draft;
+        }
+      } else {
+        changed = true;
+      }
+      if (drafts.isNotEmpty) updates[updateId] = drafts;
+    }
+
+    if (changed) {
+      await _writeDecisionDrafts(storageKey, updates);
+    }
+    return updates;
+  }
+
+  /// Persists the unsent decisions of one update for [accountId], replacing
+  /// that update's entry. An empty [drafts] map removes the entry.
+  Future<void> saveDecisionDrafts({
+    required String accountId,
+    required String updateId,
+    required Map<String, DecisionDraft> drafts,
+  }) async {
+    _requireAccount(accountId);
+    _requireUpdateId(updateId);
+
+    final storageKey = decisionsStorageKey(accountId);
+    final updates = await readDecisionDrafts(accountId);
+    if (drafts.isEmpty) {
+      if (!updates.containsKey(updateId)) return;
+      updates.remove(updateId);
+    } else {
+      updates[updateId] = Map<String, DecisionDraft>.of(drafts);
+    }
+    await _writeDecisionDrafts(storageKey, updates);
+  }
+
+  /// Removes the persisted decisions of one update for [accountId].
+  Future<void> clearDecisionDrafts({
+    required String accountId,
+    required String updateId,
+  }) async {
+    await saveDecisionDrafts(
+      accountId: accountId,
+      updateId: updateId,
+      drafts: const <String, DecisionDraft>{},
+    );
+  }
+
+  Map<String, dynamic>? _encodeDecisionDraft(DecisionDraft draft) {
+    if (!draft.isValid) return null;
+    return <String, dynamic>{
+      'candidate_id': draft.candidateId,
+      'candidate_version': draft.candidateVersion,
+      'kind': draft.kind.name,
+      if (draft.editedTitle != null) 'edited_title': draft.editedTitle,
+      if (draft.mergeIntoCandidateId != null)
+        'merge_into_candidate_id': draft.mergeIntoCandidateId,
+    };
+  }
+
+  DecisionDraft? _decodeDecisionDraft(Object? item) {
+    if (item is! Map) return null;
+    final candidateId = item['candidate_id'];
+    final candidateVersion = item['candidate_version'];
+    final kindRaw = item['kind'];
+    if (candidateId is! String ||
+        candidateId.trim().isEmpty ||
+        candidateVersion is! int ||
+        kindRaw is! String) {
+      return null;
+    }
+
+    final VerificationDecisionKind kind;
+    try {
+      kind = VerificationDecisionKind.values.byName(kindRaw);
+    } catch (_) {
+      return null;
+    }
+
+    final editedTitle = item['edited_title'];
+    final mergeInto = item['merge_into_candidate_id'];
+    final draft = DecisionDraft(
+      candidateId: candidateId,
+      candidateVersion: candidateVersion,
+      kind: kind,
+      editedTitle: editedTitle is String ? editedTitle : null,
+      mergeIntoCandidateId: mergeInto is String ? mergeInto : null,
+    );
+    // Reject entries the API contract would reject so a persisted draft can
+    // never block a submit.
+    return draft.isValid ? draft : null;
+  }
+
+  Future<void> _writeDecisionDrafts(
+    String storageKey,
+    Map<String, Map<String, DecisionDraft>> updates,
+  ) async {
+    if (updates.isEmpty) {
+      await _keyStore.delete(storageKey);
+      return;
+    }
+
+    final encoded = <String, Map<String, dynamic>>{};
+    for (final entry in updates.entries) {
+      final drafts = <Map<String, dynamic>>[];
+      for (final draft in entry.value.values) {
+        final json = _encodeDecisionDraft(draft);
+        if (json != null) drafts.add(json);
+      }
+      if (drafts.isNotEmpty) {
+        encoded[entry.key] = <String, dynamic>{'drafts': drafts};
+      }
+    }
+
+    if (encoded.isEmpty) {
+      await _keyStore.delete(storageKey);
+      return;
+    }
+
+    final record = jsonEncode(<String, dynamic>{
+      'schema_version': schemaVersion,
+      'updates': encoded,
+    });
+    await _keyStore.write(storageKey, record);
+  }
+
+  /// Clears the draft, every operation key and every unsent decision record
+  /// for [accountId].
   ///
   /// Called on discard, successful commit and sign-out (D8).
   Future<void> clearAccount(String accountId) async {
     _requireAccount(accountId);
     await _keyStore.delete(draftStorageKey(accountId));
     await _keyStore.delete(operationsStorageKey(accountId));
+    await _keyStore.delete(decisionsStorageKey(accountId));
   }
 
   Future<Map<String, dynamic>?> _readRecord(String storageKey) async {
@@ -249,6 +425,16 @@ class IngestionDraftStore {
         operation,
         'operation',
         'An operation name is required.',
+      );
+    }
+  }
+
+  void _requireUpdateId(String updateId) {
+    if (!_uuidPattern.hasMatch(updateId)) {
+      throw ArgumentError.value(
+        updateId,
+        'updateId',
+        'A canonical update id is required.',
       );
     }
   }

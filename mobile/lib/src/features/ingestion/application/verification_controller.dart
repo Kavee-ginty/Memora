@@ -328,7 +328,46 @@ class VerificationController extends StateNotifier<VerificationState> {
     state = state.copyWith(
       drafts: Map<String, DecisionDraft>.unmodifiable(next),
     );
+    unawaited(_persistDrafts());
   }
+
+  /// Best-effort persistence of the unsent decisions for this update so edits
+  /// survive navigation and process death (UIX-033).
+  ///
+  /// Storage failures never surface: the in-memory map stays authoritative for
+  /// the live screen, and a failed save only loses the restore-after-restart
+  /// convenience.
+  Future<void> _persistDrafts() async {
+    final accountId = _accountId;
+    if (accountId == null) return;
+    try {
+      await draftStore.saveDecisionDrafts(
+        accountId: accountId,
+        updateId: updateId,
+        drafts: state.drafts,
+      );
+    } catch (_) {
+      // Best-effort persistence only; never break the review flow on it.
+    }
+  }
+
+  Future<void> _forgetPersistedDrafts() async {
+    final accountId = _accountId;
+    if (accountId == null) return;
+    try {
+      await draftStore.clearDecisionDrafts(
+        accountId: accountId,
+        updateId: updateId,
+      );
+    } catch (_) {
+      // Same best-effort contract as _persistDrafts.
+    }
+  }
+
+  /// Test seam: completes the best-effort persistence write so tests can
+  /// assert on the durable copy without racing the unawaited save.
+  @visibleForTesting
+  Future<void> flushPersistedDraftsForTest() => _persistDrafts();
 
   /// Submits every local decision in one idempotent batch, then reports whether
   /// the screen may open the learning-path preview.
@@ -389,6 +428,9 @@ class VerificationController extends StateNotifier<VerificationState> {
         lockedCandidateIds: const <String>{},
         clearFailure: true,
       );
+      // The submitted decisions now live server-side; persist only what is
+      // still local so a restart restores the truth.
+      await _persistDrafts();
       return true;
     } on IngestionFailure catch (failure) {
       if (!mounted) return false;
@@ -451,6 +493,7 @@ class VerificationController extends StateNotifier<VerificationState> {
       if (!mounted || requestId != _requestId) return;
 
       if (update.state != LearningUpdateState.verificationRequired) {
+        await _forgetPersistedDrafts();
         state = state.copyWith(
           stage: VerificationStage.invalidState,
           update: update,
@@ -469,17 +512,60 @@ class VerificationController extends StateNotifier<VerificationState> {
       );
       if (!mounted || requestId != _requestId) return;
 
-      final drafts = preserveDrafts
-          ? _reconcileDrafts(state.candidates, page.items, state.drafts)
-          : const <String, DecisionDraft>{};
+      // A conflict reload must not silently drop decisions for candidates that
+      // live beyond the first page (UIX-033): fetch further pages until every
+      // preserved decision's candidate is present or pagination is exhausted.
+      final items = List<CandidateItem>.of(page.items);
+      var hasMore = page.hasMore;
+      var cursor = page.nextCursor;
+      if (preserveDrafts && state.drafts.isNotEmpty) {
+        final missing = state.drafts.keys
+            .where((id) => !items.any((candidate) => candidate.id == id))
+            .toSet();
+        var guard = 0;
+        while (missing.isNotEmpty && hasMore && guard < 20) {
+          guard += 1;
+          final next = await repository.listCandidates(
+            accessToken: token,
+            updateId: updateId,
+            cursor: cursor,
+            limit: pageSize,
+          );
+          if (!mounted || requestId != _requestId) return;
+          items.addAll(next.items);
+          hasMore = next.hasMore;
+          cursor = next.nextCursor;
+          missing.removeWhere(
+            (id) => items.any((candidate) => candidate.id == id),
+          );
+        }
+      }
+
+      Map<String, DecisionDraft> drafts;
+      if (preserveDrafts) {
+        // The in-memory decisions are authoritative here: every mutation was
+        // persisted as it happened, so the store never holds more than the
+        // reconciled map. Reconciling alone decides what survives (a dropped
+        // stale edit must not be resurrected from the store).
+        drafts = _validateHydratedDrafts(
+          _reconcileDrafts(state.candidates, items, state.drafts),
+          items,
+        );
+      } else {
+        // Fresh controller life: restore persisted decisions so edits survive
+        // process death (UIX-033).
+        drafts = _validateHydratedDrafts(await _readPersistedDrafts(), items);
+      }
+
       state = VerificationState(
         stage: VerificationStage.ready,
         update: update,
-        candidates: List<CandidateItem>.unmodifiable(page.items),
+        candidates: List<CandidateItem>.unmodifiable(items),
         drafts: Map<String, DecisionDraft>.unmodifiable(drafts),
-        hasMore: page.hasMore,
-        nextCursor: page.nextCursor,
+        hasMore: hasMore,
+        nextCursor: cursor,
       );
+      if (preserveDrafts) await _persistDrafts();
     } on IngestionFailure catch (failure) {
       if (!mounted || requestId != _requestId) return;
       await _handleLoadFailure(failure);
@@ -488,6 +574,7 @@ class VerificationController extends StateNotifier<VerificationState> {
 
   Future<void> _handleLoadFailure(IngestionFailure failure) async {
     if (failure.code == 'resource_not_found') {
+      await _forgetPersistedDrafts();
       state = state.copyWith(
         stage: VerificationStage.notFound,
         isRefreshing: false,
@@ -533,6 +620,7 @@ class VerificationController extends StateNotifier<VerificationState> {
       drafts: Map<String, DecisionDraft>.unmodifiable(next),
       clearConflictNotice: true,
     );
+    unawaited(_persistDrafts());
   }
 
   List<DecisionDraft> _decisions() {
@@ -596,6 +684,61 @@ class VerificationController extends StateNotifier<VerificationState> {
           );
         })
         .toList(growable: false);
+  }
+
+  /// Reads the persisted decisions of this update, tolerating storage
+  /// failures the same way as [_persistDrafts].
+  Future<Map<String, DecisionDraft>> _readPersistedDrafts() async {
+    final accountId = _accountId;
+    if (accountId == null) return const <String, DecisionDraft>{};
+    try {
+      final updates = await draftStore.readDecisionDrafts(accountId);
+      return updates[updateId] ?? const <String, DecisionDraft>{};
+    } catch (_) {
+      return const <String, DecisionDraft>{};
+    }
+  }
+
+  /// Revalidates loaded decisions against the current candidate list: drafts
+  /// for resolved or vanished candidates are dropped, visible candidates
+  /// adopt their current version, and merge drafts whose visible target is
+  /// gone are dropped (same rules as [_reconcileDrafts]).
+  Map<String, DecisionDraft> _validateHydratedDrafts(
+    Map<String, DecisionDraft> drafts,
+    List<CandidateItem> candidates,
+  ) {
+    if (drafts.isEmpty) return drafts;
+
+    final byId = <String, CandidateItem>{
+      for (final candidate in candidates) candidate.id: candidate,
+    };
+
+    final validated = <String, DecisionDraft>{};
+    for (final entry in drafts.entries) {
+      final candidate = byId[entry.key];
+      final draft = entry.value;
+      if (candidate == null || !candidate.needsReview || !draft.isValid) {
+        continue;
+      }
+
+      if (draft.kind == VerificationDecisionKind.merge) {
+        final target = byId[draft.mergeIntoCandidateId];
+        if (target != null &&
+            (target.status == CandidateState.rejected ||
+                target.status == CandidateState.expired)) {
+          continue;
+        }
+      }
+
+      validated[entry.key] = DecisionDraft(
+        candidateId: entry.key,
+        candidateVersion: candidate.candidateVersion,
+        kind: draft.kind,
+        editedTitle: draft.editedTitle,
+        mergeIntoCandidateId: draft.mergeIntoCandidateId,
+      );
+    }
+    return validated;
   }
 
   /// Keeps a local decision only when the refreshed candidate is still open and
@@ -903,6 +1046,11 @@ class PathPreviewController extends StateNotifier<PathPreviewState> {
         operation: _commitOperation,
       );
       await draftStore.clearDraft(accountId);
+      // Committed knowledge needs no unsent decisions anymore.
+      await draftStore.clearDecisionDrafts(
+        accountId: accountId,
+        updateId: updateId,
+      );
       if (!mounted) return false;
 
       state = state.copyWith(
