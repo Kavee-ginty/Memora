@@ -655,10 +655,438 @@ class VerificationController extends StateNotifier<VerificationState> {
   }
 }
 
+/// Which layer of the learning-path preview screen owns the presentation.
+enum PathPreviewStage {
+  /// The authoritative update and preview are loading.
+  loading,
+
+  /// The path can be reviewed, and commit may or may not be allowed.
+  ready,
+
+  /// The material is already part of the learning path.
+  committed,
+
+  /// The first read failed before a preview could be shown.
+  failed,
+
+  /// The update does not exist for this account (indistinguishable 404).
+  notFound,
+
+  /// The update is not previewable (D13). The screen returns to status.
+  invalidState,
+}
+
+/// Immutable state of the learning-path preview step (UI/UX §9.11, D11).
+@immutable
+class PathPreviewState {
+  final PathPreviewStage stage;
+  final UpdateSnapshot? update;
+  final PathPreview? preview;
+
+  /// Present after this screen performed the commit, or after a replay.
+  final CommitOutcome? outcome;
+
+  /// Resolved from the session bootstrap for the preview summary.
+  final String? subjectName;
+  final IngestionFailure? failure;
+  final bool isOffline;
+  final bool isRefreshing;
+  final bool isCommitting;
+
+  /// Explains a refresh after the material changed or was already committed.
+  final String? notice;
+
+  const PathPreviewState({
+    this.stage = PathPreviewStage.loading,
+    this.update,
+    this.preview,
+    this.outcome,
+    this.subjectName,
+    this.failure,
+    this.isOffline = false,
+    this.isRefreshing = false,
+    this.isCommitting = false,
+    this.notice,
+  });
+
+  bool get isLoading => stage == PathPreviewStage.loading;
+
+  bool get isNotFound => stage == PathPreviewStage.notFound;
+
+  bool get isInvalidState => stage == PathPreviewStage.invalidState;
+
+  bool get isCommitted => stage == PathPreviewStage.committed;
+
+  /// The number of concepts that are part of, or will join, the path.
+  int get conceptCount =>
+      outcome?.conceptMappings.length ?? preview?.conceptCount ?? 0;
+
+  /// Bounded list shown on the preview and ready states.
+  List<PreviewConcept> get firstConcepts {
+    final concepts =
+        outcome?.conceptMappings ?? preview?.firstConcepts ?? const [];
+    return concepts.take(5).toList(growable: false);
+  }
+
+  int? get estimatedFirstMissionMinutes =>
+      preview?.estimatedFirstMissionMinutes;
+
+  FirstMissionInfo? get firstMission => outcome?.firstMission;
+
+  /// Source deletion is deliberately separate from retained knowledge (D9).
+  SourceDeletionStatus get deletionStatus {
+    final committed = outcome;
+    if (committed != null) return committed.sourceDeletionStatus;
+
+    final snapshot = update;
+    if (snapshot == null) return SourceDeletionStatus.notRequired;
+    if (snapshot.sourceDeletionStatus != SourceDeletionStatus.notRequired) {
+      return snapshot.sourceDeletionStatus;
+    }
+    for (final upload in snapshot.uploads) {
+      if (upload.deletionStatus != SourceDeletionStatus.notRequired) {
+        return upload.deletionStatus;
+      }
+    }
+    return SourceDeletionStatus.notRequired;
+  }
+
+  /// A short, human-readable source name for the summary.
+  String? get sourceName {
+    final snapshot = update;
+    if (snapshot == null) return null;
+    final uploads = snapshot.uploads;
+    if (uploads.isEmpty) {
+      return snapshot.hasManualText ? 'Typed notes' : null;
+    }
+    final first = uploads.first.declaredName;
+    return uploads.length == 1 ? first : '$first + ${uploads.length - 1} more';
+  }
+
+  /// Why commit is unavailable, in approved student-facing copy.
+  String? get blockedReasonCopy {
+    final value = preview;
+    if (value == null || value.canCommit) return null;
+    // A committed path is already added; no blocked explanation applies.
+    if (stage == PathPreviewStage.committed) return null;
+    return switch (value.blockedReason) {
+      PreviewBlockReason.verificationPending =>
+        'Some concepts still need a check. Go back to verify them before '
+            'adding this path.',
+      PreviewBlockReason.noValidConcept =>
+        'No concepts are ready to add. Edit the concepts to keep at least one.',
+      PreviewBlockReason.invalidState =>
+        'This material is not ready to add right now.',
+      PreviewBlockReason.unknown =>
+        'This learning path cannot be added right now. Refresh to check again.',
+      null => 'Refresh to check whether this learning path can be added.',
+    };
+  }
+
+  bool get canCommit =>
+      stage == PathPreviewStage.ready &&
+      !isCommitting &&
+      !isOffline &&
+      (preview?.canCommit ?? false);
+
+  String? get commitDisabledReason {
+    if (stage != PathPreviewStage.ready) return null;
+    if (isOffline) return 'Reconnect to add this learning path.';
+    final value = preview;
+    if (value == null) return null;
+    if (!value.canCommit) return blockedReasonCopy;
+    return null;
+  }
+
+  PathPreviewState copyWith({
+    PathPreviewStage? stage,
+    UpdateSnapshot? update,
+    PathPreview? preview,
+    CommitOutcome? outcome,
+    String? subjectName,
+    IngestionFailure? failure,
+    bool clearFailure = false,
+    bool? isOffline,
+    bool? isRefreshing,
+    bool? isCommitting,
+    String? notice,
+    bool clearNotice = false,
+  }) {
+    return PathPreviewState(
+      stage: stage ?? this.stage,
+      update: update ?? this.update,
+      preview: preview ?? this.preview,
+      outcome: outcome ?? this.outcome,
+      subjectName: subjectName ?? this.subjectName,
+      failure: clearFailure ? null : (failure ?? this.failure),
+      isOffline: isOffline ?? this.isOffline,
+      isRefreshing: isRefreshing ?? this.isRefreshing,
+      isCommitting: isCommitting ?? this.isCommitting,
+      notice: clearNotice ? null : (notice ?? this.notice),
+    );
+  }
+}
+
+/// Loads the authoritative preview and performs one replay-safe commit
+/// (UI/UX §9.11, Flow §9.5, D11).
+class PathPreviewController extends StateNotifier<PathPreviewState> {
+  PathPreviewController({
+    required this.repository,
+    required this.draftStore,
+    required this.sessionController,
+    required this.updateId,
+  }) : super(const PathPreviewState());
+
+  final IngestionRepository repository;
+  final IngestionDraftStore draftStore;
+  final SessionController sessionController;
+  final String updateId;
+
+  bool _initialized = false;
+  int _requestId = 0;
+
+  /// Public read-only view for presentation code and widget tests.
+  PathPreviewState get currentState => state;
+
+  String? get _accountId => sessionController.state.session?.userId;
+  String? get _accessToken => sessionController.state.session?.accessToken;
+
+  String get _commitOperation => 'commit:$updateId';
+
+  /// Reads the update and preview on entry.
+  Future<void> initialize() async {
+    if (_initialized) return;
+    _initialized = true;
+    await _load(initial: true);
+  }
+
+  /// Re-reads the update and preview, keeping any completed commit outcome.
+  Future<void> refresh() async {
+    if (state.isRefreshing || state.isCommitting) return;
+    await _load();
+  }
+
+  /// Commits the previewed path with one durable operation key.
+  ///
+  /// A double tap is absorbed by [PathPreviewState.isCommitting]. The key is
+  /// reused after a transient failure and cleared after success or a terminal
+  /// conflict, so a replay can never create a second commit.
+  Future<bool> commit() async {
+    if (!state.canCommit || state.isCommitting) return false;
+
+    final accountId = _accountId;
+    final token = _accessToken;
+    if (accountId == null || token == null) {
+      await _expireSession();
+      return false;
+    }
+
+    state = state.copyWith(
+      isCommitting: true,
+      clearFailure: true,
+      clearNotice: true,
+      isOffline: false,
+    );
+
+    try {
+      final key = await draftStore.operationKey(
+        accountId: accountId,
+        operation: _commitOperation,
+      );
+      final outcome = await repository.commitUpdate(
+        accessToken: token,
+        updateId: updateId,
+        idempotencyKey: key,
+      );
+      await draftStore.clearOperationKey(
+        accountId: accountId,
+        operation: _commitOperation,
+      );
+      await draftStore.clearDraft(accountId);
+      if (!mounted) return false;
+
+      state = state.copyWith(
+        stage: PathPreviewStage.committed,
+        outcome: outcome,
+        isCommitting: false,
+        clearFailure: true,
+        isOffline: false,
+      );
+      return true;
+    } on IngestionFailure catch (failure) {
+      if (!mounted) return false;
+
+      if (failure.code == 'invalid_state' ||
+          failure.code == 'version_conflict' ||
+          failure.code == 'idempotency_key_reused') {
+        await draftStore.clearOperationKey(
+          accountId: accountId,
+          operation: _commitOperation,
+        );
+        await _load();
+        if (!mounted) return false;
+        if (state.stage == PathPreviewStage.invalidState ||
+            state.stage == PathPreviewStage.notFound ||
+            state.stage == PathPreviewStage.failed) {
+          return false;
+        }
+
+        state = state.copyWith(
+          isCommitting: false,
+          notice: state.isCommitted
+              ? 'This material is already in your learning path.'
+              : 'This material changed while you were previewing it. The '
+                    'latest preview is shown.',
+        );
+        return false;
+      }
+
+      state = state.copyWith(
+        isCommitting: false,
+        failure: failure,
+        isOffline: failure.code == 'network_error',
+      );
+      if (failure.code == 'expired_session') await _expireSession();
+      return false;
+    }
+  }
+
+  Future<void> _load({bool initial = false}) async {
+    final token = _accessToken;
+    if (token == null) {
+      await _expireSession();
+      return;
+    }
+
+    final requestId = ++_requestId;
+    if (!initial) {
+      state = state.copyWith(
+        isRefreshing: true,
+        clearFailure: true,
+        clearNotice: true,
+      );
+    }
+
+    try {
+      final update = await repository.getUpdate(
+        accessToken: token,
+        updateId: updateId,
+      );
+      if (!mounted || requestId != _requestId) return;
+
+      if (update.state != LearningUpdateState.verificationRequired &&
+          update.state != LearningUpdateState.committed) {
+        state = state.copyWith(
+          stage: PathPreviewStage.invalidState,
+          update: update,
+          isRefreshing: false,
+          isCommitting: false,
+          clearFailure: true,
+        );
+        return;
+      }
+
+      final preview = await repository.previewPath(
+        accessToken: token,
+        updateId: updateId,
+      );
+      if (!mounted || requestId != _requestId) return;
+
+      final subjectName = _subjectNameFor(update.subjectId);
+      if (update.state == LearningUpdateState.committed ||
+          preview.state == LearningUpdateState.committed) {
+        state = state.copyWith(
+          stage: PathPreviewStage.committed,
+          update: update,
+          preview: preview,
+          subjectName: subjectName,
+          isRefreshing: false,
+          isCommitting: false,
+          clearFailure: true,
+          clearNotice: true,
+        );
+        return;
+      }
+
+      state = PathPreviewState(
+        stage: PathPreviewStage.ready,
+        update: update,
+        preview: preview,
+        subjectName: subjectName,
+      );
+    } on IngestionFailure catch (failure) {
+      if (!mounted || requestId != _requestId) return;
+      await _handleLoadFailure(failure);
+    }
+  }
+
+  Future<void> _handleLoadFailure(IngestionFailure failure) async {
+    if (failure.code == 'resource_not_found') {
+      state = state.copyWith(
+        stage: PathPreviewStage.notFound,
+        isRefreshing: false,
+        isCommitting: false,
+      );
+      return;
+    }
+
+    if (failure.code == 'invalid_state') {
+      state = state.copyWith(
+        stage: PathPreviewStage.invalidState,
+        isRefreshing: false,
+        isCommitting: false,
+        clearFailure: true,
+      );
+      return;
+    }
+
+    final hasPreview = state.preview != null;
+    state = state.copyWith(
+      stage: hasPreview
+          ? (state.isCommitted
+                ? PathPreviewStage.committed
+                : PathPreviewStage.ready)
+          : PathPreviewStage.failed,
+      failure: failure,
+      isOffline: failure.code == 'network_error',
+      isRefreshing: false,
+      isCommitting: false,
+    );
+
+    if (failure.code == 'expired_session') await _expireSession();
+  }
+
+  String? _subjectNameFor(String subjectId) {
+    final subjects = sessionController.state.bootstrapData?.subjects;
+    if (subjects == null) return null;
+    for (final subject in subjects) {
+      if (subject.id == subjectId) return subject.name;
+    }
+    return null;
+  }
+
+  Future<void> _expireSession() async {
+    await sessionController.handleExpiredSession();
+  }
+}
+
 /// Verification controller keyed by the route's update id.
 final verificationControllerProvider = StateNotifierProvider.autoDispose
     .family<VerificationController, VerificationState, String>((ref, updateId) {
       final controller = VerificationController(
+        repository: ref.watch(ingestionRepositoryProvider),
+        draftStore: ref.watch(ingestionDraftStoreProvider),
+        sessionController: ref.watch(sessionControllerProvider.notifier),
+        updateId: updateId,
+      );
+      unawaited(controller.initialize());
+      return controller;
+    });
+
+/// Learning-path preview controller keyed by the route's update id.
+final pathPreviewControllerProvider = StateNotifierProvider.autoDispose
+    .family<PathPreviewController, PathPreviewState, String>((ref, updateId) {
+      final controller = PathPreviewController(
         repository: ref.watch(ingestionRepositoryProvider),
         draftStore: ref.watch(ingestionDraftStoreProvider),
         sessionController: ref.watch(sessionControllerProvider.notifier),

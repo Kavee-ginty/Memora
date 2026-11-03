@@ -1200,7 +1200,11 @@ class MockIngestionRepository implements IngestionRepository {
     final update = _requireUpdate(updateId);
     final candidates = _candidates[updateId] ?? const <CandidateItem>[];
     final accepted = candidates
-        .where((candidate) => candidate.status == CandidateState.accepted)
+        .where(
+          (candidate) =>
+              candidate.status == CandidateState.accepted ||
+              candidate.status == CandidateState.committed,
+        )
         .toList(growable: false);
     final pending = candidates.any(
       (candidate) =>
@@ -1219,7 +1223,8 @@ class MockIngestionRepository implements IngestionRepository {
       blockedReason = PreviewBlockReason.verificationPending;
     } else if (accepted.isEmpty) {
       blockedReason = PreviewBlockReason.noValidConcept;
-    } else if (update.state != LearningUpdateState.verificationRequired) {
+    } else if (update.state != LearningUpdateState.verificationRequired &&
+        update.state != LearningUpdateState.committed) {
       blockedReason = PreviewBlockReason.invalidState;
     }
 
@@ -1331,7 +1336,11 @@ class MockIngestionRepository implements IngestionRepository {
   Future<PathPreview> _buildPreview(UpdateSnapshot update) async {
     final candidates = _candidates[update.id] ?? const <CandidateItem>[];
     final accepted = candidates
-        .where((candidate) => candidate.status == CandidateState.accepted)
+        .where(
+          (candidate) =>
+              candidate.status == CandidateState.accepted ||
+              candidate.status == CandidateState.committed,
+        )
         .toList(growable: false);
     final pending = candidates.any(
       (candidate) =>
@@ -1366,7 +1375,11 @@ class MockIngestionRepository implements IngestionRepository {
           ? null
           : (pending
                 ? PreviewBlockReason.verificationPending
-                : PreviewBlockReason.noValidConcept),
+                : (accepted.isEmpty
+                      ? PreviewBlockReason.noValidConcept
+                      : (update.state == LearningUpdateState.committed
+                            ? null
+                            : PreviewBlockReason.invalidState))),
     );
   }
 

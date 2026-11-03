@@ -220,6 +220,38 @@ void main() {
     });
   });
 
+  group('Learning-path preview route guard', () {
+    test('a canonical preview id may open the preview destination', () {
+      final result = _evaluate(
+        location: AppRoutes.pathPreviewPath(_updateId),
+        bootstrap: _bootstrap(),
+      );
+
+      expect(result.isAllowed, isTrue);
+    });
+
+    test('a malformed preview id is rejected before any request', () {
+      final result = _evaluate(
+        location: '/learning/updates/not-a-uuid/preview',
+        bootstrap: _bootstrap(),
+      );
+
+      expect(result.type, RouteAccessType.malformedRoute);
+      expect(result.recoveryPath, AppRoutes.notFound);
+    });
+
+    test('signed-out preview access requires sign-in with a safe return', () {
+      final result = _evaluate(
+        location: AppRoutes.pathPreviewPath(_updateId),
+        phase: AppSessionPhase.signedOut,
+        bootstrap: _bootstrap(),
+      );
+
+      expect(result.type, RouteAccessType.signInRequired);
+      expect(result.returnLocation?.path, AppRoutes.pathPreviewPath(_updateId));
+    });
+  });
+
   group('Add-material router integration', () {
     late MockAuthRepository mockAuth;
     late MockSessionRepository mockSession;
@@ -279,6 +311,15 @@ void main() {
     Future<void> goTo(WidgetTester tester, String location) async {
       routerOf(tester).go(location);
       await tester.pumpAndSettle();
+    }
+
+    /// Navigates without settling, for a destination whose status screen keeps
+    /// an indeterminate progress animation running (processing).
+    Future<void> goToWithFrames(WidgetTester tester, String location) async {
+      routerOf(tester).go(location);
+      for (var frame = 0; frame < 8; frame++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
     }
 
     testWidgets(
@@ -435,7 +476,8 @@ void main() {
         await goTo(tester, AppRoutes.pathPreviewPath(_updateId));
 
         expect(find.text('Learning path preview'), findsOneWidget);
-        expect(find.text('Back to status'), findsOneWidget);
+        expect(find.text('Preview your learning path'), findsOneWidget);
+        expect(find.text('This path is not ready yet'), findsOneWidget);
         expect(find.text('Home'), findsNothing);
       },
     );
@@ -469,6 +511,77 @@ void main() {
       expect(find.text('We could not find that page'), findsOneWidget);
       expect(find.text('Verify concepts'), findsNothing);
       expect(mockIngestion.operations, isEmpty);
+    });
+
+    testWidgets('a malformed preview id never reaches the repository', (
+      tester,
+    ) async {
+      await tester.pumpWidget(createTestApp());
+      await tester.pumpAndSettle();
+
+      await goTo(tester, '/learning/updates/not-a-uuid/preview');
+
+      expect(find.text('We could not find that page'), findsOneWidget);
+      expect(find.text('Learning path preview'), findsNothing);
+      expect(mockIngestion.operations, isEmpty);
+    });
+
+    testWidgets('the preview route commits and shows the ready state', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(800, 1600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      mockIngestion.seedUpdate(
+        _updateSnapshot(state: LearningUpdateState.verificationRequired),
+        candidates: <CandidateItem>[_candidates().first],
+      );
+      await tester.pumpWidget(createTestApp());
+      await tester.pumpAndSettle();
+
+      await goTo(tester, AppRoutes.pathPreviewPath(_updateId));
+
+      expect(find.text('Learning path preview'), findsOneWidget);
+      expect(find.text('Preview your learning path'), findsOneWidget);
+      expect(find.text('Add to my learning path'), findsOneWidget);
+      expect(find.text('Home'), findsNothing);
+
+      await tester.tap(
+        find.widgetWithText(MemoraButton, 'Add to my learning path'),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Your learning path is ready'), findsOneWidget);
+      expect(find.text('Start first mission'), findsOneWidget);
+      expect(
+        tester
+            .widget<MemoraButton>(
+              find.widgetWithText(MemoraButton, 'Start first mission'),
+            )
+            .onPressed,
+        isNull,
+      );
+      expect(find.text('Home'), findsNothing);
+    });
+
+    testWidgets('a preview route in the wrong state redirects to status', (
+      tester,
+    ) async {
+      mockIngestion.seedUpdate(
+        _updateSnapshot(state: LearningUpdateState.processing),
+        candidates: _candidates(),
+      );
+      await tester.pumpWidget(createTestApp());
+      await tester.pumpAndSettle();
+
+      await goToWithFrames(tester, AppRoutes.pathPreviewPath(_updateId));
+
+      expect(find.text('Material status'), findsOneWidget);
+      expect(find.text('Extracting concepts'), findsOneWidget);
+      expect(find.text('Learning path preview'), findsNothing);
+      expect(find.text('Home'), findsOneWidget);
     });
   });
 }

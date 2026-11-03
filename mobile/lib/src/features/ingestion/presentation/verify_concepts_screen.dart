@@ -485,7 +485,9 @@ class _VerifyConceptsBodyState extends State<_VerifyConceptsBody> {
       callback();
       return;
     }
-    context.push(AppRoutes.pathPreviewPath(widget.controller.updateId));
+    context.pushReplacement(
+      AppRoutes.pathPreviewPath(widget.controller.updateId),
+    );
   }
 
   void _startEdit(CandidateItem candidate) {
