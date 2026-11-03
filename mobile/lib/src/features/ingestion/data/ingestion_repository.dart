@@ -1029,7 +1029,6 @@ class MockIngestionRepository implements IngestionRepository {
   }) async {
     await _enter(IngestionOperation.retry);
     final update = _requireUpdate(updateId);
-    if (update.state.isTerminal) throw _invalidState();
 
     if (stage == IngestionRetryStage.extraction) {
       if (update.state != LearningUpdateState.failed) throw _invalidState();
@@ -1043,13 +1042,15 @@ class MockIngestionRepository implements IngestionRepository {
       return next;
     }
 
+    // Source deletion is independent of the retained update's state, so
+    // cleanup recovery must also work for a committed update (D9).
     final retriable = update.uploads.where((upload) {
       return upload.deletedAt == null &&
           (upload.status == SourceUploadState.deleting ||
               upload.status == SourceUploadState.expired ||
               upload.status == SourceUploadState.rejected);
     }).toList(growable: false);
-    if (retriable.isEmpty) return update;
+    if (retriable.isEmpty) throw _invalidState();
 
     final now = DateTime.now().toUtc();
     final ids = retriable.map((upload) => upload.id).toSet();

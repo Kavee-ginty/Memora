@@ -33,6 +33,7 @@ class AddMaterialScreen extends ConsumerWidget {
     this.subjectId,
     this.controller,
     this.onClose,
+    this.onViewStatus,
   });
 
   /// Route subject. Null when a test injects [controller].
@@ -44,11 +45,18 @@ class AddMaterialScreen extends ConsumerWidget {
   /// Test seam for navigation; production uses the router.
   final VoidCallback? onClose;
 
+  /// Test seam for the submitted receipt's status action.
+  final ValueChanged<String>? onViewStatus;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final injected = controller;
     if (injected != null) {
-      return _AddMaterialBody(controller: injected, onClose: onClose);
+      return _AddMaterialBody(
+        controller: injected,
+        onClose: onClose,
+        onViewStatus: onViewStatus,
+      );
     }
 
     final id = subjectId;
@@ -56,15 +64,24 @@ class AddMaterialScreen extends ConsumerWidget {
 
     final provider = ingestionFlowControllerProvider(id);
     final flowController = ref.watch(provider.notifier);
-    return _AddMaterialBody(controller: flowController, onClose: onClose);
+    return _AddMaterialBody(
+      controller: flowController,
+      onClose: onClose,
+      onViewStatus: onViewStatus,
+    );
   }
 }
 
 class _AddMaterialBody extends StatefulWidget {
-  const _AddMaterialBody({required this.controller, this.onClose});
+  const _AddMaterialBody({
+    required this.controller,
+    this.onClose,
+    this.onViewStatus,
+  });
 
   final IngestionFlowController controller;
   final VoidCallback? onClose;
+  final ValueChanged<String>? onViewStatus;
 
   @override
   State<_AddMaterialBody> createState() => _AddMaterialBodyState();
@@ -504,7 +521,26 @@ class _AddMaterialBodyState extends State<_AddMaterialBody> {
         ),
         Padding(
           padding: const EdgeInsets.only(bottom: MemoraSpacing.space12),
-          child: MemoraButton(label: 'Back to Learning', onPressed: _close),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              if (_state.updateId != null)
+                MemoraButton(
+                  label: 'View status',
+                  onPressed: () => _viewStatus(context, _state.updateId!),
+                ),
+              if (_state.updateId != null)
+                const SizedBox(height: MemoraSpacing.space8),
+              MemoraButton(
+                label: 'Back to Learning',
+                variant: _state.updateId == null
+                    ? MemoraButtonVariant.primary
+                    : MemoraButtonVariant.secondary,
+                onPressed: _close,
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -697,6 +733,15 @@ class _AddMaterialBodyState extends State<_AddMaterialBody> {
     } else {
       context.go(AppRoutes.learning);
     }
+  }
+
+  void _viewStatus(BuildContext context, String updateId) {
+    final onViewStatus = widget.onViewStatus;
+    if (onViewStatus != null) {
+      onViewStatus(updateId);
+      return;
+    }
+    context.pushReplacement(AppRoutes.materialStatusPath(updateId));
   }
 }
 

@@ -139,7 +139,11 @@ void main() {
     addTearDown(session.dispose);
   }
 
-  Future<void> pumpScreen(WidgetTester tester, {VoidCallback? onClose}) async {
+  Future<void> pumpScreen(
+    WidgetTester tester, {
+    VoidCallback? onClose,
+    ValueChanged<String>? onViewStatus,
+  }) async {
     tester.view.physicalSize = const Size(800, 1600);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -147,7 +151,11 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         theme: MemoraTheme.light(),
-        home: AddMaterialScreen(controller: controller, onClose: onClose),
+        home: AddMaterialScreen(
+          controller: controller,
+          onClose: onClose,
+          onViewStatus: onViewStatus,
+        ),
       ),
     );
     await tester.pump();
@@ -306,17 +314,28 @@ void main() {
   });
 
   testWidgets(
-    'submitted state shows receipt copy and closes back to Learning',
+    'submitted state shows receipt copy, status action and closes back',
     (tester) async {
       var closed = false;
+      String? viewedUpdateId;
       build();
       await controller.initialize();
       controller.onManualTextChanged('Newton first law');
       await controller.extractConcepts();
-      await pumpScreen(tester, onClose: () => closed = true);
+      await pumpScreen(
+        tester,
+        onClose: () => closed = true,
+        onViewStatus: (updateId) => viewedUpdateId = updateId,
+      );
 
       expect(find.text('Material received'), findsOneWidget);
+      expect(find.text('View status'), findsOneWidget);
       expect(find.text('Back to Learning'), findsOneWidget);
+
+      await tester.tap(find.text('View status'));
+      await tester.pump();
+
+      expect(viewedUpdateId, controller.currentState.updateId);
 
       await tester.tap(find.text('Back to Learning'));
       await tester.pump();

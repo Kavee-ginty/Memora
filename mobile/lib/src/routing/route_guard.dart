@@ -155,6 +155,20 @@ RouteAccessResult? _evaluateDetailRoute(
     return null;
   }
 
+  // Material status and its review steps: /learning/updates/:updateId[/...].
+  // Ownership and workflow state are confirmed by the server on entry (D13).
+  if (path.startsWith('/learning/updates/')) {
+    final segments = path.substring('/learning/updates/'.length).split('/');
+    final validShape =
+        segments.length == 1 ||
+        (segments.length == 2 &&
+            (segments[1] == 'verify' || segments[1] == 'preview'));
+    if (!validShape || !isCanonicalUuid(segments[0])) {
+      return const RouteAccessResult.malformedRoute();
+    }
+    return const RouteAccessResult.allowed();
+  }
+
   if (path.startsWith('/learning/')) {
     final segments = path.substring('/learning/'.length).split('/');
 
