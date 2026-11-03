@@ -156,23 +156,21 @@ RouteAccessResult? _evaluateDetailRoute(
   }
 
   if (path.startsWith('/learning/')) {
-    final subjectId = path.substring('/learning/'.length);
-    if (subjectId.isEmpty ||
-        subjectId.contains('/') ||
-        !isCanonicalUuid(subjectId)) {
-      // Malformed identifiers resolve to generic not-found without lookup.
+    final segments = path.substring('/learning/'.length).split('/');
+
+    // Add-material destination: /learning/:subjectId/material/new.
+    if (segments.length == 3 &&
+        segments[1] == 'material' &&
+        segments[2] == 'new') {
+      return _evaluateSubjectOwnership(segments[0], bootstrapData);
+    }
+
+    // Any other extra segment is not a canonical learning route.
+    if (segments.length != 1) {
       return const RouteAccessResult.malformedRoute();
     }
-    if (bootstrapData == null) {
-      return const RouteAccessResult.notFound();
-    }
-    final ownsSubject = bootstrapData.subjects.any(
-      (subject) => subject.id == subjectId,
-    );
-    // Missing and wrong-owner are intentionally indistinguishable.
-    return ownsSubject
-        ? const RouteAccessResult.allowed()
-        : const RouteAccessResult.notFound();
+
+    return _evaluateSubjectOwnership(segments[0], bootstrapData);
   }
 
   if (path == '/missions' || path.startsWith('/missions/')) {
@@ -211,6 +209,28 @@ RouteAccessResult? _evaluateDetailRoute(
   }
 
   return null;
+}
+
+/// Validates a subject identifier and checks ownership.
+///
+/// Malformed identifiers resolve to the generic not-found result without a
+/// lookup. Missing and wrong-owner subjects are intentionally indistinguishable.
+RouteAccessResult _evaluateSubjectOwnership(
+  String subjectId,
+  BootstrapData? bootstrapData,
+) {
+  if (subjectId.isEmpty || !isCanonicalUuid(subjectId)) {
+    return const RouteAccessResult.malformedRoute();
+  }
+  if (bootstrapData == null) {
+    return const RouteAccessResult.notFound();
+  }
+  final ownsSubject = bootstrapData.subjects.any(
+    (subject) => subject.id == subjectId,
+  );
+  return ownsSubject
+      ? const RouteAccessResult.allowed()
+      : const RouteAccessResult.notFound();
 }
 
 /// Returns the path portion of a location, without query or fragment, and

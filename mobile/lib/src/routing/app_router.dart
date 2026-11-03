@@ -7,6 +7,7 @@ import '../design_system/components/app_header.dart';
 import '../design_system/tokens/colors.dart';
 import '../features/auth/application/session_controller.dart';
 import '../features/auth/domain/app_session_state.dart';
+import '../features/auth/domain/bootstrap_state.dart';
 import '../features/auth/domain/route_access.dart';
 import '../features/auth/presentation/account_recovery_screen.dart';
 import '../features/auth/presentation/create_account_screen.dart';
@@ -18,6 +19,7 @@ import '../features/common/presentation/authorized_placeholder_screen.dart';
 import '../features/common/presentation/feature_unavailable_screen.dart';
 import '../features/consent/presentation/consent_review_screen.dart';
 import '../features/home/presentation/home_screen.dart';
+import '../features/ingestion/presentation/add_material_screen.dart';
 import '../features/learning/presentation/learning_path_screen.dart';
 import '../features/profile/presentation/profile_entry_screen.dart';
 import '../features/progress/presentation/progress_entry_screen.dart';
@@ -170,20 +172,35 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       // Canonical authenticated detail routes owned by later feature tasks
       GoRoute(
-        path: AppRoutes.learningDetail,
-        name: 'learningDetail',
+        path: AppRoutes.addMaterial,
+        name: 'addMaterial',
         pageBuilder: (context, state) => _buildPage(
           context,
           state,
-          const AuthorizedPlaceholderScreen(
-            title: 'Learning path',
-            message:
-                'This subject is authorized for your account. The full learning '
-                'path is owned by a later milestone.',
-            backLabel: 'Back to Learning',
-            backPath: AppRoutes.learning,
-          ),
+          AddMaterialScreen(subjectId: state.pathParameters['subjectId']),
         ),
+      ),
+      GoRoute(
+        path: AppRoutes.learningDetail,
+        name: 'learningDetail',
+        pageBuilder: (context, state) {
+          final subjectId = state.pathParameters['subjectId'] ?? '';
+          return _buildPage(
+            context,
+            state,
+            AuthorizedPlaceholderScreen(
+              title: 'Learning path',
+              message:
+                  'This subject is authorized for your account. The full '
+                  'learning path is owned by a later milestone.',
+              actionLabel: 'Add material',
+              onAction: () =>
+                  context.push(AppRoutes.addMaterialPath(subjectId)),
+              backLabel: 'Back to Learning',
+              backPath: AppRoutes.learning,
+            ),
+          );
+        },
       ),
       GoRoute(
         path: AppRoutes.missionPreview,
@@ -234,15 +251,26 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: AppRoutes.learning,
                 name: 'learning',
-                pageBuilder: (context, state) => _buildPage(
-                  context,
-                  state,
-                  Scaffold(
-                    backgroundColor: MemoraColors.surfaceSoft,
-                    appBar: const MemoraHeader.root(title: 'Learning'),
-                    body: const LearningPathScreen(),
-                  ),
-                ),
+                pageBuilder: (context, state) {
+                  final subject = _activeSubjectOf(
+                    ref.read(sessionControllerProvider).bootstrapData,
+                  );
+                  return _buildPage(
+                    context,
+                    state,
+                    Scaffold(
+                      backgroundColor: MemoraColors.surfaceSoft,
+                      appBar: const MemoraHeader.root(title: 'Learning'),
+                      body: LearningPathScreen(
+                        onAddMaterial: subject == null
+                            ? null
+                            : () => context.push(
+                                AppRoutes.addMaterialPath(subject.id),
+                              ),
+                      ),
+                    ),
+                  );
+                },
               ),
             ],
           ),
@@ -307,6 +335,17 @@ Page<void> buildRoutePage({
 
 Page<void> _buildPage(BuildContext context, GoRouterState state, Widget child) {
   return buildRoutePage(context: context, key: state.pageKey, child: child);
+}
+
+/// Prefers the account's active subject, otherwise the first authorized one.
+SubjectSummaryDomain? _activeSubjectOf(BootstrapData? data) {
+  final subjects = data?.subjects ?? const <SubjectSummaryDomain>[];
+  if (subjects.isEmpty) return null;
+  final activeId = data?.profileSummary.activeSubjectId;
+  for (final subject in subjects) {
+    if (subject.id == activeId) return subject;
+  }
+  return subjects.first;
 }
 
 /// Default global router reference maintained for backwards compatibility.

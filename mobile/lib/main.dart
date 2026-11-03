@@ -13,6 +13,8 @@ import 'src/features/auth/data/session_repository.dart';
 import 'src/features/auth/domain/app_session_state.dart';
 import 'src/features/consent/application/consent_controller.dart';
 import 'src/features/consent/data/consent_repository.dart';
+import 'src/features/ingestion/application/ingestion_flow_controller.dart';
+import 'src/features/ingestion/data/ingestion_repository.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,6 +27,7 @@ void main() async {
   AuthRepository authRepository;
   SessionRepository sessionRepository;
   ConsentRepository consentRepository = MockConsentRepository();
+  IngestionRepository ingestionRepository = MockIngestionRepository();
 
   if (config.isValid &&
       config.supabaseUrl != 'https://placeholder.supabase.co') {
@@ -55,6 +58,10 @@ void main() async {
       apiClient: apiClient,
       configuration: config,
     );
+    ingestionRepository = MemoraIngestionRepository(
+      apiClient: apiClient,
+      configuration: config,
+    );
   } else {
     authRepository = MockAuthRepository()
       ..shouldFailSignIn = true
@@ -73,6 +80,7 @@ void main() async {
         authRepositoryProvider.overrideWithValue(authRepository),
         sessionRepositoryProvider.overrideWithValue(sessionRepository),
         consentRepositoryProvider.overrideWithValue(consentRepository),
+        ingestionRepositoryProvider.overrideWithValue(ingestionRepository),
       ],
       child: const MemoraApp(),
     ),

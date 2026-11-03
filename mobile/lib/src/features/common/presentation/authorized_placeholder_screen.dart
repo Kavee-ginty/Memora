@@ -20,12 +20,18 @@ class AuthorizedPlaceholderScreen extends StatelessWidget {
     required this.message,
     required this.backLabel,
     required this.backPath,
+    this.actionLabel,
+    this.onAction,
   });
 
   final String title;
   final String message;
   final String backLabel;
   final String backPath;
+
+  /// Optional forward action for a route whose next step already exists.
+  final String? actionLabel;
+  final VoidCallback? onAction;
 
   @override
   Widget build(BuildContext context) {
@@ -74,7 +80,17 @@ class AuthorizedPlaceholderScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: MemoraSpacing.space32),
-                MemoraButton(label: backLabel, onPressed: () => _back(context)),
+                if (actionLabel != null && onAction != null) ...<Widget>[
+                  MemoraButton(label: actionLabel!, onPressed: onAction),
+                  const SizedBox(height: MemoraSpacing.space12),
+                ],
+                MemoraButton(
+                  label: backLabel,
+                  variant: actionLabel == null
+                      ? MemoraButtonVariant.primary
+                      : MemoraButtonVariant.secondary,
+                  onPressed: () => _back(context),
+                ),
               ],
             ),
           ),

@@ -961,7 +961,7 @@ class MockIngestionRepository implements IngestionRepository {
         'x-memora-upload': 'mock-grant',
         'content-type': source.declaredMediaType,
       },
-      maxBytes: 20 * 1024 * 1024,
+      maxBytes: 25 * 1024 * 1024,
       expiresAt: DateTime.now().toUtc().add(const Duration(minutes: 10)),
       checksumRule: 'SHA-256 hex digest of the exact uploaded bytes',
     );
@@ -1000,9 +1000,18 @@ class MockIngestionRepository implements IngestionRepository {
               : upload,
         )
         .toList(growable: false);
+    // A multi-file update stays `uploading` until every declared file is
+    // finalized; only then does the worker start extraction.
+    final allValidated = uploads.every(
+      (upload) =>
+          upload.status == SourceUploadState.validated ||
+          upload.status == SourceUploadState.processing,
+    );
     final next = _copyUpdate(
       update,
-      state: LearningUpdateState.processing,
+      state: allValidated
+          ? LearningUpdateState.processing
+          : LearningUpdateState.uploading,
       uploads: uploads,
       rowVersion: update.rowVersion + 1,
       updatedAt: DateTime.now().toUtc(),
