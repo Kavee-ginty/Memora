@@ -321,6 +321,9 @@ class MockPrivacyRepository implements PrivacyRepository {
   PrivacyDeletion? configuredDeletion;
   AuthFailure? failure;
 
+  /// Consumed by the next repository call, then cleared.
+  AuthFailure? nextFailure;
+
   int createExportCallCount = 0;
   int getExportCallCount = 0;
   int createDeletionCallCount = 0;
@@ -329,6 +332,7 @@ class MockPrivacyRepository implements PrivacyRepository {
 
   String? lastCreateExportKey;
   String? lastCreateDeletionKey;
+  bool? lastCreateDeletionConfirmed;
   String? lastCancelDeletionKey;
   String? lastCancelReason;
 
@@ -371,6 +375,7 @@ class MockPrivacyRepository implements PrivacyRepository {
   }) async {
     createDeletionCallCount++;
     lastCreateDeletionKey = idempotencyKey;
+    lastCreateDeletionConfirmed = confirmed;
     _maybeFail();
     return configuredDeletion ??
         PrivacyDeletion(
@@ -415,6 +420,11 @@ class MockPrivacyRepository implements PrivacyRepository {
   }
 
   void _maybeFail() {
+    final next = nextFailure;
+    if (next != null) {
+      nextFailure = null;
+      throw next;
+    }
     final configured = failure;
     if (configured != null) throw configured;
   }

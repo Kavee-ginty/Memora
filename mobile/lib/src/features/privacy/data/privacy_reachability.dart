@@ -12,6 +12,16 @@ abstract class PrivacyReachability {
   Future<bool> check();
 }
 
+/// Deterministic reachability result for tests and unconfigured local runs.
+class StaticPrivacyReachability implements PrivacyReachability {
+  const StaticPrivacyReachability(this.value);
+
+  final bool value;
+
+  @override
+  Future<bool> check() async => value;
+}
+
 /// Probes `GET /health/live` with a short bounded timeout.
 class ApiPrivacyReachability implements PrivacyReachability {
   const ApiPrivacyReachability({
