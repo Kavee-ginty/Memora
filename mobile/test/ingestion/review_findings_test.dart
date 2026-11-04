@@ -26,6 +26,7 @@ import 'package:memora_mobile/src/features/ingestion/domain/ingestion_models.dar
 const String _accountId = 'account-a';
 const String _subjectId = '22222222-2222-4222-8222-222222222222';
 const String _updateId = '11111111-1111-4111-8111-111111111111';
+const String _otherUpdateId = '33333333-3333-4333-8333-333333333333';
 
 const IngestionFailure _reusedKey = IngestionFailure(
   code: 'idempotency_key_reused',
@@ -117,6 +118,39 @@ Future<Map<String, String>> _storedOperationKeys(
   return <String, String>{
     for (final entry in keys.entries) entry.key: entry.value as String,
   };
+}
+
+Future<String> _seedOtherUpdateState(IngestionDraftStore draftStore) async {
+  await draftStore.saveDecisionDrafts(
+    accountId: _accountId,
+    updateId: _otherUpdateId,
+    drafts: <String, DecisionDraft>{
+      'c-other': const DecisionDraft(
+        candidateId: 'c-other',
+        candidateVersion: 1,
+        kind: VerificationDecisionKind.accept,
+      ),
+    },
+  );
+  return draftStore.operationKey(
+    accountId: _accountId,
+    operation: 'commit:$_otherUpdateId',
+  );
+}
+
+Future<void> _expectOtherUpdatePreserved(
+  IngestionDraftStore draftStore,
+  String key,
+) async {
+  final decisions = await draftStore.readDecisionDrafts(_accountId);
+  expect(decisions.containsKey(_otherUpdateId), isTrue);
+  expect(
+    await draftStore.operationKey(
+      accountId: _accountId,
+      operation: 'commit:$_otherUpdateId',
+    ),
+    key,
+  );
 }
 
 class _RecordingRepository extends MockIngestionRepository {
@@ -587,6 +621,75 @@ void main() {
       );
     },
   );
+
+  group('Finding 5: submission cleanup keeps other updates intact', () {
+    test(
+      'a completed submission keeps another update\'s decisions and keys',
+      () async {
+        final keyStore = InMemorySecureKeyStore();
+        final draftStore = IngestionDraftStore(keyStore: keyStore);
+        final repository = _RecordingRepository();
+        final session = _sessionController();
+        final controller = IngestionFlowController(
+          repository: repository,
+          uploadClient: _FakeUploadClient(),
+          sourcePicker: _FakeSourcePicker(),
+          draftStore: draftStore,
+          sessionController: session,
+          subjectId: _subjectId,
+          draftDebounce: Duration.zero,
+        );
+        addTearDown(controller.dispose);
+        addTearDown(session.dispose);
+        final otherKey = await _seedOtherUpdateState(draftStore);
+
+        await controller.initialize();
+        controller.onManualTextChanged('Newton first law');
+        await controller.extractConcepts();
+
+        expect(controller.currentState.stage, IngestionFlowStage.submitted);
+        expect(await draftStore.readDraft(_accountId), isNull);
+        await _expectOtherUpdatePreserved(draftStore, otherKey);
+      },
+    );
+
+    test('discard keeps another update\'s decisions and keys', () async {
+      final keyStore = InMemorySecureKeyStore();
+      final draftStore = IngestionDraftStore(keyStore: keyStore);
+      final repository = _RecordingRepository();
+      final snapshot = _snapshot(state: LearningUpdateState.draft);
+      repository.seedUpdate(snapshot);
+      await draftStore.saveDraft(
+        _accountId,
+        IngestionDraft(
+          subjectId: _subjectId,
+          manualText: 'Newton first law',
+          learnedAt: DateTime.utc(2026, 11, 1, 10),
+        ),
+      );
+      final session = _sessionController();
+      final controller = IngestionFlowController(
+        repository: repository,
+        uploadClient: _FakeUploadClient(),
+        sourcePicker: _FakeSourcePicker(),
+        draftStore: draftStore,
+        sessionController: session,
+        subjectId: _subjectId,
+        resumedDraft: snapshot,
+        draftDebounce: Duration.zero,
+      );
+      addTearDown(controller.dispose);
+      addTearDown(session.dispose);
+      final otherKey = await _seedOtherUpdateState(draftStore);
+
+      await controller.initialize();
+      final discarded = await controller.discard();
+
+      expect(discarded, isTrue);
+      expect(await draftStore.readDraft(_accountId), isNull);
+      await _expectOtherUpdatePreserved(draftStore, otherKey);
+    });
+  });
 }
 
 const IngestionFailure _offline = IngestionFailure(

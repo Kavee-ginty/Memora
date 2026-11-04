@@ -793,8 +793,9 @@ class IngestionFlowController extends StateNotifier<IngestionFlowState> {
     }
   }
 
-  /// Discards the server update (when one exists) and clears the protected
-  /// draft and operation keys. Returns false when cleanup could not complete.
+  /// Discards the server update (when one exists) and clears this submission's
+  /// protected draft and operation keys. Returns false when cleanup could not
+  /// complete.
   Future<bool> discard() async {
     _draftTimer?.cancel();
     final accountId = _accountId;
@@ -836,7 +837,7 @@ class IngestionFlowController extends StateNotifier<IngestionFlowState> {
       }
     }
 
-    await draftStore.clearAccount(accountId);
+    await draftStore.clearSubmission(accountId: accountId, updateId: updateId);
     if (mounted) {
       state = state.copyWith(
         isSaving: false,
@@ -1038,9 +1039,12 @@ class IngestionFlowController extends StateNotifier<IngestionFlowState> {
 
   Future<void> _completeSubmission({required String accountId}) async {
     _draftTimer?.cancel();
-    // The server owns the material now; the protected local copy and the
-    // create/grant/finalize keys are no longer needed (D8).
-    await draftStore.clearAccount(accountId);
+    // The server owns the material now; this submission's protected draft and
+    // completed keys are no longer needed (D8). Other updates keep theirs.
+    await draftStore.clearSubmission(
+      accountId: accountId,
+      updateId: state.updateId,
+    );
     if (!mounted) return;
     state = state.copyWith(
       stage: IngestionFlowStage.submitted,

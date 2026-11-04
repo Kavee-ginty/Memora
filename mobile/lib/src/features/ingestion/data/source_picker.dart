@@ -109,7 +109,7 @@ class PlatformSourcePicker implements SourcePicker {
     }
 
     final bytes = await file.readAsBytes();
-    await _deleteTemporaryCopy(file.path);
+    await deleteTemporaryCopy(file.path);
     return PickedSource(
       name: name,
       mediaType: mediaType,
@@ -137,7 +137,7 @@ class PlatformSourcePicker implements SourcePicker {
         : _ensureExtension(originalName, mediaType);
 
     if (mediaType == null) {
-      await _deleteTemporaryCopy(file.path);
+      await deleteTemporaryCopy(file.path);
       return PickedSource.rejected(
         name: name,
         mediaType: 'application/octet-stream',
@@ -146,7 +146,7 @@ class PlatformSourcePicker implements SourcePicker {
       );
     }
     if (size <= 0) {
-      await _deleteTemporaryCopy(file.path);
+      await deleteTemporaryCopy(file.path);
       return PickedSource.rejected(
         name: name,
         mediaType: mediaType,
@@ -155,7 +155,7 @@ class PlatformSourcePicker implements SourcePicker {
       );
     }
     if (size > maxSourceBytes) {
-      await _deleteTemporaryCopy(file.path);
+      await deleteTemporaryCopy(file.path);
       return PickedSource.rejected(
         name: name,
         mediaType: mediaType,
@@ -165,7 +165,7 @@ class PlatformSourcePicker implements SourcePicker {
     }
 
     final bytes = await file.readAsBytes();
-    await _deleteTemporaryCopy(file.path);
+    await deleteTemporaryCopy(file.path);
     return PickedSource(
       name: name,
       mediaType: mediaType,
@@ -212,17 +212,51 @@ String _basename(String name) {
 /// Removes only copies the platform placed in the app's temporary directory.
 ///
 /// Some desktop pickers return the original path; deleting that would destroy
-/// a student's file, so the guard keeps cleanup limited to cache copies.
-Future<void> _deleteTemporaryCopy(String? path) async {
+/// a student's file, so cleanup is limited to mobile app sandboxes. The
+/// containment check is segment-aware, so `/tmp_notes.pdf` is not treated as a
+/// child of `/tmp`. [temporaryRoot] is injectable for tests.
+@visibleForTesting
+Future<void> deleteTemporaryCopy(String? path, {String? temporaryRoot}) async {
   if (path == null || path.isEmpty) return;
+  if (temporaryRoot == null && !Platform.isAndroid && !Platform.isIOS) return;
   try {
     final file = File(path);
-    final temporaryRoot = Directory.systemTemp.path;
-    if (!file.absolute.path.startsWith(temporaryRoot)) return;
-    if (await file.exists()) await file.delete();
+    if (!await file.exists()) return;
+    final canonicalFile = await file.resolveSymbolicLinks();
+    final canonicalRoot = await Directory(
+      temporaryRoot ?? Directory.systemTemp.path,
+    ).resolveSymbolicLinks();
+    if (!_isPathInsideDirectory(canonicalFile, canonicalRoot)) return;
+    await file.delete();
   } catch (_) {
     // Best effort: the bytes are already in memory and the OS owns the cache.
   }
+}
+
+bool _isPathInsideDirectory(String path, String directory) {
+  final pathSegments = _pathSegments(path);
+  final directorySegments = _pathSegments(directory);
+  if (directorySegments.isEmpty ||
+      pathSegments.length <= directorySegments.length) {
+    return false;
+  }
+  for (var index = 0; index < directorySegments.length; index++) {
+    if (pathSegments[index] != directorySegments[index]) return false;
+  }
+  return true;
+}
+
+List<String> _pathSegments(String path) {
+  final segments = <String>[];
+  for (final part in path.replaceAll('\\', '/').split('/')) {
+    if (part.isEmpty || part == '.') continue;
+    if (part == '..') {
+      if (segments.isNotEmpty) segments.removeLast();
+      continue;
+    }
+    segments.add(Platform.isWindows ? part.toLowerCase() : part);
+  }
+  return segments;
 }
 
 const IngestionFailure _emptyFile = IngestionFailure(

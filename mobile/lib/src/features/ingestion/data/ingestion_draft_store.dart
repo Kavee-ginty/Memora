@@ -322,10 +322,46 @@ class IngestionDraftStore {
     await _keyStore.write(storageKey, record);
   }
 
+  /// Clears the editor draft plus the operation keys and unsent decisions that
+  /// belong to one submission.
+  ///
+  /// [updateId] is null before the server has created the update. Keys and
+  /// decisions for other updates (for example one still awaiting verification)
+  /// are preserved; [clearAccount] remains the sign-out cleanup.
+  Future<void> clearSubmission({
+    required String accountId,
+    String? updateId,
+  }) async {
+    _requireAccount(accountId);
+    if (updateId != null) _requireUpdateId(updateId);
+
+    await _keyStore.delete(draftStorageKey(accountId));
+    if (updateId != null) {
+      await clearDecisionDrafts(accountId: accountId, updateId: updateId);
+    }
+
+    final storageKey = operationsStorageKey(accountId);
+    final keys = await _readOperations(storageKey);
+    final remaining = <String, String>{};
+    for (final entry in keys.entries) {
+      if (_belongsToSubmission(entry.key, updateId)) continue;
+      remaining[entry.key] = entry.value;
+    }
+    if (remaining.length == keys.length) return;
+    await _writeOperations(storageKey, remaining);
+  }
+
+  bool _belongsToSubmission(String operation, String? updateId) {
+    if (operation == 'create' || operation == 'create_operation') return true;
+    if (updateId == null) return false;
+    return operation.split(':').contains(updateId);
+  }
+
   /// Clears the draft, every operation key and every unsent decision record
   /// for [accountId].
   ///
-  /// Called on discard, successful commit and sign-out (D8).
+  /// Reserved for sign-out and account switches (D8). Discard and successful
+  /// submission use [clearSubmission] so other updates keep their state.
   Future<void> clearAccount(String accountId) async {
     _requireAccount(accountId);
     await _keyStore.delete(draftStorageKey(accountId));

@@ -26,6 +26,28 @@ IngestionDraft _draft({
   );
 }
 
+DecisionDraft _decision(String candidateId) {
+  return DecisionDraft(
+    candidateId: candidateId,
+    candidateVersion: 1,
+    kind: VerificationDecisionKind.accept,
+  );
+}
+
+Future<Map<String, String>> _operationKeys(
+  InMemorySecureKeyStore keyStore,
+) async {
+  final raw = await keyStore.read(
+    IngestionDraftStore.operationsStorageKey(_accountA),
+  );
+  if (raw == null) return <String, String>{};
+  final record = jsonDecode(raw) as Map<String, dynamic>;
+  final keys = record['keys'] as Map<String, dynamic>;
+  return <String, String>{
+    for (final entry in keys.entries) entry.key: entry.value as String,
+  };
+}
+
 void main() {
   late InMemorySecureKeyStore keyStore;
   late IngestionDraftStore store;
@@ -349,5 +371,68 @@ void main() {
         keyB,
       );
     });
+  });
+
+  group('IngestionDraftStore submission clearing', () {
+    const String updateA = '11111111-1111-4111-8111-111111111111';
+    const String updateB = '22222222-2222-4222-8222-222222222222';
+
+    test('clears only the selected submission', () async {
+      await store.saveDraft(_accountA, _draft());
+      await store.operationKey(accountId: _accountA, operation: 'create');
+      await store.operationKey(
+        accountId: _accountA,
+        operation: 'create_operation',
+      );
+      await store.operationKey(
+        accountId: _accountA,
+        operation: 'grant:$updateA:sha-a',
+      );
+      final otherKey = await store.operationKey(
+        accountId: _accountA,
+        operation: 'commit:$updateB',
+      );
+      await store.saveDecisionDrafts(
+        accountId: _accountA,
+        updateId: updateA,
+        drafts: <String, DecisionDraft>{'c1': _decision('c1')},
+      );
+      await store.saveDecisionDrafts(
+        accountId: _accountA,
+        updateId: updateB,
+        drafts: <String, DecisionDraft>{'c2': _decision('c2')},
+      );
+
+      await store.clearSubmission(accountId: _accountA, updateId: updateA);
+
+      expect(await store.readDraft(_accountA), isNull);
+      final keys = await _operationKeys(keyStore);
+      expect(keys.containsKey('create'), isFalse);
+      expect(keys.containsKey('create_operation'), isFalse);
+      expect(keys.containsKey('grant:$updateA:sha-a'), isFalse);
+      expect(keys['commit:$updateB'], otherKey);
+      final decisions = await store.readDecisionDrafts(_accountA);
+      expect(decisions.containsKey(updateA), isFalse);
+      expect(decisions.containsKey(updateB), isTrue);
+    });
+
+    test(
+      'without an update id clears the draft and create identities',
+      () async {
+        await store.saveDraft(_accountA, _draft());
+        await store.operationKey(accountId: _accountA, operation: 'create');
+        final otherKey = await store.operationKey(
+          accountId: _accountA,
+          operation: 'commit:$updateB',
+        );
+
+        await store.clearSubmission(accountId: _accountA);
+
+        expect(await store.readDraft(_accountA), isNull);
+        final keys = await _operationKeys(keyStore);
+        expect(keys.containsKey('create'), isFalse);
+        expect(keys['commit:$updateB'], otherKey);
+      },
+    );
   });
 }
