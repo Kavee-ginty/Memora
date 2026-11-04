@@ -29,6 +29,10 @@ const Map<String, String> _safeMessages = <String, String>{
   'temporarily_unavailable':
       'Memora is temporarily unavailable. Please try again shortly.',
   'operation_in_progress': 'That request is still processing. Please wait.',
+  'confirmation_required': 'Confirm that you understand this action.',
+  'deletion_cancellation_disallowed':
+      'This deletion can no longer be cancelled.',
+  'not_found': 'That privacy request was not found.',
 };
 
 /// Failure codes that always map to an expired-session outcome.
