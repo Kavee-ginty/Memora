@@ -247,42 +247,51 @@ PickedSource _pdf() {
 
 void main() {
   group('Finding 1: upload identities are scoped per update and file', () {
-    test('a failed upload persists its key under the update-scoped name only',
-        () async {
-      final keyStore = InMemorySecureKeyStore();
-      final draftStore = IngestionDraftStore(keyStore: keyStore);
-      final repository = _RecordingRepository()
-        ..failures[IngestionOperation.grant] = _offline;
-      final picker = _FakeSourcePicker()..nextDocument = _pdf();
-      final session = _sessionController();
-      final controller = IngestionFlowController(
-        repository: repository,
-        uploadClient: _FakeUploadClient(),
-        sourcePicker: picker,
-        draftStore: draftStore,
-        sessionController: session,
-        subjectId: _subjectId,
-        draftDebounce: Duration.zero,
-      );
-      addTearDown(controller.dispose);
-      addTearDown(session.dispose);
+    test(
+      'a failed upload persists its key under the update-scoped name only',
+      () async {
+        final keyStore = InMemorySecureKeyStore();
+        final draftStore = IngestionDraftStore(keyStore: keyStore);
+        final repository = _RecordingRepository()
+          ..failures[IngestionOperation.grant] = _offline;
+        final picker = _FakeSourcePicker()..nextDocument = _pdf();
+        final session = _sessionController();
+        final controller = IngestionFlowController(
+          repository: repository,
+          uploadClient: _FakeUploadClient(),
+          sourcePicker: picker,
+          draftStore: draftStore,
+          sessionController: session,
+          subjectId: _subjectId,
+          draftDebounce: Duration.zero,
+        );
+        addTearDown(controller.dispose);
+        addTearDown(session.dispose);
 
-      await controller.initialize();
-      await controller.addDocument();
-      await controller.extractConcepts();
+        await controller.initialize();
+        await controller.addDocument();
+        await controller.extractConcepts();
 
-      final updateId = controller.currentState.updateId;
-      expect(updateId, isNotNull);
-      final sha = sha256.convert(<int>[1, 2, 3, 4]).toString();
-      final keys = await _storedOperationKeys(keyStore);
+        final updateId = controller.currentState.updateId;
+        expect(updateId, isNotNull);
+        final sha = sha256.convert(<int>[1, 2, 3, 4]).toString();
+        final keys = await _storedOperationKeys(keyStore);
 
-      expect(keys.containsKey('grant:$updateId:$sha'), isTrue,
-          reason: 'the durable grant key survives for the retry');
-      expect(keys.containsKey('grant:$sha'), isFalse,
-          reason: 'the key is scoped per update so another update can never '
-              'reuse it with a different body');
-      expect(keys.containsKey('finalize:$updateId:$sha'), isFalse);
-    });
+        expect(
+          keys.containsKey('grant:$updateId:$sha'),
+          isTrue,
+          reason: 'the durable grant key survives for the retry',
+        );
+        expect(
+          keys.containsKey('grant:$sha'),
+          isFalse,
+          reason:
+              'the key is scoped per update so another update can never '
+              'reuse it with a different body',
+        );
+        expect(keys.containsKey('finalize:$updateId:$sha'), isFalse);
+      },
+    );
 
     test('a reused-key grant failure clears the identity so the retry '
         'starts a fresh operation', () async {
@@ -315,115 +324,126 @@ void main() {
       final updateId = controller.currentState.updateId;
       final sha = sha256.convert(<int>[1, 2, 3, 4]).toString();
       final keysAfterFailure = await _storedOperationKeys(keyStore);
-      expect(keysAfterFailure.containsKey('grant:$updateId:$sha'), isFalse,
-          reason: 'the stale identity is dropped for a fresh attempt');
+      expect(
+        keysAfterFailure.containsKey('grant:$updateId:$sha'),
+        isFalse,
+        reason: 'the stale identity is dropped for a fresh attempt',
+      );
 
       repository.failures.remove(IngestionOperation.grant);
       await controller.retrySubmission();
 
       expect(controller.currentState.stage, IngestionFlowStage.submitted);
       expect(repository.grantKeys, hasLength(2));
-      expect(repository.grantKeys[0], isNot(equals(repository.grantKeys[1])),
-          reason: 'the retry must not replay the collided identity');
+      expect(
+        repository.grantKeys[0],
+        isNot(equals(repository.grantKeys[1])),
+        reason: 'the retry must not replay the collided identity',
+      );
     });
   });
 
   group('Finding 2: a create identity collision recovers with the draft '
       'preserved', () {
-    test('the stale create identity is cleared and the next attempt creates',
-        () async {
-      final keyStore = InMemorySecureKeyStore();
-      final draftStore = IngestionDraftStore(keyStore: keyStore);
-      final repository = _RecordingRepository()
-        ..failures[IngestionOperation.create] = _reusedKey;
-      final session = _sessionController();
-      final controller = IngestionFlowController(
-        repository: repository,
-        uploadClient: _FakeUploadClient(),
-        sourcePicker: _FakeSourcePicker(),
-        draftStore: draftStore,
-        sessionController: session,
-        subjectId: _subjectId,
-        draftDebounce: Duration.zero,
-      );
-      addTearDown(controller.dispose);
-      addTearDown(session.dispose);
+    test(
+      'the stale create identity is cleared and the next attempt creates',
+      () async {
+        final keyStore = InMemorySecureKeyStore();
+        final draftStore = IngestionDraftStore(keyStore: keyStore);
+        final repository = _RecordingRepository()
+          ..failures[IngestionOperation.create] = _reusedKey;
+        final session = _sessionController();
+        final controller = IngestionFlowController(
+          repository: repository,
+          uploadClient: _FakeUploadClient(),
+          sourcePicker: _FakeSourcePicker(),
+          draftStore: draftStore,
+          sessionController: session,
+          subjectId: _subjectId,
+          draftDebounce: Duration.zero,
+        );
+        addTearDown(controller.dispose);
+        addTearDown(session.dispose);
 
-      await controller.initialize();
-      controller.onManualTextChanged('Newton first law');
-      await controller.extractConcepts();
+        await controller.initialize();
+        controller.onManualTextChanged('Newton first law');
+        await controller.extractConcepts();
 
-      // The collision surfaces as a restartable failure; the draft survives.
-      expect(controller.currentState.stage, IngestionFlowStage.editing);
-      expect(
-        controller.currentState.failure?.code,
-        'idempotency_key_reused',
-      );
-      final restored = await draftStore.readDraft(_accountId);
-      expect(restored?.manualText, 'Newton first law');
-      final keysAfterFailure = await _storedOperationKeys(keyStore);
-      expect(keysAfterFailure.containsKey('create'), isFalse);
-      expect(keysAfterFailure.containsKey('create_operation'), isFalse);
+        // The collision surfaces as a restartable failure; the draft survives.
+        expect(controller.currentState.stage, IngestionFlowStage.editing);
+        expect(controller.currentState.failure?.code, 'idempotency_key_reused');
+        final restored = await draftStore.readDraft(_accountId);
+        expect(restored?.manualText, 'Newton first law');
+        final keysAfterFailure = await _storedOperationKeys(keyStore);
+        expect(keysAfterFailure.containsKey('create'), isFalse);
+        expect(keysAfterFailure.containsKey('create_operation'), isFalse);
 
-      repository.failures.remove(IngestionOperation.create);
-      await controller.extractConcepts();
+        repository.failures.remove(IngestionOperation.create);
+        await controller.extractConcepts();
 
-      expect(controller.currentState.stage, IngestionFlowStage.submitted);
-      expect(repository.createIdempotencyKeys, hasLength(2));
-      expect(
-        repository.createIdempotencyKeys[0],
-        isNot(equals(repository.createIdempotencyKeys[1])),
-        reason: 'the retry creates a fresh update instead of replaying the '
-            'collided identity',
-      );
-    });
+        expect(controller.currentState.stage, IngestionFlowStage.submitted);
+        expect(repository.createIdempotencyKeys, hasLength(2));
+        expect(
+          repository.createIdempotencyKeys[0],
+          isNot(equals(repository.createIdempotencyKeys[1])),
+          reason:
+              'the retry creates a fresh update instead of replaying the '
+              'collided identity',
+        );
+      },
+    );
   });
 
   group('Finding 3: unsent verification decisions persist (UIX-033)', () {
-    test('decisions survive a controller recreation and submit once restored',
-        () async {
-      final keyStore = InMemorySecureKeyStore();
-      final draftStore = IngestionDraftStore(keyStore: keyStore);
-      final repository = _RecordingRepository();
-      repository.seedUpdate(
-        _snapshot(),
-        candidates: <CandidateItem>[_reviewCandidate('c1')],
-      );
-      final session = _sessionController();
+    test(
+      'decisions survive a controller recreation and submit once restored',
+      () async {
+        final keyStore = InMemorySecureKeyStore();
+        final draftStore = IngestionDraftStore(keyStore: keyStore);
+        final repository = _RecordingRepository();
+        repository.seedUpdate(
+          _snapshot(),
+          candidates: <CandidateItem>[_reviewCandidate('c1')],
+        );
+        final session = _sessionController();
 
-      final first = VerificationController(
-        repository: repository,
-        draftStore: draftStore,
-        sessionController: session,
-        updateId: _updateId,
-      );
-      await first.initialize();
-      first.accept('c1');
-      await first.flushPersistedDraftsForTest();
-      first.dispose();
+        final first = VerificationController(
+          repository: repository,
+          draftStore: draftStore,
+          sessionController: session,
+          updateId: _updateId,
+        );
+        await first.initialize();
+        first.accept('c1');
+        await first.flushPersistedDraftsForTest();
+        first.dispose();
 
-      final second = VerificationController(
-        repository: repository,
-        draftStore: draftStore,
-        sessionController: session,
-        updateId: _updateId,
-      );
-      await second.initialize();
+        final second = VerificationController(
+          repository: repository,
+          draftStore: draftStore,
+          sessionController: session,
+          updateId: _updateId,
+        );
+        await second.initialize();
 
-      expect(second.currentState.drafts.keys, <String>['c1']);
-      final submitted = await second.submitAndContinue();
-      expect(submitted, isTrue);
-      expect(
-        repository.decisionBatches.single.map((draft) => draft.candidateId),
-        <String>['c1'],
-      );
-      expect(second.currentState.drafts, isEmpty);
-      final persisted = await draftStore.readDecisionDrafts(_accountId);
-      expect(persisted.containsKey(_updateId), isFalse,
-          reason: 'submitted decisions no longer persist locally');
-      second.dispose();
-      session.dispose();
-    });
+        expect(second.currentState.drafts.keys, <String>['c1']);
+        final submitted = await second.submitAndContinue();
+        expect(submitted, isTrue);
+        expect(
+          repository.decisionBatches.single.map((draft) => draft.candidateId),
+          <String>['c1'],
+        );
+        expect(second.currentState.drafts, isEmpty);
+        final persisted = await draftStore.readDecisionDrafts(_accountId);
+        expect(
+          persisted.containsKey(_updateId),
+          isFalse,
+          reason: 'submitted decisions no longer persist locally',
+        );
+        second.dispose();
+        session.dispose();
+      },
+    );
 
     test('a non-verifiable update forgets its persisted decisions', () async {
       final keyStore = InMemorySecureKeyStore();
@@ -509,59 +529,64 @@ void main() {
     });
   });
 
-  group('Finding 4: a conflict reload keeps decisions beyond the first page',
-      () {
-    test('fetches further pages until preserved decisions are found',
+  group(
+    'Finding 4: a conflict reload keeps decisions beyond the first page',
+    () {
+      test(
+        'fetches further pages until preserved decisions are found',
         () async {
-      final keyStore = InMemorySecureKeyStore();
-      final draftStore = IngestionDraftStore(keyStore: keyStore);
-      final repository = _RecordingRepository();
-      repository.seedUpdate(
-        _snapshot(),
-        candidates: List<CandidateItem>.generate(
-          25,
-          (index) => _reviewCandidate('c-${index + 1}'),
-        ),
+          final keyStore = InMemorySecureKeyStore();
+          final draftStore = IngestionDraftStore(keyStore: keyStore);
+          final repository = _RecordingRepository();
+          repository.seedUpdate(
+            _snapshot(),
+            candidates: List<CandidateItem>.generate(
+              25,
+              (index) => _reviewCandidate('c-${index + 1}'),
+            ),
+          );
+          final session = _sessionController();
+          final controller = VerificationController(
+            repository: repository,
+            draftStore: draftStore,
+            sessionController: session,
+            updateId: _updateId,
+            pageSize: 20,
+          );
+          addTearDown(controller.dispose);
+          addTearDown(session.dispose);
+
+          await controller.initialize();
+          await controller.loadMore();
+          controller.accept('c-21');
+          await controller.flushPersistedDraftsForTest();
+
+          repository.failures[IngestionOperation
+              .decisions] = const IngestionFailure(
+            code: 'version_conflict',
+            message: 'This information has changed. Please review it again.',
+          );
+          final submitted = await controller.submitAndContinue();
+
+          expect(submitted, isFalse);
+          expect(controller.currentState.conflictNotice, isNotNull);
+          // The reload pulled the second page so the preserved decision stayed.
+          expect(controller.currentState.candidates, hasLength(25));
+          expect(controller.currentState.drafts.containsKey('c-21'), isTrue);
+
+          repository.failures.remove(IngestionOperation.decisions);
+          final retried = await controller.submitAndContinue();
+
+          expect(retried, isTrue);
+          expect(
+            repository.decisionBatches.last.map((draft) => draft.candidateId),
+            contains('c-21'),
+          );
+          expect(controller.currentState.drafts, isEmpty);
+        },
       );
-      final session = _sessionController();
-      final controller = VerificationController(
-        repository: repository,
-        draftStore: draftStore,
-        sessionController: session,
-        updateId: _updateId,
-        pageSize: 20,
-      );
-      addTearDown(controller.dispose);
-      addTearDown(session.dispose);
-
-      await controller.initialize();
-      await controller.loadMore();
-      controller.accept('c-21');
-      await controller.flushPersistedDraftsForTest();
-
-      repository.failures[IngestionOperation.decisions] = const IngestionFailure(
-        code: 'version_conflict',
-        message: 'This information has changed. Please review it again.',
-      );
-      final submitted = await controller.submitAndContinue();
-
-      expect(submitted, isFalse);
-      expect(controller.currentState.conflictNotice, isNotNull);
-      // The reload pulled the second page so the preserved decision stayed.
-      expect(controller.currentState.candidates, hasLength(25));
-      expect(controller.currentState.drafts.containsKey('c-21'), isTrue);
-
-      repository.failures.remove(IngestionOperation.decisions);
-      final retried = await controller.submitAndContinue();
-
-      expect(retried, isTrue);
-      expect(
-        repository.decisionBatches.last.map((draft) => draft.candidateId),
-        contains('c-21'),
-      );
-      expect(controller.currentState.drafts, isEmpty);
-    });
-  });
+    },
+  );
 }
 
 const IngestionFailure _offline = IngestionFailure(

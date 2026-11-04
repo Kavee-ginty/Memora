@@ -205,12 +205,11 @@ class PresignedUploadClient implements UploadClient {
   }
 }
 
-const Map<String, List<String>> _supportedExtensions =
-    <String, List<String>>{
-      'application/pdf': <String>['.pdf'],
-      'image/png': <String>['.png'],
-      'image/jpeg': <String>['.jpg', '.jpeg'],
-    };
+const Map<String, List<String>> _supportedExtensions = <String, List<String>>{
+  'application/pdf': <String>['.pdf'],
+  'image/png': <String>['.png'],
+  'image/jpeg': <String>['.jpg', '.jpeg'],
+};
 
 const IngestionFailure _emptyFileFailure = IngestionFailure(
   code: 'empty_file',

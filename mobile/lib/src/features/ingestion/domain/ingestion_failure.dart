@@ -38,11 +38,12 @@ class IngestionFailure {
     retryable: true,
   );
 
-  factory IngestionFailure.expiredSession([String? message]) => IngestionFailure(
-    code: 'expired_session',
-    message: message ?? 'Your session has expired. Please sign in again.',
-    retryable: false,
-  );
+  factory IngestionFailure.expiredSession([String? message]) =>
+      IngestionFailure(
+        code: 'expired_session',
+        message: message ?? 'Your session has expired. Please sign in again.',
+        retryable: false,
+      );
 
   factory IngestionFailure.unknown([String? message]) => IngestionFailure(
     code: 'unknown',
@@ -69,7 +70,8 @@ class IngestionFailure {
           message:
               'Your material is safe, but the temporary source could not be '
               'removed yet.',
-          nextAction: 'Memora will keep trying. You can also retry the cleanup.',
+          nextAction:
+              'Memora will keep trying. You can also retry the cleanup.',
           retryable: true,
         );
       case 'extraction_failed':

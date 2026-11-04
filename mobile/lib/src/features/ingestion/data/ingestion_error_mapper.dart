@@ -15,7 +15,8 @@ const Map<String, String> _contractMessages = <String, String>{
   'invalid_state': 'That action is not available right now.',
   'malformed_request': 'That request could not be completed.',
   'consent_required': 'Review the current policies to continue.',
-  'recent_authentication_required': 'Please confirm your credentials to continue.',
+  'recent_authentication_required':
+      'Please confirm your credentials to continue.',
   'operation_not_allowed': 'That action is not allowed for this account.',
   'resource_not_found': 'The requested item was not found.',
   'version_conflict': 'This information has changed. Please review it again.',
@@ -68,7 +69,8 @@ IngestionFailure mapDioExceptionToIngestionFailure(DioException error) {
     final code = envelope.error.code;
     final safeMessage = _contractMessages[code];
 
-    if (_sessionCodes.contains(code) || (safeMessage == null && status == 401)) {
+    if (_sessionCodes.contains(code) ||
+        (safeMessage == null && status == 401)) {
       return IngestionFailure.expiredSession();
     }
 

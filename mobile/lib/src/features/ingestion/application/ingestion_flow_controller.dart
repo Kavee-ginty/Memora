@@ -546,9 +546,14 @@ class IngestionFlowController extends StateNotifier<IngestionFlowState> {
             subjectId: state.subjectId,
             inputType: _inputType,
             learnedAt: state.learnedAt,
-            clientOperationId: await _operationKey(accountId, 'create_operation'),
+            clientOperationId: await _operationKey(
+              accountId,
+              'create_operation',
+            ),
             idempotencyKey: await _operationKey(accountId, 'create'),
-            manualText: state.manualText.trim().isEmpty ? null : state.manualText,
+            manualText: state.manualText.trim().isEmpty
+                ? null
+                : state.manualText,
             files: prepared.values
                 .map((upload) => upload.declaration)
                 .toList(growable: false),

@@ -5,7 +5,10 @@ import 'package:memora_mobile/src/features/ingestion/domain/ingestion_models.dar
 void main() {
   group('LearningUpdateState wire parsing', () {
     test('Parses every contracted wire value', () {
-      expect(LearningUpdateState.fromWireName('draft'), LearningUpdateState.draft);
+      expect(
+        LearningUpdateState.fromWireName('draft'),
+        LearningUpdateState.draft,
+      );
       expect(
         LearningUpdateState.fromWireName('uploading'),
         LearningUpdateState.uploading,
@@ -22,13 +25,25 @@ void main() {
         LearningUpdateState.fromWireName('committed'),
         LearningUpdateState.committed,
       );
-      expect(LearningUpdateState.fromWireName('failed'), LearningUpdateState.failed);
-      expect(LearningUpdateState.fromWireName('expired'), LearningUpdateState.expired);
-      expect(LearningUpdateState.fromWireName('deleted'), LearningUpdateState.deleted);
+      expect(
+        LearningUpdateState.fromWireName('failed'),
+        LearningUpdateState.failed,
+      );
+      expect(
+        LearningUpdateState.fromWireName('expired'),
+        LearningUpdateState.expired,
+      );
+      expect(
+        LearningUpdateState.fromWireName('deleted'),
+        LearningUpdateState.deleted,
+      );
     });
 
     test('Falls back safely for null, empty and additive values', () {
-      expect(LearningUpdateState.fromWireName(null), LearningUpdateState.unknown);
+      expect(
+        LearningUpdateState.fromWireName(null),
+        LearningUpdateState.unknown,
+      );
       expect(LearningUpdateState.fromWireName(''), LearningUpdateState.unknown);
       expect(
         LearningUpdateState.fromWireName('future_additive_state'),
@@ -74,8 +89,14 @@ void main() {
         SourceDeletionStatus.fromWireName('pending'),
         SourceDeletionStatus.pending,
       );
-      expect(SourceDeletionStatus.fromWireName('gone'), SourceDeletionStatus.unknown);
-      expect(SourceDeletionStatus.fromWireName(null), SourceDeletionStatus.unknown);
+      expect(
+        SourceDeletionStatus.fromWireName('gone'),
+        SourceDeletionStatus.unknown,
+      );
+      expect(
+        SourceDeletionStatus.fromWireName(null),
+        SourceDeletionStatus.unknown,
+      );
     });
 
     test('CandidateState parses known values and falls back safely', () {
@@ -97,11 +118,23 @@ void main() {
     });
 
     test('IngestionInputType parses known values and falls back safely', () {
-      expect(IngestionInputType.fromWireName('manual_text'), IngestionInputType.manualText);
+      expect(
+        IngestionInputType.fromWireName('manual_text'),
+        IngestionInputType.manualText,
+      );
       expect(IngestionInputType.fromWireName('pdf'), IngestionInputType.pdf);
-      expect(IngestionInputType.fromWireName('image'), IngestionInputType.image);
-      expect(IngestionInputType.fromWireName('mixed'), IngestionInputType.mixed);
-      expect(IngestionInputType.fromWireName('audio'), IngestionInputType.unknown);
+      expect(
+        IngestionInputType.fromWireName('image'),
+        IngestionInputType.image,
+      );
+      expect(
+        IngestionInputType.fromWireName('mixed'),
+        IngestionInputType.mixed,
+      );
+      expect(
+        IngestionInputType.fromWireName('audio'),
+        IngestionInputType.unknown,
+      );
       expect(IngestionInputType.fromWireName(null), IngestionInputType.unknown);
     });
 
@@ -139,25 +172,48 @@ void main() {
       );
     }
 
-    test('Is available for deleting, expired and rejected without deletedAt', () {
-      expect(buildItem(SourceUploadState.deleting).deletionRetryAvailable, isTrue);
-      expect(buildItem(SourceUploadState.expired).deletionRetryAvailable, isTrue);
-      expect(buildItem(SourceUploadState.rejected).deletionRetryAvailable, isTrue);
-    });
+    test(
+      'Is available for deleting, expired and rejected without deletedAt',
+      () {
+        expect(
+          buildItem(SourceUploadState.deleting).deletionRetryAvailable,
+          isTrue,
+        );
+        expect(
+          buildItem(SourceUploadState.expired).deletionRetryAvailable,
+          isTrue,
+        );
+        expect(
+          buildItem(SourceUploadState.rejected).deletionRetryAvailable,
+          isTrue,
+        );
+      },
+    );
 
     test('Is unavailable once a deletion has been recorded', () {
       final deletedAt = DateTime.utc(2026, 11, 1);
       expect(
-        buildItem(SourceUploadState.deleting, deletedAt: deletedAt)
-            .deletionRetryAvailable,
+        buildItem(
+          SourceUploadState.deleting,
+          deletedAt: deletedAt,
+        ).deletionRetryAvailable,
         isFalse,
       );
     });
 
     test('Is unavailable for other statuses', () {
-      expect(buildItem(SourceUploadState.processing).deletionRetryAvailable, isFalse);
-      expect(buildItem(SourceUploadState.authorized).deletionRetryAvailable, isFalse);
-      expect(buildItem(SourceUploadState.deleted).deletionRetryAvailable, isFalse);
+      expect(
+        buildItem(SourceUploadState.processing).deletionRetryAvailable,
+        isFalse,
+      );
+      expect(
+        buildItem(SourceUploadState.authorized).deletionRetryAvailable,
+        isFalse,
+      );
+      expect(
+        buildItem(SourceUploadState.deleted).deletionRetryAvailable,
+        isFalse,
+      );
     });
   });
 
@@ -376,19 +432,22 @@ void main() {
       expect(preview.estimatedFirstMissionMinutes, isNull);
     });
 
-    test('CommitOutcome defaults firstMission to null before mission wiring', () {
-      const outcome = CommitOutcome(
-        knowledgeCommitId: 'commit-1',
-        commitVersion: 1,
-        committedCounts: <String, int>{'concepts': 4},
-        conceptMappings: <PreviewConcept>[],
-        privateKnowledgeCount: 2,
-        sourceDeletionStatus: SourceDeletionStatus.pending,
-      );
+    test(
+      'CommitOutcome defaults firstMission to null before mission wiring',
+      () {
+        const outcome = CommitOutcome(
+          knowledgeCommitId: 'commit-1',
+          commitVersion: 1,
+          committedCounts: <String, int>{'concepts': 4},
+          conceptMappings: <PreviewConcept>[],
+          privateKnowledgeCount: 2,
+          sourceDeletionStatus: SourceDeletionStatus.pending,
+        );
 
-      expect(outcome.firstMission, isNull);
-      expect(outcome.committedCounts['concepts'], 4);
-    });
+        expect(outcome.firstMission, isNull);
+        expect(outcome.committedCounts['concepts'], 4);
+      },
+    );
 
     test('FirstMissionInfo carries the mission reference when present', () {
       const outcome = CommitOutcome(

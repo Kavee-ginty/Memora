@@ -381,39 +381,42 @@ void main() {
       );
     });
 
-    test('updateDraft sends the row version and maps the new version', () async {
-      late RequestOptions request;
-      late Map<dynamic, dynamic> body;
-      _resolve(
-        dio,
-        _updateJson(status: 'draft', rowVersion: 2),
-        onRequest: (options) {
-          request = options;
-          body = Map<dynamic, dynamic>.from(options.data as Map);
-        },
-      );
+    test(
+      'updateDraft sends the row version and maps the new version',
+      () async {
+        late RequestOptions request;
+        late Map<dynamic, dynamic> body;
+        _resolve(
+          dio,
+          _updateJson(status: 'draft', rowVersion: 2),
+          onRequest: (options) {
+            request = options;
+            body = Map<dynamic, dynamic>.from(options.data as Map);
+          },
+        );
 
-      final snapshot = await repository.updateDraft(
-        accessToken: 'token',
-        updateId: _updateId,
-        version: 1,
-        idempotencyKey: 'idem-patch',
-        learnedAt: DateTime.utc(2026, 11, 2),
-        manualText: 'Updated text',
-      );
+        final snapshot = await repository.updateDraft(
+          accessToken: 'token',
+          updateId: _updateId,
+          version: 1,
+          idempotencyKey: 'idem-patch',
+          learnedAt: DateTime.utc(2026, 11, 2),
+          manualText: 'Updated text',
+        );
 
-      expect(request.method, 'PATCH');
-      expect(request.path, '/v1/learning-updates/$_updateId');
-      expect(request.headers['Idempotency-Key'], 'idem-patch');
-      expect(body['version'], 1);
-      expect(body['manual_text'], 'Updated text');
-      expect(
-        DateTime.parse(body['learned_at'] as String),
-        DateTime.utc(2026, 11, 2),
-      );
-      expect(snapshot.state, LearningUpdateState.draft);
-      expect(snapshot.rowVersion, 2);
-    });
+        expect(request.method, 'PATCH');
+        expect(request.path, '/v1/learning-updates/$_updateId');
+        expect(request.headers['Idempotency-Key'], 'idem-patch');
+        expect(body['version'], 1);
+        expect(body['manual_text'], 'Updated text');
+        expect(
+          DateTime.parse(body['learned_at'] as String),
+          DateTime.utc(2026, 11, 2),
+        );
+        expect(snapshot.state, LearningUpdateState.draft);
+        expect(snapshot.rowVersion, 2);
+      },
+    );
 
     test('updateDraft omits absent optional fields', () async {
       late Map<dynamic, dynamic> body;
@@ -438,9 +441,14 @@ void main() {
 
     test('delete sends the durable operation key', () async {
       late RequestOptions request;
-      _resolve(dio, null, statusCode: 204, onRequest: (options) {
-        request = options;
-      });
+      _resolve(
+        dio,
+        null,
+        statusCode: 204,
+        onRequest: (options) {
+          request = options;
+        },
+      );
 
       await repository.deleteUpdate(
         accessToken: 'token',
@@ -589,10 +597,7 @@ void main() {
         limit: 2,
       );
 
-      expect(
-        request.path,
-        '/v1/learning-updates/$_updateId/candidates',
-      );
+      expect(request.path, '/v1/learning-updates/$_updateId/candidates');
       expect(request.queryParameters['cursor'], 'candidate-page-1');
       expect(request.queryParameters['limit'], 2);
       expect(page.items, hasLength(2));
@@ -612,16 +617,11 @@ void main() {
     });
 
     test('unknown confidence band falls back safely', () async {
-      _resolve(
-        dio,
-        <String, dynamic>{
-          'items': <Map<String, dynamic>>[
-            _candidateJson(band: 'certain'),
-          ],
-          'has_more': false,
-          'next_cursor': null,
-        },
-      );
+      _resolve(dio, <String, dynamic>{
+        'items': <Map<String, dynamic>>[_candidateJson(band: 'certain')],
+        'has_more': false,
+        'next_cursor': null,
+      });
 
       final page = await repository.listCandidates(
         accessToken: 'token',
@@ -760,14 +760,14 @@ void main() {
         idempotencyKey: 'idem-commit',
       );
 
-      expect(
-        request.path,
-        '/v1/learning-updates/$_updateId/commit',
-      );
+      expect(request.path, '/v1/learning-updates/$_updateId/commit');
       expect(request.headers['Idempotency-Key'], 'idem-commit');
       expect(outcome.knowledgeCommitId, 'commit-1');
       expect(outcome.commitVersion, 1);
-      expect(outcome.committedCounts, <String, int>{'concept': 2, 'formula': 1});
+      expect(outcome.committedCounts, <String, int>{
+        'concept': 2,
+        'formula': 1,
+      });
       expect(outcome.conceptMappings, hasLength(1));
       expect(outcome.privateKnowledgeCount, 0);
       expect(outcome.firstMission, isNull);

@@ -49,11 +49,7 @@ Dio _countingDio(void Function(RequestOptions options)? onRequest) {
       onRequest: (options, handler) {
         onRequest?.call(options);
         return handler.resolve(
-          Response<Object?>(
-            requestOptions: options,
-            statusCode: 200,
-            data: '',
-          ),
+          Response<Object?>(requestOptions: options, statusCode: 200, data: ''),
         );
       },
     ),
@@ -135,29 +131,29 @@ void main() {
       );
     });
 
-    test('rejects a name whose extension does not match the media type', () async {
-      final client = PresignedUploadClient();
+    test(
+      'rejects a name whose extension does not match the media type',
+      () async {
+        final client = PresignedUploadClient();
 
-      await expectLater(
-        client.prepare(_source(name: 'notes.txt')),
-        throwsA(
-          isA<IngestionFailure>().having(
-            (failure) => failure.code,
-            'code',
-            'unsupported_media_type',
+        await expectLater(
+          client.prepare(_source(name: 'notes.txt')),
+          throwsA(
+            isA<IngestionFailure>().having(
+              (failure) => failure.code,
+              'code',
+              'unsupported_media_type',
+            ),
           ),
-        ),
-      );
-    });
+        );
+      },
+    );
 
     test('accepts JPEG aliases and strips media-type parameters', () async {
       final client = PresignedUploadClient();
 
       final jpg = await client.prepare(
-        _source(
-          name: 'photo.JPG',
-          mediaType: 'image/jpeg; charset=binary',
-        ),
+        _source(name: 'photo.JPG', mediaType: 'image/jpeg; charset=binary'),
       );
       final jpeg = await client.prepare(
         _source(name: 'photo.jpeg', mediaType: 'image/jpeg'),
@@ -237,11 +233,7 @@ void main() {
         ),
         throwsA(
           isA<IngestionFailure>()
-              .having(
-                (failure) => failure.code,
-                'code',
-                'upload_grant_expired',
-              )
+              .having((failure) => failure.code, 'code', 'upload_grant_expired')
               .having((failure) => failure.retryable, 'retryable', isTrue),
         ),
       );
@@ -275,7 +267,10 @@ void main() {
       final prepared = await client.prepare(_source());
 
       await expectLater(
-        client.upload(grant: _grant(method: 'POST'), upload: prepared),
+        client.upload(
+          grant: _grant(method: 'POST'),
+          upload: prepared,
+        ),
         throwsA(
           isA<IngestionFailure>().having(
             (failure) => failure.code,
