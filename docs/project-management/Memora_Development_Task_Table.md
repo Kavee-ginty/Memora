@@ -50,7 +50,7 @@ If two sources appear inconsistent, stop implementation and resolve the conflict
 | T15 | Progress XP streak and reef backend | Blocked | - | 5 | T11, T13 | `task/T15-progress-backend` | Backend engagement |
 | T16 | Progress mobile experience | Blocked | - | 5 | T07, T15 | `task/T16-progress-mobile` | Mobile feature |
 | T17 | Profile preferences and notifications backend | **Done** | Harsha | 4 | T06 | `task/T17-profile-backend` | Backend account |
-| T18 | Profile and settings mobile | **Ready** | - | 4 | T07, T17 | `task/T18-profile-mobile` | Mobile feature |
+| T18 | Profile and settings mobile | **In Progress** | Codex | 4 | T07, T17 | `task/T18-profile-mobile` | Mobile feature |
 | T19 | Push notifications and deep links | **Ready** | - | 4 | T07, T17 | `task/T19-push-deep-links` | Mobile and backend |
 | T20 | Privacy export and deletion backend | **Done** | Dima | 5 | T06, T04 | `task/T20-privacy-backend` | Backend privacy |
 | T21 | Privacy mobile experience | **Ready** | - | 3 | T07, T20 | `task/T21-privacy-mobile` | Mobile feature |
