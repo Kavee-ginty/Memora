@@ -20,6 +20,7 @@ from memora.modules.questions.models import (
 from memora.modules.questions.validation import (
     QuestionValidationError,
     parse_answer_payload,
+    parse_question_content,
     source_precedence_rank,
     validate_answer_against_question,
     validate_question_import,
@@ -346,6 +347,83 @@ def test_import_rejects_publication_without_primary_mapping() -> None:
         validate_question_import(bundle(concept_mappings=[]))
 
     assert captured.value.code == "concept_mapping_missing"
+
+
+def test_import_rejects_supporting_only_mapping_for_publication() -> None:
+    supporting = {
+        "concept_version_id": CONCEPT_ID,
+        "mapping_role": "supporting",
+        "weight": Decimal("1"),
+        "provenance_type": "review",
+        "provenance_ref": "synthetic-review",
+    }
+
+    with pytest.raises(QuestionValidationError) as captured:
+        validate_question_import(bundle(concept_mappings=[supporting]))
+
+    assert captured.value.code == "concept_mapping_missing"
+
+
+def test_import_rejects_approved_question_without_required_principals() -> None:
+    without_reviewer = {
+        "reviewer_principal": None,
+    }
+    without_author = {
+        "author_principal": None,
+    }
+
+    with pytest.raises(QuestionValidationError) as reviewer_error:
+        validate_question_import(bundle(**without_reviewer))
+    with pytest.raises(QuestionValidationError) as author_error:
+        validate_question_import(bundle(**without_author))
+
+    assert reviewer_error.value.code == "reviewer_required"
+    assert author_error.value.code == "author_required"
+
+
+def test_import_accepts_ai_generated_question_without_author_principal() -> None:
+    imported = validate_question_import(generated_bundle(author_principal=None))
+
+    assert imported.trust_label == "AI generated"
+
+
+def test_import_rejects_approved_question_without_explanation() -> None:
+    with pytest.raises(QuestionValidationError) as captured:
+        validate_question_import(bundle(explanation="   "))
+
+    assert captured.value.code == "publish_requirements_missing"
+    assert captured.value.field == "explanation"
+
+
+def test_import_rejects_approved_question_with_draft_rubric() -> None:
+    with pytest.raises(QuestionValidationError) as captured:
+        validate_question_import(bundle(rubric=rubric(status="draft")))
+
+    assert captured.value.code == "publish_requirements_missing"
+    assert captured.value.field == "rubric.status"
+
+
+def test_import_rejects_approved_question_with_zero_evidence_ceiling() -> None:
+    with pytest.raises(QuestionValidationError) as captured:
+        validate_question_import(bundle(rubric=rubric(evidence_ceiling=Decimal("0"))))
+
+    assert captured.value.code == "publish_requirements_missing"
+    assert captured.value.field == "rubric.evidence_ceiling"
+
+
+def test_source_metadata_cannot_be_smuggled_into_question_content() -> None:
+    with pytest.raises(QuestionValidationError) as captured:
+        parse_question_content(
+            "mcq",
+            {
+                "selection_mode": "single",
+                "source_ref": "SL-DOE-AL-PHYS-2025-P1",
+                "licence": "claimed-in-content",
+            },
+        )
+
+    assert captured.value.code == "content_invalid"
+    assert captured.value.field == "content"
 
 
 def test_import_rejects_single_choice_with_two_correct_options() -> None:

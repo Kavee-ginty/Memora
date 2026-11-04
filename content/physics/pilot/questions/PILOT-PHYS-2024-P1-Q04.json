@@ -1,0 +1,148 @@
+{
+  "schema_version": "2.0",
+  "pilot_id": "PILOT-PHYS-2024-P1-Q04",
+  "verification_mode": "expert_review",
+  "source": {
+    "source_id": "SL-DOE-AL-PHYS-2024-P1",
+    "source_type": "past_paper",
+    "document_filename": "AL_Physics_2024_Combined_Paper_English.pdf",
+    "document_sha256": "1d628ae65f32d97ce495a244176a7aa2db31e2b1a57f698a6fe3b028772c18c2",
+    "exam_year": 2024,
+    "exam_label": "2024",
+    "paper": "Paper I",
+    "question_number": 4,
+    "pdf_page": 1,
+    "medium": "English",
+    "marking_scheme_document": "AL_Physics_2024_Combined_Marking_Scheme_English.pdf",
+    "marking_scheme_sha256": "2e77a2fd58a9213ea0cf025a11a72babedef363b66126c9d7830c8dcec9394b2",
+    "marking_scheme_pdf_page": 5,
+    "official_key": 1,
+    "official_key_status": "verified_against_marking_scheme",
+    "transcription_status": "verified_visual",
+    "text_only_adaptation": false,
+    "transcription_note": null,
+    "reproduction_status": "unapproved",
+    "licence_note": "Department of Examinations past paper. Reproduction permission is not recorded; this short excerpt is retained only for the internal T24 pilot and is not cleared for redistribution."
+  },
+  "question": {
+    "question_code": "pilot-phys-2024-p1-q04",
+    "subject_id": "10000000-0000-0000-0000-000000000001",
+    "curriculum_version_id": "20000000-0000-0000-0000-000000000001",
+    "source_class": "expert_verified",
+    "target_source_class": "expert_verified",
+    "question_type": "mcq",
+    "prompt": "Consider the following statements about a pair of action-reaction forces.\n(A) They are equal in magnitude but opposite in direction.\n(B) They act only on objects touching each other.\n(C) They act on the same object.\nOf the above statements,",
+    "explanation": "Newton's third-law pair forces are equal in magnitude and opposite in direction, but they act on different bodies. They can act without contact, for example gravitational or magnetic forces. Statement B is false because contact is not required; C is false because action and reaction act on different objects. Only A is true.",
+    "validation_status": "approved",
+    "author_principal": "a2400000-0000-4000-8000-000000000001",
+    "author_qualification_ref": "PostGraduate",
+    "reviewer_principal": "a2400000-0000-4000-8000-000000000001",
+    "content": {
+      "kind": "choice",
+      "schema_version": "1",
+      "selection_mode": "single"
+    },
+    "options": [
+      {
+        "option_key": "1",
+        "display_text": "only (A) is true.",
+        "is_correct": true,
+        "display_order": 0
+      },
+      {
+        "option_key": "2",
+        "display_text": "only (A) and (B) are true.",
+        "is_correct": false,
+        "display_order": 1
+      },
+      {
+        "option_key": "3",
+        "display_text": "only (A) and (C) are true.",
+        "is_correct": false,
+        "display_order": 2
+      },
+      {
+        "option_key": "4",
+        "display_text": "only (B) and (C) are true.",
+        "is_correct": false,
+        "display_order": 3
+      },
+      {
+        "option_key": "5",
+        "display_text": "all (A), (B) and (C) are true.",
+        "is_correct": false,
+        "display_order": 4
+      }
+    ],
+    "rubric": {
+      "rubric_type": "exact",
+      "max_score": 1,
+      "evidence_ceiling": 0.9,
+      "status": "approved",
+      "payload": {
+        "kind": "exact",
+        "schema_version": "1"
+      }
+    },
+    "concept_mappings": [
+      {
+        "concept_version_id": "50000000-0000-0000-0000-000000000009",
+        "learning_objective_id": "30000000-0000-0000-0000-000000000006",
+        "mapping_role": "primary",
+        "weight": 1.0,
+        "provenance_type": "pilot_review",
+        "provenance_ref": "content/physics/pilot/REVIEW_RECORD.md#pilot-phys-2024-p1-q04"
+      },
+      {
+        "concept_version_id": "50000000-0000-0000-0000-000000000008",
+        "learning_objective_id": "30000000-0000-0000-0000-000000000006",
+        "mapping_role": "supporting",
+        "weight": 0.3,
+        "provenance_type": "pilot_review",
+        "provenance_ref": "content/physics/pilot/REVIEW_RECORD.md#pilot-phys-2024-p1-q04"
+      }
+    ]
+  },
+  "answer_verification": {
+    "mode": "expert_review",
+    "official_key": 1,
+    "derived_option_key": "1",
+    "matches_official_key": true,
+    "derivation": "Newton's third law gives F_AB = -F_BA: equal magnitude and opposite direction (A true). Third-law pairs are interactions between two bodies and need not touch (B false). They never act on the same body (C false). Therefore only (A), option 1. The official key is 1.",
+    "official_key_source_ref": "SL-DOE-AL-PHYS-2024-P1 Q4; AL_Physics_2024_Combined_Marking_Scheme_English.pdf p.5",
+    "independent_review_status": "self_review",
+    "reviewer_ref": "content/physics/pilot/REVIEW_RECORD.md#pilot-phys-2024-p1-q04",
+    "notes": "Self-reviewed by the named pilot reviewer; the printed official marking-scheme grid remains the answer-key authority. See content/physics/pilot/REVIEW_RECORD.md."
+  },
+  "review": {
+    "review_mode": "expert_review",
+    "academic_review_status": "approved",
+    "reviewer_principal": "a2400000-0000-4000-8000-000000000001",
+    "reviewer_qualification_ref": "PostGraduate",
+    "review_scope": [
+      "official_key_match",
+      "derivation",
+      "transcription",
+      "curriculum_mapping",
+      "ambiguity",
+      "duplicate"
+    ],
+    "reviewed_at": "2026-11-02T13:30:00+00:00",
+    "ambiguity_status": "cleared",
+    "ambiguity_note": null,
+    "duplicate_status": "cleared",
+    "coverage_note": "Covers Newton's third law and distinguishes action-reaction pairs from balanced forces on one body.",
+    "content_hash": "a9f113027d7e50b7d4b77d6eba2ba7821d846741a5a55436a1ac7eed014683b3",
+    "source_ref": "SL-DOE-AL-PHYS-2024-P1 Q4; AL_Physics_2024_Combined_Marking_Scheme_English.pdf p.5",
+    "independence_declaration_ref": "content/physics/pilot/REVIEW_RECORD.md#independence-declaration",
+    "deviation_ref": null
+  },
+  "publication": {
+    "approved_for_import": true,
+    "approved_by": "Malshani Perera",
+    "approved_at": "2026-11-02T13:30:00+00:00",
+    "import_batch_id": "T24-PHYS-PILOT-2026-11",
+    "import_status": "ready_for_import",
+    "blocker_ref": null
+  }
+}
