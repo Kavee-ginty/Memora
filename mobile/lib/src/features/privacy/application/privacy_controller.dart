@@ -716,6 +716,16 @@ class PrivacyController extends StateNotifier<PrivacyState> {
     state = state.copyWith(notice: null);
   }
 
+  /// Cancels background status polling when a privacy status screen is disposed.
+  ///
+  /// Widget disposal cannot publish a provider state change, so this only
+  /// cancels the timer. A later status screen load reads the server's latest
+  /// state and restarts polling, so leaving a screen never implies completion.
+  void stopPolling() {
+    _pollTimer?.cancel();
+    _pollTimer = null;
+  }
+
   void _applyExport(PrivacyExport export, {bool startPolling = true}) {
     state = state.copyWith(
       export: export,

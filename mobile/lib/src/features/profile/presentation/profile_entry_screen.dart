@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../design_system/components/app_header.dart';
 import '../../../design_system/components/button.dart';
@@ -8,6 +9,7 @@ import '../../../design_system/components/dialog.dart';
 import '../../../design_system/tokens/colors.dart';
 import '../../../design_system/tokens/spacing.dart';
 import '../../../design_system/tokens/typography.dart';
+import '../../../routing/app_routes.dart';
 import '../../auth/application/session_controller.dart';
 
 /// Minimal Profile host rendering authenticated profile summary and safe sign-out.
@@ -109,22 +111,34 @@ class ProfileEntryScreen extends ConsumerWidget {
             ),
             const SizedBox(height: MemoraSpacing.space24),
 
-            // Settings & Preferences placeholder section
-            const MemoraCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Preferences & Privacy',
-                    style: MemoraTypography.cardTitle,
+            // Privacy entry owned by T21
+            MemoraCard(
+              key: const Key('profile_privacy_entry'),
+              onTap: () => context.go(AppRoutes.privacy),
+              child: Row(
+                children: <Widget>[
+                  const Icon(
+                    Icons.shield_outlined,
+                    color: MemoraColors.brandBlue,
+                    size: 24,
                   ),
-                  SizedBox(height: MemoraSpacing.space8),
-                  Text(
-                    'Account preferences, notification schedules, and privacy controls will be configurable in milestone T18 & T21.',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: MemoraColors.textSecondary,
+                  const SizedBox(width: MemoraSpacing.space12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text('Privacy', style: MemoraTypography.cardTitle),
+                        const SizedBox(height: MemoraSpacing.space4),
+                        Text(
+                          'Export your data or delete your account',
+                          style: MemoraTypography.metadata,
+                        ),
+                      ],
                     ),
+                  ),
+                  const Icon(
+                    Icons.chevron_right,
+                    color: MemoraColors.textMuted,
                   ),
                 ],
               ),
