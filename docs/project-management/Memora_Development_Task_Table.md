@@ -56,7 +56,7 @@ If two sources appear inconsistent, stop implementation and resolve the conflict
 | T21 | Privacy mobile experience | **Ready** | - | 3 | T07, T20 | `task/T21-privacy-mobile` | Mobile feature |
 | T22 | Offline sync and idempotency hardening | Blocked | - | 6 | T09, T13, T07 | `task/T22-offline-idempotency` | Cross-platform |
 | T23 | Observability and security hardening | Blocked | - | 5 | T02, T09, T13, T17, T20 | `task/T23-security-observability` | Platform |
-| T24 | Verified Physics pilot content | **In Progress** | Neleesha | 6 | T08, T12 | `task/T24-physics-content` | Academic content |
+| T24 | Verified Physics pilot content | **Review** | Neleesha | 6 | T08, T12 | `task/T24-physics-content` | Academic content |
 | T25 | API contract and authorization tests | Blocked | - | 5 | T09, T13, T15, T17, T20 | `task/T25-api-auth-tests` | QA and backend |
 | T26 | Cross-feature end-to-end integration | Blocked | - | 6 | T10, T14, T16, T18, T19, T21, T22, T25 | `task/T26-e2e-integration` | Integration |
 | T27 | Accessibility and visual QA | Blocked | - | 5 | T10, T14, T16, T18, T19, T21 | `task/T27-accessibility-visual-qa` | QA and mobile |
@@ -301,9 +301,36 @@ This records the Section 6 checklist for T11. Pull request #37 was reviewed and 
 | Security and privacy | Ownership is derived from the validated session and enforced by RLS plus explicit predicates; cross-user reads return `404`; responses are `private, no-store` and band-only; logs contain no learning text, event payloads or authorization headers. Worker roles are limited to the granted tables. |
 | Deviations and follow-ups | No approved deviation. Follow-ups: composite `memory_decisions` history index, `disable_existing_loggers=False` in migration logging, real T09 producer wiring, and T13/T15 additive extensions. All are recorded in `docs/learning/T11_Study_Note.md` and are outside the T11 merge boundary. |
 
+### T24 review evidence
+
+T24 is in **Review**, not Done. Route A is complete on
+`task/T24-physics-content`: all eight envelopes use `expert_review`, record an
+explicit self-review by Malshani Perera (Physics Teacher, qualification reference
+`PostGraduate`) and are approved for import batch `T24-PHYS-PILOT-2026-11`. The
+reviewer is also the author. Independence is not claimed, and the qualification
+reference is self-declared and underspecified.
+
+The conversion changed review and publication metadata only; prompts, options,
+explanations, derivations, source references and concept/objective mappings were
+preserved. `content/physics/pilot/REVIEW_RECORD.md` records the declaration,
+per-item decisions and reviewed/sealed hashes. The real envelopes were imported
+through `QuestionImportRepository` into a disposable PostgreSQL database; all
+eight rows carry the same non-null author and reviewer principal and an approved
+version. T24 remains Review until the Route A changes are committed, the branch is
+merged and the merged content is reviewed as part of `develop`. Full evidence is
+in `docs/evidence/T24_Content_Evidence.md`.
+
 ## 7 Current next action
 
-T01-T09, T11-T12, T17 and T20 are merged and Done. T10 is in Review pending merge; T13 and T24 are In Progress. T18, T19 and T21 are Ready. T14, T15, T22 and T23 remain Blocked until T13 is Done; later tasks remain blocked until all listed dependencies are Done. T26 and T27 remain Blocked until T10 is merged and marked Done.
+T01-T09, T11-T12, T17 and T20 are merged and Done. T10 and T24 are in Review
+pending merge; T13 is In Progress. T18, T19 and T21 are Ready. T14, T15, T22 and T23 remain
+Blocked until T13 is Done; later tasks remain blocked until all listed
+dependencies are Done. T26 and T27 remain Blocked until T10 is merged and marked Done.
+
+T24's next action is user commit, push, pull request and merge of the Route A
+changes. Do not mark T24 Done until that merge occurs. The qualified-review record
+is a self-review, and the qualification reference still lacks degree,
+institution, year and subject-specialisation evidence.
 
 T20 completed through pull request #38, merged into `develop` at `a243e79`. All required CI checks passed. Its successors were recalculated: T21 is Ready because T07 and T20 are Done; T23 and T25 remain Blocked by their other incomplete dependencies.
 

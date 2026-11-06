@@ -1,0 +1,571 @@
+{
+  "schema_version": "2.0",
+  "generated_at": "2026-11-02",
+  "authority": "T08 seed data in backend/src/memora/modules/curriculum/seed_data.py; formulas and units are the pilot brief derived from the 2017 NIE syllabus.",
+  "concept_count": 14,
+  "covered_count": 11,
+  "gap_count": 3,
+  "concepts": [
+    {
+      "stable_code": "PHYS-MEA-SI-UNITS",
+      "concept_id": "40000000-0000-0000-0000-000000000001",
+      "concept_version_id": "50000000-0000-0000-0000-000000000001",
+      "kind": "concept",
+      "title": "International System of Units (SI)",
+      "definition": "A coherent system of units based on seven fundamental base quantities: length, mass, time, electric current, thermodynamic temperature, amount of substance, and luminous intensity.",
+      "objective_code": "LO-PHYS-01-01-UNITS",
+      "objective_id": "30000000-0000-0000-0000-000000000002",
+      "objective_title": "Physical Quantities and SI Units",
+      "parent_objective_code": "LO-PHYS-01-MEAS",
+      "formula": null,
+      "unit": "Seven SI base units: m, kg, s, A, K, mol, cd",
+      "dimensions": null,
+      "prerequisites": [],
+      "related": [],
+      "aliases": [
+        "SI Units",
+        "International System of Units",
+        "SI"
+      ],
+      "claims": [
+        {
+          "claim_id": "70000000-0000-0000-0000-000000000001",
+          "claim_type": "definition",
+          "statement": "SI is the globally adopted metric system consisting of seven fundamental base units."
+        }
+      ],
+      "pilot_status": "covered",
+      "question_ids": [
+        "PILOT-PHYS-2024-P1-Q01",
+        "PILOT-PHYS-2025-P1-Q01"
+      ],
+      "mapping_roles": [
+        "supporting"
+      ],
+      "coverage_note": "Covered by 2 pilot question(s).",
+      "note": "Derived units are products and powers of the base units."
+    },
+    {
+      "stable_code": "PHYS-MEA-DIMENSIONS",
+      "concept_id": "40000000-0000-0000-0000-000000000002",
+      "concept_version_id": "50000000-0000-0000-0000-000000000002",
+      "kind": "concept",
+      "title": "Dimensions of Physical Quantities",
+      "definition": "The powers to which fundamental base quantities must be raised to represent a physical quantity, denoted by [M], [L], [T], [I], [θ], [N], and [J].",
+      "objective_code": "LO-PHYS-01-02-DIMS",
+      "objective_id": "30000000-0000-0000-0000-000000000003",
+      "objective_title": "Dimensions and Dimensional Analysis",
+      "parent_objective_code": "LO-PHYS-01-MEAS",
+      "formula": "[Q] = M^a L^b T^c for mechanical quantities",
+      "unit": null,
+      "dimensions": "M, L, T, I, Theta, N, J",
+      "prerequisites": [
+        "PHYS-MEA-SI-UNITS"
+      ],
+      "related": [],
+      "aliases": [
+        "Dimensional Analysis",
+        "Dimensions"
+      ],
+      "claims": [
+        {
+          "claim_id": "70000000-0000-0000-0000-000000000002",
+          "claim_type": "condition",
+          "statement": "Only terms having the same dimensions can be added, subtracted, or equated (Principle of Homogeneity)."
+        }
+      ],
+      "pilot_status": "covered",
+      "question_ids": [
+        "PILOT-PHYS-2024-P1-Q01"
+      ],
+      "mapping_roles": [
+        "primary"
+      ],
+      "coverage_note": "Covered by 1 pilot question(s).",
+      "note": "Only quantities with the same dimensions may be added, subtracted or equated."
+    },
+    {
+      "stable_code": "PHYS-MEC-DISPLACEMENT",
+      "concept_id": "40000000-0000-0000-0000-000000000003",
+      "concept_version_id": "50000000-0000-0000-0000-000000000003",
+      "kind": "variable",
+      "title": "Displacement",
+      "definition": "The vector change in position of an object from an initial point to a final point in a specified direction.",
+      "objective_code": "LO-PHYS-02-01-KINEMATICS",
+      "objective_id": "30000000-0000-0000-0000-000000000005",
+      "objective_title": "Kinematics in One Dimension",
+      "parent_objective_code": "LO-PHYS-02-MECH",
+      "formula": "Delta s = s_final - s_initial",
+      "unit": "m",
+      "dimensions": "L",
+      "prerequisites": [
+        "PHYS-MEA-SI-UNITS"
+      ],
+      "related": [],
+      "aliases": [
+        "Displacement",
+        "s"
+      ],
+      "claims": [
+        {
+          "claim_id": "70000000-0000-0000-0000-000000000003",
+          "claim_type": "definition",
+          "statement": "Displacement is the straight-line directed distance between start and end."
+        }
+      ],
+      "pilot_status": "gap",
+      "question_ids": [],
+      "mapping_roles": [],
+      "coverage_note": "No selected pilot question maps to this T08 concept.",
+      "note": null
+    },
+    {
+      "stable_code": "PHYS-MEC-VELOCITY",
+      "concept_id": "40000000-0000-0000-0000-000000000004",
+      "concept_version_id": "50000000-0000-0000-0000-000000000004",
+      "kind": "variable",
+      "title": "Velocity",
+      "definition": "The rate of change of displacement of an object with respect to time.",
+      "objective_code": "LO-PHYS-02-01-KINEMATICS",
+      "objective_id": "30000000-0000-0000-0000-000000000005",
+      "objective_title": "Kinematics in One Dimension",
+      "parent_objective_code": "LO-PHYS-02-MECH",
+      "formula": "v = ds/dt",
+      "unit": "m s^-1",
+      "dimensions": "L T^-1",
+      "prerequisites": [
+        "PHYS-MEC-DISPLACEMENT"
+      ],
+      "related": [],
+      "aliases": [
+        "Velocity",
+        "v",
+        "velocity vector"
+      ],
+      "claims": [
+        {
+          "claim_id": "70000000-0000-0000-0000-000000000004",
+          "claim_type": "formula",
+          "statement": "Velocity is the first time derivative of displacement: v = ds/dt."
+        }
+      ],
+      "pilot_status": "gap",
+      "question_ids": [],
+      "mapping_roles": [],
+      "coverage_note": "No selected pilot question maps to this T08 concept.",
+      "note": null
+    },
+    {
+      "stable_code": "PHYS-MEC-ACCELERATION",
+      "concept_id": "40000000-0000-0000-0000-000000000005",
+      "concept_version_id": "50000000-0000-0000-0000-000000000005",
+      "kind": "variable",
+      "title": "Acceleration",
+      "definition": "The rate of change of velocity of an object with respect to time.",
+      "objective_code": "LO-PHYS-02-01-KINEMATICS",
+      "objective_id": "30000000-0000-0000-0000-000000000005",
+      "objective_title": "Kinematics in One Dimension",
+      "parent_objective_code": "LO-PHYS-02-MECH",
+      "formula": "a = dv/dt",
+      "unit": "m s^-2",
+      "dimensions": "L T^-2",
+      "prerequisites": [
+        "PHYS-MEC-VELOCITY"
+      ],
+      "related": [],
+      "aliases": [
+        "Acceleration",
+        "a"
+      ],
+      "claims": [
+        {
+          "claim_id": "70000000-0000-0000-0000-000000000005",
+          "claim_type": "formula",
+          "statement": "Acceleration is the time rate of change of velocity: a = dv/dt."
+        }
+      ],
+      "pilot_status": "covered",
+      "question_ids": [
+        "PILOT-PHYS-2022-P1-Q17",
+        "PILOT-PHYS-2025-P1-Q03"
+      ],
+      "mapping_roles": [
+        "supporting"
+      ],
+      "coverage_note": "Covered by 2 pilot question(s).",
+      "note": null
+    },
+    {
+      "stable_code": "PHYS-MEC-MOMENTUM",
+      "concept_id": "40000000-0000-0000-0000-000000000006",
+      "concept_version_id": "50000000-0000-0000-0000-000000000006",
+      "kind": "variable",
+      "title": "Linear Momentum",
+      "definition": "The product of mass and velocity of a body, pointing in the direction of velocity.",
+      "objective_code": "LO-PHYS-02-02-NEWTON-LAWS",
+      "objective_id": "30000000-0000-0000-0000-000000000006",
+      "objective_title": "Newton's Laws of Motion and Momentum",
+      "parent_objective_code": "LO-PHYS-02-MECH",
+      "formula": "p = m v",
+      "unit": "kg m s^-1",
+      "dimensions": "M L T^-1",
+      "prerequisites": [
+        "PHYS-MEC-VELOCITY"
+      ],
+      "related": [],
+      "aliases": [
+        "Linear Momentum",
+        "Momentum",
+        "p"
+      ],
+      "claims": [
+        {
+          "claim_id": "70000000-0000-0000-0000-000000000006",
+          "claim_type": "definition",
+          "statement": "Linear momentum p = mv is a vector quantity having the direction of velocity."
+        }
+      ],
+      "pilot_status": "covered",
+      "question_ids": [
+        "PILOT-PHYS-2022-P1-Q01",
+        "PILOT-PHYS-2024-P1-Q05",
+        "PILOT-PHYS-2025-P1-Q45"
+      ],
+      "mapping_roles": [
+        "primary"
+      ],
+      "coverage_note": "Covered by 3 pilot question(s).",
+      "note": null
+    },
+    {
+      "stable_code": "PHYS-MEC-NEWTON1",
+      "concept_id": "40000000-0000-0000-0000-000000000007",
+      "concept_version_id": "50000000-0000-0000-0000-000000000007",
+      "kind": "law",
+      "title": "Newton's First Law of Motion",
+      "definition": "A body continues in its state of rest or uniform motion in a straight line unless acted upon by an external unbalanced resultant force.",
+      "objective_code": "LO-PHYS-02-02-NEWTON-LAWS",
+      "objective_id": "30000000-0000-0000-0000-000000000006",
+      "objective_title": "Newton's Laws of Motion and Momentum",
+      "parent_objective_code": "LO-PHYS-02-MECH",
+      "formula": "Sum F = 0 => a = 0 and v = constant",
+      "unit": null,
+      "dimensions": null,
+      "prerequisites": [
+        "PHYS-MEC-VELOCITY"
+      ],
+      "related": [],
+      "aliases": [
+        "Newton's First Law",
+        "Law of Inertia",
+        "Newton 1"
+      ],
+      "claims": [
+        {
+          "claim_id": "70000000-0000-0000-0000-000000000007",
+          "claim_type": "definition",
+          "statement": "In the absence of a resultant external force, an object maintains constant velocity."
+        },
+        {
+          "claim_id": "70000000-0000-0000-0000-000000000008",
+          "claim_type": "misconception",
+          "statement": "A continuous force is required to keep an object moving with uniform velocity."
+        }
+      ],
+      "pilot_status": "gap",
+      "question_ids": [],
+      "mapping_roles": [],
+      "coverage_note": "No selected pilot question maps to this T08 concept.",
+      "note": null
+    },
+    {
+      "stable_code": "PHYS-MEC-NEWTON2",
+      "concept_id": "40000000-0000-0000-0000-000000000008",
+      "concept_version_id": "50000000-0000-0000-0000-000000000008",
+      "kind": "law",
+      "title": "Newton's Second Law of Motion",
+      "definition": "The rate of change of linear momentum of a body is directly proportional to the applied resultant force and occurs in the direction of the force.",
+      "objective_code": "LO-PHYS-02-02-NEWTON-LAWS",
+      "objective_id": "30000000-0000-0000-0000-000000000006",
+      "objective_title": "Newton's Laws of Motion and Momentum",
+      "parent_objective_code": "LO-PHYS-02-MECH",
+      "formula": "F = dp/dt = m a (constant mass)",
+      "unit": "N = kg m s^-2",
+      "dimensions": "M L T^-2",
+      "prerequisites": [
+        "PHYS-MEC-ACCELERATION",
+        "PHYS-MEC-MOMENTUM",
+        "PHYS-MEC-NEWTON1"
+      ],
+      "related": [],
+      "aliases": [
+        "Newton's Second Law",
+        "F = ma",
+        "Newton 2"
+      ],
+      "claims": [
+        {
+          "claim_id": "70000000-0000-0000-0000-000000000009",
+          "claim_type": "formula",
+          "statement": "Resultant Force F = dp/dt. When mass m is constant, F = ma."
+        }
+      ],
+      "pilot_status": "covered",
+      "question_ids": [
+        "PILOT-PHYS-2022-P1-Q17",
+        "PILOT-PHYS-2024-P1-Q04"
+      ],
+      "mapping_roles": [
+        "supporting"
+      ],
+      "coverage_note": "Covered by 2 pilot question(s).",
+      "note": null
+    },
+    {
+      "stable_code": "PHYS-MEC-NEWTON3",
+      "concept_id": "40000000-0000-0000-0000-000000000009",
+      "concept_version_id": "50000000-0000-0000-0000-000000000009",
+      "kind": "law",
+      "title": "Newton's Third Law of Motion",
+      "definition": "When two bodies interact, the force exerted by the first body on the second is equal in magnitude and opposite in direction to the force exerted by the second body on the first.",
+      "objective_code": "LO-PHYS-02-02-NEWTON-LAWS",
+      "objective_id": "30000000-0000-0000-0000-000000000006",
+      "objective_title": "Newton's Laws of Motion and Momentum",
+      "parent_objective_code": "LO-PHYS-02-MECH",
+      "formula": "F_AB = -F_BA",
+      "unit": "N",
+      "dimensions": "M L T^-2",
+      "prerequisites": [
+        "PHYS-MEC-NEWTON2"
+      ],
+      "related": [
+        "PHYS-MEC-NEWTON2"
+      ],
+      "aliases": [
+        "Newton's Third Law",
+        "Action and Reaction",
+        "Newton 3"
+      ],
+      "claims": [
+        {
+          "claim_id": "70000000-0000-0000-0000-000000000010",
+          "claim_type": "condition",
+          "statement": "Action and reaction forces act on different bodies and are of the exact same physical nature."
+        }
+      ],
+      "pilot_status": "covered",
+      "question_ids": [
+        "PILOT-PHYS-2024-P1-Q04"
+      ],
+      "mapping_roles": [
+        "primary"
+      ],
+      "coverage_note": "Covered by 1 pilot question(s).",
+      "note": null
+    },
+    {
+      "stable_code": "PHYS-MEC-WORK",
+      "concept_id": "40000000-0000-0000-0000-000000000010",
+      "concept_version_id": "50000000-0000-0000-0000-000000000010",
+      "kind": "concept",
+      "title": "Work Done by a Force",
+      "definition": "The product of the magnitude of displacement and the component of force in the direction of displacement.",
+      "objective_code": "LO-PHYS-02-03-WORK-ENERGY",
+      "objective_id": "30000000-0000-0000-0000-000000000007",
+      "objective_title": "Work, Energy, and Power",
+      "parent_objective_code": "LO-PHYS-02-MECH",
+      "formula": "W = F s cos(theta)",
+      "unit": "J = kg m^2 s^-2",
+      "dimensions": "M L^2 T^-2",
+      "prerequisites": [
+        "PHYS-MEC-DISPLACEMENT",
+        "PHYS-MEC-NEWTON2"
+      ],
+      "related": [],
+      "aliases": [
+        "Work",
+        "Mechanical Work",
+        "W"
+      ],
+      "claims": [
+        {
+          "claim_id": "70000000-0000-0000-0000-000000000011",
+          "claim_type": "formula",
+          "statement": "Work W = F · s = F s cos(θ). Work is zero if displacement is perpendicular to force."
+        }
+      ],
+      "pilot_status": "covered",
+      "question_ids": [
+        "PILOT-PHYS-2025-P1-Q01"
+      ],
+      "mapping_roles": [
+        "primary"
+      ],
+      "coverage_note": "Covered by 1 pilot question(s).",
+      "note": null
+    },
+    {
+      "stable_code": "PHYS-MEC-KINETIC-ENERGY",
+      "concept_id": "40000000-0000-0000-0000-000000000011",
+      "concept_version_id": "50000000-0000-0000-0000-000000000011",
+      "kind": "concept",
+      "title": "Kinetic Energy",
+      "definition": "The energy possessed by a body due to its motion, defined as half the product of mass and speed squared.",
+      "objective_code": "LO-PHYS-02-03-WORK-ENERGY",
+      "objective_id": "30000000-0000-0000-0000-000000000007",
+      "objective_title": "Work, Energy, and Power",
+      "parent_objective_code": "LO-PHYS-02-MECH",
+      "formula": "E_k = (1/2) m v^2 = p^2/(2m)",
+      "unit": "J",
+      "dimensions": "M L^2 T^-2",
+      "prerequisites": [
+        "PHYS-MEC-WORK"
+      ],
+      "related": [],
+      "aliases": [
+        "Kinetic Energy",
+        "Ek",
+        "KE"
+      ],
+      "claims": [
+        {
+          "claim_id": "70000000-0000-0000-0000-000000000012",
+          "claim_type": "formula",
+          "statement": "E_k = (1/2) * m * v^2 = p^2 / (2m)."
+        }
+      ],
+      "pilot_status": "covered",
+      "question_ids": [
+        "PILOT-PHYS-2024-P1-Q05",
+        "PILOT-PHYS-2025-P1-Q01",
+        "PILOT-PHYS-2025-P1-Q45"
+      ],
+      "mapping_roles": [
+        "supporting"
+      ],
+      "coverage_note": "Covered by 3 pilot question(s).",
+      "note": null
+    },
+    {
+      "stable_code": "PHYS-MEC-GRAV-POT-ENERGY",
+      "concept_id": "40000000-0000-0000-0000-000000000012",
+      "concept_version_id": "50000000-0000-0000-0000-000000000012",
+      "kind": "concept",
+      "title": "Gravitational Potential Energy",
+      "definition": "The energy possessed by a body due to its position in a gravitational field relative to a reference level.",
+      "objective_code": "LO-PHYS-02-03-WORK-ENERGY",
+      "objective_id": "30000000-0000-0000-0000-000000000007",
+      "objective_title": "Work, Energy, and Power",
+      "parent_objective_code": "LO-PHYS-02-MECH",
+      "formula": "E_p = m g h",
+      "unit": "J",
+      "dimensions": "M L^2 T^-2",
+      "prerequisites": [
+        "PHYS-MEC-WORK"
+      ],
+      "related": [],
+      "aliases": [
+        "Gravitational Potential Energy",
+        "Potential Energy",
+        "GPE"
+      ],
+      "claims": [
+        {
+          "claim_id": "70000000-0000-0000-0000-000000000013",
+          "claim_type": "formula",
+          "statement": "Near Earth's surface, E_p = mgh relative to reference height h = 0."
+        }
+      ],
+      "pilot_status": "covered",
+      "question_ids": [
+        "PILOT-PHYS-2022-P1-Q01"
+      ],
+      "mapping_roles": [
+        "supporting"
+      ],
+      "coverage_note": "Covered by 1 pilot question(s).",
+      "note": null
+    },
+    {
+      "stable_code": "PHYS-MEC-CONSERV-ENERGY",
+      "concept_id": "40000000-0000-0000-0000-000000000013",
+      "concept_version_id": "50000000-0000-0000-0000-000000000013",
+      "kind": "principle",
+      "title": "Principle of Conservation of Mechanical Energy",
+      "definition": "In an isolated system where only conservative forces do work, the total mechanical energy (sum of kinetic and potential energies) remains constant over time.",
+      "objective_code": "LO-PHYS-02-03-WORK-ENERGY",
+      "objective_id": "30000000-0000-0000-0000-000000000007",
+      "objective_title": "Work, Energy, and Power",
+      "parent_objective_code": "LO-PHYS-02-MECH",
+      "formula": "E_k + E_p = constant when W_nonconservative = 0",
+      "unit": "J",
+      "dimensions": "M L^2 T^-2",
+      "prerequisites": [
+        "PHYS-MEC-GRAV-POT-ENERGY",
+        "PHYS-MEC-KINETIC-ENERGY"
+      ],
+      "related": [],
+      "aliases": [
+        "Conservation of Mechanical Energy",
+        "Conservation of Energy"
+      ],
+      "claims": [
+        {
+          "claim_id": "70000000-0000-0000-0000-000000000014",
+          "claim_type": "condition",
+          "statement": "Mechanical energy is conserved only when non-conservative forces do zero work."
+        }
+      ],
+      "pilot_status": "covered",
+      "question_ids": [
+        "PILOT-PHYS-2024-P1-Q05",
+        "PILOT-PHYS-2025-P1-Q45"
+      ],
+      "mapping_roles": [
+        "supporting"
+      ],
+      "coverage_note": "Covered by 2 pilot question(s).",
+      "note": null
+    },
+    {
+      "stable_code": "PHYS-WAV-SHM",
+      "concept_id": "40000000-0000-0000-0000-000000000014",
+      "concept_version_id": "50000000-0000-0000-0000-000000000014",
+      "kind": "concept",
+      "title": "Simple Harmonic Motion",
+      "definition": "Periodic motion where acceleration is directly proportional to displacement from equilibrium and is always directed towards the equilibrium position.",
+      "objective_code": "LO-PHYS-03-01-SHM",
+      "objective_id": "30000000-0000-0000-0000-000000000009",
+      "objective_title": "Simple Harmonic Motion",
+      "parent_objective_code": "LO-PHYS-03-WAVES",
+      "formula": "a = -omega^2 x; T = 2 pi / omega",
+      "unit": "s (period); rad s^-1 (angular frequency)",
+      "dimensions": "T (period)",
+      "prerequisites": [
+        "PHYS-MEC-ACCELERATION"
+      ],
+      "related": [],
+      "aliases": [
+        "Simple Harmonic Motion",
+        "SHM"
+      ],
+      "claims": [
+        {
+          "claim_id": "70000000-0000-0000-0000-000000000015",
+          "claim_type": "definition",
+          "statement": "Defining condition of SHM: acceleration is proportional to displacement from center and directed opposite to displacement."
+        }
+      ],
+      "pilot_status": "covered",
+      "question_ids": [
+        "PILOT-PHYS-2022-P1-Q17",
+        "PILOT-PHYS-2025-P1-Q03"
+      ],
+      "mapping_roles": [
+        "primary"
+      ],
+      "coverage_note": "Covered by 2 pilot question(s).",
+      "note": null
+    }
+  ]
+}
