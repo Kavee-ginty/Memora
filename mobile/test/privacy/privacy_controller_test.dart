@@ -252,8 +252,12 @@ void main() {
 
       await controller.requestExport();
 
-      expect(controller.state.failure?.code, 'expired_session');
+      // Normal session-expiry handling clears the private projection and
+      // leaves the reason on the session state for the sign-in screen.
+      expect(controller.state.export, isNull);
+      expect(controller.state.failure, isNull);
       expect(sessionController.state.phase, AppSessionPhase.signedOut);
+      expect(sessionController.state.failure?.code, 'expired_session');
     });
 
     test('a pending bootstrap summary blocks a new export', () async {
@@ -415,8 +419,10 @@ void main() {
 
       await controller.requestDeletion(confirmed: true);
 
-      expect(controller.state.failure?.code, 'expired_session');
+      expect(controller.state.deletion, isNull);
+      expect(controller.state.failure, isNull);
       expect(sessionController.state.phase, AppSessionPhase.signedOut);
+      expect(sessionController.state.failure?.code, 'expired_session');
     });
 
     test(
@@ -527,6 +533,64 @@ void main() {
         );
       },
     );
+  });
+
+  group('account projection', () {
+    test(
+      'pending deletion projects deletion-pending without bootstrapping',
+      () async {
+        final bootstrapCalls = mockSession.bootstrapCallCount;
+        repository.configuredDeletion = _deletion();
+
+        await controller.loadDeletion('del_1');
+
+        expect(
+          sessionController.state.bootstrapData?.accountStatus,
+          AccountStatusDomain.deletionPending,
+        );
+        expect(
+          sessionController.state.bootstrapData?.pendingPrivacyRequests.any(
+            (item) => item.id == 'del_1',
+          ),
+          isTrue,
+        );
+        expect(sessionController.state.phase, AppSessionPhase.active);
+        expect(mockSession.bootstrapCallCount, bootstrapCalls);
+      },
+    );
+
+    test('cancelled deletion clears the local pending projection', () async {
+      final bootstrapCalls = mockSession.bootstrapCallCount;
+      repository.configuredDeletion = _deletion();
+      await controller.loadDeletion('del_1');
+
+      repository.configuredDeletion = _deletion(
+        status: PrivacyRequestStatus.cancelled,
+      );
+      await controller.cancelDeletion();
+
+      expect(
+        sessionController.state.bootstrapData?.accountStatus,
+        AccountStatusDomain.active,
+      );
+      expect(
+        sessionController.state.bootstrapData?.pendingPrivacyRequests,
+        isEmpty,
+      );
+      expect(mockSession.bootstrapCallCount, bootstrapCalls);
+    });
+
+    test('sign-out clears every privacy projection', () async {
+      repository.configuredExport = _export();
+      await controller.loadExport('exp_1');
+      expect(controller.state.export, isNotNull);
+
+      await sessionController.signOut();
+
+      expect(controller.state.export, isNull);
+      expect(controller.state.deletion, isNull);
+      expect(controller.state.awaitingReauthentication, isFalse);
+    });
   });
 
   group('bootstrap recovery', () {

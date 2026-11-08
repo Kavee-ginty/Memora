@@ -66,7 +66,7 @@ class _PrivacyOverviewScreenState extends ConsumerState<PrivacyOverviewScreen> {
           PrivacyBanners(
             state: state,
             onRetry: controller.checkReachability,
-            onReauthenticate: () => context.go(AppRoutes.privacyReauth),
+            onReauthenticate: () => context.push(AppRoutes.privacyReauth),
             onDismissFailure: controller.clearFailure,
             onDismissNotice: controller.clearNotice,
             onSignOut: () {

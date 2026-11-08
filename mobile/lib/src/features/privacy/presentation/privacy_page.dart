@@ -13,10 +13,16 @@ import '../domain/privacy_models.dart';
 
 /// Shared privacy page shell with a detail header and bounded content width.
 class PrivacyScaffold extends StatelessWidget {
-  const PrivacyScaffold({super.key, required this.title, required this.child});
+  const PrivacyScaffold({
+    super.key,
+    required this.title,
+    required this.child,
+    this.onBackPressed,
+  });
 
   final String title;
   final Widget child;
+  final VoidCallback? onBackPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +32,7 @@ class PrivacyScaffold extends StatelessWidget {
       backgroundColor: MemoraColors.surfaceSoft,
       appBar: MemoraHeader.detail(
         title: title,
-        onBackPressed: () => _goBack(context),
+        onBackPressed: onBackPressed ?? () => _goBack(context),
       ),
       body: SafeArea(
         top: false,

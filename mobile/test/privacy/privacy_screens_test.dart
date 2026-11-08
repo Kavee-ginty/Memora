@@ -19,6 +19,7 @@ import 'package:memora_mobile/src/features/privacy/presentation/privacy_delete_s
 import 'package:memora_mobile/src/features/privacy/presentation/privacy_deletion_status_screen.dart';
 import 'package:memora_mobile/src/features/privacy/presentation/privacy_export_screen.dart';
 import 'package:memora_mobile/src/features/privacy/presentation/privacy_overview_screen.dart';
+import 'package:memora_mobile/src/features/privacy/presentation/privacy_reauth_screen.dart';
 import 'package:memora_mobile/src/features/profile/presentation/profile_entry_screen.dart';
 import 'package:memora_mobile/src/routing/app_routes.dart';
 
@@ -49,9 +50,10 @@ class _FakeLauncher implements PrivacyDownloadLauncher {
 class _Harness {
   _Harness({List<PendingResourceSummaryDomain> pending = const []}) {
     auth = MockAuthRepository();
+    sessionRepository = MockSessionRepository();
     session = SessionController(
       authRepository: auth,
-      sessionRepository: MockSessionRepository(),
+      sessionRepository: sessionRepository,
       localStorage: AppLocalStorage(InMemorySecureKeyStore()),
       initialState: AppSessionState.active(
         session: const AuthSession(
@@ -89,6 +91,7 @@ class _Harness {
   }
 
   late final MockAuthRepository auth;
+  late final MockSessionRepository sessionRepository;
   late final SessionController session;
   late final MockPrivacyRepository repository;
   late final _MutableReachability reachability;
@@ -147,7 +150,7 @@ Widget _buildApp({
       ),
       GoRoute(
         path: AppRoutes.privacyReauth,
-        builder: (context, state) => const Scaffold(body: Text('reauth-stub')),
+        builder: (context, state) => const PrivacyReauthScreen(),
       ),
       GoRoute(
         path: AppRoutes.profile,
@@ -173,6 +176,18 @@ Future<void> _pumpAsync(WidgetTester tester, {int frames = 6}) async {
   for (var i = 0; i < frames; i++) {
     await tester.pump(const Duration(milliseconds: 50));
   }
+}
+
+const AuthFailure _recentAuth = AuthFailure(
+  code: 'recent_authentication_required',
+  message: 'Please confirm your credentials to continue.',
+);
+
+Future<void> _triggerPendingExport(_Harness harness) async {
+  harness.repository.failure = _recentAuth;
+  await harness.controller.checkReachability();
+  await harness.controller.requestExport();
+  harness.repository.failure = null;
 }
 
 PrivacyExport _export({
@@ -487,6 +502,40 @@ void main() {
         find.textContaining('did not return verification details'),
         findsAtLeastNWidgets(1),
       );
+      // Proof-missing completion must never clear the local session.
+      expect(harness.session.state.phase, AppSessionPhase.active);
+      expect(harness.auth.signOutCallCount, 0);
+    });
+
+    testWidgets('confirmed deletion clears credentials on the return action', (
+      tester,
+    ) async {
+      final harness = _createHarness();
+      harness.repository.configuredDeletion = _deletion(
+        status: PrivacyRequestStatus.completed,
+        proofs: <DeletionProof>[_proof()],
+      );
+
+      await tester.pumpWidget(
+        _buildApp(
+          harness: harness,
+          child: const PrivacyDeletionStatusScreen(requestId: 'del_1'),
+        ),
+      );
+      await _pumpAsync(tester);
+
+      expect(harness.session.state.phase, AppSessionPhase.active);
+      expect(harness.auth.signOutCallCount, 0);
+
+      await tester.ensureVisible(
+        find.byKey(const Key('privacy_delete_sign_in')),
+      );
+      await tester.tap(find.byKey(const Key('privacy_delete_sign_in')));
+      await _pumpAsync(tester, frames: 12);
+
+      expect(harness.session.state.phase, AppSessionPhase.signedOut);
+      expect(harness.session.state.session, isNull);
+      expect(harness.auth.signOutCallCount, 1);
     });
 
     testWidgets('an expired session reports an unconfirmed outcome', (
@@ -518,6 +567,169 @@ void main() {
 
       expect(harness.session.state.phase, AppSessionPhase.signedOut);
       expect(harness.auth.signOutCallCount, 1);
+    });
+  });
+
+  group('Privacy reauthentication', () {
+    testWidgets(
+      'email confirmation retries the pending export without bootstrap',
+      (tester) async {
+        final harness = _createHarness();
+        await _triggerPendingExport(harness);
+        harness.auth.emailSignInUserId = 'usr_1';
+        harness.auth.emailSignInEmail = 'student@memora.internal';
+        final bootstrapCalls = harness.sessionRepository.bootstrapCallCount;
+        final previousToken = harness.session.state.session!.accessToken;
+
+        await tester.pumpWidget(
+          _buildApp(
+            harness: harness,
+            child: const PrivacyReauthScreen(),
+            initialLocation: AppRoutes.privacyReauth,
+          ),
+        );
+        await _pumpAsync(tester);
+
+        expect(find.text("Confirm it's you"), findsOneWidget);
+        await tester.enterText(
+          find.byKey(const Key('privacy_reauth_password')),
+          'Password123!',
+        );
+        await tester.tap(find.byKey(const Key('privacy_reauth_submit')));
+        await _pumpAsync(tester, frames: 16);
+
+        expect(harness.repository.createExportCallCount, 2);
+        expect(
+          harness.session.state.session?.accessToken,
+          isNot(previousToken),
+        );
+        expect(harness.sessionRepository.bootstrapCallCount, bootstrapCalls);
+        expect(harness.auth.signOutCallCount, 0);
+        expect(
+          find.text('export-status-stub:${MockPrivacyRepository.mockExportId}'),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets('Google confirmation retries the pending export', (
+      tester,
+    ) async {
+      final harness = _createHarness();
+      await _triggerPendingExport(harness);
+      harness.auth.googleUserId = 'usr_1';
+
+      await tester.pumpWidget(
+        _buildApp(
+          harness: harness,
+          child: const PrivacyReauthScreen(),
+          initialLocation: AppRoutes.privacyReauth,
+        ),
+      );
+      await _pumpAsync(tester);
+
+      await tester.tap(find.byKey(const Key('privacy_reauth_google')));
+      await _pumpAsync(tester, frames: 20);
+
+      expect(harness.repository.createExportCallCount, 2);
+      expect(harness.session.state.session?.accessToken, 'mock_google_token');
+      expect(harness.auth.signOutCallCount, 0);
+      expect(
+        find.text('export-status-stub:${MockPrivacyRepository.mockExportId}'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('invalid credentials keep the pending action recoverable', (
+      tester,
+    ) async {
+      final harness = _createHarness();
+      await _triggerPendingExport(harness);
+      harness.auth.shouldFailSignIn = true;
+      harness.auth.configuredFailure = AuthFailure.invalidCredentials();
+
+      await tester.pumpWidget(
+        _buildApp(
+          harness: harness,
+          child: const PrivacyReauthScreen(),
+          initialLocation: AppRoutes.privacyReauth,
+        ),
+      );
+      await _pumpAsync(tester);
+
+      await tester.enterText(
+        find.byKey(const Key('privacy_reauth_password')),
+        'wrong-password',
+      );
+      await tester.tap(find.byKey(const Key('privacy_reauth_submit')));
+      await _pumpAsync(tester);
+
+      expect(find.textContaining('Invalid email or password'), findsOneWidget);
+      expect(harness.controller.state.awaitingReauthentication, isTrue);
+      expect(
+        harness.controller.state.pendingAction,
+        PrivacyPendingAction.export,
+      );
+      expect(harness.repository.createExportCallCount, 1);
+    });
+
+    testWidgets('cancel clears the recovery intent and returns to Privacy', (
+      tester,
+    ) async {
+      final harness = _createHarness();
+      await _triggerPendingExport(harness);
+
+      await tester.pumpWidget(
+        _buildApp(
+          harness: harness,
+          child: const PrivacyReauthScreen(),
+          initialLocation: AppRoutes.privacyReauth,
+        ),
+      );
+      await _pumpAsync(tester);
+
+      await tester.ensureVisible(
+        find.byKey(const Key('privacy_reauth_cancel')),
+      );
+      await tester.tap(find.byKey(const Key('privacy_reauth_cancel')));
+      await _pumpAsync(tester);
+
+      expect(harness.controller.state.awaitingReauthentication, isFalse);
+      expect(harness.controller.state.pendingAction, isNull);
+      expect(find.text('privacy-stub'), findsOneWidget);
+    });
+
+    testWidgets('a second recent-auth rejection offers sign-in recovery', (
+      tester,
+    ) async {
+      final harness = _createHarness();
+      await _triggerPendingExport(harness);
+      harness.repository.failure = _recentAuth;
+      harness.auth.emailSignInUserId = 'usr_1';
+      harness.auth.emailSignInEmail = 'student@memora.internal';
+
+      await tester.pumpWidget(
+        _buildApp(
+          harness: harness,
+          child: const PrivacyReauthScreen(),
+          initialLocation: AppRoutes.privacyReauth,
+        ),
+      );
+      await _pumpAsync(tester);
+
+      await tester.enterText(
+        find.byKey(const Key('privacy_reauth_password')),
+        'Password123!',
+      );
+      await tester.tap(find.byKey(const Key('privacy_reauth_submit')));
+      await _pumpAsync(tester);
+
+      expect(find.textContaining('Please sign in again'), findsOneWidget);
+      expect(
+        find.byKey(const Key('privacy_reauth_sign_in_again')),
+        findsOneWidget,
+      );
+      expect(harness.controller.state.pendingAction, isNull);
     });
   });
 

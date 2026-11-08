@@ -83,6 +83,16 @@ class _PrivacyDeletionStatusScreenState
     ref.read(sessionControllerProvider.notifier).signOut(force: true);
   }
 
+  Future<void> _signInAfterConfirmedDeletion() async {
+    // Credentials are cleared only after the status section verified both the
+    // completed status and non-empty server proofs.
+    await ref
+        .read(sessionControllerProvider.notifier)
+        .clearAfterConfirmedDeletion();
+    if (!mounted) return;
+    context.go(AppRoutes.signIn);
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(privacyControllerProvider);
@@ -98,7 +108,7 @@ class _PrivacyDeletionStatusScreenState
           PrivacyBanners(
             state: state,
             onRetry: () => _controller.loadDeletion(widget.requestId),
-            onReauthenticate: () => context.go(AppRoutes.privacyReauth),
+            onReauthenticate: () => context.push(AppRoutes.privacyReauth),
             onDismissFailure: _controller.clearFailure,
             onDismissNotice: _controller.clearNotice,
             onSignOut: _signOut,
@@ -121,7 +131,8 @@ class _PrivacyDeletionStatusScreenState
               state: state,
               onRefresh: () => _controller.loadDeletion(widget.requestId),
               onCancel: _showCancelDialog,
-              onSignIn: () => context.go(AppRoutes.signIn),
+              onReturnToSignIn: () =>
+                  unawaited(_signInAfterConfirmedDeletion()),
               onBackToPrivacy: () => context.go(AppRoutes.privacy),
               onRequestNew: () => context.go(AppRoutes.privacyDelete),
             ),
@@ -137,7 +148,7 @@ class _DeletionStatusSection extends StatelessWidget {
     required this.state,
     required this.onRefresh,
     required this.onCancel,
-    required this.onSignIn,
+    required this.onReturnToSignIn,
     required this.onBackToPrivacy,
     required this.onRequestNew,
   });
@@ -146,7 +157,7 @@ class _DeletionStatusSection extends StatelessWidget {
   final PrivacyState state;
   final VoidCallback onRefresh;
   final VoidCallback onCancel;
-  final VoidCallback onSignIn;
+  final VoidCallback onReturnToSignIn;
   final VoidCallback onBackToPrivacy;
   final VoidCallback onRequestNew;
 
@@ -309,7 +320,7 @@ class _DeletionStatusSection extends StatelessWidget {
               key: const Key('privacy_delete_sign_in'),
               label: 'Return to sign in',
               variant: MemoraButtonVariant.secondary,
-              onPressed: onSignIn,
+              onPressed: onReturnToSignIn,
             ),
           ],
         );

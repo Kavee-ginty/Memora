@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../design_system/components/button.dart';
 import '../../../design_system/components/mora.dart';
 import '../../../design_system/tokens/colors.dart';
 import '../../../design_system/tokens/spacing.dart';
 import '../../../design_system/tokens/typography.dart';
+import '../../../routing/app_routes.dart';
 import '../application/session_controller.dart';
 import '../domain/bootstrap_state.dart';
 
@@ -17,6 +19,14 @@ class AccountRecoveryScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final sessionState = ref.watch(sessionControllerProvider);
     final status = sessionState.bootstrapData?.accountStatus;
+    final pendingPrivacyRequests =
+        sessionState.bootstrapData?.pendingPrivacyRequests ??
+        const <PendingResourceSummaryDomain>[];
+    final deletionRequest =
+        status == AccountStatusDomain.deletionPending &&
+            pendingPrivacyRequests.isNotEmpty
+        ? pendingPrivacyRequests.first
+        : null;
 
     final String title;
     final String description;
@@ -24,8 +34,12 @@ class AccountRecoveryScreen extends ConsumerWidget {
     if (status == AccountStatusDomain.suspended) {
       title = 'Account Suspended';
       description = 'Your student account has been temporarily suspended. Please contact support to resolve this issue.';
-    } else if (status == AccountStatusDomain.deletionPending ||
-        status == AccountStatusDomain.deleted) {
+    } else if (status == AccountStatusDomain.deletionPending) {
+      title = 'Account Deletion in Progress';
+      description =
+          'An account deletion request was received. You can review its '
+          'status and cancel while the server still permits cancellation.';
+    } else if (status == AccountStatusDomain.deleted) {
       title = 'Account Deletion in Progress';
       description = 'An account deletion request was received. You can sign out or contact support if this was made in error.';
     } else {
@@ -71,6 +85,16 @@ class AccountRecoveryScreen extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: MemoraSpacing.space32),
+                if (deletionRequest != null) ...[
+                  MemoraButton(
+                    key: const Key('account_recovery_view_deletion'),
+                    label: 'View deletion status',
+                    onPressed: () => context.go(
+                      AppRoutes.privacyDeletionStatusPath(deletionRequest.id),
+                    ),
+                  ),
+                  const SizedBox(height: MemoraSpacing.space12),
+                ],
                 MemoraButton(
                   label: 'Sign Out',
                   variant: MemoraButtonVariant.secondary,

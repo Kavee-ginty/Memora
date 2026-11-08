@@ -7,6 +7,7 @@ import '../data/auth_repository.dart';
 import '../data/secure_auth_storage.dart';
 import '../data/session_repository.dart';
 import '../domain/app_session_state.dart';
+import '../domain/bootstrap_state.dart';
 import '../domain/route_access.dart';
 
 // --- Riverpod Dependency Providers ---
@@ -56,6 +57,13 @@ class SessionController extends StateNotifier<AppSessionState> {
   StreamSubscription<AuthSession?>? _authSubscription;
   SafeReturnLocation? _pendingReturnLocation;
 
+  /// User whose credentials are being confirmed for a sensitive action.
+  ///
+  /// While set, a matching provider session replaces only the access token and
+  /// never re-runs bootstrap. That keeps a deletion-pending or privacy status
+  /// route stable instead of sending the student back through splash.
+  String? _reauthExpectedUserId;
+
   SessionController({
     required this.authRepository,
     required this.sessionRepository,
@@ -80,11 +88,26 @@ class SessionController extends StateNotifier<AppSessionState> {
   void _listenToAuthChanges() {
     _authSubscription = authRepository.authStateChanges.listen((session) {
       if (session == null) {
+        _reauthExpectedUserId = null;
         if (state.phase != AppSessionPhase.signedOut &&
             state.phase != AppSessionPhase.unknown) {
           state = const AppSessionState.signedOut();
         }
-      } else if (state.session?.accessToken != session.accessToken) {
+        return;
+      }
+
+      final expectedUserId = _reauthExpectedUserId;
+      if (expectedUserId != null) {
+        _reauthExpectedUserId = null;
+        if (session.userId == expectedUserId) {
+          _applyReauthenticatedSession(session);
+        } else {
+          unawaited(_rejectReauthentication());
+        }
+        return;
+      }
+
+      if (state.session?.accessToken != session.accessToken) {
         // Session refreshed or changed externally
         bootstrapWithSession(session);
       }
@@ -168,6 +191,7 @@ class SessionController extends StateNotifier<AppSessionState> {
   ) async {
     state = AppSessionState.signedOut(failure: failure);
     _pendingReturnLocation = null;
+    _reauthExpectedUserId = null;
 
     try {
       await authRepository.signOut();
@@ -236,6 +260,216 @@ class SessionController extends StateNotifier<AppSessionState> {
     );
   }
 
+  /// Confirms credentials for a pending sensitive action without bootstrapping.
+  ///
+  /// The returned provider session must belong to the account already signed in
+  /// on this device. A different account is treated as a failed confirmation,
+  /// every local credential is cleared and the caller receives a safe failure.
+  Future<AuthSession> reauthenticateWithEmailPassword({
+    required String email,
+    required String password,
+  }) async {
+    final currentSession = state.session;
+    if (currentSession == null) {
+      throw AuthFailure.expiredSession();
+    }
+
+    _beginReauthentication(currentSession.userId);
+    try {
+      final session = await authRepository.signInWithEmailPassword(
+        email: email.trim(),
+        password: password,
+      );
+
+      if (session.userId != currentSession.userId) {
+        await _rejectReauthentication();
+        throw const AuthFailure(
+          code: 'reauth_account_mismatch',
+          message:
+              'That account does not match the account signed in on this '
+              'device. Sign in with the original account.',
+        );
+      }
+
+      _applyReauthenticatedSession(session);
+      return session;
+    } finally {
+      _finishReauthentication(currentSession.userId);
+    }
+  }
+
+  /// Starts Google confirmation for a pending sensitive action.
+  ///
+  /// The provider delivers the confirmed session through [authStateChanges].
+  /// Until it arrives the pending privacy action remains untouched.
+  Future<void> reauthenticateWithGoogle({required String redirectUri}) async {
+    final currentSession = state.session;
+    if (currentSession == null) {
+      throw AuthFailure.expiredSession();
+    }
+
+    _beginReauthentication(currentSession.userId);
+    try {
+      await authRepository.signInWithGoogle(redirectUri: redirectUri);
+    } catch (_) {
+      _finishReauthentication(currentSession.userId);
+      rethrow;
+    }
+  }
+
+  void _beginReauthentication(String userId) {
+    if (_reauthExpectedUserId != null) {
+      throw const AuthFailure(
+        code: 'reauthentication_in_progress',
+        message: 'A confirmation is already in progress. Please wait.',
+        retryable: true,
+      );
+    }
+    _reauthExpectedUserId = userId;
+  }
+
+  void _finishReauthentication(String userId) {
+    if (_reauthExpectedUserId == userId) {
+      _reauthExpectedUserId = null;
+    }
+  }
+
+  void _applyReauthenticatedSession(AuthSession session) {
+    if (!mounted) return;
+    state = AppSessionState(
+      phase: state.phase,
+      session: session,
+      bootstrapData: state.bootstrapData,
+      failure: state.failure,
+      hasUnsyncedWork: state.hasUnsyncedWork,
+    );
+  }
+
+  Future<void> _rejectReauthentication() async {
+    if (state.phase == AppSessionPhase.signedOut &&
+        state.failure?.code == 'reauth_account_mismatch') {
+      return;
+    }
+
+    final currentSession = state.session;
+    _reauthExpectedUserId = null;
+    state = const AppSessionState.signedOut(
+      failure: AuthFailure(
+        code: 'reauth_account_mismatch',
+        message:
+            'That account does not match the account signed in on this '
+            'device. Sign in with the original account.',
+      ),
+    );
+    _pendingReturnLocation = null;
+
+    try {
+      await authRepository.signOut();
+    } catch (_) {
+      // Local clearing below still proceeds.
+    }
+
+    if (currentSession != null) {
+      try {
+        await localStorage.clearAccountScopedData(
+          userId: currentSession.userId,
+        );
+      } catch (_) {
+        // Intentionally safe.
+      }
+    }
+  }
+
+  /// Projects a server-confirmed deletion request into local account state.
+  ///
+  /// This deliberately avoids bootstrap, which would replace the current route
+  /// with splash. The deletion status route remains reachable under the guard's
+  /// deletion-pending exception.
+  void markDeletionPending(String requestId, {String status = 'requested'}) {
+    final data = state.bootstrapData;
+    if (data == null) return;
+
+    final pending = data.pendingPrivacyRequests;
+    final index = pending.indexWhere((item) => item.id == requestId);
+    if (data.accountStatus == AccountStatusDomain.deletionPending &&
+        index >= 0 &&
+        pending[index].status == status) {
+      return;
+    }
+
+    final updated = List<PendingResourceSummaryDomain>.of(pending);
+    final summary = PendingResourceSummaryDomain(
+      id: requestId,
+      status: status,
+      updatedAt: DateTime.now().toUtc(),
+    );
+    if (index >= 0) {
+      updated[index] = summary;
+    } else {
+      updated.add(summary);
+    }
+
+    state = state.copyWith(
+      bootstrapData: data.copyWith(
+        accountStatus: AccountStatusDomain.deletionPending,
+        pendingPrivacyRequests: updated,
+      ),
+    );
+  }
+
+  /// Reactivates the local account projection after a confirmed cancellation or
+  /// terminal failure. The server remains authoritative; this only removes the
+  /// blocking status so the student can continue safely.
+  void clearDeletionPending({String? requestId}) {
+    final data = state.bootstrapData;
+    if (data == null) return;
+
+    final updated = requestId == null
+        ? data.pendingPrivacyRequests
+        : data.pendingPrivacyRequests
+              .where((item) => item.id != requestId)
+              .toList(growable: false);
+    final nextStatus = data.accountStatus == AccountStatusDomain.deletionPending
+        ? AccountStatusDomain.active
+        : data.accountStatus;
+
+    if (nextStatus == data.accountStatus &&
+        updated.length == data.pendingPrivacyRequests.length) {
+      return;
+    }
+
+    state = state.copyWith(
+      bootstrapData: data.copyWith(
+        accountStatus: nextStatus,
+        pendingPrivacyRequests: updated,
+      ),
+    );
+  }
+
+  /// Clears credentials only after the server confirms deletion with proofs.
+  Future<void> clearAfterConfirmedDeletion() async {
+    final currentSession = state.session;
+    _reauthExpectedUserId = null;
+    _pendingReturnLocation = null;
+    state = const AppSessionState.signedOut();
+
+    try {
+      await authRepository.signOut();
+    } catch (_) {
+      // Local clearing below still proceeds.
+    }
+
+    if (currentSession != null) {
+      try {
+        await localStorage.clearAccountScopedData(
+          userId: currentSession.userId,
+        );
+      } catch (_) {
+        // Intentionally safe.
+      }
+    }
+  }
+
   /// Checks if sign-out requires confirmation due to unsynced work.
   bool get requiresSignOutConfirmation =>
       state.hasUnsyncedWork || (state.bootstrapData?.hasPendingWork ?? false);
@@ -266,6 +500,7 @@ class SessionController extends StateNotifier<AppSessionState> {
       await localStorage.clearAccountScopedData(userId: currentSession.userId);
     }
     _pendingReturnLocation = null;
+    _reauthExpectedUserId = null;
 
     state = AppSessionState.signedOut(
       failure: remoteRevocationSuccess

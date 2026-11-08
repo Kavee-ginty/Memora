@@ -84,7 +84,7 @@ class _PrivacyExportScreenState extends ConsumerState<PrivacyExportScreen> {
           PrivacyBanners(
             state: state,
             onRetry: _retry,
-            onReauthenticate: () => context.go(AppRoutes.privacyReauth),
+            onReauthenticate: () => context.push(AppRoutes.privacyReauth),
             onDismissFailure: _controller.clearFailure,
             onDismissNotice: _controller.clearNotice,
             onSignOut: () {

@@ -151,6 +151,126 @@ void main() {
     );
 
     test(
+      'Reauthentication refreshes the token without bootstrapping or clearing',
+      () async {
+        mockAuth.emailSignInUserId = 'usr_1';
+        mockAuth.emailSignInEmail = 'student@memora.internal';
+        await controller.signInWithEmailPassword(
+          email: 'student@memora.internal',
+          password: 'Password123!',
+        );
+        final bootstrapCalls = mockSession.bootstrapCallCount;
+        final previousToken = controller.state.session!.accessToken;
+
+        await controller.reauthenticateWithEmailPassword(
+          email: 'student@memora.internal',
+          password: 'Password123!',
+        );
+
+        expect(controller.state.phase, AppSessionPhase.active);
+        expect(controller.state.session?.userId, 'usr_1');
+        expect(controller.state.session?.accessToken, isNot(previousToken));
+        expect(controller.state.bootstrapData, isNotNull);
+        expect(mockSession.bootstrapCallCount, bootstrapCalls);
+        expect(mockAuth.signOutCallCount, 0);
+      },
+    );
+
+    test('Reauthentication with another account clears the session', () async {
+      await controller.signInWithEmailPassword(
+        email: 'student@memora.internal',
+        password: 'Password123!',
+      );
+      mockAuth.emailSignInUserId = 'usr_other';
+
+      await expectLater(
+        controller.reauthenticateWithEmailPassword(
+          email: 'other@memora.internal',
+          password: 'Password123!',
+        ),
+        throwsA(
+          isA<AuthFailure>().having(
+            (failure) => failure.code,
+            'code',
+            'reauth_account_mismatch',
+          ),
+        ),
+      );
+
+      expect(controller.state.phase, AppSessionPhase.signedOut);
+      expect(controller.state.failure?.code, 'reauth_account_mismatch');
+      expect(mockAuth.signOutCallCount, 1);
+    });
+
+    test(
+      'Google reauthentication applies a same-account provider session',
+      () async {
+        mockAuth.emitSession(
+          const AuthSession(
+            accessToken: 'initial_token',
+            userId: 'usr_1',
+            email: 'student@memora.internal',
+          ),
+        );
+        await controller.initialize();
+        final bootstrapCalls = mockSession.bootstrapCallCount;
+        mockAuth.googleUserId = 'usr_1';
+
+        await controller.reauthenticateWithGoogle(redirectUri: 'memora://auth');
+        await Future<void>.delayed(Duration.zero);
+
+        expect(controller.state.phase, AppSessionPhase.active);
+        expect(controller.state.session?.accessToken, 'mock_google_token');
+        expect(mockSession.bootstrapCallCount, bootstrapCalls);
+      },
+    );
+
+    test(
+      'Deletion pending projection can be applied and cleared locally',
+      () async {
+        mockAuth.emitSession(
+          const AuthSession(accessToken: 'token_1', userId: 'usr_1'),
+        );
+        await controller.initialize();
+
+        controller.markDeletionPending('del_1');
+        expect(
+          controller.state.bootstrapData?.accountStatus,
+          AccountStatusDomain.deletionPending,
+        );
+        expect(
+          controller.state.bootstrapData?.pendingPrivacyRequests.single.id,
+          'del_1',
+        );
+
+        controller.clearDeletionPending(requestId: 'del_1');
+        expect(
+          controller.state.bootstrapData?.accountStatus,
+          AccountStatusDomain.active,
+        );
+        expect(controller.state.bootstrapData?.pendingPrivacyRequests, isEmpty);
+      },
+    );
+
+    test(
+      'Confirmed deletion clears local credentials without remote revoke',
+      () async {
+        mockAuth.emitSession(
+          const AuthSession(accessToken: 'token_1', userId: 'usr_1'),
+        );
+        await controller.initialize();
+        mockSession.revokeCallCount = 0;
+
+        await controller.clearAfterConfirmedDeletion();
+
+        expect(controller.state.phase, AppSessionPhase.signedOut);
+        expect(controller.state.session, isNull);
+        expect(mockAuth.signOutCallCount, 1);
+        expect(mockSession.revokeCallCount, 0);
+      },
+    );
+
+    test(
       'Detects when sign-out confirmation is required due to pending work',
       () async {
         expect(controller.requiresSignOutConfirmation, isFalse);

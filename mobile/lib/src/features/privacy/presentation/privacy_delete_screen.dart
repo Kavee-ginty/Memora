@@ -46,7 +46,15 @@ class _PrivacyDeleteScreenState extends ConsumerState<PrivacyDeleteScreen> {
   Future<void> _submit() async {
     final deletion = await _controller.requestDeletion(confirmed: true);
     if (!mounted || deletion == null) return;
+
+    final sessionController = ref.read(sessionControllerProvider.notifier);
+    // Navigate before projecting deletion-pending locally so the status route
+    // is already the current destination when the guard re-evaluates.
     context.go(AppRoutes.privacyDeletionStatusPath(deletion.id));
+    sessionController.markDeletionPending(
+      deletion.id,
+      status: deletion.status.name,
+    );
   }
 
   void _showConfirmationDialog() {
@@ -94,7 +102,7 @@ class _PrivacyDeleteScreenState extends ConsumerState<PrivacyDeleteScreen> {
           PrivacyBanners(
             state: state,
             onRetry: _controller.checkReachability,
-            onReauthenticate: () => context.go(AppRoutes.privacyReauth),
+            onReauthenticate: () => context.push(AppRoutes.privacyReauth),
             onDismissFailure: _controller.clearFailure,
             onDismissNotice: _controller.clearNotice,
             onSignOut: () {

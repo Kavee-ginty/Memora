@@ -151,7 +151,12 @@ class PrivacyController extends StateNotifier<PrivacyState> {
     this.pollInterval = const Duration(seconds: 5),
     DateTime Function()? clock,
   }) : _clock = clock ?? DateTime.now,
-       super(const PrivacyState());
+       super(const PrivacyState()) {
+    _sessionUserId = sessionController.state.session?.userId;
+    _removeSessionListener = sessionController.addListener(
+      _handleSessionChanged,
+    );
+  }
 
   final PrivacyRepository repository;
   final PrivacyReachability reachability;
@@ -162,6 +167,8 @@ class PrivacyController extends StateNotifier<PrivacyState> {
 
   Timer? _pollTimer;
   bool _pollInFlight = false;
+  String? _sessionUserId;
+  late final VoidCallback _removeSessionListener;
 
   String? _exportKey;
   String? _deletionKey;
@@ -170,6 +177,24 @@ class PrivacyController extends StateNotifier<PrivacyState> {
   String? get _accessToken => sessionController.state.session?.accessToken;
 
   DateTime _now() => _clock().toUtc();
+
+  /// Drops every privacy projection when the signed-in account changes.
+  ///
+  /// Reauthentication keeps the same user identifier, so it never clears the
+  /// pending action. Sign-out and a different account do clear it.
+  void _handleSessionChanged(AppSessionState _) {
+    final userId = sessionController.state.session?.userId;
+    if (userId == _sessionUserId) return;
+
+    _sessionUserId = userId;
+    _stopPolling();
+    _exportKey = null;
+    _deletionKey = null;
+    _cancelKey = null;
+    if (mounted) {
+      state = const PrivacyState();
+    }
+  }
 
   /// Whether the current export has a signed URL that has not expired.
   bool get canDownloadExport =>
@@ -460,6 +485,7 @@ class PrivacyController extends StateNotifier<PrivacyState> {
       if (!mounted) return;
       _markReachable();
       _applyDeletion(deletion, startPolling: startPolling);
+      _syncAccountStatus(deletion);
     } on AuthFailure catch (failure) {
       if (!mounted) return;
       if (failure.code == 'expired_session') {
@@ -526,6 +552,7 @@ class PrivacyController extends StateNotifier<PrivacyState> {
       _markReachable();
       _cancelKey = null;
       _applyDeletion(cancelled, startPolling: false);
+      sessionController.clearDeletionPending(requestId: cancelled.id);
       return cancelled;
     } on AuthFailure catch (failure) {
       if (!mounted) return null;
@@ -780,6 +807,26 @@ class PrivacyController extends StateNotifier<PrivacyState> {
     }
   }
 
+  /// Keeps the local account projection aligned with authoritative deletion
+  /// status without running bootstrap.
+  void _syncAccountStatus(PrivacyDeletion deletion) {
+    switch (deletion.status) {
+      case PrivacyRequestStatus.requested:
+      case PrivacyRequestStatus.verifying:
+      case PrivacyRequestStatus.processing:
+        sessionController.markDeletionPending(
+          deletion.id,
+          status: deletion.status.name,
+        );
+      case PrivacyRequestStatus.cancelled:
+      case PrivacyRequestStatus.failed:
+        sessionController.clearDeletionPending(requestId: deletion.id);
+      case PrivacyRequestStatus.completed:
+      case PrivacyRequestStatus.unknown:
+        break;
+    }
+  }
+
   void _startExportPolling(String requestId) {
     _stopPolling();
     state = state.copyWith(isPolling: true);
@@ -946,6 +993,7 @@ class PrivacyController extends StateNotifier<PrivacyState> {
 
   @override
   void dispose() {
+    _removeSessionListener();
     _pollTimer?.cancel();
     _pollTimer = null;
     super.dispose();
@@ -971,12 +1019,10 @@ final privacyDownloadLauncherProvider = Provider<PrivacyDownloadLauncher>((
 
 final privacyControllerProvider =
     StateNotifierProvider<PrivacyController, PrivacyState>((ref) {
-      final controller = PrivacyController(
+      return PrivacyController(
         repository: ref.watch(privacyRepositoryProvider),
         reachability: ref.watch(privacyReachabilityProvider),
         sessionController: ref.watch(sessionControllerProvider.notifier),
         downloadLauncher: ref.watch(privacyDownloadLauncherProvider),
       );
-      ref.onDispose(controller.dispose);
-      return controller;
     });
