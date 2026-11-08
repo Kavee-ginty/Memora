@@ -325,6 +325,36 @@ void main() {
       );
     });
 
+    testWidgets('polls a pending export and stops on completion', (
+      tester,
+    ) async {
+      final harness = _createHarness();
+      harness.repository.configuredExport = _export();
+
+      await tester.pumpWidget(
+        _buildApp(
+          harness: harness,
+          child: const PrivacyExportScreen(requestId: 'exp_1'),
+        ),
+      );
+      await _pumpAsync(tester);
+
+      expect(find.text('Requested'), findsOneWidget);
+      final initialReads = harness.repository.getExportCallCount;
+
+      harness.repository.configuredExport = _export(
+        status: PrivacyRequestStatus.completed,
+        downloadUri: Uri.parse('https://cdn.memora.example/export'),
+        downloadExpiresAt: DateTime.utc(2026, 11, 2),
+      );
+      await tester.pump(const Duration(seconds: 5));
+      await _pumpAsync(tester, frames: 12);
+
+      expect(harness.repository.getExportCallCount, greaterThan(initialReads));
+      expect(find.text('Completed'), findsOneWidget);
+      expect(find.byKey(const Key('privacy_export_download')), findsOneWidget);
+    });
+
     testWidgets('offers a download only while the signed URL is valid', (
       tester,
     ) async {

@@ -36,7 +36,8 @@ class PrivacyScaffold extends StatelessWidget {
       ),
       body: SafeArea(
         top: false,
-        child: Center(
+        child: Align(
+          alignment: Alignment.topCenter,
           child: ConstrainedBox(
             constraints: BoxConstraints(
               maxWidth: MemoraSpacing.maxContentWidthFor(width),
@@ -200,11 +201,13 @@ class PrivacyStatusCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.start,
+            spacing: MemoraSpacing.space8,
+            runSpacing: MemoraSpacing.space4,
             children: <Widget>[
-              Expanded(child: Text(title, style: MemoraTypography.cardTitle)),
-              const SizedBox(width: MemoraSpacing.space8),
+              Text(title, style: MemoraTypography.cardTitle),
               PrivacyStatusChip(status: status),
             ],
           ),
