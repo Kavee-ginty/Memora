@@ -133,6 +133,33 @@ While unreachable:
 - `docs/evidence/T21_Privacy_Evidence.md` records commands, captures and manual
   device evidence.
 
+## Implementation outcome
+
+The task is implemented on `task/T21-privacy-mobile` in seven commits:
+
+1. `docs(T21): claim privacy mobile task and record plan`
+2. `feat(T21): add privacy domain models and repository`
+3. `feat(T21): add privacy request state controller`
+4. `feat(T21): add retained-data and export/deletion screens`
+5. `feat(T21): add privacy routes and reauthentication recovery`
+6. `test(T21): cover privacy states accessibility and visual evidence`
+7. `docs(T21): record privacy evidence and handoff`
+
+Final local checks: formatting is clean, `flutter analyze` reports no issues,
+the full Flutter suite passes with 333 tests (248 auth/privacy), the seven T21
+golden comparisons pass, the Android debug APK builds, and the OpenAPI/generated
+client drift check passes.
+
+The 200% text matrix found two real presentation defects, both fixed inside the
+owning implementation: the status-card header now wraps instead of overflowing,
+and short privacy pages are top-aligned instead of vertically centered.
+
+T21 remains **Review**. Real T20 backend/worker integration and Android
+TalkBack/device accessibility evidence are still outstanding. No push, merge,
+tag, deployment or Done status is claimed. Full command results, captures and
+the outstanding verification list are in
+`docs/evidence/T21_Privacy_Evidence.md`.
+
 ## Decisions recorded
 
 - Branch: `task/T21-privacy-mobile`.
