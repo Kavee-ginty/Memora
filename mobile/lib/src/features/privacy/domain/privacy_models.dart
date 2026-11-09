@@ -85,14 +85,18 @@ class PrivacyExport {
 
   bool get hasDownload => downloadUri != null;
 
-  /// True only when the server returned a completed export and the download
-  /// details are still usable at [now].
+  /// True only when the server returned a completed export, a signed URL and a
+  /// server-supplied expiry that is still in the future at [now].
+  ///
+  /// A URL without an expiry is not treated as ready: the contract says the
+  /// ready state provides both the retrieval action and its expiry, so the app
+  /// must not invite a download whose lifetime it cannot confirm.
   bool hasActiveDownload(DateTime now) {
     if (status != PrivacyRequestStatus.completed || downloadUri == null) {
       return false;
     }
     final expiresAt = downloadExpiresAt;
-    return expiresAt == null || expiresAt.isAfter(now);
+    return expiresAt != null && expiresAt.isAfter(now);
   }
 
   @override

@@ -58,6 +58,15 @@ class _PrivacyDeletionStatusScreenState
     // The server-confirmed cancellation is rendered from the new status.
   }
 
+  void _retry() {
+    final state = ref.read(privacyControllerProvider);
+    if (!state.reachabilityKnown || state.isOffline) {
+      _controller.checkReachability();
+      return;
+    }
+    _controller.loadDeletion(widget.requestId);
+  }
+
   void _showCancelDialog() {
     showDialog<void>(
       context: context,
@@ -107,7 +116,7 @@ class _PrivacyDeletionStatusScreenState
         children: <Widget>[
           PrivacyBanners(
             state: state,
-            onRetry: () => _controller.loadDeletion(widget.requestId),
+            onRetry: _retry,
             onReauthenticate: () => context.push(AppRoutes.privacyReauth),
             onDismissFailure: _controller.clearFailure,
             onDismissNotice: _controller.clearNotice,
@@ -123,7 +132,8 @@ class _PrivacyDeletionStatusScreenState
             const _DeletionLoadingCard()
           else if (loadedDeletion == null)
             _DeletionLoadFailureCard(
-              onRetry: () => _controller.loadDeletion(widget.requestId),
+              isOffline: state.isOffline,
+              onRetry: _retry,
             )
           else
             _DeletionStatusSection(
@@ -182,7 +192,7 @@ class _DeletionStatusSection extends StatelessWidget {
             label: 'Refresh status',
             variant: MemoraButtonVariant.secondary,
             isLoading: state.isRefreshing,
-            onPressed: state.isRefreshing ? null : onRefresh,
+            onPressed: state.isRefreshing || state.isOffline ? null : onRefresh,
           ),
         ],
         if (deletion.status == PrivacyRequestStatus.completed &&
@@ -192,7 +202,7 @@ class _DeletionStatusSection extends StatelessWidget {
             label: 'Check again',
             variant: MemoraButtonVariant.secondary,
             isLoading: state.isRefreshing,
-            onPressed: state.isRefreshing ? null : onRefresh,
+            onPressed: state.isRefreshing || state.isOffline ? null : onRefresh,
           ),
         ],
         if (deletion.status == PrivacyRequestStatus.unknown) ...<Widget>[
@@ -201,14 +211,14 @@ class _DeletionStatusSection extends StatelessWidget {
             label: 'Check again',
             variant: MemoraButtonVariant.secondary,
             isLoading: state.isRefreshing,
-            onPressed: state.isRefreshing ? null : onRefresh,
+            onPressed: state.isRefreshing || state.isOffline ? null : onRefresh,
           ),
         ],
         if (deletion.status == PrivacyRequestStatus.failed) ...<Widget>[
           MemoraButton(
             key: const Key('privacy_delete_request_new'),
             label: 'Start a new deletion request',
-            onPressed: onRequestNew,
+            onPressed: state.isOffline ? null : onRequestNew,
           ),
         ],
         if (deletion.status == PrivacyRequestStatus.cancelled) ...<Widget>[
@@ -249,7 +259,9 @@ class _DeletionStatusSection extends StatelessWidget {
                 label: 'Cancel deletion',
                 variant: MemoraButtonVariant.secondary,
                 isLoading: state.isSubmitting,
-                onPressed: state.isSubmitting ? null : onCancel,
+                onPressed: state.isSubmitting || state.isOffline
+                    ? null
+                    : onCancel,
               ),
             ],
             const SizedBox(height: MemoraSpacing.space12),
@@ -417,8 +429,12 @@ class _DeletionLoadingCard extends StatelessWidget {
 }
 
 class _DeletionLoadFailureCard extends StatelessWidget {
-  const _DeletionLoadFailureCard({required this.onRetry});
+  const _DeletionLoadFailureCard({
+    required this.isOffline,
+    required this.onRetry,
+  });
 
+  final bool isOffline;
   final VoidCallback onRetry;
 
   @override
@@ -443,7 +459,7 @@ class _DeletionLoadFailureCard extends StatelessWidget {
             key: const Key('privacy_delete_retry_load'),
             label: 'Try again',
             variant: MemoraButtonVariant.secondary,
-            onPressed: onRetry,
+            onPressed: isOffline ? null : onRetry,
           ),
         ],
       ),

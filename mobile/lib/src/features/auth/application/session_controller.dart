@@ -380,6 +380,53 @@ class SessionController extends StateNotifier<AppSessionState> {
     }
   }
 
+  /// Adds or refreshes a pending privacy summary without changing account
+  /// status.
+  ///
+  /// Bootstrap only returns pending summaries, so this keeps the local overview
+  /// truthful after a request is created or its server status changes without
+  /// running bootstrap and losing the current route.
+  void upsertPrivacyRequestSummary({
+    required String requestId,
+    required String status,
+  }) {
+    final data = state.bootstrapData;
+    if (data == null) return;
+
+    final pending = data.pendingPrivacyRequests;
+    final index = pending.indexWhere((item) => item.id == requestId);
+    final summary = PendingResourceSummaryDomain(
+      id: requestId,
+      status: status,
+      updatedAt: DateTime.now().toUtc(),
+    );
+    final updated = List<PendingResourceSummaryDomain>.of(pending);
+    if (index >= 0) {
+      updated[index] = summary;
+    } else {
+      updated.add(summary);
+    }
+
+    state = state.copyWith(
+      bootstrapData: data.copyWith(pendingPrivacyRequests: updated),
+    );
+  }
+
+  /// Removes a resolved privacy summary without changing account status.
+  void clearPrivacyRequest({required String requestId}) {
+    final data = state.bootstrapData;
+    if (data == null) return;
+
+    final updated = data.pendingPrivacyRequests
+        .where((item) => item.id != requestId)
+        .toList(growable: false);
+    if (updated.length == data.pendingPrivacyRequests.length) return;
+
+    state = state.copyWith(
+      bootstrapData: data.copyWith(pendingPrivacyRequests: updated),
+    );
+  }
+
   /// Projects a server-confirmed deletion request into local account state.
   ///
   /// This deliberately avoids bootstrap, which would replace the current route

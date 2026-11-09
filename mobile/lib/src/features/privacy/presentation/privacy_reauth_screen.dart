@@ -56,6 +56,10 @@ class _PrivacyReauthScreenState extends ConsumerState<PrivacyReauthScreen> {
     _initialAccessToken = session?.accessToken;
     _currentUserId = session?.userId;
     _emailController.text = session?.email ?? '';
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _privacyController.checkReachability();
+    });
   }
 
   @override
@@ -257,6 +261,10 @@ class _PrivacyReauthScreenState extends ConsumerState<PrivacyReauthScreen> {
 
     final privacyState = ref.watch(privacyControllerProvider);
     final hasPendingAction = privacyState.pendingAction != null;
+    final canAttempt =
+        privacyState.reachabilityKnown &&
+        privacyState.isReachable &&
+        !_isLoading;
     // A second recent-auth rejection clears the pending action but must keep a
     // visible recovery path instead of falling back to the empty-state card.
     final signInRecoveryRequired =
@@ -275,6 +283,18 @@ class _PrivacyReauthScreenState extends ConsumerState<PrivacyReauthScreen> {
             'change the request already in progress.',
             style: MemoraTypography.body,
           ),
+          if (privacyState.isOffline) ...<Widget>[
+            const SizedBox(height: MemoraSpacing.space16),
+            MemoraBanner(
+              variant: MemoraBannerVariant.offline,
+              title: 'You are offline',
+              message:
+                  'Identity confirmation is unavailable until Memora '
+                  'reconnects. Your pending privacy action is unchanged.',
+              actionLabel: 'Retry',
+              onAction: _privacyController.checkReachability,
+            ),
+          ],
           const SizedBox(height: MemoraSpacing.space16),
           if (!hasPendingAction && !signInRecoveryRequired) ...<Widget>[
             MemoraCard(
@@ -412,7 +432,7 @@ class _PrivacyReauthScreenState extends ConsumerState<PrivacyReauthScreen> {
                             ? 'Confirming...'
                             : 'Confirm and continue',
                         isLoading: _isLoading,
-                        onPressed: _isLoading ? null : _submitEmailPassword,
+                        onPressed: canAttempt ? _submitEmailPassword : null,
                       ),
                     ),
                     const SizedBox(height: MemoraSpacing.space16),
@@ -442,7 +462,7 @@ class _PrivacyReauthScreenState extends ConsumerState<PrivacyReauthScreen> {
                         label: 'Continue with Google',
                         variant: MemoraButtonVariant.secondary,
                         icon: const Icon(Icons.g_mobiledata, size: 24),
-                        onPressed: _isLoading ? null : _submitGoogle,
+                        onPressed: canAttempt ? _submitGoogle : null,
                       ),
                     ),
                     const SizedBox(height: MemoraSpacing.space8),

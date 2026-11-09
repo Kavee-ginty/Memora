@@ -251,7 +251,14 @@ void main() {
       expect(find.text('Delete your account'), findsOneWidget);
       expect(find.byKey(const Key('privacy_overview_export')), findsOneWidget);
       expect(find.byKey(const Key('privacy_overview_delete')), findsOneWidget);
-      expect(find.text('Recent sign-in required'), findsOneWidget);
+      expect(find.textContaining('confirm your identity'), findsOneWidget);
+      expect(find.text('What Memora keeps'), findsOneWidget);
+      expect(find.text('Verified learning knowledge'), findsOneWidget);
+      expect(
+        find.textContaining('Original files you upload are temporary'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('status of each upload'), findsOneWidget);
       expect(harness.reachability.calls, greaterThanOrEqualTo(1));
     });
 
@@ -267,12 +274,36 @@ void main() {
       await _pumpAsync(tester);
 
       expect(find.text('You are offline'), findsOneWidget);
+      expect(
+        tester
+            .widget<MemoraButton>(
+              find.byKey(const Key('privacy_overview_export')),
+            )
+            .onPressed,
+        isNull,
+      );
+      expect(
+        tester
+            .widget<MemoraButton>(
+              find.byKey(const Key('privacy_overview_delete')),
+            )
+            .onPressed,
+        isNull,
+      );
 
       harness.reachability.value = true;
       await tester.tap(find.text('Retry'));
       await _pumpAsync(tester);
 
       expect(find.text('You are offline'), findsNothing);
+      expect(
+        tester
+            .widget<MemoraButton>(
+              find.byKey(const Key('privacy_overview_export')),
+            )
+            .onPressed,
+        isNotNull,
+      );
     });
 
     testWidgets('resolves a pending bootstrap request before navigating', (
@@ -323,6 +354,88 @@ void main() {
         find.text('export-status-stub:${MockPrivacyRepository.mockExportId}'),
         findsOneWidget,
       );
+    });
+
+    testWidgets(
+      'offline export introduction disables the request with a reason',
+      (tester) async {
+        final harness = _createHarness();
+        harness.reachability.value = false;
+
+        await tester.pumpWidget(
+          _buildApp(harness: harness, child: const PrivacyExportScreen()),
+        );
+        await _pumpAsync(tester);
+
+        expect(find.text('You are offline'), findsOneWidget);
+        expect(
+          tester
+              .widget<MemoraButton>(
+                find.byKey(const Key('privacy_export_request')),
+              )
+              .onPressed,
+          isNull,
+        );
+      },
+    );
+
+    testWidgets(
+      'a network failure retries export creation after reconnecting',
+      (tester) async {
+        final harness = _createHarness();
+        harness.repository.nextFailure = AuthFailure.networkError();
+
+        await tester.pumpWidget(
+          _buildApp(harness: harness, child: const PrivacyExportScreen()),
+        );
+        await _pumpAsync(tester);
+
+        await tester.tap(find.byKey(const Key('privacy_export_request')));
+        await _pumpAsync(tester);
+
+        expect(harness.repository.createExportCallCount, 1);
+        expect(find.text('You are offline'), findsOneWidget);
+
+        harness.reachability.value = true;
+        await tester.tap(find.text('Retry'));
+        await _pumpAsync(tester);
+
+        expect(find.text('You are offline'), findsNothing);
+        expect(find.text('Try again'), findsOneWidget);
+
+        await tester.tap(find.text('Try again'));
+        await _pumpAsync(tester, frames: 12);
+
+        expect(harness.repository.createExportCallCount, 2);
+        expect(
+          find.text('export-status-stub:${MockPrivacyRepository.mockExportId}'),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets('a completed export without an expiry is not downloadable', (
+      tester,
+    ) async {
+      final harness = _createHarness();
+      harness.repository.configuredExport = _export(
+        status: PrivacyRequestStatus.completed,
+        downloadUri: Uri.parse('https://cdn.memora.example/export'),
+      );
+
+      await tester.pumpWidget(
+        _buildApp(
+          harness: harness,
+          child: const PrivacyExportScreen(requestId: 'exp_1'),
+        ),
+      );
+      await _pumpAsync(tester);
+
+      expect(
+        find.textContaining('did not return a download expiry'),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('privacy_export_download')), findsNothing);
     });
 
     testWidgets('polls a pending export and stops on completion', (
@@ -450,6 +563,63 @@ void main() {
         findsOneWidget,
       );
     });
+
+    testWidgets(
+      'a network failure retries deletion creation after reconnecting',
+      (tester) async {
+        final harness = _createHarness();
+        harness.repository.nextFailure = AuthFailure.networkError();
+
+        await tester.pumpWidget(
+          _buildApp(harness: harness, child: const PrivacyDeleteScreen()),
+        );
+        await _pumpAsync(tester);
+
+        final checkbox = find.byKey(
+          const Key('privacy_delete_confirm_checkbox'),
+        );
+        await tester.ensureVisible(checkbox);
+        await tester.tap(checkbox);
+        await tester.pump();
+
+        final submit = find.byKey(const Key('privacy_delete_submit'));
+        await tester.ensureVisible(submit);
+        await tester.tap(submit);
+        await _pumpAsync(tester);
+        await tester.tap(find.text('Delete account'));
+        await _pumpAsync(tester);
+
+        expect(harness.repository.createDeletionCallCount, 1);
+        expect(find.text('You are offline'), findsOneWidget);
+        final firstKey = harness.repository.lastCreateDeletionKey;
+
+        harness.reachability.value = true;
+        final retry = find.text('Retry');
+        await tester.ensureVisible(retry);
+        await tester.tap(retry);
+        await _pumpAsync(tester);
+
+        expect(find.text('You are offline'), findsNothing);
+        final tryAgain = find.text('Try again');
+        expect(tryAgain, findsOneWidget);
+        await tester.ensureVisible(tryAgain);
+        await tester.tap(tryAgain);
+        await _pumpAsync(tester);
+        expect(find.text('Delete your account?'), findsOneWidget);
+
+        await tester.tap(find.text('Delete account'));
+        await _pumpAsync(tester, frames: 12);
+
+        expect(harness.repository.createDeletionCallCount, 2);
+        expect(harness.repository.lastCreateDeletionKey, firstKey);
+        expect(
+          find.text(
+            'deletion-status-stub:${MockPrivacyRepository.mockDeletionId}',
+          ),
+          findsOneWidget,
+        );
+      },
+    );
   });
 
   group('Privacy deletion status screen', () {
@@ -483,6 +653,59 @@ void main() {
 
       expect(harness.repository.cancelDeletionCallCount, 1);
       expect(find.text('Deletion cancelled'), findsOneWidget);
+    });
+
+    testWidgets('offline deletion status disables cancellation and refresh', (
+      tester,
+    ) async {
+      final harness = _createHarness();
+      harness.repository.configuredDeletion = _deletion();
+      await harness.controller.checkReachability();
+      await harness.controller.loadDeletion('del_1');
+      harness.reachability.value = false;
+      await harness.controller.checkReachability();
+
+      await tester.pumpWidget(
+        _buildApp(
+          harness: harness,
+          child: const PrivacyDeletionStatusScreen(requestId: 'del_1'),
+        ),
+      );
+      await _pumpAsync(tester);
+
+      expect(find.text('You are offline'), findsOneWidget);
+      expect(
+        tester
+            .widget<MemoraButton>(
+              find.byKey(const Key('privacy_delete_cancel')),
+            )
+            .onPressed,
+        isNull,
+      );
+      expect(
+        tester
+            .widget<MemoraButton>(
+              find.byKey(const Key('privacy_delete_refresh')),
+            )
+            .onPressed,
+        isNull,
+      );
+
+      final reachabilityCalls = harness.reachability.calls;
+      harness.reachability.value = true;
+      await tester.tap(find.text('Retry'));
+      await _pumpAsync(tester);
+
+      expect(harness.reachability.calls, greaterThan(reachabilityCalls));
+      expect(find.text('You are offline'), findsNothing);
+      expect(
+        tester
+            .widget<MemoraButton>(
+              find.byKey(const Key('privacy_delete_refresh')),
+            )
+            .onPressed,
+        isNotNull,
+      );
     });
 
     testWidgets('claims completion only with server proof state', (
@@ -667,6 +890,45 @@ void main() {
       expect(
         find.text('export-status-stub:${MockPrivacyRepository.mockExportId}'),
         findsOneWidget,
+      );
+    });
+
+    testWidgets('offline confirmation is disabled with a stated reason', (
+      tester,
+    ) async {
+      final harness = _createHarness();
+      await _triggerPendingExport(harness);
+      harness.reachability.value = false;
+
+      await tester.pumpWidget(
+        _buildApp(
+          harness: harness,
+          child: const PrivacyReauthScreen(),
+          initialLocation: AppRoutes.privacyReauth,
+        ),
+      );
+      await _pumpAsync(tester);
+
+      expect(find.text('You are offline'), findsOneWidget);
+      expect(
+        tester
+            .widget<MemoraButton>(
+              find.byKey(const Key('privacy_reauth_submit')),
+            )
+            .onPressed,
+        isNull,
+      );
+      expect(
+        tester
+            .widget<MemoraButton>(
+              find.byKey(const Key('privacy_reauth_google')),
+            )
+            .onPressed,
+        isNull,
+      );
+      expect(
+        harness.controller.state.pendingAction,
+        PrivacyPendingAction.export,
       );
     });
 

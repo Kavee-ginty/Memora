@@ -192,6 +192,35 @@ void main() {
       },
     );
 
+    test(
+      'a created export is discoverable and a terminal status clears it',
+      () async {
+        await controller.checkReachability();
+        await controller.requestExport();
+
+        final pendingAfterCreate =
+            sessionController.state.bootstrapData!.pendingPrivacyRequests;
+        expect(
+          pendingAfterCreate.map((item) => item.id),
+          contains(MockPrivacyRepository.mockExportId),
+        );
+        expect(pendingAfterCreate.single.status, 'requested');
+
+        repository.configuredExport = _export(
+          id: MockPrivacyRepository.mockExportId,
+          status: PrivacyRequestStatus.completed,
+          downloadUri: Uri.parse('https://cdn.memora.example/export'),
+          downloadExpiresAt: DateTime.utc(2026, 11, 2),
+        );
+        await controller.loadExport(MockPrivacyRepository.mockExportId);
+
+        expect(
+          sessionController.state.bootstrapData!.pendingPrivacyRequests,
+          isEmpty,
+        );
+      },
+    );
+
     test('network failure keeps the same key for a retry', () async {
       await controller.checkReachability();
       repository.failure = AuthFailure.networkError();
@@ -230,6 +259,27 @@ void main() {
         expect(repository.lastCreateExportKey, firstKey);
         expect(controller.state.awaitingReauthentication, isFalse);
         expect(controller.state.export, isNotNull);
+      },
+    );
+
+    test(
+      'a retry that fails differently resets the recent-auth retry guard',
+      () async {
+        await controller.checkReachability();
+        repository.failure = _recentAuth;
+        await controller.requestExport();
+
+        repository.failure = AuthFailure.networkError();
+        await controller.retryPendingAction();
+        expect(controller.state.reauthenticationRetryUsed, isFalse);
+
+        reachability.value = true;
+        await controller.checkReachability();
+        repository.failure = _recentAuth;
+        await controller.requestExport();
+
+        expect(controller.state.awaitingReauthentication, isTrue);
+        expect(controller.state.pendingAction, PrivacyPendingAction.export);
       },
     );
 
@@ -331,6 +381,27 @@ void main() {
       expect(launcher.calls, 0);
       expect(controller.state.failure?.code, 'download_expired');
     });
+
+    test(
+      'a download without a server expiry is not offered or opened',
+      () async {
+        repository.configuredExport = _export(
+          status: PrivacyRequestStatus.completed,
+          downloadUri: Uri.parse('https://cdn.memora.example/export'),
+        );
+
+        await controller.loadExport('exp_1');
+
+        expect(controller.state.export?.hasDownload, isTrue);
+        expect(controller.canDownloadExport, isFalse);
+
+        await controller.downloadExport();
+
+        expect(launcher.calls, 0);
+        expect(controller.state.failure?.code, 'download_expired');
+        expect(controller.state.failure?.message, contains('expires'));
+      },
+    );
 
     test(
       'download launch failure is recoverable and does not log the URL',

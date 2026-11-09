@@ -438,6 +438,9 @@ class PrivacyController extends StateNotifier<PrivacyState> {
       if (!mounted) return null;
       _markReachable();
       _applyDeletion(deletion);
+      if (deletion.status.isTerminal) {
+        _syncAccountStatus(deletion);
+      }
       return deletion;
     } on AuthFailure catch (failure) {
       if (!mounted) return null;
@@ -580,11 +583,15 @@ class PrivacyController extends StateNotifier<PrivacyState> {
   Future<void> downloadExport() async {
     final export = state.export;
     if (export == null || !export.hasActiveDownload(_now())) {
+      final message =
+          export != null &&
+              export.downloadUri != null &&
+              export.downloadExpiresAt == null
+          ? 'Memora could not confirm when that download expires. Request a '
+                'new export.'
+          : 'That download has expired. Request a new export.';
       state = state.copyWith(
-        failure: const AuthFailure(
-          code: 'download_expired',
-          message: 'That download has expired. Request a new export.',
-        ),
+        failure: AuthFailure(code: 'download_expired', message: message),
       );
       return;
     }
@@ -767,6 +774,10 @@ class PrivacyController extends StateNotifier<PrivacyState> {
     );
 
     if (export.status.isPending) {
+      sessionController.upsertPrivacyRequestSummary(
+        requestId: export.id,
+        status: export.status.name,
+      );
       if (startPolling) {
         _startExportPolling(export.id);
       } else {
@@ -775,6 +786,9 @@ class PrivacyController extends StateNotifier<PrivacyState> {
     } else {
       _stopPolling();
       _exportKey = null;
+      // A terminal export must disappear from the hub's pending card even when
+      // the bootstrap summary was captured before it finished.
+      sessionController.clearPrivacyRequest(requestId: export.id);
     }
   }
 
@@ -875,6 +889,9 @@ class PrivacyController extends StateNotifier<PrivacyState> {
       failure: failure,
       awaitingReauthentication: false,
       pendingAction: null,
+      // A retry that ends in a different failure has finished its recent-auth
+      // cycle. A later challenge must be allowed to ask for confirmation again.
+      reauthenticationRetryUsed: false,
     );
   }
 

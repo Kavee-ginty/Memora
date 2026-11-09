@@ -57,6 +57,26 @@ class _PrivacyDeleteScreenState extends ConsumerState<PrivacyDeleteScreen> {
     );
   }
 
+  void _retry() {
+    final state = ref.read(privacyControllerProvider);
+    final failure = state.failure;
+
+    if (!state.reachabilityKnown || state.isOffline) {
+      _controller.checkReachability();
+      return;
+    }
+
+    if (failure != null &&
+        failure.code != 'recent_authentication_required' &&
+        _confirmed &&
+        state.deletion?.status.isPending != true) {
+      _showConfirmationDialog();
+      return;
+    }
+
+    _controller.checkReachability();
+  }
+
   void _showConfirmationDialog() {
     showDialog<void>(
       context: context,
@@ -101,7 +121,7 @@ class _PrivacyDeleteScreenState extends ConsumerState<PrivacyDeleteScreen> {
         children: <Widget>[
           PrivacyBanners(
             state: state,
-            onRetry: _controller.checkReachability,
+            onRetry: _retry,
             onReauthenticate: () => context.push(AppRoutes.privacyReauth),
             onDismissFailure: _controller.clearFailure,
             onDismissNotice: _controller.clearNotice,
@@ -129,9 +149,13 @@ class _PrivacyDeleteScreenState extends ConsumerState<PrivacyDeleteScreen> {
                     key: const Key('privacy_delete_view_status'),
                     label: 'View deletion status',
                     variant: MemoraButtonVariant.secondary,
-                    onPressed: () => context.go(
-                      AppRoutes.privacyDeletionStatusPath(state.deletion!.id),
-                    ),
+                    onPressed: state.isOffline
+                        ? null
+                        : () => context.go(
+                            AppRoutes.privacyDeletionStatusPath(
+                              state.deletion!.id,
+                            ),
+                          ),
                   ),
                 ],
               ),
@@ -142,8 +166,9 @@ class _PrivacyDeleteScreenState extends ConsumerState<PrivacyDeleteScreen> {
               variant: MemoraBannerVariant.attention,
               title: 'Another privacy request is in progress',
               message:
-                  'Request ${pending.first.id} is still ${pending.first.status}. '
-                  'Check its status before starting a deletion request.',
+                  'Request ${pending.first.id} was last reported as '
+                  '${pending.first.status}. Check its status before starting a '
+                  'deletion request.',
               actionLabel: 'View privacy requests',
               onAction: () => context.go(AppRoutes.privacy),
             ),
@@ -159,8 +184,13 @@ class _PrivacyDeleteScreenState extends ConsumerState<PrivacyDeleteScreen> {
           const SizedBox(height: MemoraSpacing.space16),
           const _DeletionBullet(
             text:
-                'Your profile, learning materials, notes, missions and '
-                'progress are deleted.',
+                'Your profile, notes, missions, answers and progress are '
+                'deleted.',
+          ),
+          const _DeletionBullet(
+            text:
+                'Temporary uploaded files are removed, and verified knowledge '
+                'retained from them is deleted with your account.',
           ),
           const _DeletionBullet(
             text:
@@ -184,7 +214,8 @@ class _PrivacyDeleteScreenState extends ConsumerState<PrivacyDeleteScreen> {
                 CheckboxListTile(
                   key: const Key('privacy_delete_confirm_checkbox'),
                   value: _confirmed,
-                  onChanged: state.isSubmitting || pendingDeletion
+                  onChanged:
+                      state.isSubmitting || pendingDeletion || state.isOffline
                       ? null
                       : (value) {
                           setState(() => _confirmed = value ?? false);

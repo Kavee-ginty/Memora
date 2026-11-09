@@ -224,6 +224,42 @@ void main() {
       },
     );
 
+    test(
+      'a download URL without an expiry is never treated as ready',
+      () async {
+        dio.interceptors.add(
+          InterceptorsWrapper(
+            onRequest: (options, handler) {
+              return handler.resolve(
+                Response<Map<String, dynamic>>(
+                  requestOptions: options,
+                  statusCode: 200,
+                  data: _exportResponse(
+                    status: 'completed',
+                    downloadUrl:
+                        '/v1/privacy/exports/exp_1/download?token=signed-token',
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+
+        final export = await repository.getExport(
+          accessToken: 'token_abc',
+          requestId: 'exp_1',
+        );
+
+        expect(export.status, PrivacyRequestStatus.completed);
+        expect(export.hasDownload, isTrue);
+        expect(export.downloadExpiresAt, isNull);
+        expect(
+          export.hasActiveDownload(DateTime.utc(2026, 11, 1, 12)),
+          isFalse,
+        );
+      },
+    );
+
     test('unsafe download schemes are rejected', () async {
       dio.interceptors.add(
         InterceptorsWrapper(

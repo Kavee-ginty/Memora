@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../design_system/components/button.dart';
-import '../../../design_system/components/banner.dart';
 import '../../../design_system/components/card.dart';
 import '../../../design_system/tokens/colors.dart';
 import '../../../design_system/tokens/spacing.dart';
@@ -57,6 +56,9 @@ class _PrivacyOverviewScreenState extends ConsumerState<PrivacyOverviewScreen> {
     final pending =
         sessionState.bootstrapData?.pendingPrivacyRequests ??
         const <PendingResourceSummaryDomain>[];
+    // Navigation into a workflow is unavailable until the liveness probe says
+    // the backend is reachable. The offline banner states the reason.
+    final canOpenWorkflows = state.reachabilityKnown && state.isReachable;
 
     return PrivacyScaffold(
       title: 'Privacy',
@@ -85,6 +87,7 @@ class _PrivacyOverviewScreenState extends ConsumerState<PrivacyOverviewScreen> {
             _PendingRequestCard(
               pending: pending.first,
               isBusy: state.isLoading,
+              enabled: canOpenWorkflows,
               onOpen: () => _openPendingRequest(pending.first),
             ),
             const SizedBox(height: MemoraSpacing.space16),
@@ -100,7 +103,9 @@ class _PrivacyOverviewScreenState extends ConsumerState<PrivacyOverviewScreen> {
               key: const Key('privacy_overview_export'),
               label: 'Export my data',
               icon: const Icon(Icons.download_outlined),
-              onPressed: () => context.go(AppRoutes.privacyExport),
+              onPressed: canOpenWorkflows
+                  ? () => context.go(AppRoutes.privacyExport)
+                  : null,
             ),
           ),
           const SizedBox(height: MemoraSpacing.space16),
@@ -116,18 +121,87 @@ class _PrivacyOverviewScreenState extends ConsumerState<PrivacyOverviewScreen> {
               label: 'Review deletion',
               variant: MemoraButtonVariant.secondary,
               icon: const Icon(Icons.delete_outline),
-              onPressed: () => context.go(AppRoutes.privacyDelete),
+              onPressed: canOpenWorkflows
+                  ? () => context.go(AppRoutes.privacyDelete)
+                  : null,
             ),
           ),
           const SizedBox(height: MemoraSpacing.space24),
-          const MemoraBanner(
-            variant: MemoraBannerVariant.info,
-            title: 'Recent sign-in required',
-            message:
-                'For your security, Memora asks you to confirm your credentials '
-                'when your recent sign-in has expired. You can cancel before '
-                'any privacy request is sent.',
+          const _RetainedDataCard(),
+        ],
+      ),
+    );
+  }
+}
+
+/// PRD 033 retained-data summary.
+///
+/// The hub names the categories Memora keeps and keeps temporary source uploads
+/// visibly separate from retained knowledge and learner evidence. Per-material
+/// upload status is owned by the ingestion screens; this card explains where it
+/// belongs without inventing an upload list the privacy API does not expose.
+class _RetainedDataCard extends StatelessWidget {
+  const _RetainedDataCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return MemoraCard(
+      key: const Key('privacy_overview_retained_data'),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Text('What Memora keeps', style: MemoraTypography.cardTitle),
+          const SizedBox(height: MemoraSpacing.space12),
+          const _RetainedCategory(
+            icon: Icons.person_outline,
+            label: 'Profile and account details',
           ),
+          const _RetainedCategory(
+            icon: Icons.school_outlined,
+            label: 'Verified learning knowledge',
+          ),
+          const _RetainedCategory(
+            icon: Icons.quiz_outlined,
+            label: 'Notes, answers, missions and progress',
+          ),
+          const _RetainedCategory(
+            icon: Icons.shield_outlined,
+            label: 'Consent and security records',
+          ),
+          const SizedBox(height: MemoraSpacing.space12),
+          Text(
+            'Original files you upload are temporary and are removed after '
+            'validated processing. The status of each upload appears with that '
+            'material and is separate from the knowledge retained in your '
+            'learning path.',
+            style: MemoraTypography.metadata,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RetainedCategory extends StatelessWidget {
+  const _RetainedCategory({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: MemoraSpacing.space8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Padding(
+            padding: const EdgeInsets.only(top: MemoraSpacing.space4),
+            child: Icon(icon, size: 18, color: MemoraColors.brandBlue),
+          ),
+          const SizedBox(width: MemoraSpacing.space8),
+          Expanded(child: Text(label, style: MemoraTypography.body)),
         ],
       ),
     );
@@ -138,11 +212,13 @@ class _PendingRequestCard extends StatelessWidget {
   const _PendingRequestCard({
     required this.pending,
     required this.isBusy,
+    required this.enabled,
     required this.onOpen,
   });
 
   final PendingResourceSummaryDomain pending;
   final bool isBusy;
+  final bool enabled;
   final VoidCallback onOpen;
 
   @override
@@ -159,8 +235,8 @@ class _PendingRequestCard extends StatelessWidget {
           ),
           const SizedBox(height: MemoraSpacing.space8),
           Text(
-            'Request ${pending.id} is still ${pending.status}. Open it to see '
-            'the latest server-reported status.',
+            'Request ${pending.id} was last reported as ${pending.status}. '
+            'Open it to see the latest server-reported status.',
             style: MemoraTypography.metadata,
           ),
           const SizedBox(height: MemoraSpacing.space16),
@@ -169,7 +245,7 @@ class _PendingRequestCard extends StatelessWidget {
             label: 'View request status',
             variant: MemoraButtonVariant.secondary,
             isLoading: isBusy,
-            onPressed: isBusy ? null : onOpen,
+            onPressed: isBusy || !enabled ? null : onOpen,
           ),
         ],
       ),

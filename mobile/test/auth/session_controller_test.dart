@@ -253,6 +253,45 @@ void main() {
     );
 
     test(
+      'Privacy summaries can be refreshed and cleared without account changes',
+      () async {
+        mockAuth.emitSession(
+          const AuthSession(accessToken: 'token_1', userId: 'usr_1'),
+        );
+        await controller.initialize();
+
+        controller.upsertPrivacyRequestSummary(
+          requestId: 'exp_1',
+          status: 'requested',
+        );
+        expect(
+          controller.state.bootstrapData?.pendingPrivacyRequests.single.status,
+          'requested',
+        );
+
+        controller.upsertPrivacyRequestSummary(
+          requestId: 'exp_1',
+          status: 'processing',
+        );
+        expect(
+          controller.state.bootstrapData?.pendingPrivacyRequests.single.status,
+          'processing',
+        );
+        expect(
+          controller.state.bootstrapData?.accountStatus,
+          AccountStatusDomain.active,
+        );
+
+        controller.clearPrivacyRequest(requestId: 'exp_1');
+        expect(controller.state.bootstrapData?.pendingPrivacyRequests, isEmpty);
+        expect(
+          controller.state.bootstrapData?.accountStatus,
+          AccountStatusDomain.active,
+        );
+      },
+    );
+
+    test(
       'Confirmed deletion clears local credentials without remote revoke',
       () async {
         mockAuth.emitSession(

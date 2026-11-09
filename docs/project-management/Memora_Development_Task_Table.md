@@ -235,7 +235,7 @@ Known cross-task boundaries: exposure ingestion consumes the documented `learnin
 | T18 | Profile, edit, notification, accessibility and mission settings retain confirmed values across restart; local-safe accessibility changes apply immediately; failed persistence restores confirmed server values; Profile does not duplicate Progress. | Widget/repository/integration tests for save, retry, conflict, restart, offline and rollback; 320 px, 200% text, screen-reader, keyboard/switch and reduced-motion evidence; approved screenshots. |
 | T19 | Push payloads contain no sensitive learning detail; foreground handling does not interrupt active answers; mission, verification, learning-path, reward and privacy links validate authentication, ownership, expiry and workflow state; each intent is consumed once. | Provider-adapter contract tests; redaction tests; signed-out, expired, wrong-owner, invalid-state, foreground and consume-once deep-link tests; Android/iOS integration evidence and safe fallback screenshots. |
 | T20 | Export and deletion require recent authentication, run as durable idempotent jobs and report pending versus terminal state truthfully; completion requires proof or a documented exception for every scope; provider deletion, cancellation, audit and reconciliation rules are enforced. | Recent-auth and owner-negative tests; duplicate/concurrent request tests; job retry/provider-outage, cancellation, restore and reconciliation tests; deletion-proof and safe-audit assertions; migration/OpenAPI/client drift checks. |
-| T21 | Retained-data, export and deletion screens distinguish pending, failed and complete states; destructive confirmation is explicit; offline operations are disabled with a reason; account/session data is cleared only after confirmed deletion state; reauthentication recovers safely. | Widget/integration tests for request, polling, download, reauthentication, cancellation, failure, offline and confirmed clearing; 320 px, 200% text, semantics and focus evidence; approved screenshots. |
+| T21 | Retained-data, export and deletion screens distinguish pending, failed and complete states; the hub names retained categories and separates temporary uploads from verified knowledge; export download requires a completed status, signed URL and non-null future server expiry; destructive confirmation is explicit; offline navigation and operations, including reauthentication and download, are disabled with a reason; account/session data is cleared only after confirmed deletion state; reauthentication recovers safely. | Widget/integration tests for retained data, request, polling, download readiness, reauthentication, cancellation, failure, offline and confirmed clearing; 320 px, 200% text, semantics and focus evidence; approved screenshots. |
 
 ### 5.3 Hardening integration and release
 
@@ -310,8 +310,12 @@ T23 remain Blocked until T13 is Done; later tasks remain blocked until all
 listed dependencies are Done.
 
 T21's next action is user review, push, pull request and merge of
-`task/T21-privacy-mobile`. Do not mark T21 Done until that merge occurs and the
-real T20 backend/worker integration plus Android accessibility evidence in
+`task/T21-privacy-mobile`. The latest local verification passes 345 full tests
+(260 auth/privacy), formatting, `flutter analyze`, seven T21 golden comparisons,
+the Android debug APK build and the OpenAPI/client drift check; the evidence
+record also covers the uncommitted retained-data, offline-disabling and
+download-expiry corrections. Do not mark T21 Done until that merge occurs and
+the real T20 backend/worker integration plus Android accessibility evidence in
 `docs/evidence/T21_Privacy_Evidence.md` are recorded. T27 remains Blocked until
 T21 is Done.
 

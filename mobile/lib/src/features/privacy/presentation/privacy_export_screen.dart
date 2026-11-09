@@ -36,12 +36,15 @@ class _PrivacyExportScreenState extends ConsumerState<PrivacyExportScreen> {
   void initState() {
     super.initState();
     _controller = ref.read(privacyControllerProvider.notifier);
-    if (widget.requestId != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        _controller.loadExport(widget.requestId!);
-      });
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final requestId = widget.requestId;
+      if (requestId != null) {
+        _controller.loadExport(requestId);
+      } else {
+        _controller.checkReachability();
+      }
+    });
   }
 
   @override
@@ -57,12 +60,35 @@ class _PrivacyExportScreenState extends ConsumerState<PrivacyExportScreen> {
   }
 
   void _retry() {
+    final privacyState = ref.read(privacyControllerProvider);
+    final failure = privacyState.failure;
+
+    if (!privacyState.reachabilityKnown || privacyState.isOffline) {
+      _controller.checkReachability();
+      return;
+    }
+
+    if (failure?.code == 'download_unavailable' &&
+        _controller.canDownloadExport) {
+      _controller.downloadExport();
+      return;
+    }
+
     final requestId = widget.requestId;
     if (requestId != null) {
       _controller.loadExport(requestId);
-    } else {
-      _controller.checkReachability();
+      return;
     }
+
+    if (failure != null) {
+      // Retry the failed mutation with the retained idempotency key instead of
+      // only rechecking connectivity. This includes a network failure after the
+      // liveness probe has already recovered.
+      _requestExport();
+      return;
+    }
+
+    _controller.checkReachability();
   }
 
   @override
@@ -95,10 +121,11 @@ class _PrivacyExportScreenState extends ConsumerState<PrivacyExportScreen> {
           if (state.isLoading && loadedExport == null)
             const _ExportLoadingCard()
           else if (isStatusRoute && loadedExport == null)
-            _ExportLoadFailureCard(onRetry: _retry)
+            _ExportLoadFailureCard(isOffline: state.isOffline, onRetry: _retry)
           else if (loadedExport == null)
             _ExportIntroCard(
               isSubmitting: state.isSubmitting,
+              canRequest: state.canMutate,
               onRequest: _requestExport,
             )
           else
@@ -117,9 +144,14 @@ class _PrivacyExportScreenState extends ConsumerState<PrivacyExportScreen> {
 }
 
 class _ExportIntroCard extends StatelessWidget {
-  const _ExportIntroCard({required this.isSubmitting, required this.onRequest});
+  const _ExportIntroCard({
+    required this.isSubmitting,
+    required this.canRequest,
+    required this.onRequest,
+  });
 
   final bool isSubmitting;
+  final bool canRequest;
   final VoidCallback onRequest;
 
   @override
@@ -153,7 +185,7 @@ class _ExportIntroCard extends StatelessWidget {
           label: 'Request export',
           icon: const Icon(Icons.download_outlined),
           isLoading: isSubmitting,
-          onPressed: isSubmitting ? null : onRequest,
+          onPressed: isSubmitting || !canRequest ? null : onRequest,
         ),
         const SizedBox(height: MemoraSpacing.space16),
         const MemoraBanner(
@@ -203,7 +235,7 @@ class _ExportStatusSection extends StatelessWidget {
             label: 'Refresh status',
             variant: MemoraButtonVariant.secondary,
             isLoading: state.isRefreshing,
-            onPressed: state.isRefreshing ? null : onRefresh,
+            onPressed: state.isRefreshing || state.isOffline ? null : onRefresh,
           ),
         ],
         if (export.status == PrivacyRequestStatus.completed) ...<Widget>[
@@ -213,7 +245,9 @@ class _ExportStatusSection extends StatelessWidget {
               label: 'Download export',
               icon: const Icon(Icons.open_in_new),
               isLoading: state.downloadInProgress,
-              onPressed: state.downloadInProgress ? null : onDownload,
+              onPressed: state.downloadInProgress || state.isOffline
+                  ? null
+                  : onDownload,
             ),
           ],
           const SizedBox(height: MemoraSpacing.space8),
@@ -221,7 +255,9 @@ class _ExportStatusSection extends StatelessWidget {
             key: const Key('privacy_export_request_new'),
             label: 'Request another export',
             variant: MemoraButtonVariant.tertiary,
-            onPressed: state.isSubmitting ? null : onRequestNew,
+            onPressed: state.isSubmitting || state.isOffline
+                ? null
+                : onRequestNew,
           ),
         ],
         if (export.status == PrivacyRequestStatus.failed ||
@@ -229,7 +265,9 @@ class _ExportStatusSection extends StatelessWidget {
           MemoraButton(
             key: const Key('privacy_export_request_new'),
             label: 'Request a new export',
-            onPressed: state.isSubmitting ? null : onRequestNew,
+            onPressed: state.isSubmitting || state.isOffline
+                ? null
+                : onRequestNew,
           ),
         ],
         if (export.status == PrivacyRequestStatus.unknown) ...<Widget>[
@@ -238,7 +276,7 @@ class _ExportStatusSection extends StatelessWidget {
             label: 'Check again',
             variant: MemoraButtonVariant.secondary,
             isLoading: state.isRefreshing,
-            onPressed: state.isRefreshing ? null : onRefresh,
+            onPressed: state.isRefreshing || state.isOffline ? null : onRefresh,
           ),
         ],
         const SizedBox(height: MemoraSpacing.space24),
@@ -275,6 +313,14 @@ class _ExportStatusSection extends StatelessWidget {
         );
       case PrivacyRequestStatus.completed:
         if (!canDownload) {
+          if (export.hasDownload && export.downloadExpiresAt == null) {
+            return Text(
+              'The server did not return a download expiry, so Memora cannot '
+              'confirm the link is still valid. Request a new export to get a '
+              'fresh temporary link.',
+              style: MemoraTypography.body,
+            );
+          }
           return Text(
             'The download link has expired. Request a new export to get a '
             'fresh temporary link.',
@@ -333,8 +379,12 @@ class _ExportLoadingCard extends StatelessWidget {
 }
 
 class _ExportLoadFailureCard extends StatelessWidget {
-  const _ExportLoadFailureCard({required this.onRetry});
+  const _ExportLoadFailureCard({
+    required this.isOffline,
+    required this.onRetry,
+  });
 
+  final bool isOffline;
   final VoidCallback onRetry;
 
   @override
@@ -359,7 +409,7 @@ class _ExportLoadFailureCard extends StatelessWidget {
             key: const Key('privacy_export_retry_load'),
             label: 'Try again',
             variant: MemoraButtonVariant.secondary,
-            onPressed: onRetry,
+            onPressed: isOffline ? null : onRetry,
           ),
         ],
       ),

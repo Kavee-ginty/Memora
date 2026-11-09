@@ -225,6 +225,12 @@ void main() {
       expect(find.text('Your data, your choice'), findsOneWidget);
       expect(find.byKey(const Key('privacy_overview_export')), findsOneWidget);
       expect(find.byKey(const Key('privacy_overview_delete')), findsOneWidget);
+      expect(find.text('What Memora keeps'), findsOneWidget);
+      expect(find.text('Verified learning knowledge'), findsOneWidget);
+      expect(
+        find.textContaining('Original files you upload are temporary'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('offline overview disables actions with a stated reason', (
@@ -239,6 +245,22 @@ void main() {
       expect(
         find.textContaining('Privacy actions are unavailable'),
         findsOneWidget,
+      );
+      expect(
+        tester
+            .widget<MemoraButton>(
+              find.byKey(const Key('privacy_overview_export')),
+            )
+            .onPressed,
+        isNull,
+      );
+      expect(
+        tester
+            .widget<MemoraButton>(
+              find.byKey(const Key('privacy_overview_delete')),
+            )
+            .onPressed,
+        isNull,
       );
     });
 
@@ -289,6 +311,29 @@ void main() {
       expect(tester.takeException(), isNull);
       expect(find.text('Completed'), findsOneWidget);
       expect(find.byKey(const Key('privacy_export_download')), findsOneWidget);
+    });
+
+    testWidgets('export without an expiry never offers a download', (
+      tester,
+    ) async {
+      final harness = _createHarness();
+      harness.repository.configuredExport = _export(
+        status: PrivacyRequestStatus.completed,
+        downloadUri: Uri.parse('https://api.memora.test/export'),
+      );
+      await _pumpScreen(
+        tester,
+        harness,
+        const PrivacyExportScreen(requestId: 'exp_1'),
+      );
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Completed'), findsOneWidget);
+      expect(find.byKey(const Key('privacy_export_download')), findsNothing);
+      expect(
+        find.textContaining('did not return a download expiry'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('failed export never offers a download', (tester) async {

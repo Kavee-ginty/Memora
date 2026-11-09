@@ -4,12 +4,14 @@
 
 T21 builds the student-facing privacy workflow on top of the T20 privacy API:
 
-- Retained-data overview at `/profile/privacy`.
-- Export request, status, polling, expiry and download.
+- Retained-data overview at `/profile/privacy`, including named retained
+  categories and the distinction between temporary uploads and verified
+  knowledge.
+- Export request, status, polling, non-null server expiry and download.
 - Deletion explanation, explicit confirmation, status and permitted cancellation.
 - Recent-authentication recovery for privacy mutations.
 - Truthful pending, failed, cancelled, completed and unknown states.
-- Offline mutation disabling with a visible reason.
+- Offline navigation and mutation disabling with a visible reason.
 - Account and session clearing only after server-confirmed deletion with proof
   state.
 
@@ -61,7 +63,20 @@ navigation is not available during a sensitive workflow.
 Generated `unknown_default_open_api` values map to domain `unknown`; they never
 map to complete or failed.
 
-## Idempotency
+## Download readiness
+
+An export is downloadable only when all of these are true:
+
+- the status is `completed`;
+- the server returned a signed download URL; and
+- the server returned a non-null expiry that is still in the future.
+
+A completed export without an expiry is shown as completed but not
+downloadable, with an explanation. The client never treats a missing expiry as
+"no expiry" and never opens a launcher for it. The signed URL is never logged,
+rendered or persisted.
+
+## Idempotency and pending summaries
 
 - One stable idempotency key is reused while the same create or cancel intent is
   unresolved.
@@ -72,6 +87,13 @@ map to complete or failed.
 - Across process restart, the bootstrap `pending_privacy_requests` summary is the
   recovery source. A new request is not created while a matching pending request
   exists.
+- A created export is upserted into the local pending summary so the hub can
+  discover it. A terminal export is removed from that summary. Both are local
+  projections; they never infer completion or failure from the local status.
+- A retry that fails for a reason other than recent authentication resets the
+  recent-auth retry guard. A later `403 recent_authentication_required` can
+  therefore open recovery again instead of being treated as the second
+  rejection.
 
 ## Recent authentication
 
@@ -114,10 +136,17 @@ check. It does not add a connectivity dependency.
 
 While unreachable:
 
-- Export request, deletion request, cancellation and download are disabled.
-- A visible offline banner states the reason.
-- Last-known status remains readable with a last-checked label.
+- Hub workflow navigation, export request/refresh/download and retry, deletion
+  confirmation/refresh/cancel/retry, and reauthentication submission are
+  disabled.
+- A visible offline banner states the reason and keeps a labelled retry action.
+- Last-known status remains readable with a last-checked label. A pending
+  bootstrap summary is described as last reported, not live.
 - Polling stops; a resume or manual action rechecks reachability.
+- The offline Retry action rechecks reachability. Once reachable, contextual
+  retry on the export and deletion screens resumes the failed creation with the
+  same idempotency key rather than only rechecking the health endpoint. The
+  deletion-status Retry also probes reachability before loading status.
 
 ## Evidence plan
 
@@ -145,14 +174,22 @@ The task is implemented on `task/T21-privacy-mobile` in seven commits:
 6. `test(T21): cover privacy states accessibility and visual evidence`
 7. `docs(T21): record privacy evidence and handoff`
 
-Final local checks: formatting is clean, `flutter analyze` reports no issues,
-the full Flutter suite passes with 333 tests (248 auth/privacy), the seven T21
-golden comparisons pass, the Android debug APK builds, and the OpenAPI/generated
-client drift check passes.
+Final local checks after the review corrections and golden regeneration:
+formatting is clean, `flutter analyze` reports no issues, the full Flutter suite
+passes with 345 tests (260 auth/privacy), the seven T21 golden comparisons pass,
+the Android debug APK builds, and the OpenAPI/generated client drift check
+passes.
 
 The 200% text matrix found two real presentation defects, both fixed inside the
 owning implementation: the status-card header now wraps instead of overflowing,
 and short privacy pages are top-aligned instead of vertically centered.
+
+The final audit also tightened download readiness to require a non-null future
+server expiry, surfaced created exports through the local pending summary, reset
+the recent-auth retry guard after unrelated failures, named retained-data
+categories on the hub, and disabled every privacy mutation and navigation while
+offline with a visible reason. These corrections are included in the final T21
+review changes on the task branch.
 
 T21 remains **Review**. Real T20 backend/worker integration and Android
 TalkBack/device accessibility evidence are still outstanding. No push, merge,
@@ -166,7 +203,8 @@ the outstanding verification list are in
 - Owner: Neleesha Peiris.
 - Visual composition: approved spec-derived from `Profile.png` and UI/UX 9.20 /
   Flow 12/14.
-- Download: `url_launcher` opens the signed URL in the external browser.
+- Download: `url_launcher` opens the signed URL in the external browser, and
+  only with a non-null future server expiry.
 - Reauthentication: email/password and Google-only "Continue with Google",
   without re-bootstrapping.
 - Deletion-pending access: restricted to the privacy overview and deletion
