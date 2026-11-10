@@ -136,6 +136,21 @@ Final local checks after the review corrections and golden regeneration:
 | `flutter build apk --debug` | Pass; built `build/app/outputs/flutter-apk/app-debug.apk` |
 | `.venv/Scripts/python.exe tools/contracts/generate_contracts.py --check` | Pass; OpenAPI and generated Dart client are drift-clean |
 
+### Revalidation after merging current `develop`
+
+| Command | Result |
+| --- | --- |
+| `dart format --output=none --set-exit-if-changed lib test` | Pass; 148 files, 0 changed |
+| `flutter analyze` | Pass; no issues found |
+| `flutter test` | Pass; all 602 mobile tests, including T21 privacy and merged T10 ingestion coverage |
+| `flutter build apk --debug` | Not completed locally; Gradle failed before compilation with `Unable to establish loopback connection` on this Windows host |
+
+The required GitHub run for the pre-merge PR commit passed format/analyze/tests,
+contract drift, migrations, compose validation and secret/dependency scans. The
+backend container and Flutter APK jobs built their outputs but failed while
+uploading them because the repository's GitHub Actions artifact storage quota
+was exhausted. A fresh required run is still needed for the merged branch.
+
 ## Outstanding verification
 
 T21 remains in **Review**. The following acceptance evidence is not yet
@@ -146,9 +161,10 @@ recorded and must be completed before the task can be marked Done:
   deletion completion with proofs, cancellation and proof-missing behavior.
 - Record Android device or emulator TalkBack, keyboard/switch, reduced-motion
   and 320 px / 200% text manual results for the privacy routes.
-- Capture the successful required CI run on the pull request after the branch is
-  pushed.
+- Capture a successful required CI run on the updated pull request.
 
-The checked-in golden captures are Windows evidence and do not replace the
-Android manual record. No push, merge, tag, deployment or Done status is claimed
-by this record.
+The local Docker engine is unavailable and there is no local `.env`, so the real
+T20 API/worker exercise could not run here. Flutter lists an Android emulator
+image but no connected Android device; the local APK build is also blocked by
+Gradle's loopback error. The checked-in Windows golden captures do not replace
+the Android manual record. T21 remains in **Review** until those items pass.

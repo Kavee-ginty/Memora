@@ -13,6 +13,8 @@ import 'src/features/auth/data/session_repository.dart';
 import 'src/features/auth/domain/app_session_state.dart';
 import 'src/features/consent/application/consent_controller.dart';
 import 'src/features/consent/data/consent_repository.dart';
+import 'src/features/ingestion/application/ingestion_flow_controller.dart';
+import 'src/features/ingestion/data/ingestion_repository.dart';
 import 'src/features/privacy/application/privacy_controller.dart';
 import 'src/features/privacy/data/privacy_download_launcher.dart';
 import 'src/features/privacy/data/privacy_reachability.dart';
@@ -35,6 +37,7 @@ void main() async {
   );
   PrivacyDownloadLauncher privacyDownloadLauncher =
       UrlLauncherPrivacyDownloadLauncher();
+  IngestionRepository ingestionRepository = MockIngestionRepository();
 
   if (config.isValid &&
       config.supabaseUrl != 'https://placeholder.supabase.co') {
@@ -73,6 +76,10 @@ void main() async {
     privacyDownloadLauncher = UrlLauncherPrivacyDownloadLauncher(
       allowLocalHttp: config.environment == 'local',
     );
+    ingestionRepository = MemoraIngestionRepository(
+      apiClient: apiClient,
+      configuration: config,
+    );
   } else {
     authRepository = MockAuthRepository()
       ..shouldFailSignIn = true
@@ -96,6 +103,7 @@ void main() async {
         privacyDownloadLauncherProvider.overrideWithValue(
           privacyDownloadLauncher,
         ),
+        ingestionRepositoryProvider.overrideWithValue(ingestionRepository),
       ],
       child: const MemoraApp(),
     ),

@@ -42,7 +42,7 @@ If two sources appear inconsistent, stop implementation and resolve the conflict
 | T07 | Auth bootstrap mobile and guarded routes | **Done** | Ginodh | 5 | T03, T05, T06 | `task/T07-mobile-auth-routes` | Mobile navigation |
 | T08 | Curriculum and knowledge graph seed | **Done** | Dima | 5 | T04, T05 | `task/T08-curriculum-graph` | Data and knowledge |
 | T09 | Learning ingestion backend | **Done** | Dasun | 7 | T05, T06, T08 | `task/T09-ingestion-backend` | API and worker |
-| T10 | Learning ingestion mobile | **In Progress** | Dasun | 6 | T07, T09 | `task/T10-ingestion-mobile` | Mobile feature |
+| T10 | Learning ingestion mobile | **Review** | Dasun | 6 | T07, T09 | `task/T10-ingestion-mobile` | Mobile feature |
 | T11 | Memory engine v1 | **Done** | Dasun | 7 | T08 | `task/T11-memory-engine` | Learning engine |
 | T12 | Question bank and grading backend | **Done** | Neleesha | 7 | T08, T05 | `task/T12-questions-grading` | Backend learning |
 | T13 | Mission assembly and completion backend | **In Progress** | Ginodh | 7 | T06, T11, T12 | `task/T13-mission-backend` | Backend learning |
@@ -201,9 +201,27 @@ are true:
 | --- | --- | --- |
 | T07 | Bootstrap, onboarding/auth, root-shell and guarded routes use generated DTOs through repositories; signed-out, expired-session, wrong-owner and invalid-state navigation falls back safely; sign-out clears only approved state and process restart restores only approved state. | Router and repository tests for every guard and restoration case; 320 px, 200% text, screen-reader and reduced-motion results for matching screens; screenshots against approved PNG composition; Flutter format, analyze, test and build jobs. |
 | T09 | Text and file ingestion cover create, upload grant, finalize, status, retry, extraction, verification, commit and deletion reconciliation; duplicate finalize/commit requests converge; unsupported or malicious input fails safely; uncertain candidates cannot commit without verification; raw-file deletion records proof. | Owner-negative, validation, idempotency, concurrency, worker retry/provider-failure and deletion-proof integration tests; migration and seed checks; OpenAPI and generated-client drift checks; logs proven free of source text, signed URLs and authorization data. |
-| T10 | Add-material, progress/status, concept-verification and learning-path-preview screens cover every contracted update state; safe drafts and edits survive interruption; text and file flows can leave and resume; unavailable actions explain connectivity. | Mobile integration tests for text and file paths plus retry/restoration; loading, empty, error, offline and deletion-pending state tests; 320 px, 200% text, semantics and reduced-motion evidence; approved screenshots. |
+| T10 | Add-material, progress/status, concept-verification and learning-path-preview screens cover every contracted update state; safe drafts and edits survive interruption; text and file flows can leave and resume; unavailable actions explain connectivity. | Mobile integration tests for text and file paths plus retry/restoration; loading, empty, error, offline and deletion-pending state tests; 320 px, 200% text, semantics and reduced-motion evidence; approved screenshots. Expanded in the T10 Definition of Done subsection below and `docs/learning/T10_Study_Note.md`. |
 | T11 | Versioned memory inputs reproduce the same decision; updates are isolated per learner concept; expert bounds control first review, overdue and comeback cases; model output cannot directly set due dates; explanations identify the governing evidence and policy. | Deterministic unit/property tests, versioned calibration fixtures and scheduling simulations covering new, overdue, weak-prerequisite and comeback cases; persistence tests proving append-only evidence and concept isolation; recorded policy and fixture versions. Expanded in the T11 Definition of Done subsection below and `docs/learning/T11_Study_Note.md`. |
 | T12 | Verified questions, versions, options, rubrics and concept mappings remain immutable after use; answer keys stay hidden before submission; MCQ and numeric grading are deterministic; enabled short-answer grading is bounded and low-confidence evidence has limited influence; report/dispute hooks preserve provenance. | Import and schema validation tests; authorization and pre-submission response tests; grading fixtures for correct, partial, uncertain, unit and tolerance cases; immutable-version and report/dispute tests; OpenAPI/client drift checks for changed contracts. |
+
+### T10 Definition of Done
+
+This expands the acceptance gate in Section 4 and the T10 row in Section 5.1. It does not replace the board rule in Section 2.
+
+| Area | Done criteria | Evidence |
+| --- | --- | --- |
+| Screen and state coverage | Add-material, material status, verify-concepts and path-preview screens render every contracted update state (draft, uploading, processing, verification_required, committed, failed, expired, deleted) with loading/empty/error/offline/deletion-pending variants. | per-screen widget tests for all eight states; golden captures for nine states; UI/UX §13 Material state matrix mapping |
+| Drafts and edits | Manual-text drafts persist protected and account-scoped; edits use `row_version`; drafts and edits survive interruption and process restart; unsent verification decisions persist across navigation and process death; discard warns before destroying unsaved work. | draft-store isolation/corruption tests; decision persistence/restore tests (UIX-033) |
+| Text and file flows | Both paths complete create → grant → upload → finalize → poll → verify → preview → commit; both can leave and resume at any stage; finalize and commit are idempotent with durable, update-scoped operation identity. | flow/repository integration tests for text and file paths; double-submit and key-replay tests |
+| Retry and recovery | Failed uploads re-grant retaining update identity and input; failed extraction retries via the retry operation; expired updates start new updates cleanly; terminal states never regress; a create-identity collision recovers with the draft preserved. | retry/restoration tests; expired-state tests; `mobile/test/ingestion/review_findings_test.dart` |
+| Connectivity honesty | Unavailable actions are disabled with a connectivity reason after network failure; the offline banner shows; retry preserves input. | offline-state widget tests (decision D12, derived connectivity, reviewer acknowledgement requested) |
+| Deletion separation | `source_deletion_status` and per-upload deletion state render separately from knowledge status; committed knowledge is never implied deleted. | status-screen and preview deletion tests |
+| Security and privacy | No learning text, file names, draft content, tokens or authorization data in logs/errors; drafts encrypted at rest and account-isolated; upload bytes never cached; the presigned PUT carries zero API headers; generated client untouched. | isolation tests; header-exactness test; grep audit (zero logging hits) |
+| Accessibility | One primary heading per screen; semantics for progress, bands and states; 48 px targets; 320 px and 200% text pass; reduced motion honored; no color-only meaning. | `mobile/test/ingestion/ingestion_accessibility_test.dart`; goldens; recorded evidence |
+| Contracts | No backend/OpenAPI/client change; `generate_contracts.py --check` green; analyzer warnings at baseline. | contract check exit 0; analyzer clean |
+
+Known cross-task boundaries: `first_mission` stays `null` until T13 wires mission creation into commit, so **Start first mission** is a disabled, explained action; real offline reconciliation lands with T22; the Learning-path screen (UI/UX 9.8) remains a placeholder outside this task; connectivity is derived from failed requests only pending T22.
 
 ### T11 Definition of Done
 
@@ -304,26 +322,21 @@ in `docs/evidence/T24_Content_Evidence.md`.
 
 ## 7 Current next action
 
-T01-T09, T11-T12, T17 and T20 are merged and Done. T10 and T13 are In
-Progress. T21 and T24 are in Review. T18 and T19 are Ready. T14, T15, T22 and
-T23 remain Blocked until T13 is Done; later tasks remain blocked until all
-listed dependencies are Done.
+T01-T09, T11-T12, T17 and T20 are merged and Done. T10, T21 and T24 are in
+Review; T13 is In Progress. T18 and T19 are Ready. T14, T15, T22 and T23 remain
+Blocked until T13 is Done; later tasks remain blocked until all listed
+dependencies are Done.
 
-T21's next action is user review, push, pull request and merge of
-`task/T21-privacy-mobile`. The latest local verification passes 345 full tests
-(260 auth/privacy), formatting, `flutter analyze`, seven T21 golden comparisons,
-the Android debug APK build and the OpenAPI/client drift check; the evidence
-record also covers the uncommitted retained-data, offline-disabling and
-download-expiry corrections. Do not mark T21 Done until that merge occurs and
-the real T20 backend/worker integration plus Android accessibility evidence in
-`docs/evidence/T21_Privacy_Evidence.md` are recorded. T27 remains Blocked until
-T21 is Done.
+T21's implementation and automated evidence are recorded in its study note and
+privacy evidence. Before marking it Done, complete a real T20 backend/worker
+exercise and Android manual accessibility/device record. The current PR merge
+also requires final CI artifact uploads to succeed; this run hit the GitHub
+Actions artifact storage quota. T27 remains Blocked until T21 is Done.
 
 T24's next action is user commit, push, pull request and merge of the Route A
 changes. Do not mark T24 Done until that merge occurs. The qualified-review record
 is a self-review, and the qualification reference still lacks degree,
 institution, year and subject-specialisation evidence.
-
 
 T20 completed through pull request #38, merged into `develop` at `a243e79`. All required CI checks passed. Its successors were recalculated: T21 is Ready because T07 and T20 are Done; T23 and T25 remain Blocked by their other incomplete dependencies.
 
