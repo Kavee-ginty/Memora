@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'features/ingestion/application/ingestion_flow_controller.dart';
 import 'routing/app_router.dart';
 import 'theme/memora_theme.dart';
 
@@ -31,6 +32,10 @@ class _MemoraAppContent extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final routerConfig = router ?? ref.watch(appRouterProvider);
+
+    // Clears protected ingestion drafts and operation keys when the signed-in
+    // account changes or signs out (D8). Kept alive for the app's lifetime.
+    ref.watch(ingestionSessionCleanupProvider);
 
     return MaterialApp.router(
       title: 'Memora',

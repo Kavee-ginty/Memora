@@ -58,6 +58,10 @@
 			</array>
 		</dict>
 	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>Memora uses the camera so you can add a photo of your study notes as learning material.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Memora lets you choose a photo of your study notes to add as learning material.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>
