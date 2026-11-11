@@ -200,6 +200,51 @@ void main() {
       );
     });
 
+    test('Deletion-pending status route is the only blocked exception', () {
+      final statusPath = AppRoutes.privacyDeletionStatusPath('del_1');
+
+      expect(
+        resolveRouteRedirect(
+          sessionPhase: AppSessionPhase.blocked,
+          currentLocation: statusPath,
+          onboardingCompleted: true,
+          accountStatus: AccountStatusDomain.deletionPending,
+        ),
+        isNull,
+      );
+
+      expect(
+        resolveRouteRedirect(
+          sessionPhase: AppSessionPhase.blocked,
+          currentLocation: AppRoutes.privacy,
+          onboardingCompleted: true,
+          accountStatus: AccountStatusDomain.deletionPending,
+        ),
+        equals(AppRoutes.accountRecovery),
+      );
+
+      expect(
+        resolveRouteRedirect(
+          sessionPhase: AppSessionPhase.active,
+          currentLocation: statusPath,
+          onboardingCompleted: true,
+          accountStatus: AccountStatusDomain.deletionPending,
+        ),
+        isNull,
+      );
+
+      // A suspended account cannot use the deletion exception.
+      expect(
+        resolveRouteRedirect(
+          sessionPhase: AppSessionPhase.blocked,
+          currentLocation: statusPath,
+          onboardingCompleted: true,
+          accountStatus: AccountStatusDomain.suspended,
+        ),
+        equals(AppRoutes.accountRecovery),
+      );
+    });
+
     test('Required consent renewal redirects to consent screen', () {
       expect(
         resolveRouteRedirect(

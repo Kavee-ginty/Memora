@@ -453,6 +453,104 @@ void main() {
       expect(find.text('Mission for 2026-10-28'), findsOneWidget);
     });
 
+    testWidgets(
+      'Deletion-pending account can view deletion status from recovery',
+      (tester) async {
+        final deletionPending = BootstrapData(
+          accountStatus: AccountStatusDomain.deletionPending,
+          profileSummary: const ProfileSummaryDomain(
+            userId: 'usr_b',
+            displayName: 'Blocked User',
+          ),
+          consentStatus: const ConsentStatusDomain(requiresReview: false),
+          subjects: const [],
+          pendingPrivacyRequests: <PendingResourceSummaryDomain>[
+            PendingResourceSummaryDomain(
+              id: 'del_1',
+              status: 'requested',
+              updatedAt: DateTime.utc(2026, 11, 1),
+            ),
+          ],
+          capabilities: const CapabilityFlagsDomain(),
+          serverTime: DateTime.utc(2026, 11, 1),
+        );
+
+        await tester.pumpWidget(
+          createTestApp(
+            initialState: AppSessionState.blocked(
+              session: const AuthSession(accessToken: 'token', userId: 'usr_b'),
+              failure: const AuthFailure(
+                code: 'account_blocked',
+                message: 'Account deletion is pending.',
+              ),
+              bootstrapData: deletionPending,
+            ),
+            onboardingCompleted: true,
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Account Deletion in Progress'), findsOneWidget);
+        expect(
+          find.byKey(const Key('account_recovery_view_deletion')),
+          findsOneWidget,
+        );
+
+        await tester.tap(
+          find.byKey(const Key('account_recovery_view_deletion')),
+        );
+        for (var i = 0; i < 12; i++) {
+          await tester.pump(const Duration(milliseconds: 50));
+        }
+
+        expect(find.text('Deletion status'), findsOneWidget);
+        expect(find.text('Requested'), findsOneWidget);
+        expect(find.text('Request ID: del_1'), findsOneWidget);
+      },
+    );
+
+    testWidgets('Deletion-pending account cannot open the privacy hub', (
+      tester,
+    ) async {
+      final deletionPending = BootstrapData(
+        accountStatus: AccountStatusDomain.deletionPending,
+        profileSummary: const ProfileSummaryDomain(
+          userId: 'usr_b',
+          displayName: 'Blocked User',
+        ),
+        consentStatus: const ConsentStatusDomain(requiresReview: false),
+        subjects: const [],
+        pendingPrivacyRequests: <PendingResourceSummaryDomain>[
+          PendingResourceSummaryDomain(
+            id: 'del_1',
+            status: 'requested',
+            updatedAt: DateTime.utc(2026, 11, 1),
+          ),
+        ],
+        capabilities: const CapabilityFlagsDomain(),
+        serverTime: DateTime.utc(2026, 11, 1),
+      );
+
+      await tester.pumpWidget(
+        createTestApp(
+          initialState: AppSessionState.blocked(
+            session: const AuthSession(accessToken: 'token', userId: 'usr_b'),
+            failure: const AuthFailure(
+              code: 'account_blocked',
+              message: 'Account deletion is pending.',
+            ),
+            bootstrapData: deletionPending,
+          ),
+          onboardingCompleted: true,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await goTo(tester, AppRoutes.privacy);
+
+      expect(find.text('Account Deletion in Progress'), findsOneWidget);
+    });
+
     testWidgets('Detail placeholder Back returns to the stable root', (
       tester,
     ) async {

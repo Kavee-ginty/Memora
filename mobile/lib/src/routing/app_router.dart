@@ -24,6 +24,11 @@ import '../features/ingestion/presentation/material_status_screen.dart';
 import '../features/ingestion/presentation/path_preview_screen.dart';
 import '../features/ingestion/presentation/verify_concepts_screen.dart';
 import '../features/learning/presentation/learning_path_screen.dart';
+import '../features/privacy/presentation/privacy_delete_screen.dart';
+import '../features/privacy/presentation/privacy_deletion_status_screen.dart';
+import '../features/privacy/presentation/privacy_export_screen.dart';
+import '../features/privacy/presentation/privacy_overview_screen.dart';
+import '../features/privacy/presentation/privacy_reauth_screen.dart';
 import '../features/profile/presentation/profile_entry_screen.dart';
 import '../features/progress/presentation/progress_entry_screen.dart';
 import '../features/quiz/presentation/quiz_screen.dart';
@@ -163,6 +168,53 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: 'consent',
         pageBuilder: (context, state) =>
             _buildPage(context, state, const ConsentReviewScreen()),
+      ),
+
+      // Privacy destinations (outside the root shell so a deletion-pending
+      // account can reach only the authoritative deletion status route).
+      GoRoute(
+        path: AppRoutes.privacy,
+        name: 'privacy',
+        pageBuilder: (context, state) =>
+            _buildPage(context, state, const PrivacyOverviewScreen()),
+      ),
+      GoRoute(
+        path: AppRoutes.privacyReauth,
+        name: 'privacyReauth',
+        pageBuilder: (context, state) =>
+            _buildPage(context, state, const PrivacyReauthScreen()),
+      ),
+      GoRoute(
+        path: AppRoutes.privacyExport,
+        name: 'privacyExport',
+        pageBuilder: (context, state) =>
+            _buildPage(context, state, const PrivacyExportScreen()),
+      ),
+      GoRoute(
+        path: AppRoutes.privacyExportStatus,
+        name: 'privacyExportStatus',
+        pageBuilder: (context, state) => _buildPage(
+          context,
+          state,
+          PrivacyExportScreen(requestId: state.pathParameters['requestId']),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.privacyDelete,
+        name: 'privacyDelete',
+        pageBuilder: (context, state) =>
+            _buildPage(context, state, const PrivacyDeleteScreen()),
+      ),
+      GoRoute(
+        path: AppRoutes.privacyDeletionStatus,
+        name: 'privacyDeletionStatus',
+        pageBuilder: (context, state) => _buildPage(
+          context,
+          state,
+          PrivacyDeletionStatusScreen(
+            requestId: state.pathParameters['requestId']!,
+          ),
+        ),
       ),
 
       // Generic not-found destination for malformed or wrong-owner resources

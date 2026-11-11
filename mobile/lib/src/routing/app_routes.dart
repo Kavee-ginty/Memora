@@ -17,6 +17,30 @@ abstract class AppRoutes {
   static const String progress = '/progress';
   static const String profile = '/profile';
 
+  /// Privacy hub reached from Profile.
+  static const String privacy = '/profile/privacy';
+
+  /// Recent-authentication recovery for a pending privacy mutation.
+  static const String privacyReauth = '/profile/privacy/reauth';
+
+  /// Export entry and authoritative status destinations.
+  static const String privacyExport = '/profile/privacy/export';
+  static const String privacyExportStatus =
+      '/profile/privacy/export/:requestId';
+
+  /// Deletion confirmation and authoritative status destinations.
+  static const String privacyDelete = '/profile/privacy/delete';
+  static const String privacyDeletionStatus =
+      '/profile/privacy/delete/:requestId';
+
+  /// Builds an encoded export status location for a validated request ID.
+  static String privacyExportStatusPath(String requestId) =>
+      '/profile/privacy/export/${Uri.encodeComponent(requestId)}';
+
+  /// Builds an encoded deletion status location for a validated request ID.
+  static String privacyDeletionStatusPath(String requestId) =>
+      '/profile/privacy/delete/${Uri.encodeComponent(requestId)}';
+
   static const String learningDetail = '/learning/:subjectId';
   static const String addMaterial = '/learning/:subjectId/material/new';
   static const String materialStatus = '/learning/updates/:updateId';

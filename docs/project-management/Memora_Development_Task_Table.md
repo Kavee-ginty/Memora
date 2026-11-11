@@ -53,7 +53,7 @@ If two sources appear inconsistent, stop implementation and resolve the conflict
 | T18 | Profile and settings mobile | **Ready** | - | 4 | T07, T17 | `task/T18-profile-mobile` | Mobile feature |
 | T19 | Push notifications and deep links | **Ready** | - | 4 | T07, T17 | `task/T19-push-deep-links` | Mobile and backend |
 | T20 | Privacy export and deletion backend | **Done** | Dima | 5 | T06, T04 | `task/T20-privacy-backend` | Backend privacy |
-| T21 | Privacy mobile experience | **Ready** | - | 3 | T07, T20 | `task/T21-privacy-mobile` | Mobile feature |
+| T21 | Privacy mobile experience | **Review** | Neleesha Peiris | 3 | T07, T20 | `task/T21-privacy-mobile` | Mobile feature |
 | T22 | Offline sync and idempotency hardening | Blocked | - | 6 | T09, T13, T07 | `task/T22-offline-idempotency` | Cross-platform |
 | T23 | Observability and security hardening | Blocked | - | 5 | T02, T09, T13, T17, T20 | `task/T23-security-observability` | Platform |
 | T24 | Verified Physics pilot content | **Review** | Neleesha | 6 | T08, T12 | `task/T24-physics-content` | Academic content |
@@ -253,7 +253,7 @@ Known cross-task boundaries: exposure ingestion consumes the documented `learnin
 | T18 | Profile, edit, notification, accessibility and mission settings retain confirmed values across restart; local-safe accessibility changes apply immediately; failed persistence restores confirmed server values; Profile does not duplicate Progress. | Widget/repository/integration tests for save, retry, conflict, restart, offline and rollback; 320 px, 200% text, screen-reader, keyboard/switch and reduced-motion evidence; approved screenshots. |
 | T19 | Push payloads contain no sensitive learning detail; foreground handling does not interrupt active answers; mission, verification, learning-path, reward and privacy links validate authentication, ownership, expiry and workflow state; each intent is consumed once. | Provider-adapter contract tests; redaction tests; signed-out, expired, wrong-owner, invalid-state, foreground and consume-once deep-link tests; Android/iOS integration evidence and safe fallback screenshots. |
 | T20 | Export and deletion require recent authentication, run as durable idempotent jobs and report pending versus terminal state truthfully; completion requires proof or a documented exception for every scope; provider deletion, cancellation, audit and reconciliation rules are enforced. | Recent-auth and owner-negative tests; duplicate/concurrent request tests; job retry/provider-outage, cancellation, restore and reconciliation tests; deletion-proof and safe-audit assertions; migration/OpenAPI/client drift checks. |
-| T21 | Retained-data, export and deletion screens distinguish pending, failed and complete states; destructive confirmation is explicit; offline operations are disabled with a reason; account/session data is cleared only after confirmed deletion state; reauthentication recovers safely. | Widget/integration tests for request, polling, download, reauthentication, cancellation, failure, offline and confirmed clearing; 320 px, 200% text, semantics and focus evidence; approved screenshots. |
+| T21 | Retained-data, export and deletion screens distinguish pending, failed and complete states; the hub names retained categories and separates temporary uploads from verified knowledge; export download requires a completed status, signed URL and non-null future server expiry; destructive confirmation is explicit; offline navigation and operations, including reauthentication and download, are disabled with a reason; account/session data is cleared only after confirmed deletion state; reauthentication recovers safely. | Widget/integration tests for retained data, request, polling, download readiness, reauthentication, cancellation, failure, offline and confirmed clearing; 320 px, 200% text, semantics and focus evidence; approved screenshots. |
 
 ### 5.3 Hardening integration and release
 
@@ -322,10 +322,16 @@ in `docs/evidence/T24_Content_Evidence.md`.
 
 ## 7 Current next action
 
-T01-T09, T11-T12, T17 and T20 are merged and Done. T10 and T24 are in Review
-pending merge; T13 is In Progress. T18, T19 and T21 are Ready. T14, T15, T22 and T23 remain
+T01-T09, T11-T12, T17 and T20 are merged and Done. T10, T21 and T24 are in
+Review; T13 is In Progress. T18 and T19 are Ready. T14, T15, T22 and T23 remain
 Blocked until T13 is Done; later tasks remain blocked until all listed
-dependencies are Done. T26 and T27 remain Blocked until T10 is merged and marked Done.
+dependencies are Done.
+
+T21's implementation and automated evidence are recorded in its study note and
+privacy evidence. Before marking it Done, complete a real T20 backend/worker
+exercise and Android manual accessibility/device record. The current PR merge
+also requires final CI artifact uploads to succeed; this run hit the GitHub
+Actions artifact storage quota. T27 remains Blocked until T21 is Done.
 
 T24's next action is user commit, push, pull request and merge of the Route A
 changes. Do not mark T24 Done until that merge occurs. The qualified-review record
