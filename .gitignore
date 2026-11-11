@@ -23,6 +23,14 @@ plan_assets/
 /docs/learning/*_Bug_Report.md
 /T07_IMPLEMENTATION_PLAN.md
 
+# T24 academic source PDFs: local only pending reproduction/licence approval
+/content/physics/source_documents/
+
+# T24 local verbatim review pack (full transcriptions): local only.
+# The selected short excerpts in content/physics/pilot/questions/ are tracked
+# pilot evidence only and remain uncleared for redistribution.
+/content/physics/pilot/local_review/
+
 # Python
 __pycache__/
 *.py[cod]

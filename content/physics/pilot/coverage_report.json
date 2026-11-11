@@ -1,0 +1,352 @@
+{
+  "schema_version": "2.0",
+  "generated_at": "2026-11-02",
+  "source": "sealed envelopes under content/physics/pilot/questions/",
+  "question_count": 8,
+  "source_years": [
+    2022,
+    2024,
+    2025
+  ],
+  "summary": {
+    "concepts_total": 14,
+    "concepts_covered": 11,
+    "concepts_gap": 3,
+    "leaf_objectives_total": 6,
+    "leaf_objectives_covered": 6
+  },
+  "concepts": [
+    {
+      "stable_code": "PHYS-MEA-SI-UNITS",
+      "concept_version_id": "50000000-0000-0000-0000-000000000001",
+      "title": "International System of Units (SI)",
+      "objective_code": "LO-PHYS-01-01-UNITS",
+      "question_count": 2,
+      "question_ids": [
+        "PILOT-PHYS-2024-P1-Q01",
+        "PILOT-PHYS-2025-P1-Q01"
+      ],
+      "mapping_roles": [
+        "supporting"
+      ],
+      "coverage_status": "covered"
+    },
+    {
+      "stable_code": "PHYS-MEA-DIMENSIONS",
+      "concept_version_id": "50000000-0000-0000-0000-000000000002",
+      "title": "Dimensions of Physical Quantities",
+      "objective_code": "LO-PHYS-01-02-DIMS",
+      "question_count": 1,
+      "question_ids": [
+        "PILOT-PHYS-2024-P1-Q01"
+      ],
+      "mapping_roles": [
+        "primary"
+      ],
+      "coverage_status": "covered"
+    },
+    {
+      "stable_code": "PHYS-MEC-DISPLACEMENT",
+      "concept_version_id": "50000000-0000-0000-0000-000000000003",
+      "title": "Displacement",
+      "objective_code": "LO-PHYS-02-01-KINEMATICS",
+      "question_count": 0,
+      "question_ids": [],
+      "mapping_roles": [],
+      "coverage_status": "gap"
+    },
+    {
+      "stable_code": "PHYS-MEC-VELOCITY",
+      "concept_version_id": "50000000-0000-0000-0000-000000000004",
+      "title": "Velocity",
+      "objective_code": "LO-PHYS-02-01-KINEMATICS",
+      "question_count": 0,
+      "question_ids": [],
+      "mapping_roles": [],
+      "coverage_status": "gap"
+    },
+    {
+      "stable_code": "PHYS-MEC-ACCELERATION",
+      "concept_version_id": "50000000-0000-0000-0000-000000000005",
+      "title": "Acceleration",
+      "objective_code": "LO-PHYS-02-01-KINEMATICS",
+      "question_count": 2,
+      "question_ids": [
+        "PILOT-PHYS-2022-P1-Q17",
+        "PILOT-PHYS-2025-P1-Q03"
+      ],
+      "mapping_roles": [
+        "supporting"
+      ],
+      "coverage_status": "covered"
+    },
+    {
+      "stable_code": "PHYS-MEC-MOMENTUM",
+      "concept_version_id": "50000000-0000-0000-0000-000000000006",
+      "title": "Linear Momentum",
+      "objective_code": "LO-PHYS-02-02-NEWTON-LAWS",
+      "question_count": 3,
+      "question_ids": [
+        "PILOT-PHYS-2022-P1-Q01",
+        "PILOT-PHYS-2024-P1-Q05",
+        "PILOT-PHYS-2025-P1-Q45"
+      ],
+      "mapping_roles": [
+        "primary"
+      ],
+      "coverage_status": "covered"
+    },
+    {
+      "stable_code": "PHYS-MEC-NEWTON1",
+      "concept_version_id": "50000000-0000-0000-0000-000000000007",
+      "title": "Newton's First Law of Motion",
+      "objective_code": "LO-PHYS-02-02-NEWTON-LAWS",
+      "question_count": 0,
+      "question_ids": [],
+      "mapping_roles": [],
+      "coverage_status": "gap"
+    },
+    {
+      "stable_code": "PHYS-MEC-NEWTON2",
+      "concept_version_id": "50000000-0000-0000-0000-000000000008",
+      "title": "Newton's Second Law of Motion",
+      "objective_code": "LO-PHYS-02-02-NEWTON-LAWS",
+      "question_count": 2,
+      "question_ids": [
+        "PILOT-PHYS-2022-P1-Q17",
+        "PILOT-PHYS-2024-P1-Q04"
+      ],
+      "mapping_roles": [
+        "supporting"
+      ],
+      "coverage_status": "covered"
+    },
+    {
+      "stable_code": "PHYS-MEC-NEWTON3",
+      "concept_version_id": "50000000-0000-0000-0000-000000000009",
+      "title": "Newton's Third Law of Motion",
+      "objective_code": "LO-PHYS-02-02-NEWTON-LAWS",
+      "question_count": 1,
+      "question_ids": [
+        "PILOT-PHYS-2024-P1-Q04"
+      ],
+      "mapping_roles": [
+        "primary"
+      ],
+      "coverage_status": "covered"
+    },
+    {
+      "stable_code": "PHYS-MEC-WORK",
+      "concept_version_id": "50000000-0000-0000-0000-000000000010",
+      "title": "Work Done by a Force",
+      "objective_code": "LO-PHYS-02-03-WORK-ENERGY",
+      "question_count": 1,
+      "question_ids": [
+        "PILOT-PHYS-2025-P1-Q01"
+      ],
+      "mapping_roles": [
+        "primary"
+      ],
+      "coverage_status": "covered"
+    },
+    {
+      "stable_code": "PHYS-MEC-KINETIC-ENERGY",
+      "concept_version_id": "50000000-0000-0000-0000-000000000011",
+      "title": "Kinetic Energy",
+      "objective_code": "LO-PHYS-02-03-WORK-ENERGY",
+      "question_count": 3,
+      "question_ids": [
+        "PILOT-PHYS-2024-P1-Q05",
+        "PILOT-PHYS-2025-P1-Q01",
+        "PILOT-PHYS-2025-P1-Q45"
+      ],
+      "mapping_roles": [
+        "supporting"
+      ],
+      "coverage_status": "covered"
+    },
+    {
+      "stable_code": "PHYS-MEC-GRAV-POT-ENERGY",
+      "concept_version_id": "50000000-0000-0000-0000-000000000012",
+      "title": "Gravitational Potential Energy",
+      "objective_code": "LO-PHYS-02-03-WORK-ENERGY",
+      "question_count": 1,
+      "question_ids": [
+        "PILOT-PHYS-2022-P1-Q01"
+      ],
+      "mapping_roles": [
+        "supporting"
+      ],
+      "coverage_status": "covered"
+    },
+    {
+      "stable_code": "PHYS-MEC-CONSERV-ENERGY",
+      "concept_version_id": "50000000-0000-0000-0000-000000000013",
+      "title": "Principle of Conservation of Mechanical Energy",
+      "objective_code": "LO-PHYS-02-03-WORK-ENERGY",
+      "question_count": 2,
+      "question_ids": [
+        "PILOT-PHYS-2024-P1-Q05",
+        "PILOT-PHYS-2025-P1-Q45"
+      ],
+      "mapping_roles": [
+        "supporting"
+      ],
+      "coverage_status": "covered"
+    },
+    {
+      "stable_code": "PHYS-WAV-SHM",
+      "concept_version_id": "50000000-0000-0000-0000-000000000014",
+      "title": "Simple Harmonic Motion",
+      "objective_code": "LO-PHYS-03-01-SHM",
+      "question_count": 2,
+      "question_ids": [
+        "PILOT-PHYS-2022-P1-Q17",
+        "PILOT-PHYS-2025-P1-Q03"
+      ],
+      "mapping_roles": [
+        "primary"
+      ],
+      "coverage_status": "covered"
+    }
+  ],
+  "objectives": [
+    {
+      "objective_code": "LO-PHYS-01-MEAS",
+      "objective_id": "30000000-0000-0000-0000-000000000001",
+      "title": "Measurement",
+      "parent_objective_code": null,
+      "is_leaf": false,
+      "question_count": 0,
+      "question_ids": [],
+      "coverage_status": "covered_by_descendant"
+    },
+    {
+      "objective_code": "LO-PHYS-01-01-UNITS",
+      "objective_id": "30000000-0000-0000-0000-000000000002",
+      "title": "Physical Quantities and SI Units",
+      "parent_objective_code": "LO-PHYS-01-MEAS",
+      "is_leaf": true,
+      "question_count": 2,
+      "question_ids": [
+        "PILOT-PHYS-2024-P1-Q01",
+        "PILOT-PHYS-2025-P1-Q01"
+      ],
+      "coverage_status": "covered_direct"
+    },
+    {
+      "objective_code": "LO-PHYS-01-02-DIMS",
+      "objective_id": "30000000-0000-0000-0000-000000000003",
+      "title": "Dimensions and Dimensional Analysis",
+      "parent_objective_code": "LO-PHYS-01-MEAS",
+      "is_leaf": true,
+      "question_count": 1,
+      "question_ids": [
+        "PILOT-PHYS-2024-P1-Q01"
+      ],
+      "coverage_status": "covered_direct"
+    },
+    {
+      "objective_code": "LO-PHYS-02-MECH",
+      "objective_id": "30000000-0000-0000-0000-000000000004",
+      "title": "Mechanics",
+      "parent_objective_code": null,
+      "is_leaf": false,
+      "question_count": 0,
+      "question_ids": [],
+      "coverage_status": "covered_by_descendant"
+    },
+    {
+      "objective_code": "LO-PHYS-02-01-KINEMATICS",
+      "objective_id": "30000000-0000-0000-0000-000000000005",
+      "title": "Kinematics in One Dimension",
+      "parent_objective_code": "LO-PHYS-02-MECH",
+      "is_leaf": true,
+      "question_count": 2,
+      "question_ids": [
+        "PILOT-PHYS-2022-P1-Q17",
+        "PILOT-PHYS-2025-P1-Q03"
+      ],
+      "coverage_status": "covered_direct"
+    },
+    {
+      "objective_code": "LO-PHYS-02-02-NEWTON-LAWS",
+      "objective_id": "30000000-0000-0000-0000-000000000006",
+      "title": "Newton's Laws of Motion and Momentum",
+      "parent_objective_code": "LO-PHYS-02-MECH",
+      "is_leaf": true,
+      "question_count": 5,
+      "question_ids": [
+        "PILOT-PHYS-2022-P1-Q01",
+        "PILOT-PHYS-2022-P1-Q17",
+        "PILOT-PHYS-2024-P1-Q04",
+        "PILOT-PHYS-2024-P1-Q05",
+        "PILOT-PHYS-2025-P1-Q45"
+      ],
+      "coverage_status": "covered_direct"
+    },
+    {
+      "objective_code": "LO-PHYS-02-03-WORK-ENERGY",
+      "objective_id": "30000000-0000-0000-0000-000000000007",
+      "title": "Work, Energy, and Power",
+      "parent_objective_code": "LO-PHYS-02-MECH",
+      "is_leaf": true,
+      "question_count": 4,
+      "question_ids": [
+        "PILOT-PHYS-2022-P1-Q01",
+        "PILOT-PHYS-2024-P1-Q05",
+        "PILOT-PHYS-2025-P1-Q01",
+        "PILOT-PHYS-2025-P1-Q45"
+      ],
+      "coverage_status": "covered_direct"
+    },
+    {
+      "objective_code": "LO-PHYS-03-WAVES",
+      "objective_id": "30000000-0000-0000-0000-000000000008",
+      "title": "Oscillations and Waves",
+      "parent_objective_code": null,
+      "is_leaf": false,
+      "question_count": 0,
+      "question_ids": [],
+      "coverage_status": "covered_by_descendant"
+    },
+    {
+      "objective_code": "LO-PHYS-03-01-SHM",
+      "objective_id": "30000000-0000-0000-0000-000000000009",
+      "title": "Simple Harmonic Motion",
+      "parent_objective_code": "LO-PHYS-03-WAVES",
+      "is_leaf": true,
+      "question_count": 2,
+      "question_ids": [
+        "PILOT-PHYS-2022-P1-Q17",
+        "PILOT-PHYS-2025-P1-Q03"
+      ],
+      "coverage_status": "covered_direct"
+    }
+  ],
+  "gaps": [
+    {
+      "stable_code": "PHYS-MEC-DISPLACEMENT",
+      "title": "Displacement",
+      "objective_code": "LO-PHYS-02-01-KINEMATICS",
+      "reason": "No selected past-paper MCQ maps to this T08 concept."
+    },
+    {
+      "stable_code": "PHYS-MEC-VELOCITY",
+      "title": "Velocity",
+      "objective_code": "LO-PHYS-02-01-KINEMATICS",
+      "reason": "No selected past-paper MCQ maps to this T08 concept."
+    },
+    {
+      "stable_code": "PHYS-MEC-NEWTON1",
+      "title": "Newton's First Law of Motion",
+      "objective_code": "LO-PHYS-02-02-NEWTON-LAWS",
+      "reason": "No selected past-paper MCQ maps to this T08 concept."
+    }
+  ],
+  "notes": [
+    "Coverage means at least one sealed pilot question maps to the T08 concept; it is not a claim of full syllabus coverage.",
+    "The three gaps are deliberate: the selected Paper I MCQs do not address displacement, velocity or Newton's first law directly.",
+    "No private student content is present."
+  ]
+}

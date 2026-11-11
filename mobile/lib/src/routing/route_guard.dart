@@ -43,6 +43,13 @@ RouteAccessResult evaluateRouteAccess({
   final isRecovery = path == AppRoutes.accountRecovery;
   final isConsent = path == AppRoutes.consent;
 
+  // A deletion-pending account may only reach the authoritative deletion
+  // status route so it can inspect progress or cancel while the server still
+  // permits cancellation. No other authenticated destination is exposed.
+  final canViewDeletionStatus =
+      accountStatus == AccountStatusDomain.deletionPending &&
+      _isDeletionStatusPath(path);
+
   // 1. Session lifecycle.
   switch (sessionPhase) {
     case AppSessionPhase.unknown:
@@ -55,9 +62,10 @@ RouteAccessResult evaluateRouteAccess({
           ? const RouteAccessResult.allowed()
           : const RouteAccessResult.redirect(AppRoutes.splash);
     case AppSessionPhase.blocked:
-      return isRecovery
-          ? const RouteAccessResult.allowed()
-          : const RouteAccessResult.accountRecoveryRequired();
+      if (isRecovery || canViewDeletionStatus) {
+        return const RouteAccessResult.allowed();
+      }
+      return const RouteAccessResult.accountRecoveryRequired();
     case AppSessionPhase.signedOut:
     case AppSessionPhase.refreshRequired:
       if (isSplash) {
@@ -78,9 +86,10 @@ RouteAccessResult evaluateRouteAccess({
 
   // 2. Account status remains authoritative even if the phase lags.
   if (accountStatus?.isBlocked ?? false) {
-    return isRecovery
-        ? const RouteAccessResult.allowed()
-        : const RouteAccessResult.accountRecoveryRequired();
+    if (isRecovery || canViewDeletionStatus) {
+      return const RouteAccessResult.allowed();
+    }
+    return const RouteAccessResult.accountRecoveryRequired();
   }
 
   // 3. Recent authentication when the destination requires it.
@@ -155,24 +164,36 @@ RouteAccessResult? _evaluateDetailRoute(
     return null;
   }
 
-  if (path.startsWith('/learning/')) {
-    final subjectId = path.substring('/learning/'.length);
-    if (subjectId.isEmpty ||
-        subjectId.contains('/') ||
-        !isCanonicalUuid(subjectId)) {
-      // Malformed identifiers resolve to generic not-found without lookup.
+  // Material status and its review steps: /learning/updates/:updateId[/...].
+  // Ownership and workflow state are confirmed by the server on entry (D13).
+  if (path.startsWith('/learning/updates/')) {
+    final segments = path.substring('/learning/updates/'.length).split('/');
+    final validShape =
+        segments.length == 1 ||
+        (segments.length == 2 &&
+            (segments[1] == 'verify' || segments[1] == 'preview'));
+    if (!validShape || !isCanonicalUuid(segments[0])) {
       return const RouteAccessResult.malformedRoute();
     }
-    if (bootstrapData == null) {
-      return const RouteAccessResult.notFound();
+    return const RouteAccessResult.allowed();
+  }
+
+  if (path.startsWith('/learning/')) {
+    final segments = path.substring('/learning/'.length).split('/');
+
+    // Add-material destination: /learning/:subjectId/material/new.
+    if (segments.length == 3 &&
+        segments[1] == 'material' &&
+        segments[2] == 'new') {
+      return _evaluateSubjectOwnership(segments[0], bootstrapData);
     }
-    final ownsSubject = bootstrapData.subjects.any(
-      (subject) => subject.id == subjectId,
-    );
-    // Missing and wrong-owner are intentionally indistinguishable.
-    return ownsSubject
-        ? const RouteAccessResult.allowed()
-        : const RouteAccessResult.notFound();
+
+    // Any other extra segment is not a canonical learning route.
+    if (segments.length != 1) {
+      return const RouteAccessResult.malformedRoute();
+    }
+
+    return _evaluateSubjectOwnership(segments[0], bootstrapData);
   }
 
   if (path == '/missions' || path.startsWith('/missions/')) {
@@ -211,6 +232,40 @@ RouteAccessResult? _evaluateDetailRoute(
   }
 
   return null;
+}
+
+/// True only for the single-segment deletion status destination.
+///
+/// The exception deliberately excludes the privacy hub, export screens and the
+/// deletion entry form. Those routes either expose unrelated data or invite a
+/// second mutation that the server would reject while deletion is pending.
+bool _isDeletionStatusPath(String path) {
+  const String prefix = '/profile/privacy/delete/';
+  if (!path.startsWith(prefix)) return false;
+  final String requestId = path.substring(prefix.length);
+  return requestId.isNotEmpty && !requestId.contains('/');
+}
+
+/// Validates a subject identifier and checks ownership.
+///
+/// Malformed identifiers resolve to the generic not-found result without a
+/// lookup. Missing and wrong-owner subjects are intentionally indistinguishable.
+RouteAccessResult _evaluateSubjectOwnership(
+  String subjectId,
+  BootstrapData? bootstrapData,
+) {
+  if (subjectId.isEmpty || !isCanonicalUuid(subjectId)) {
+    return const RouteAccessResult.malformedRoute();
+  }
+  if (bootstrapData == null) {
+    return const RouteAccessResult.notFound();
+  }
+  final ownsSubject = bootstrapData.subjects.any(
+    (subject) => subject.id == subjectId,
+  );
+  return ownsSubject
+      ? const RouteAccessResult.allowed()
+      : const RouteAccessResult.notFound();
 }
 
 /// Returns the path portion of a location, without query or fragment, and

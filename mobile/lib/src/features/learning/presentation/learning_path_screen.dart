@@ -5,9 +5,16 @@ import '../../../design_system/design_system.dart';
 
 /// Screen representing the full Learning Path experience shown in Everyday English learning path.png.
 class LearningPathScreen extends StatelessWidget {
-  const LearningPathScreen({super.key, this.onStartMission});
+  const LearningPathScreen({
+    super.key,
+    this.onStartMission,
+    this.onAddMaterial,
+  });
 
   final VoidCallback? onStartMission;
+
+  /// Secondary action from UI/UX §9.8. Absent when the account has no subject.
+  final VoidCallback? onAddMaterial;
 
   @override
   Widget build(BuildContext context) {
@@ -76,6 +83,15 @@ class LearningPathScreen extends StatelessWidget {
             subtitle: 'Finish Quiz 8 to unlock',
             nodeSide: MemoraPathNodeSide.left,
           ),
+          if (onAddMaterial != null) ...<Widget>[
+            const SizedBox(height: MemoraSpacing.space16),
+            MemoraButton(
+              label: 'Add material',
+              variant: MemoraButtonVariant.secondary,
+              icon: const Icon(Icons.add),
+              onPressed: onAddMaterial,
+            ),
+          ],
           const SizedBox(height: MemoraSpacing.space24),
         ],
       ),

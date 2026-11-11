@@ -25,6 +25,10 @@ from memora.api.v1.schemas.question_reports import QuestionReportCreateRequest
 from memora.core.config import Settings
 from memora.db.seed import seed_database
 from memora.modules.questions.models import QuestionImportBundle
+from memora.modules.questions.pilot_validation import (
+    load_pilot_envelopes,
+    to_validated_import,
+)
 from memora.modules.questions.repository import (
     QuestionImportRepository,
     QuestionReportRepository,
@@ -1380,3 +1384,46 @@ def test_attempt_evidence_eligibility_tracks_linked_open_reports(database: Engin
         )
     assert captured.value.status_code == 404
     assert captured.value.code == "resource_not_found"
+
+
+def test_t24_physics_pilot_envelopes_import_as_expert_self_review(database: Engine) -> None:
+    envelopes = load_pilot_envelopes(BACKEND_ROOT.parent / "content/physics/pilot/questions")
+    assert len(envelopes) == 8
+
+    pilot_principal = UUID("a2400000-0000-4000-8000-000000000001")
+    imported = []
+    for envelope in envelopes:
+        validated = to_validated_import(envelope)
+        assert validated.bundle.author_principal == pilot_principal
+        assert validated.bundle.reviewer_principal == pilot_principal
+        assert validated.bundle.validation_status == "approved"
+        result = QuestionImportRepository(database).import_question(validated)
+        imported.append((envelope, result))
+
+    assert len({result["question_id"] for _, result in imported}) == 8
+
+    with database.connect() as connection:
+        for envelope, result in imported:
+            row = (
+                connection.execute(
+                    text(
+                        """
+                    SELECT q.author_principal, q.reviewer_principal, q.status,
+                           qv.prompt, qv.trust_label, qv.validation_status
+                    FROM question_versions qv
+                    JOIN questions q ON q.id = qv.question_id
+                    WHERE qv.id = :question_version_id
+                    """
+                    ),
+                    {"question_version_id": result["question_version_id"]},
+                )
+                .mappings()
+                .one()
+            )
+
+            assert row["author_principal"] == pilot_principal
+            assert row["reviewer_principal"] == pilot_principal
+            assert row["status"] == "approved"
+            assert row["validation_status"] == "approved"
+            assert row["trust_label"] == "Expert verified"
+            assert row["prompt"] == envelope["question"]["prompt"]

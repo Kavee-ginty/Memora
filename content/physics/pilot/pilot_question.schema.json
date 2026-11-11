@@ -1,0 +1,1100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://memora.local/schemas/pilot-question-v2.schema.json",
+  "title": "T24 pilot question envelope v2",
+  "description": "Structural contract for a sealed T24 Physics pilot envelope. The Python validator and the T08 seed data are the semantic authorities. The schema permits official marking-scheme verification with null human principals; the T12 import gate remains closed for that mode.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "pilot_id",
+    "verification_mode",
+    "source",
+    "question",
+    "answer_verification",
+    "review",
+    "publication"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "2.0"
+    },
+    "pilot_id": {
+      "type": "string",
+      "pattern": "^PILOT-PHYS-[0-9]{4}-P1-Q[0-9]{1,2}$"
+    },
+    "verification_mode": {
+      "enum": [
+        "official_marking_scheme",
+        "expert_review"
+      ]
+    },
+    "source": {
+      "$ref": "#/$defs/source"
+    },
+    "question": {
+      "$ref": "#/$defs/question"
+    },
+    "answer_verification": {
+      "$ref": "#/$defs/answerVerification"
+    },
+    "review": {
+      "$ref": "#/$defs/review"
+    },
+    "publication": {
+      "$ref": "#/$defs/publication"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "verification_mode": {
+            "const": "official_marking_scheme"
+          }
+        },
+        "required": [
+          "verification_mode"
+        ]
+      },
+      "then": {
+        "properties": {
+          "source": {
+            "properties": {
+              "source_type": {
+                "const": "past_paper"
+              },
+              "document_filename": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 300
+              },
+              "document_sha256": {
+                "$ref": "#/$defs/sha256"
+              },
+              "exam_year": {
+                "type": "integer",
+                "minimum": 2017,
+                "maximum": 2025
+              },
+              "paper": {
+                "const": "Paper I"
+              },
+              "question_number": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 50
+              },
+              "pdf_page": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "marking_scheme_document": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 300
+              },
+              "marking_scheme_sha256": {
+                "$ref": "#/$defs/sha256"
+              },
+              "marking_scheme_pdf_page": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "official_key": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 5
+              },
+              "official_key_status": {
+                "const": "verified_against_marking_scheme"
+              },
+              "transcription_status": {
+                "const": "verified_visual"
+              }
+            },
+            "required": [
+              "marking_scheme_document",
+              "marking_scheme_sha256",
+              "marking_scheme_pdf_page",
+              "official_key"
+            ]
+          },
+          "question": {
+            "properties": {
+              "author_principal": {
+                "type": "null"
+              },
+              "author_qualification_ref": {
+                "type": "null"
+              },
+              "reviewer_principal": {
+                "type": "null"
+              },
+              "concept_mappings": {
+                "items": {
+                  "properties": {
+                    "provenance_type": {
+                      "enum": [
+                        "analyst_mapping",
+                        "source_analysis"
+                      ]
+                    }
+                  }
+                }
+              }
+            },
+            "required": [
+              "author_principal",
+              "author_qualification_ref",
+              "reviewer_principal",
+              "concept_mappings"
+            ]
+          },
+          "answer_verification": {
+            "properties": {
+              "independent_review_status": {
+                "const": "not_required"
+              },
+              "reviewer_ref": {
+                "type": "null"
+              }
+            },
+            "required": [
+              "independent_review_status",
+              "reviewer_ref"
+            ]
+          },
+          "review": {
+            "properties": {
+              "review_mode": {
+                "const": "official_marking_scheme"
+              },
+              "academic_review_status": {
+                "const": "not_required"
+              },
+              "reviewer_principal": {
+                "type": "null"
+              },
+              "reviewer_qualification_ref": {
+                "type": "null"
+              },
+              "independence_declaration_ref": {
+                "type": "null"
+              },
+              "deviation_ref": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 300
+              },
+              "review_scope": {
+                "allOf": [
+                  {
+                    "contains": {
+                      "const": "official_key_match"
+                    }
+                  },
+                  {
+                    "contains": {
+                      "const": "derivation"
+                    }
+                  },
+                  {
+                    "contains": {
+                      "const": "transcription"
+                    }
+                  },
+                  {
+                    "contains": {
+                      "const": "curriculum_mapping"
+                    }
+                  },
+                  {
+                    "contains": {
+                      "const": "ambiguity"
+                    }
+                  },
+                  {
+                    "contains": {
+                      "const": "duplicate"
+                    }
+                  }
+                ]
+              }
+            },
+            "required": [
+              "review_mode",
+              "academic_review_status",
+              "reviewer_principal",
+              "reviewer_qualification_ref",
+              "independence_declaration_ref",
+              "deviation_ref",
+              "review_scope"
+            ]
+          },
+          "publication": {
+            "properties": {
+              "approved_for_import": {
+                "const": false
+              },
+              "approved_by": {
+                "type": "null"
+              },
+              "approved_at": {
+                "type": "null"
+              },
+              "import_batch_id": {
+                "type": "null"
+              },
+              "import_status": {
+                "const": "blocked_pending_t12_verification_mode"
+              },
+              "blocker_ref": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 300
+              }
+            },
+            "required": [
+              "approved_for_import",
+              "approved_by",
+              "approved_at",
+              "import_batch_id",
+              "import_status",
+              "blocker_ref"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "verification_mode": {
+            "const": "expert_review"
+          }
+        },
+        "required": [
+          "verification_mode"
+        ]
+      },
+      "then": {
+        "properties": {
+          "question": {
+            "properties": {
+              "author_principal": {
+                "$ref": "#/$defs/uuid"
+              },
+              "author_qualification_ref": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 300
+              },
+              "reviewer_principal": {
+                "$ref": "#/$defs/uuid"
+              }
+            },
+            "required": [
+              "author_principal",
+              "author_qualification_ref",
+              "reviewer_principal"
+            ]
+          },
+          "answer_verification": {
+            "properties": {
+              "independent_review_status": {
+                "enum": [
+                  "verified",
+                  "self_review"
+                ]
+              },
+              "reviewer_ref": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 300
+              }
+            },
+            "required": [
+              "independent_review_status",
+              "reviewer_ref"
+            ]
+          },
+          "review": {
+            "properties": {
+              "review_mode": {
+                "const": "expert_review"
+              },
+              "academic_review_status": {
+                "const": "approved"
+              },
+              "reviewer_principal": {
+                "$ref": "#/$defs/uuid"
+              },
+              "reviewer_qualification_ref": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 300
+              },
+              "independence_declaration_ref": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 300
+              }
+            },
+            "required": [
+              "review_mode",
+              "academic_review_status",
+              "reviewer_principal",
+              "reviewer_qualification_ref",
+              "independence_declaration_ref"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "uuid": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+    },
+    "nullableUuid": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "dateTime": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_id",
+        "source_type",
+        "document_filename",
+        "document_sha256",
+        "exam_year",
+        "exam_label",
+        "paper",
+        "question_number",
+        "pdf_page",
+        "medium",
+        "marking_scheme_document",
+        "marking_scheme_sha256",
+        "marking_scheme_pdf_page",
+        "official_key",
+        "official_key_status",
+        "transcription_status",
+        "text_only_adaptation",
+        "transcription_note",
+        "reproduction_status",
+        "licence_note"
+      ],
+      "properties": {
+        "source_id": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 200,
+          "pattern": "^(SL-DOE-AL-PHYS-[0-9]{4}-P1|SYNTHETIC-[A-Z0-9-]+)$"
+        },
+        "source_type": {
+          "enum": [
+            "past_paper",
+            "synthetic"
+          ]
+        },
+        "document_filename": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 300
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "document_sha256": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/sha256"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "exam_year": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 2017,
+              "maximum": 2025
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "exam_label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "paper": {
+          "oneOf": [
+            {
+              "const": "Paper I"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "question_number": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pdf_page": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "medium": {
+          "const": "English"
+        },
+        "marking_scheme_document": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 300
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "marking_scheme_sha256": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/sha256"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "marking_scheme_pdf_page": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "official_key": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 5
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "official_key_status": {
+          "enum": [
+            "verified_against_marking_scheme",
+            "not_found",
+            "not_published",
+            "marking_scheme_not_mcq_key",
+            "unknown",
+            "not_applicable"
+          ]
+        },
+        "transcription_status": {
+          "enum": [
+            "verified_visual",
+            "unverified",
+            "not_applicable"
+          ]
+        },
+        "text_only_adaptation": {
+          "type": "boolean"
+        },
+        "transcription_note": {
+          "oneOf": [
+            {
+              "type": "string",
+              "maxLength": 1000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reproduction_status": {
+          "enum": [
+            "unapproved",
+            "approved",
+            "not_applicable"
+          ]
+        },
+        "licence_note": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        }
+      }
+    },
+    "choiceContent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "schema_version",
+        "selection_mode"
+      ],
+      "properties": {
+        "kind": {
+          "const": "choice"
+        },
+        "schema_version": {
+          "const": "1"
+        },
+        "selection_mode": {
+          "const": "single"
+        }
+      }
+    },
+    "option": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "option_key",
+        "display_text",
+        "is_correct",
+        "display_order"
+      ],
+      "properties": {
+        "option_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16,
+          "pattern": "^[a-z0-9][a-z0-9_-]*$"
+        },
+        "display_text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "is_correct": {
+          "type": "boolean"
+        },
+        "display_order": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9
+        }
+      }
+    },
+    "rubric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rubric_type",
+        "max_score",
+        "evidence_ceiling",
+        "status",
+        "payload"
+      ],
+      "properties": {
+        "rubric_type": {
+          "const": "exact"
+        },
+        "max_score": {
+          "const": 1
+        },
+        "evidence_ceiling": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1
+        },
+        "status": {
+          "const": "approved"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "schema_version"
+          ],
+          "properties": {
+            "kind": {
+              "const": "exact"
+            },
+            "schema_version": {
+              "const": "1"
+            }
+          }
+        }
+      }
+    },
+    "conceptMapping": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "concept_version_id",
+        "learning_objective_id",
+        "mapping_role",
+        "weight",
+        "provenance_type",
+        "provenance_ref"
+      ],
+      "properties": {
+        "concept_version_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "learning_objective_id": {
+          "$ref": "#/$defs/nullableUuid"
+        },
+        "mapping_role": {
+          "enum": [
+            "primary",
+            "supporting",
+            "prerequisite",
+            "misconception"
+          ]
+        },
+        "weight": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "provenance_type": {
+          "enum": [
+            "analyst_mapping",
+            "source_analysis",
+            "pilot_review"
+          ]
+        },
+        "provenance_ref": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        }
+      }
+    },
+    "question": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "question_code",
+        "subject_id",
+        "curriculum_version_id",
+        "source_class",
+        "target_source_class",
+        "question_type",
+        "prompt",
+        "explanation",
+        "validation_status",
+        "author_principal",
+        "author_qualification_ref",
+        "reviewer_principal",
+        "content",
+        "options",
+        "rubric",
+        "concept_mappings"
+      ],
+      "properties": {
+        "question_code": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "pattern": "^[a-z0-9][a-z0-9._-]*$"
+        },
+        "subject_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "curriculum_version_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "source_class": {
+          "const": "expert_verified"
+        },
+        "target_source_class": {
+          "const": "expert_verified"
+        },
+        "question_type": {
+          "const": "mcq"
+        },
+        "prompt": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 5000
+        },
+        "explanation": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 5000
+        },
+        "validation_status": {
+          "const": "approved"
+        },
+        "author_principal": {
+          "$ref": "#/$defs/nullableUuid"
+        },
+        "author_qualification_ref": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 300
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reviewer_principal": {
+          "$ref": "#/$defs/nullableUuid"
+        },
+        "content": {
+          "$ref": "#/$defs/choiceContent"
+        },
+        "options": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 10,
+          "items": {
+            "$ref": "#/$defs/option"
+          }
+        },
+        "rubric": {
+          "$ref": "#/$defs/rubric"
+        },
+        "concept_mappings": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 12,
+          "items": {
+            "$ref": "#/$defs/conceptMapping"
+          }
+        }
+      }
+    },
+    "answerVerification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "official_key",
+        "derived_option_key",
+        "matches_official_key",
+        "derivation",
+        "official_key_source_ref",
+        "independent_review_status",
+        "reviewer_ref",
+        "notes"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "official_marking_scheme",
+            "expert_review"
+          ]
+        },
+        "official_key": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5
+        },
+        "derived_option_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16
+        },
+        "matches_official_key": {
+          "const": true
+        },
+        "derivation": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 5000
+        },
+        "official_key_source_ref": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "independent_review_status": {
+          "enum": [
+            "not_required",
+            "pending",
+            "verified",
+            "rejected",
+            "self_review"
+          ]
+        },
+        "reviewer_ref": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 300
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "notes": {
+          "oneOf": [
+            {
+              "type": "string",
+              "maxLength": 2000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "review_mode",
+        "academic_review_status",
+        "reviewer_principal",
+        "reviewer_qualification_ref",
+        "review_scope",
+        "reviewed_at",
+        "ambiguity_status",
+        "ambiguity_note",
+        "duplicate_status",
+        "coverage_note",
+        "content_hash",
+        "source_ref",
+        "independence_declaration_ref",
+        "deviation_ref"
+      ],
+      "properties": {
+        "review_mode": {
+          "enum": [
+            "official_marking_scheme",
+            "expert_review"
+          ]
+        },
+        "academic_review_status": {
+          "enum": [
+            "not_required",
+            "pending",
+            "approved",
+            "rejected"
+          ]
+        },
+        "reviewer_principal": {
+          "$ref": "#/$defs/nullableUuid"
+        },
+        "reviewer_qualification_ref": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 300
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "review_scope": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "official_key_match",
+              "derivation",
+              "transcription",
+              "curriculum_mapping",
+              "ambiguity",
+              "duplicate"
+            ]
+          }
+        },
+        "reviewed_at": {
+          "$ref": "#/$defs/dateTime"
+        },
+        "ambiguity_status": {
+          "enum": [
+            "cleared",
+            "flagged",
+            "pending"
+          ]
+        },
+        "ambiguity_note": {
+          "oneOf": [
+            {
+              "type": "string",
+              "maxLength": 1000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "duplicate_status": {
+          "enum": [
+            "cleared",
+            "duplicate",
+            "pending"
+          ]
+        },
+        "coverage_note": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "content_hash": {
+          "$ref": "#/$defs/sha256"
+        },
+        "source_ref": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "independence_declaration_ref": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 300
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "deviation_ref": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 300
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "publication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "approved_for_import",
+        "approved_by",
+        "approved_at",
+        "import_batch_id",
+        "import_status",
+        "blocker_ref"
+      ],
+      "properties": {
+        "approved_for_import": {
+          "type": "boolean"
+        },
+        "approved_by": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 300
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "approved_at": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/dateTime"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "import_batch_id": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "import_status": {
+          "enum": [
+            "not_requested",
+            "blocked_pending_t12_verification_mode",
+            "ready_for_import"
+          ]
+        },
+        "blocker_ref": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 300
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

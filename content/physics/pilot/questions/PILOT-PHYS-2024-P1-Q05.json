@@ -1,0 +1,156 @@
+{
+  "schema_version": "2.0",
+  "pilot_id": "PILOT-PHYS-2024-P1-Q05",
+  "verification_mode": "expert_review",
+  "source": {
+    "source_id": "SL-DOE-AL-PHYS-2024-P1",
+    "source_type": "past_paper",
+    "document_filename": "AL_Physics_2024_Combined_Paper_English.pdf",
+    "document_sha256": "1d628ae65f32d97ce495a244176a7aa2db31e2b1a57f698a6fe3b028772c18c2",
+    "exam_year": 2024,
+    "exam_label": "2024",
+    "paper": "Paper I",
+    "question_number": 5,
+    "pdf_page": 1,
+    "medium": "English",
+    "marking_scheme_document": "AL_Physics_2024_Combined_Marking_Scheme_English.pdf",
+    "marking_scheme_sha256": "2e77a2fd58a9213ea0cf025a11a72babedef363b66126c9d7830c8dcec9394b2",
+    "marking_scheme_pdf_page": 5,
+    "official_key": 5,
+    "official_key_status": "verified_against_marking_scheme",
+    "transcription_status": "verified_visual",
+    "text_only_adaptation": true,
+    "transcription_note": "The original question refers to a figure. The figure shows only the bullet and block on a horizontal surface; the prompt states the same setup in words. No physics information is lost.",
+    "reproduction_status": "unapproved",
+    "licence_note": "Department of Examinations past paper. Reproduction permission is not recorded; this short excerpt is retained only for the internal T24 pilot and is not cleared for redistribution."
+  },
+  "question": {
+    "question_code": "pilot-phys-2024-p1-q05",
+    "subject_id": "10000000-0000-0000-0000-000000000001",
+    "curriculum_version_id": "20000000-0000-0000-0000-000000000001",
+    "source_class": "expert_verified",
+    "target_source_class": "expert_verified",
+    "question_type": "mcq",
+    "prompt": "A bullet hits a wooden block placed on a smooth horizontal surface and embeds within the block. Consider the following statements:\n(A) The law of conservation of linear momentum is valid for the collision.\n(B) The law of conservation of energy is valid for the collision.\n(C) A part of kinetic energy of the system is lost due to the collision.\nOf the above statements,",
+    "explanation": "Horizontal momentum is conserved because no external horizontal force acts on the bullet-block system. Total energy is conserved, but mechanical energy is not: some initial kinetic energy is converted into internal energy, deformation and sound. Therefore A, B and C are all true.",
+    "validation_status": "approved",
+    "author_principal": "a2400000-0000-4000-8000-000000000001",
+    "author_qualification_ref": "PostGraduate",
+    "reviewer_principal": "a2400000-0000-4000-8000-000000000001",
+    "content": {
+      "kind": "choice",
+      "schema_version": "1",
+      "selection_mode": "single"
+    },
+    "options": [
+      {
+        "option_key": "1",
+        "display_text": "only (A) is true.",
+        "is_correct": false,
+        "display_order": 0
+      },
+      {
+        "option_key": "2",
+        "display_text": "only (A) and (B) are true.",
+        "is_correct": false,
+        "display_order": 1
+      },
+      {
+        "option_key": "3",
+        "display_text": "only (A) and (C) are true.",
+        "is_correct": false,
+        "display_order": 2
+      },
+      {
+        "option_key": "4",
+        "display_text": "only (B) and (C) are true.",
+        "is_correct": false,
+        "display_order": 3
+      },
+      {
+        "option_key": "5",
+        "display_text": "all (A), (B) and (C) are true.",
+        "is_correct": true,
+        "display_order": 4
+      }
+    ],
+    "rubric": {
+      "rubric_type": "exact",
+      "max_score": 1,
+      "evidence_ceiling": 0.9,
+      "status": "approved",
+      "payload": {
+        "kind": "exact",
+        "schema_version": "1"
+      }
+    },
+    "concept_mappings": [
+      {
+        "concept_version_id": "50000000-0000-0000-0000-000000000006",
+        "learning_objective_id": "30000000-0000-0000-0000-000000000006",
+        "mapping_role": "primary",
+        "weight": 1.0,
+        "provenance_type": "pilot_review",
+        "provenance_ref": "content/physics/pilot/REVIEW_RECORD.md#pilot-phys-2024-p1-q05"
+      },
+      {
+        "concept_version_id": "50000000-0000-0000-0000-000000000011",
+        "learning_objective_id": "30000000-0000-0000-0000-000000000007",
+        "mapping_role": "supporting",
+        "weight": 0.7,
+        "provenance_type": "pilot_review",
+        "provenance_ref": "content/physics/pilot/REVIEW_RECORD.md#pilot-phys-2024-p1-q05"
+      },
+      {
+        "concept_version_id": "50000000-0000-0000-0000-000000000013",
+        "learning_objective_id": "30000000-0000-0000-0000-000000000007",
+        "mapping_role": "supporting",
+        "weight": 0.5,
+        "provenance_type": "pilot_review",
+        "provenance_ref": "content/physics/pilot/REVIEW_RECORD.md#pilot-phys-2024-p1-q05"
+      }
+    ]
+  },
+  "answer_verification": {
+    "mode": "expert_review",
+    "official_key": 5,
+    "derived_option_key": "5",
+    "matches_official_key": true,
+    "derivation": "During the embedded collision the surface is smooth and horizontal, so the net external horizontal force is zero: p_initial = p_final (A true). Total energy conservation always applies; the missing mechanical energy appears as internal energy, deformation and sound (B true). A perfectly inelastic collision loses kinetic energy, so C is true. All three, option 5. The official key is 5.",
+    "official_key_source_ref": "SL-DOE-AL-PHYS-2024-P1 Q5; AL_Physics_2024_Combined_Marking_Scheme_English.pdf p.5",
+    "independent_review_status": "self_review",
+    "reviewer_ref": "content/physics/pilot/REVIEW_RECORD.md#pilot-phys-2024-p1-q05",
+    "notes": "Self-reviewed by the named pilot reviewer; the printed official marking-scheme grid remains the answer-key authority. See content/physics/pilot/REVIEW_RECORD.md."
+  },
+  "review": {
+    "review_mode": "expert_review",
+    "academic_review_status": "approved",
+    "reviewer_principal": "a2400000-0000-4000-8000-000000000001",
+    "reviewer_qualification_ref": "PostGraduate",
+    "review_scope": [
+      "official_key_match",
+      "derivation",
+      "transcription",
+      "curriculum_mapping",
+      "ambiguity",
+      "duplicate"
+    ],
+    "reviewed_at": "2026-11-02T13:30:00+00:00",
+    "ambiguity_status": "cleared",
+    "ambiguity_note": "Statement B refers to total energy, not conservation of mechanical energy. The explanation makes this distinction explicit; the official key confirms all three statements.",
+    "duplicate_status": "cleared",
+    "coverage_note": "Covers momentum conservation and energy accounting in a perfectly inelastic collision.",
+    "content_hash": "daddcd8e44eba36b773a1ec7002a7eb0e760cdca93e9088fe257398a297f880d",
+    "source_ref": "SL-DOE-AL-PHYS-2024-P1 Q5; AL_Physics_2024_Combined_Marking_Scheme_English.pdf p.5",
+    "independence_declaration_ref": "content/physics/pilot/REVIEW_RECORD.md#independence-declaration",
+    "deviation_ref": null
+  },
+  "publication": {
+    "approved_for_import": true,
+    "approved_by": "Malshani Perera",
+    "approved_at": "2026-11-02T13:30:00+00:00",
+    "import_batch_id": "T24-PHYS-PILOT-2026-11",
+    "import_status": "ready_for_import",
+    "blocker_ref": null
+  }
+}

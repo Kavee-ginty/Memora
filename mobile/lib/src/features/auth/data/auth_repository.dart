@@ -224,6 +224,15 @@ class MockAuthRepository implements AuthRepository {
   String? lastCreateAccountRedirectUri;
   String? lastRecoveryRedirectUri;
 
+  /// Optional stable identities for tests that exercise same-account
+  /// reauthentication. Defaults preserve the original mock behaviour.
+  String? emailSignInUserId;
+  String? emailSignInEmail;
+  String? googleUserId;
+  String? googleEmail;
+
+  int _accessTokenSequence = 0;
+
   MockAuthRepository({AuthSession? initialSession})
     : _currentSession = initialSession;
 
@@ -247,10 +256,10 @@ class MockAuthRepository implements AuthRepository {
       throw configuredFailure ?? AuthFailure.invalidCredentials();
     }
     final session = AuthSession(
-      accessToken: 'mock_access_token_${DateTime.now().millisecondsSinceEpoch}',
+      accessToken: 'mock_access_token_${++_accessTokenSequence}',
       refreshToken: 'mock_refresh_token',
-      userId: 'mock_user_${email.hashCode.abs()}',
-      email: email,
+      userId: emailSignInUserId ?? 'mock_user_${email.hashCode.abs()}',
+      email: emailSignInEmail ?? email,
     );
     emitSession(session);
     return session;
@@ -282,11 +291,11 @@ class MockAuthRepository implements AuthRepository {
     if (shouldFailSignIn) {
       throw configuredFailure ?? AuthFailure.networkError();
     }
-    final session = const AuthSession(
+    final session = AuthSession(
       accessToken: 'mock_google_token',
       refreshToken: 'mock_google_refresh',
-      userId: 'mock_google_user',
-      email: 'student@memora.internal',
+      userId: googleUserId ?? 'mock_google_user',
+      email: googleEmail ?? 'student@memora.internal',
     );
     emitSession(session);
   }
