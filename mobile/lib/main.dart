@@ -15,6 +15,7 @@ import 'src/features/consent/application/consent_controller.dart';
 import 'src/features/consent/data/consent_repository.dart';
 import 'src/features/ingestion/application/ingestion_flow_controller.dart';
 import 'src/features/ingestion/data/ingestion_repository.dart';
+import 'src/features/notifications/application/deep_link_controller.dart';
 import 'src/features/notifications/application/push_registration_controller.dart';
 import 'src/features/notifications/domain/notification_permission.dart';
 import 'src/features/notifications/infrastructure/device_token_registrar.dart';
@@ -44,6 +45,7 @@ void main() async {
   IngestionRepository ingestionRepository = MockIngestionRepository();
   NotificationGateway notificationGateway = FakeNotificationGateway();
   DeviceRegistrationApi? deviceRegistrationApi;
+  MemoraApiClient? deepLinkApiClient;
 
   if (config.isValid &&
       config.supabaseUrl != 'https://placeholder.supabase.co') {
@@ -90,6 +92,7 @@ void main() async {
       apiClient: apiClient,
       configuration: config,
     );
+    deepLinkApiClient = apiClient;
   } else {
     authRepository = MockAuthRepository()
       ..shouldFailSignIn = true
@@ -123,6 +126,8 @@ void main() async {
         deviceRegistrationApiProvider.overrideWithValue(
           deviceRegistrationApi ?? _UnconfiguredDeviceRegistrationApi(),
         ),
+        if (deepLinkApiClient != null)
+          memoraApiClientProvider.overrideWithValue(deepLinkApiClient!),
       ],
       child: const MemoraApp(),
     ),
