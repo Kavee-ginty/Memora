@@ -190,7 +190,32 @@ class AppLocalStorage {
 
   final SecureKeyStore _keyStore;
 
-  const AppLocalStorage(this._keyStore);
+  AppLocalStorage(this._keyStore);
+
+  Future<void> _profileWrites = Future<void>.value();
+
+  String _profileKey(String userId) =>
+      'memora_profile_${Uri.encodeComponent(userId)}';
+
+  Future<String?> readProfileCache(String userId) async {
+    await _profileWrites;
+    return _keyStore.read(_profileKey(userId));
+  }
+
+  Future<void> writeProfileCache(String userId, String value) =>
+      _queueProfileWrite(() => _keyStore.write(_profileKey(userId), value));
+
+  Future<void> clearProfileCache(String userId) =>
+      _queueProfileWrite(() => _keyStore.delete(_profileKey(userId)));
+
+  Future<void> _queueProfileWrite(Future<void> Function() write) {
+    final pending = _profileWrites.then((_) => write());
+    _profileWrites = pending.then<void>(
+      (_) {},
+      onError: (Object _, StackTrace _) {},
+    );
+    return pending;
+  }
 
   Future<bool> isOnboardingCompleted() async {
     try {
@@ -225,10 +250,14 @@ class AppLocalStorage {
   /// Clears account-scoped cache and tokens while preserving non-sensitive
   /// onboarding completion state.
   Future<void> clearAccountScopedData({String? userId}) async {
+    if (userId == null) return;
     try {
-      if (userId != null) {
-        await _keyStore.delete('$_accountScopePrefix$userId');
-      }
+      await clearProfileCache(userId);
+    } catch (_) {
+      // Proceed with the remaining account cleanup.
+    }
+    try {
+      await _keyStore.delete('$_accountScopePrefix$userId');
     } catch (_) {
       // Intentionally safe
     }
@@ -237,7 +266,7 @@ class AppLocalStorage {
   /// Completely clears all stored credentials and preferences.
   Future<void> clearAll() async {
     try {
-      await _keyStore.deleteAll();
+      await _queueProfileWrite(_keyStore.deleteAll);
     } catch (_) {
       // Intentionally safe
     }

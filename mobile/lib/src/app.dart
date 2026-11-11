@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'features/ingestion/application/ingestion_flow_controller.dart';
+import 'features/profile/application/profile_controller.dart';
 import 'routing/app_router.dart';
 import 'theme/memora_theme.dart';
 
@@ -36,12 +37,44 @@ class _MemoraAppContent extends ConsumerWidget {
     // Clears protected ingestion drafts and operation keys when the signed-in
     // account changes or signs out (D8). Kept alive for the app's lifetime.
     ref.watch(ingestionSessionCleanupProvider);
+    final accessibility = ref.watch(
+      profileControllerProvider.select(
+        (state) =>
+            state.applied ?? state.confirmed?.preferences.fields.accessibility,
+      ),
+    );
+    final baseTheme = MemoraTheme.light();
+    final contrastTheme = baseTheme.copyWith(
+      colorScheme: baseTheme.colorScheme.copyWith(
+        onSurface: Colors.black,
+        onSurfaceVariant: Colors.black,
+        outline: Colors.black,
+        outlineVariant: Colors.black,
+      ),
+    );
 
     return MaterialApp.router(
       title: 'Memora',
       debugShowCheckedModeBanner: false,
-      theme: MemoraTheme.light(),
+      theme: accessibility?.highContrast == true ? contrastTheme : baseTheme,
+      highContrastTheme: contrastTheme,
+      themeAnimationDuration: accessibility?.reducedMotion == true
+          ? Duration.zero
+          : kThemeAnimationDuration,
       routerConfig: routerConfig,
+      builder: (context, child) {
+        final media = MediaQuery.of(context);
+        return MediaQuery(
+          data: media.copyWith(
+            disableAnimations:
+                media.disableAnimations ||
+                (accessibility?.reducedMotion ?? false),
+            highContrast:
+                media.highContrast || (accessibility?.highContrast ?? false),
+          ),
+          child: child!,
+        );
+      },
     );
   }
 }

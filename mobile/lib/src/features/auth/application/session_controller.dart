@@ -63,6 +63,8 @@ class SessionController extends StateNotifier<AppSessionState> {
   /// never re-runs bootstrap. That keeps a deletion-pending or privacy status
   /// route stable instead of sending the student back through splash.
   String? _reauthExpectedUserId;
+  Future<AuthSession?>? _settingsRefresh;
+  String? _settingsRefreshOwner;
 
   SessionController({
     required this.authRepository,
@@ -89,6 +91,8 @@ class SessionController extends StateNotifier<AppSessionState> {
     _authSubscription = authRepository.authStateChanges.listen((session) {
       if (session == null) {
         _reauthExpectedUserId = null;
+        _settingsRefreshOwner = null;
+        _settingsRefresh = null;
         if (state.phase != AppSessionPhase.signedOut &&
             state.phase != AppSessionPhase.unknown) {
           state = const AppSessionState.signedOut();
@@ -108,10 +112,51 @@ class SessionController extends StateNotifier<AppSessionState> {
       }
 
       if (state.session?.accessToken != session.accessToken) {
+        if (_settingsRefreshOwner == session.userId &&
+            state.session?.userId == session.userId &&
+            state.phase == AppSessionPhase.active) {
+          _applyReauthenticatedSession(session);
+          return;
+        }
         // Session refreshed or changed externally
         bootstrapWithSession(session);
       }
     });
+  }
+
+  /// Refresh an active settings request without navigating away from its draft.
+  Future<AuthSession?> refreshForSettings(AuthSession expected) async {
+    final current = state.session;
+    if (state.phase != AppSessionPhase.active ||
+        current?.userId != expected.userId) {
+      return null;
+    }
+    if (current!.accessToken != expected.accessToken) return current;
+    if (_settingsRefreshOwner == expected.userId && _settingsRefresh != null) {
+      return _settingsRefresh;
+    }
+    _settingsRefreshOwner = expected.userId;
+    late final Future<AuthSession?> pending;
+    pending = authRepository.refreshSession().then((refreshed) {
+      if (!mounted ||
+          !identical(_settingsRefresh, pending) ||
+          state.phase != AppSessionPhase.active ||
+          state.session?.userId != expected.userId ||
+          refreshed?.userId != expected.userId) {
+        return null;
+      }
+      _applyReauthenticatedSession(refreshed!);
+      return refreshed;
+    });
+    _settingsRefresh = pending;
+    try {
+      return await pending;
+    } finally {
+      if (identical(_settingsRefresh, pending)) {
+        _settingsRefresh = null;
+        _settingsRefreshOwner = null;
+      }
+    }
   }
 
   /// Cold-start initialization resolving persisted session and bootstrap.

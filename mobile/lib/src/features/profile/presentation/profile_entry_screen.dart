@@ -11,8 +11,9 @@ import '../../../design_system/tokens/spacing.dart';
 import '../../../design_system/tokens/typography.dart';
 import '../../../routing/app_routes.dart';
 import '../../auth/application/session_controller.dart';
+import '../application/profile_controller.dart';
 
-/// Minimal Profile host rendering authenticated profile summary and safe sign-out.
+/// Account identity, settings destinations, and safe sign-out.
 class ProfileEntryScreen extends ConsumerWidget {
   const ProfileEntryScreen({super.key});
 
@@ -44,7 +45,15 @@ class ProfileEntryScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final sessionState = ref.watch(sessionControllerProvider);
-    final profile = sessionState.bootstrapData?.profileSummary;
+    final bootstrap = sessionState.bootstrapData;
+    final profile = bootstrap?.profileSummary;
+    final settings = ref.watch(profileControllerProvider);
+    final name =
+        settings.confirmed?.profile.fields.displayName ?? profile?.displayName;
+    final email = profile?.email.isNotEmpty == true
+        ? profile!.email
+        : sessionState.session?.email;
+    final streak = profile?.streakDays ?? 0;
 
     return Scaffold(
       backgroundColor: MemoraColors.surfaceSoft,
@@ -67,8 +76,8 @@ class ProfileEntryScreen extends ConsumerWidget {
                       radius: 32,
                       backgroundColor: const Color(0xFFD4E9F9),
                       child: Text(
-                        (profile?.displayName.isNotEmpty == true)
-                            ? profile!.displayName[0].toUpperCase()
+                        (name?.isNotEmpty == true)
+                            ? name!.characters.first.toUpperCase()
                             : 'M',
                         style: const TextStyle(
                           fontSize: 24,
@@ -85,23 +94,20 @@ class ProfileEntryScreen extends ConsumerWidget {
                           Semantics(
                             header: true,
                             child: Text(
-                              profile?.displayName ?? 'Student',
+                              name ?? 'Your account',
                               style: MemoraTypography.cardTitle,
                             ),
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            profile?.email ?? '',
-                            style: MemoraTypography.metadata,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Streak: ${profile?.streakDays ?? 0} days',
-                            style: MemoraTypography.metadata.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: const Color(0xFF0072B2),
+                          if (email != null && email.isNotEmpty)
+                            Text(email, style: MemoraTypography.metadata),
+                          if (streak > 0)
+                            Text(
+                              'Streak: $streak days',
+                              style: MemoraTypography.metadata.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF0072B2),
+                              ),
                             ),
-                          ),
                         ],
                       ),
                     ),
@@ -109,7 +115,29 @@ class ProfileEntryScreen extends ConsumerWidget {
                 ),
               ),
             ),
-            const SizedBox(height: MemoraSpacing.space24),
+            const SizedBox(height: MemoraSpacing.space8),
+            MemoraButton(
+              label: 'Edit profile',
+              onPressed: () => context.go(AppRoutes.editProfile),
+            ),
+            if (settings.cached) const Text('Showing your last saved profile.'),
+            for (final subject in bootstrap?.subjects ?? [])
+              ListTile(
+                title: Text(subject.name),
+                subtitle: const Text('Learning path'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.go(AppRoutes.learning),
+              ),
+            ListTile(
+              title: const Text('Accessibility and mission settings'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.go(AppRoutes.profileAccessibility),
+            ),
+            ListTile(
+              title: const Text('Notifications'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.go(AppRoutes.profileNotifications),
+            ),
 
             // Privacy entry owned by T21
             MemoraCard(

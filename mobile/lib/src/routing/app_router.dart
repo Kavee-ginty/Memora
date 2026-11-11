@@ -30,6 +30,8 @@ import '../features/privacy/presentation/privacy_export_screen.dart';
 import '../features/privacy/presentation/privacy_overview_screen.dart';
 import '../features/privacy/presentation/privacy_reauth_screen.dart';
 import '../features/profile/presentation/profile_entry_screen.dart';
+import '../features/profile/application/profile_controller.dart';
+import '../features/profile/presentation/profile_settings_screen.dart';
 import '../features/progress/presentation/progress_entry_screen.dart';
 import '../features/quiz/presentation/quiz_screen.dart';
 import 'app_routes.dart';
@@ -373,6 +375,36 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 name: 'profile',
                 pageBuilder: (context, state) =>
                     _buildPage(context, state, const ProfileEntryScreen()),
+                routes: [
+                  GoRoute(
+                    path: 'edit',
+                    pageBuilder: (context, state) => _buildPage(
+                      context,
+                      state,
+                      const ProfileSettingsScreen(SettingsSection.profile),
+                    ),
+                  ),
+                  GoRoute(
+                    path: 'notifications',
+                    pageBuilder: (context, state) => _buildPage(
+                      context,
+                      state,
+                      const ProfileSettingsScreen(
+                        SettingsSection.notifications,
+                      ),
+                    ),
+                  ),
+                  GoRoute(
+                    path: 'accessibility',
+                    pageBuilder: (context, state) => _buildPage(
+                      context,
+                      state,
+                      const ProfileSettingsScreen(
+                        SettingsSection.accessibility,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
