@@ -191,10 +191,13 @@ categories on the hub, and disabled every privacy mutation and navigation while
 offline with a visible reason. These corrections are included in the final T21
 review changes on the task branch.
 
-T21 remains **Review**. Real T20 backend/worker integration and Android
-TalkBack/device accessibility evidence are still outstanding. No push, merge,
-tag, deployment or Done status is claimed. Full command results, captures and
-the outstanding verification list are in
+T21 is **Done**. Pull request #49 merged into `develop` at `d387506`, all required
+CI checks passed, and the post-merge privacy run passed 112 Flutter privacy
+tests, 16 backend API/workflow tests and 8 real PostgreSQL/durable-worker
+contracts. The repository owner accepted the missing Android
+TalkBack/keyboard-switch/manual-device record as an approved deviation on 11
+November 2026; T27 retains that full device accessibility sweep. Full command
+results, captures and the deviation are recorded in
 `docs/evidence/T21_Privacy_Evidence.md`.
 
 ## Decisions recorded
