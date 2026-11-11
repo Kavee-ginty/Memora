@@ -15,6 +15,10 @@ import 'src/features/consent/application/consent_controller.dart';
 import 'src/features/consent/data/consent_repository.dart';
 import 'src/features/ingestion/application/ingestion_flow_controller.dart';
 import 'src/features/ingestion/data/ingestion_repository.dart';
+import 'src/features/notifications/application/push_registration_controller.dart';
+import 'src/features/notifications/domain/notification_permission.dart';
+import 'src/features/notifications/infrastructure/device_token_registrar.dart';
+import 'src/features/notifications/infrastructure/notification_gateway.dart';
 import 'src/features/privacy/application/privacy_controller.dart';
 import 'src/features/privacy/data/privacy_download_launcher.dart';
 import 'src/features/privacy/data/privacy_reachability.dart';
@@ -38,6 +42,8 @@ void main() async {
   PrivacyDownloadLauncher privacyDownloadLauncher =
       UrlLauncherPrivacyDownloadLauncher();
   IngestionRepository ingestionRepository = MockIngestionRepository();
+  NotificationGateway notificationGateway = FakeNotificationGateway();
+  DeviceRegistrationApi? deviceRegistrationApi;
 
   if (config.isValid &&
       config.supabaseUrl != 'https://placeholder.supabase.co') {
@@ -80,6 +86,10 @@ void main() async {
       apiClient: apiClient,
       configuration: config,
     );
+    deviceRegistrationApi = MemoraDeviceRegistrationApi(
+      apiClient: apiClient,
+      configuration: config,
+    );
   } else {
     authRepository = MockAuthRepository()
       ..shouldFailSignIn = true
@@ -87,6 +97,11 @@ void main() async {
         'Memora is not configured. Rebuild the app with the required environment values.',
       );
     sessionRepository = MockSessionRepository();
+    // Push is unavailable in unconfigured/mock builds: the registration
+    // controller stays idle and never prompts (denial never blocks use).
+    (notificationGateway as FakeNotificationGateway).setPermission(
+      NotificationPermission.unavailable,
+    );
   }
 
   runApp(
@@ -104,8 +119,28 @@ void main() async {
           privacyDownloadLauncher,
         ),
         ingestionRepositoryProvider.overrideWithValue(ingestionRepository),
+        notificationGatewayProvider.overrideWithValue(notificationGateway),
+        deviceRegistrationApiProvider.overrideWithValue(
+          deviceRegistrationApi ?? _UnconfiguredDeviceRegistrationApi(),
+        ),
       ],
       child: const MemoraApp(),
     ),
   );
+}
+
+/// Placeholder registration transport for unconfigured builds; the push
+/// gateway reports unavailable there, so this is never reached in practice.
+class _UnconfiguredDeviceRegistrationApi implements DeviceRegistrationApi {
+  @override
+  Future<void> register({
+    required String installationId,
+    required String pushToken,
+    required String idempotencyKey,
+    required String appVersion,
+    required String platform,
+    required String locale,
+  }) async {
+    throw UnimplementedError('Push registration requires a configured API.');
+  }
 }
