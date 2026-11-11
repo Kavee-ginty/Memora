@@ -101,12 +101,33 @@ def fcm_provider(responses) -> tuple[FcmNotificationProvider, FakeTransport]:
     return provider, transport
 
 
-def test_logging_provider_reports_sent_without_leaking_content(caplog) -> None:
-    with caplog.at_level(logging.INFO, logger="memora.modules.notifications.providers"):
+def test_logging_provider_reports_sent_without_leaking_content() -> None:
+    """Attach a dedicated capture handler: other suites reconfigure root
+    logging, so the assertion must not depend on global propagation state."""
+
+    module_logger = logging.getLogger("memora.modules.notifications.providers")
+    records: list[logging.LogRecord] = []
+
+    class Capture(logging.Handler):
+        def emit(self, record: logging.LogRecord) -> None:
+            records.append(record)
+
+    # The migration fixture runs alembic's fileConfig, which disables
+    # pre-existing loggers (see test_memory_worker for the same workaround).
+    module_logger.disabled = False
+    capture = Capture()
+    previous_level = module_logger.level
+    module_logger.addHandler(capture)
+    module_logger.setLevel(logging.INFO)
+    try:
         result = LoggingNotificationProvider().send(payload(), PUSH_TOKEN)
+    finally:
+        module_logger.removeHandler(capture)
+        module_logger.setLevel(previous_level)
+
     assert result.sent is True
     assert result.reason_code == "logged"
-    joined = caplog.text
+    joined = "\n".join(record.getMessage() for record in records)
     assert "category=due_memories" in joined
     assert "Physics" not in joined  # payload parameter never logged
     assert PUSH_TOKEN not in joined  # push token never logged
