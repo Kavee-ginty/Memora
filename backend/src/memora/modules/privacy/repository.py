@@ -991,6 +991,34 @@ class PrivacyRepository:
                 ),
                 {"id": request_id},
             )
+            # T19 trigger: export-ready push signal, written in the same
+            # transaction as the completion transition. Identifiers only.
+            # Deletion completions are intentionally never notified.
+            connection.execute(
+                text(
+                    """
+                    INSERT INTO outbox_events(
+                        domain_event_key, aggregate_type, aggregate_id, event_type,
+                        event_version, payload, correlation_id, publication_status
+                    ) VALUES (
+                        :event_key, 'privacy_request', :id,
+                        'privacy.export_ready', 1,
+                        CAST(:payload AS jsonb), gen_random_uuid(), 'pending'
+                    )
+                    """
+                ),
+                {
+                    "event_key": f"privacy.export_ready:{request_id}",
+                    "id": request_id,
+                    "payload": json.dumps(
+                        {
+                            "schema_version": "1",
+                            "user_id": str(user_id),
+                            "request_id": str(request_id),
+                        }
+                    ),
+                },
+            )
 
     def execute_deletion_job(self, request_id: UUID, user_id: UUID) -> None:
         with self._user_scope_connection(user_id) as connection:

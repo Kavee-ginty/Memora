@@ -647,6 +647,34 @@ class MissionRepository:
                     "priority": self._json(self._candidate_snapshot(planned)),
                 },
             )
+        # T19 trigger: one daily-mission push signal per materialized mission,
+        # written in the same transaction as the mission itself. Identifiers
+        # and the safe estimated-minutes count only — never question text.
+        connection.execute(
+            text(
+                """
+                INSERT INTO outbox_events(
+                    domain_event_key, aggregate_type, aggregate_id, event_type,
+                    event_version, payload, correlation_id, publication_status
+                ) VALUES (
+                    :key, 'mission', :mission_id, 'mission.ready', 1,
+                    CAST(:payload AS jsonb), gen_random_uuid(), 'pending'
+                )
+                """
+            ),
+            {
+                "key": f"mission.ready:{user_id}:{mission_id}",
+                "mission_id": mission_id,
+                "payload": json.dumps(
+                    {
+                        "schema_version": "1",
+                        "user_id": str(user_id),
+                        "mission_id": str(mission_id),
+                        "count": estimated_minutes,
+                    }
+                ),
+            },
+        )
         return self._mission(connection, user_id, mission_id)
 
     @staticmethod
