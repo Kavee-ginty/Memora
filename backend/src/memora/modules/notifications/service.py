@@ -63,7 +63,49 @@ SKIP_NO_DEVICES = "no_devices"
 SKIP_NOTIFICATIONS_DISABLED = "notifications_disabled"
 SKIP_QUIET_HOURS = "quiet_hours"
 SKIP_REMINDER_CAP = "reminder_cap_reached"
+SKIP_RESOURCE_UNAVAILABLE = "resource_unavailable"
 SKIP_TOKEN_UNREADABLE = "token_unreadable"
+
+
+def record_skip_once(
+    connection: Connection,
+    *,
+    user_id: UUID,
+    notification_id: str,
+    category: str,
+    resource_type: str,
+    resource_id: str,
+    dedupe_key: str,
+    reason: str,
+    now: datetime,
+) -> bool:
+    """Record a pre-dispatch skip exactly once per trigger dedupe key.
+
+    Used when a trigger must be consumed without producing a payload — for
+    example a due-memories reminder when the user has no open mission today.
+    Returns ``True`` when this call recorded the skip, ``False`` when another
+    dispatch already consumed the trigger.
+    """
+
+    take_delivery_lock(connection, dedupe_key)
+    if delivery_exists(connection, user_id, dedupe_key):
+        return False
+    record_delivery(
+        connection,
+        user_id=user_id,
+        notification_id=notification_id,
+        category=category,
+        resource_type=resource_type,
+        resource_id=resource_id,
+        dedupe_key=dedupe_key,
+        device_id=None,
+        status="skipped",
+        skip_reason=reason,
+        provider_code=None,
+        provider_message_id=None,
+        created_at=now,
+    )
+    return True
 
 
 @dataclass(frozen=True)
@@ -321,8 +363,10 @@ __all__ = [
     "SKIP_NOTIFICATIONS_DISABLED",
     "SKIP_QUIET_HOURS",
     "SKIP_REMINDER_CAP",
+    "SKIP_RESOURCE_UNAVAILABLE",
     "SKIP_TOKEN_UNREADABLE",
     "category_blocked",
     "dispatch",
     "quiet_hours_block",
+    "record_skip_once",
 ]

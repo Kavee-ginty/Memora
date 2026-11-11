@@ -29,7 +29,7 @@ CREATE TABLE notification_deliveries (
   skip_reason text CHECK (skip_reason IN (
     'already_delivered', 'category_disabled', 'expired', 'no_devices',
     'notifications_disabled', 'quiet_hours', 'reminder_cap_reached',
-    'token_unreadable'
+    'resource_unavailable', 'token_unreadable'
   )),
   provider_code text,
   provider_message_id text,
