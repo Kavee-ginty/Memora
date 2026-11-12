@@ -241,7 +241,7 @@ From the repository root, with the backend environment active:
 
 ```powershell
 $env:MEMORA_TEST_DATABASE_URL = 'postgresql+psycopg://memora:<local-password>@127.0.0.1:5432/memora_migration_test'
-backend\.venv\Scripts\python.exe -m pytest backend\tests\test_memory_engine.py backend\tests\test_memory_policy.py backend\tests\test_memory_persistence.py backend\tests\test_memory_selection.py backend\tests\test_memory_simulation.py backend\tests\test_memory_worker.py backend\tests\test_memory_endpoints.py
+backend/.venv/Scripts/python.exe -m pytest backend\tests\test_memory_engine.py backend\tests\test_memory_policy.py backend\tests\test_memory_persistence.py backend\tests\test_memory_selection.py backend\tests\test_memory_simulation.py backend\tests\test_memory_worker.py backend\tests\test_memory_endpoints.py
 ```
 
 The database-backed cases in `test_memory_persistence`, `test_memory_selection`,
@@ -271,5 +271,71 @@ Run the focused mission checks against a disposable database:
 
 ```powershell
 $env:MEMORA_TEST_DATABASE_URL = 'postgresql+psycopg://memora:<local-password>@127.0.0.1:5432/memora_migration_test'
-backend\.venv\Scripts\python.exe -m pytest backend\tests\test_mission_ranking.py backend\tests\test_missions_integration.py
+backend/.venv/Scripts/python.exe -m pytest backend\tests\test_mission_ranking.py backend\tests\test_missions_integration.py
+```
+
+## Push notifications and deep links
+
+T19 integrates push delivery behind one notification module. The closed payload
+contract (API §16.2) lives in `modules/notifications/constants.py` and
+`payload.py`: six categories map to route intents, stable fallback parents and
+localization keys; the builder rejects any parameter outside the safe allowlist
+and applies the recipient's `lock_screen_detail` band before anything leaves
+the process. No note text, answers, misconception details or tokens can be
+expressed in a payload.
+
+### Module map
+
+```text
+modules/notifications/
+  constants.py    # categories, route intents, fallbacks, safe parameters
+  payload.py      # closed payload builder + flattened wire form
+  providers.py    # logging (default) and FCM HTTP v1 adapters
+  repository.py   # preferences/devices reads, delivery ledger writes
+  service.py      # quiet hours, caps, category choice, per-device dispatch
+worker/
+  notifications.py  # notification.send jobs + trigger consumers
+```
+
+### Providers
+
+`MEMORA_NOTIFICATION_PROVIDER` selects the adapter: `logging` (default —
+records dispatches without external calls, used by local runs, CI and tests)
+or `fcm` (service-account OAuth2 assertion signed with PyJWT, FCM HTTP v1
+send through a narrow stdlib transport). `fcm` requires `MEMORA_FCM_PROJECT_ID`
+and `MEMORA_FCM_SERVICE_ACCOUNT_JSON`; credentials arrive via environment only
+and are never logged. Provider results reduce to bounded reason codes
+(`sent`, `provider_timeout`, `provider_rate_limited`, `provider_server_error`,
+`invalid_token`, `provider_rejected`).
+
+### Trigger events and enforcement
+
+Producers append trigger events in the same transaction as their authoritative
+change: `memory.schedule_changed` (T11 due memories), `mission.ready` (T13
+today-mission creation), `ingestion.verification_required` and
+`ingestion.learning_path_committed` (T09), `privacy.export_ready` (T20 export
+completion). `reward.granted` is reserved for T15. The worker's reconcile pass
+enqueues one `notification.send` job per unseen trigger; the job handler
+validates the envelope, resolves the payload resource (due-memories reminders
+resolve the recipient's open mission), builds the payload and dispatches.
+
+Dispatch enforcement order (PRD 031-032): expired intent, preferences missing
+or disabled, category choice, reminder cap per user-local day, quiet hours in
+the recipient's IANA timezone with the preferred-window exception, then
+consume-once on the trigger dedupe key. Every blocked dispatch appends one
+`notification_deliveries` row with a closed skip reason; denial never blocks
+any user flow. The ledger is append-only, owner-scoped by RLS and written
+through SECURITY DEFINER functions (migration `20261111_0015`); the worker
+role has no direct DML on it.
+
+Push is never authoritative (API §16.3): clients validate the referenced
+resource through the API before navigating. See the mobile feature
+`lib/src/features/notifications` for the gateway, deep-link coordinator and
+foreground-notice host.
+
+Run the focused notification checks against a disposable database:
+
+```powershell
+$env:MEMORA_TEST_DATABASE_URL = 'postgresql+psycopg://memora:<local-password>@127.0.0.1:5432/memora_test'
+backend/.venv/Scripts/python.exe -m pytest backend	ests	est_notification_payload.py backend	ests	est_notification_providers.py backend	ests	est_notification_service.py backend	ests	est_notification_worker.py backend	ests	est_notification_triggers.py
 ```
