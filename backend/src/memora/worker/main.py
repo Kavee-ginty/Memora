@@ -43,8 +43,13 @@ from memora.worker.memory import (
 )
 from memora.worker.notifications import (
     JOB_TYPE_NOTIFICATION_SEND,
+    _send_plan_outside_transaction,
     enqueue_notification_backlog,
     handle_notification_job,
+    reconcile_stale_sending,
+)
+from memora.worker.notifications import (
+    get_dispatcher as get_notification_dispatcher,
 )
 
 logger = logging.getLogger(__name__)
@@ -136,7 +141,13 @@ def process_next_job(
         if job_type == JOB_TYPE_MEMORY_PROCESS_EVENT:
             handle_memory_job(engine, job, now=now)
         elif job_type == JOB_TYPE_NOTIFICATION_SEND:
-            handle_notification_job(engine, job, now=now)
+            # Two-phase send (Schema 14.2): the handler plans and records
+            # inside its own transaction; the external provider call runs
+            # with no transaction open, then a short transaction completes
+            # the ledger rows.
+            plan = handle_notification_job(engine, job, now=now)
+            if plan is not None and plan.is_send:
+                _send_plan_outside_transaction(engine, plan, get_notification_dispatcher(), now)
         elif job_type == "privacy.export":
             request_id = UUID(str(payload["request_id"]))
             user_id = UUID(str(payload["user_id"]))
@@ -227,6 +238,7 @@ def run_worker(
                 recovered = recover_expired_leases(connection, now=now)
                 enqueued = enqueue_outbox_backlog(connection, now=now)
                 notifications_enqueued = enqueue_notification_backlog(connection, now=now)
+                stale_sending_expired = reconcile_stale_sending(connection, now=now)
                 from memora.modules.privacy.repository import (
                     reconcile_expired_export_archives,
                     reconcile_privacy_deletions,
@@ -238,15 +250,17 @@ def run_worker(
                 recovered
                 or enqueued
                 or notifications_enqueued
+                or stale_sending_expired
                 or privacy_reconciled
                 or exports_expired
             ):
                 logger.info(
                     "Worker reconcile: recovered=%s enqueued=%s notifications_enqueued=%s "
-                    "privacy_reconciled=%s exports_expired=%s",
+                    "stale_sending_expired=%s privacy_reconciled=%s exports_expired=%s",
                     recovered,
                     enqueued,
                     notifications_enqueued,
+                    stale_sending_expired,
                     privacy_reconciled,
                     exports_expired,
                 )

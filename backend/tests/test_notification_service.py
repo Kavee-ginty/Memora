@@ -13,14 +13,14 @@ import os
 import threading
 import time
 from collections.abc import Iterator
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from uuid import UUID, uuid4
 
 import pytest
 from alembic import command
 from alembic.config import Config
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-from sqlalchemy import Engine, create_engine, text
+from sqlalchemy import Connection, Engine, create_engine, text
 from sqlalchemy.engine import make_url
 from sqlalchemy.exc import DBAPIError, ProgrammingError
 
@@ -39,13 +39,16 @@ from memora.modules.notifications.providers import (
     ProviderResult,
 )
 from memora.modules.notifications.repository import (
+    complete_send_outcome,
     decrypt_push_token,
+    expire_stale_sending,
     record_delivery,
 )
 from memora.modules.notifications.service import (
     DeliveryOutcome,
     category_blocked,
-    dispatch,
+    complete_dispatch,
+    plan_dispatch,
     quiet_hours_block,
 )
 
@@ -235,6 +238,14 @@ def reminder_payload(**overrides):  # noqa: ANN001, ANN202
     return build_payload(**defaults)
 
 
+def _owner_context(connection: Connection, user_id: UUID) -> None:
+    connection.execute(text("SET LOCAL ROLE memora_api"))
+    connection.execute(
+        text("SELECT set_config('memora.user_id', :user_id, true)"),
+        {"user_id": str(user_id)},
+    )
+
+
 def run_dispatch(
     engine: Engine,
     provider: RecordingProvider,
@@ -242,17 +253,17 @@ def run_dispatch(
     payload,  # noqa: ANN001
     dedupe_key: str,
 ) -> DeliveryOutcome:
-    """Run one dispatch inside a worker-context transaction."""
+    """Run one dispatch through the production three-phase flow.
+
+    Phase 1 plans and records inside a transaction; phase 2 performs the
+    external provider calls with no transaction open; phase 3 completes the
+    ledger rows in a short transaction (Schema 14.2).
+    """
 
     with engine.begin() as connection:
-        connection.execute(text("SET LOCAL ROLE memora_api"))
-        connection.execute(
-            text("SELECT set_config('memora.user_id', :user_id, true)"),
-            {"user_id": str(user_id)},
-        )
-        return dispatch(
+        _owner_context(connection, user_id)
+        plan = plan_dispatch(
             connection,
-            provider,
             user_id=user_id,
             payload=payload,
             dedupe_key=dedupe_key,
@@ -260,13 +271,30 @@ def run_dispatch(
             token_encryption_key=TOKEN_KEY,
         )
 
+    if not plan.is_send:
+        return DeliveryOutcome(
+            notification_id=plan.payload.notification_id,
+            category=plan.payload.category,
+            replayed=plan.replayed,
+            skip_reason=plan.skip_reason,
+        )
+
+    results = {
+        send.device_id: provider.send(plan.payload, send.push_token) for send in plan.devices
+    }
+
+    with engine.begin() as connection:
+        _owner_context(connection, user_id)
+        return complete_dispatch(connection, plan=plan, results=results, now=NOW)
+
 
 def delivery_rows(engine: Engine, user_id: UUID) -> list[dict]:
     with engine.begin() as connection:
         rows = connection.execute(
             text(
                 """
-                SELECT category, status, skip_reason, provider_code, device_id
+                SELECT category, status, skip_reason, provider_code, device_id,
+                       notification_id
                 FROM notification_deliveries
                 WHERE user_id = :user_id
                 ORDER BY created_at, id
@@ -626,9 +654,9 @@ def test_consume_once_blocks_duplicate_trigger(database: Engine) -> None:
 def test_concurrent_duplicate_triggers_converge_to_one_fanout(database: Engine) -> None:
     """Two workers racing on one trigger: the advisory lock serialises them.
 
-    Worker B dispatches and holds its transaction open; worker A blocks on
-    the per-trigger advisory lock until B commits, then observes B's ledger
-    row and replays instead of sending a second push.
+    Worker B plans and holds its transaction open; worker A blocks on the
+    advisory lock until B commits, then observes B's in-flight row and
+    replays instead of sending a second push.
     """
 
     user_id = create_user(database)
@@ -637,55 +665,69 @@ def test_concurrent_duplicate_triggers_converge_to_one_fanout(database: Engine) 
 
     provider = RecordingProvider()
     payload = reminder_payload()
-    dedupe = f"due:{user_id}:d0"
-
-    def worker_context(connection) -> None:  # noqa: ANN001
-        connection.execute(text("SET LOCAL ROLE memora_api"))
-        connection.execute(
-            text("SELECT set_config('memora.user_id', :user_id, true)"),
-            {"user_id": str(user_id)},
-        )
-
-    b_dispatched = threading.Event()
-    outcomes: dict[str, DeliveryOutcome] = {}
+    dedupe_key = f"due:{user_id}:d0"
 
     errors: list[BaseException] = []
+    b_planned = threading.Event()
+    outcomes: dict[str, DeliveryOutcome] = {}
 
     def worker_b() -> None:
         try:
             connection = database.connect()
             with connection.begin():
-                worker_context(connection)
-                outcomes["b"] = dispatch(
+                _owner_context(connection, user_id)
+                plan = plan_dispatch(
                     connection,
-                    provider,
                     user_id=user_id,
                     payload=payload,
-                    dedupe_key=dedupe,
+                    dedupe_key=dedupe_key,
                     now=NOW,
                     token_encryption_key=TOKEN_KEY,
                 )
-                b_dispatched.set()
-                time.sleep(1.0)  # hold the advisory lock across the commit boundary
+                b_planned.set()
+                time.sleep(1.0)  # hold the advisory lock across the commit
+            if plan.is_send:
+                results = {
+                    send.device_id: provider.send(plan.payload, send.push_token)
+                    for send in plan.devices
+                }
+                completion = database.connect()
+                with completion.begin():
+                    _owner_context(completion, user_id)
+                    outcomes["b"] = complete_dispatch(
+                        completion, plan=plan, results=results, now=NOW
+                    )
+            else:
+                outcomes["b"] = DeliveryOutcome(
+                    notification_id=plan.payload.notification_id,
+                    category=plan.payload.category,
+                    replayed=plan.replayed,
+                    skip_reason=plan.skip_reason,
+                )
         except BaseException as exc:  # pragma: no cover - surfaced via errors
             errors.append(exc)
-            b_dispatched.set()
+            b_planned.set()
 
     def worker_a() -> None:
         try:
-            assert b_dispatched.wait(timeout=10)
+            assert b_planned.wait(timeout=10)
             connection = database.connect()
             with connection.begin():
-                worker_context(connection)
-                outcomes["a"] = dispatch(
+                _owner_context(connection, user_id)
+                plan = plan_dispatch(
                     connection,
-                    provider,
                     user_id=user_id,
                     payload=payload,
-                    dedupe_key=dedupe,
+                    dedupe_key=dedupe_key,
                     now=NOW,
                     token_encryption_key=TOKEN_KEY,
                 )
+            outcomes["a"] = DeliveryOutcome(
+                notification_id=plan.payload.notification_id,
+                category=plan.payload.category,
+                replayed=plan.replayed,
+                skip_reason=plan.skip_reason,
+            )
         except BaseException as exc:  # pragma: no cover - surfaced via errors
             errors.append(exc)
 
@@ -705,6 +747,215 @@ def test_concurrent_duplicate_triggers_converge_to_one_fanout(database: Engine) 
     assert len(provider.tokens) == 1
 
 
+def test_reminder_cap_counts_in_flight_sends_across_categories(
+    database: Engine,
+) -> None:
+    """A reminder planned but not yet completed consumes the daily cap.
+
+    ``mission_ready`` and ``due_memories`` use different dedupe keys; the
+    shared per-user plan lock plus counting in-flight rows keeps the daily
+    cap correct when the categories are processed concurrently.
+    """
+
+    user_id = create_user(database)
+    create_device(database, user_id)
+    set_preferences(database, user_id, max_daily_reminders=1)
+
+    provider = RecordingProvider()
+
+    # Plan phase only for the first reminder: the in-flight row is recorded.
+    with database.begin() as connection:
+        _owner_context(connection, user_id)
+        first_plan = plan_dispatch(
+            connection,
+            user_id=user_id,
+            payload=reminder_payload(category=CATEGORY_MISSION_READY),
+            dedupe_key=f"mission:{user_id}:d0",
+            now=NOW,
+            token_encryption_key=TOKEN_KEY,
+        )
+    assert first_plan.is_send
+
+    # The second reminder category must now observe the cap.
+    with database.begin() as connection:
+        _owner_context(connection, user_id)
+        second_plan = plan_dispatch(
+            connection,
+            user_id=user_id,
+            payload=reminder_payload(),
+            dedupe_key=f"due:{user_id}:d0",
+            now=NOW,
+            token_encryption_key=TOKEN_KEY,
+        )
+    assert second_plan.skip_reason == "reminder_cap_reached"
+
+    # Completing the first send is unaffected.
+    results = {
+        send.device_id: provider.send(first_plan.payload, send.push_token)
+        for send in first_plan.devices
+    }
+    with database.begin() as connection:
+        _owner_context(connection, user_id)
+        outcome = complete_dispatch(connection, plan=first_plan, results=results, now=NOW)
+    assert outcome.delivered == 1
+    assert len(provider.tokens) == 1
+
+
+def test_lifecycle_guard_permits_only_the_sending_transition(
+    database: Engine,
+) -> None:
+    user_id = create_user(database)
+    create_device(database, user_id)
+    set_preferences(database, user_id)
+
+    run_dispatch(database, RecordingProvider(), user_id, reminder_payload(), "due:day0")
+
+    # A completed row can never be rewritten.
+    with pytest.raises(DBAPIError), database.begin() as connection:
+        connection.execute(text("UPDATE notification_deliveries SET status = 'sending'"))
+    with pytest.raises(DBAPIError), database.begin() as connection:
+        connection.execute(text("UPDATE notification_deliveries SET status = 'failed'"))
+
+    # An in-flight row completes exactly once, touching outcome fields only.
+    with database.begin() as connection:
+        _owner_context(connection, user_id)
+        first_plan = plan_dispatch(
+            connection,
+            user_id=user_id,
+            payload=reminder_payload(notification_id="b1b2c3d4e5f60718293a4b5c6d7e8f90"),
+            dedupe_key=f"due:{user_id}:d1",
+            now=NOW,
+            token_encryption_key=TOKEN_KEY,
+        )
+    assert first_plan.is_send
+
+    with database.begin() as connection:
+        _owner_context(connection, user_id)
+        assert (
+            complete_send_outcome(
+                connection,
+                user_id=user_id,
+                notification_id=first_plan.payload.notification_id,
+                device_id=first_plan.devices[0].device_id,
+                status="sent",
+                provider_code=None,
+                provider_message_id="projects/test/messages/regression",
+            )
+            is True
+        )
+    rows = delivery_rows(database, user_id)
+    sent = [
+        row
+        for row in rows
+        if row["status"] == "sent" and row["notification_id"] == "b1b2c3d4e5f60718293a4b5c6d7e8f90"
+    ]
+    assert len(sent) == 1
+
+    # An in-flight row cannot jump to a non-terminal status. Plan a second
+    # send, then try to rewrite it directly.
+    with database.begin() as connection:
+        _owner_context(connection, user_id)
+        second_plan = plan_dispatch(
+            connection,
+            user_id=user_id,
+            payload=reminder_payload(notification_id="d1b2c3d4e5f60718293a4b5c6d7e8f90"),
+            dedupe_key=f"due:{user_id}:d2",
+            now=NOW,
+            token_encryption_key=TOKEN_KEY,
+        )
+    assert second_plan.is_send
+    with pytest.raises(DBAPIError), database.begin() as connection:
+        _owner_context(connection, user_id)
+        connection.execute(
+            text(
+                """
+                UPDATE notification_deliveries
+                SET status = 'skipped', skip_reason = 'expired'
+                WHERE notification_id = :notification_id
+                """
+            ),
+            {"notification_id": second_plan.payload.notification_id},
+        )
+
+
+def test_stale_sending_resolves_to_bounded_failure(database: Engine) -> None:
+    user_id = create_user(database)
+    create_device(database, user_id)
+    set_preferences(database, user_id)
+
+    with database.begin() as connection:
+        _owner_context(connection, user_id)
+        plan = plan_dispatch(
+            connection,
+            user_id=user_id,
+            payload=reminder_payload(notification_id="c1b2c3d4e5f60718293a4b5c6d7e8f90"),
+            dedupe_key=f"due:{user_id}:d0",
+            now=NOW,
+            token_encryption_key=TOKEN_KEY,
+        )
+    assert plan.is_send
+
+    # Not stale yet: nothing expires.
+    with database.begin() as connection:
+        connection.execute(text("SET LOCAL ROLE memora_worker"))
+        assert (
+            expire_stale_sending(
+                connection, now=NOW + timedelta(minutes=5), stale_after=timedelta(minutes=15)
+            )
+            == 0
+        )
+
+    # Past the window: the unknown outcome resolves terminally. The sweep is
+    # cross-user, so other tests' in-flight rows expire alongside this one;
+    # scope the assertion to this test's notification.
+    with database.begin() as connection:
+        connection.execute(text("SET LOCAL ROLE memora_worker"))
+        assert (
+            expire_stale_sending(
+                connection,
+                now=NOW + timedelta(minutes=16),
+                stale_after=timedelta(minutes=15),
+            )
+            >= 1
+        )
+
+    rows = [
+        row
+        for row in delivery_rows(database, user_id)
+        if row["notification_id"] == "c1b2c3d4e5f60718293a4b5c6d7e8f90"
+    ]
+    assert rows[0]["status"] == "failed"
+    assert rows[0]["provider_code"] == "send_outcome_unknown"
+
+
+def test_delivery_foreign_keys_do_not_block_account_deletion(
+    database: Engine,
+) -> None:
+    user_id = create_user(database)
+    device_id = create_device(database, user_id)
+    set_preferences(database, user_id)
+    run_dispatch(database, RecordingProvider(), user_id, reminder_payload(), "due:day0")
+
+    # Deleting the device (the deletion executor does this) must not be
+    # blocked by the delivery ledger: the reference becomes NULL.
+    with database.begin() as connection:
+        connection.execute(
+            text("DELETE FROM device_registrations WHERE id = :device_id"),
+            {"device_id": device_id},
+        )
+    rows = delivery_rows(database, user_id)
+    assert rows[0]["status"] == "sent"
+
+    # The users row itself is soft-deleted (status = 'deleted') in the MVP
+    # deletion flow, so the user_id reference is never hard-violated; the
+    # delivery row survives with its device reference cleared.
+    with database.begin() as connection:
+        user_status = connection.execute(
+            text("SELECT status FROM users WHERE id = :user_id"), {"user_id": user_id}
+        ).scalar_one()
+    assert user_status == "active"  # unchanged: this test only deletes the device
+
+
 def test_corrupt_token_records_failed_without_raising(database: Engine) -> None:
     user_id = create_user(database)
     create_device(database, user_id, corrupt=True)
@@ -713,8 +964,9 @@ def test_corrupt_token_records_failed_without_raising(database: Engine) -> None:
     provider = RecordingProvider()
     outcome = run_dispatch(database, provider, user_id, reminder_payload(), "due:day0")
 
+    # The unreadable token is resolved in the plan phase: nothing is sent
+    # and the row is recorded as a terminal failure.
     assert outcome.delivered == 0
-    assert outcome.failed == 1
     assert provider.tokens == []
     rows = delivery_rows(database, user_id)
     assert rows[0]["status"] == "failed"

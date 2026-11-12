@@ -22,6 +22,7 @@ payload parameters or push tokens (API §19).
 from __future__ import annotations
 
 import logging
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime, time
 from uuid import UUID
@@ -39,10 +40,10 @@ from memora.modules.notifications.constants import (
 from memora.modules.notifications.payload import NotificationPayload, is_expired
 from memora.modules.notifications.providers import (
     PROVIDER_OUTCOME_SENT,
-    NotificationProvider,
     ProviderResult,
 )
 from memora.modules.notifications.repository import (
+    complete_send_outcome,
     decrypt_push_token,
     delivery_exists,
     load_preferences,
@@ -172,21 +173,62 @@ def category_blocked(preferences, category: str) -> bool:  # noqa: ANN001 - pref
     return False
 
 
-def dispatch(
+@dataclass(frozen=True)
+class PlannedSend:
+    """One device resolved for delivery, with its decrypted push token."""
+
+    device_id: UUID
+    push_token: str
+
+
+@dataclass(frozen=True)
+class DispatchPlan:
+    """The transactional plan for one payload (two-phase send).
+
+    ``plan_dispatch`` records every decision — skips and per-device
+    in-flight rows — inside the caller's transaction. The provider call then
+    happens strictly outside any database transaction (Schema 14.2), and
+    ``complete_dispatch`` persists the outcomes in a short transaction.
+    """
+
+    user_id: UUID
+    payload: NotificationPayload
+    dedupe_key: str
+    devices: tuple[PlannedSend, ...] = ()
+    replayed: bool = False
+    skip_reason: str | None = None
+
+    @property
+    def is_send(self) -> bool:
+        return not self.replayed and self.skip_reason is None and bool(self.devices)
+
+
+def _cap_lock_key(user_id: UUID) -> str:
+    """Shared per-user lock for reminder dispatches (PRD 032).
+
+    ``mission_ready`` and ``due_memories`` reminders use different dedupe
+    keys; serializing their plan phase on one per-user lock keeps the daily
+    cap correct when different reminder categories are processed
+    concurrently.
+    """
+
+    return f"notifications:reminder-cap:{user_id}"
+
+
+def plan_dispatch(
     connection: Connection,
-    provider: NotificationProvider,
     *,
     user_id: UUID,
     payload: NotificationPayload,
     dedupe_key: str,
     now: datetime,
     token_encryption_key: bytes,
-) -> DeliveryOutcome:
-    """Enforce preferences, then send and record one outcome per device."""
+) -> DispatchPlan:
+    """Enforce preferences and record the dispatch plan transactionally."""
 
     category_spec(payload.category)  # unknown categories fail fast
 
-    def skipped(reason: str) -> DeliveryOutcome:
+    def skipped(reason: str) -> DispatchPlan:
         logger.info(
             "notification.skip category=%s resource_type=%s resource_id=%s "
             "notification_id=%s reason=%s",
@@ -211,13 +253,18 @@ def dispatch(
             provider_message_id=None,
             created_at=now,
         )
-        return DeliveryOutcome(
-            notification_id=payload.notification_id,
-            category=payload.category,
+        return DispatchPlan(
+            user_id=user_id,
+            payload=payload,
+            dedupe_key=dedupe_key,
             skip_reason=reason,
         )
 
-    take_delivery_lock(connection, dedupe_key)
+    # Reminder categories serialize on one shared per-user lock so the daily
+    # cap holds across concurrently planned categories; workflow signals
+    # lock per trigger dedupe key.
+    lock_key = _cap_lock_key(user_id) if payload.category in REMINDER_CATEGORIES else dedupe_key
+    take_delivery_lock(connection, lock_key)
 
     if delivery_exists(connection, user_id, dedupe_key):
         logger.info(
@@ -225,9 +272,10 @@ def dispatch(
             payload.category,
             payload.notification_id,
         )
-        return DeliveryOutcome(
-            notification_id=payload.notification_id,
-            category=payload.category,
+        return DispatchPlan(
+            user_id=user_id,
+            payload=payload,
+            dedupe_key=dedupe_key,
             replayed=True,
         )
 
@@ -246,6 +294,8 @@ def dispatch(
             local_day = now.astimezone(ZoneInfo(preferences.timezone)).date()
         except (ZoneInfoNotFoundError, ValueError):
             return skipped(SKIP_NOTIFICATIONS_DISABLED)
+        # In-flight sends count toward the cap: a concurrent reminder of the
+        # other category is already recorded as 'sending'.
         sent_today = reminders_sent_on(connection, user_id, preferences.timezone, local_day)
         if sent_today >= preferences.max_daily_reminders:
             return skipped(SKIP_REMINDER_CAP)
@@ -264,8 +314,7 @@ def dispatch(
     if not devices:
         return skipped(SKIP_NO_DEVICES)
 
-    delivered = 0
-    failed = 0
+    planned: list[PlannedSend] = []
     for device in devices:
         try:
             token = decrypt_push_token(
@@ -290,65 +339,95 @@ def dispatch(
                 provider_message_id=None,
                 created_at=now,
             )
-            failed += 1
             continue
+        # Record the in-flight row inside this transaction: it holds the
+        # (user, notification, device) send index, so worker retries and
+        # duplicate triggers cannot double-send while the external call is
+        # in progress or after a crash (the stale-sending reconciler resolves
+        # unknown outcomes).
+        record_delivery(
+            connection,
+            user_id=user_id,
+            notification_id=payload.notification_id,
+            category=payload.category,
+            resource_type=payload.resource_type,
+            resource_id=payload.resource_id,
+            dedupe_key=dedupe_key,
+            device_id=device.device_id,
+            status="sending",
+            skip_reason=None,
+            provider_code=None,
+            provider_message_id=None,
+            created_at=now,
+        )
+        planned.append(PlannedSend(device_id=device.device_id, push_token=token))
 
-        result: ProviderResult = provider.send(payload, token)
+    return DispatchPlan(
+        user_id=user_id,
+        payload=payload,
+        dedupe_key=dedupe_key,
+        devices=tuple(planned),
+    )
+
+
+def complete_dispatch(
+    connection: Connection,
+    *,
+    plan: DispatchPlan,
+    results: Mapping[UUID, ProviderResult],
+    now: datetime,
+) -> DeliveryOutcome:
+    """Persist per-device provider outcomes for an in-flight plan.
+
+    Rows whose result is missing stay ``sending`` and are resolved to a
+    bounded failed outcome by the stale-sending reconciler.
+    """
+
+    delivered = 0
+    failed = 0
+    for send in plan.devices:
+        result = results.get(send.device_id)
+        if result is None:
+            continue
         if result.outcome == PROVIDER_OUTCOME_SENT:
-            record_delivery(
-                connection,
-                user_id=user_id,
-                notification_id=payload.notification_id,
-                category=payload.category,
-                resource_type=payload.resource_type,
-                resource_id=payload.resource_id,
-                dedupe_key=dedupe_key,
-                device_id=device.device_id,
-                status="sent",
-                skip_reason=None,
-                provider_code=None,
-                provider_message_id=result.provider_message_id,
-                created_at=now,
-            )
+            status = "sent"
+            provider_code = None
+            provider_message_id = result.provider_message_id
             delivered += 1
         else:
             # Terminal outcome for this trigger: the send index already holds
-            # a row for (user, notification, device), so worker retries and
-            # duplicate triggers cannot double-send. The provider adapter
-            # performs its own bounded transport retries before classifying;
-            # later natural triggers (the next day's reminder, the next
-            # workflow event) attempt again, and the client reads truth from
-            # the status endpoint regardless (API §16.3).
-            record_delivery(
-                connection,
-                user_id=user_id,
-                notification_id=payload.notification_id,
-                category=payload.category,
-                resource_type=payload.resource_type,
-                resource_id=payload.resource_id,
-                dedupe_key=dedupe_key,
-                device_id=device.device_id,
-                status="failed",
-                skip_reason=None,
-                provider_code=result.reason_code,
-                provider_message_id=None,
-                created_at=now,
-            )
+            # the row, so worker retries and duplicate triggers cannot
+            # double-send. The provider adapter performs its own bounded
+            # transport retries before classifying; later natural triggers
+            # attempt again, and the client reads truth from the status
+            # endpoint regardless (API 16.3).
+            status = "failed"
+            provider_code = result.reason_code
+            provider_message_id = None
             failed += 1
+        complete_send_outcome(
+            connection,
+            user_id=plan.user_id,
+            notification_id=plan.payload.notification_id,
+            device_id=send.device_id,
+            status=status,
+            provider_code=provider_code,
+            provider_message_id=provider_message_id,
+        )
 
     logger.info(
         "notification.dispatch category=%s resource_type=%s resource_id=%s "
         "notification_id=%s delivered=%d failed=%d",
-        payload.category,
-        payload.resource_type,
-        payload.resource_id,
-        payload.notification_id,
+        plan.payload.category,
+        plan.payload.resource_type,
+        plan.payload.resource_id,
+        plan.payload.notification_id,
         delivered,
         failed,
     )
     return DeliveryOutcome(
-        notification_id=payload.notification_id,
-        category=payload.category,
+        notification_id=plan.payload.notification_id,
+        category=plan.payload.category,
         delivered=delivered,
         failed=failed,
     )
@@ -356,6 +435,8 @@ def dispatch(
 
 __all__ = [
     "DeliveryOutcome",
+    "DispatchPlan",
+    "PlannedSend",
     "SKIP_ALREADY_DELIVERED",
     "SKIP_CATEGORY_DISABLED",
     "SKIP_EXPIRED",
@@ -366,7 +447,8 @@ __all__ = [
     "SKIP_RESOURCE_UNAVAILABLE",
     "SKIP_TOKEN_UNREADABLE",
     "category_blocked",
-    "dispatch",
+    "complete_dispatch",
+    "plan_dispatch",
     "quiet_hours_block",
     "record_skip_once",
 ]

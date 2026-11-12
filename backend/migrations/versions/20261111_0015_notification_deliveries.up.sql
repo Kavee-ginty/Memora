@@ -24,8 +24,8 @@ CREATE TABLE notification_deliveries (
   resource_type text NOT NULL,
   resource_id text NOT NULL,
   dedupe_key text NOT NULL,
-  device_id uuid REFERENCES device_registrations(id),
-  status text NOT NULL CHECK (status IN ('sent', 'failed', 'skipped')),
+  device_id uuid REFERENCES device_registrations(id) ON DELETE SET NULL,
+  status text NOT NULL CHECK (status IN ('sending', 'sent', 'failed', 'skipped')),
   skip_reason text CHECK (skip_reason IN (
     'already_delivered', 'category_disabled', 'expired', 'no_devices',
     'notifications_disabled', 'quiet_hours', 'reminder_cap_reached',
@@ -35,7 +35,8 @@ CREATE TABLE notification_deliveries (
   provider_message_id text,
   created_at timestamptz NOT NULL DEFAULT now(),
   CHECK ((status = 'skipped') = (skip_reason IS NOT NULL)),
-  CHECK ((status = 'failed') = (provider_code IS NOT NULL)),
+  CHECK (skip_reason IS NULL OR status = 'skipped'),
+  CHECK (provider_code IS NULL OR status IN ('failed', 'sending')),
   CHECK (provider_message_id IS NULL OR status = 'sent')
 );
 
@@ -52,15 +53,38 @@ CREATE POLICY notification_deliveries_owner ON notification_deliveries
   USING (user_id = nullif(current_setting('memora.user_id', true), '')::uuid)
   WITH CHECK (user_id = nullif(current_setting('memora.user_id', true), '')::uuid);
 
-CREATE FUNCTION memora_forbid_notification_delivery_mutation() RETURNS trigger
+CREATE FUNCTION memora_protect_notification_delivery() RETURNS trigger
 LANGUAGE plpgsql AS $$
 BEGIN
-  RAISE EXCEPTION 'notification_deliveries is append-only' USING ERRCODE = '55000';
+  IF TG_OP = 'DELETE' THEN
+    RAISE EXCEPTION 'notification_deliveries is append-only' USING ERRCODE = '55000';
+  END IF;
+  -- The foreign key's ON DELETE SET NULL action nulls device_id when the
+  -- referenced device registration is removed (account deletion); that
+  -- system-initiated update touches no other column.
+  IF NEW.device_id IS NULL
+     AND OLD.device_id IS NOT NULL
+     AND (to_jsonb(NEW) - 'device_id') = (to_jsonb(OLD) - 'device_id') THEN
+    RETURN NEW;
+  END IF;
+  -- The only other permitted update is the two-phase completion of an
+  -- in-flight send: sending -> sent/failed, touching nothing but the
+  -- outcome fields (Schema §14.2: the external provider call happens
+  -- outside the planning transaction, so the row is recorded first and
+  -- completed after).
+  IF OLD.status <> 'sending'
+     OR NEW.status NOT IN ('sent', 'failed')
+     OR (to_jsonb(NEW) - 'status' - 'provider_code' - 'provider_message_id')
+        IS DISTINCT FROM (to_jsonb(OLD) - 'status' - 'provider_code' - 'provider_message_id')
+  THEN
+    RAISE EXCEPTION 'notification_deliveries is append-only' USING ERRCODE = '55000';
+  END IF;
+  RETURN NEW;
 END $$;
 
-CREATE TRIGGER notification_deliveries_append_only
+CREATE TRIGGER notification_deliveries_lifecycle
   BEFORE UPDATE OR DELETE ON notification_deliveries
-  FOR EACH ROW EXECUTE FUNCTION memora_forbid_notification_delivery_mutation();
+  FOR EACH ROW EXECUTE FUNCTION memora_protect_notification_delivery();
 
 CREATE FUNCTION memora_notifications_delivery_exists(
   p_user_id uuid,
@@ -94,7 +118,7 @@ AS $$
   SELECT count(*)::integer
   FROM public.notification_deliveries
   WHERE user_id = p_user_id
-    AND status = 'sent'
+    AND status IN ('sent', 'sending')
     AND category IN ('mission_ready', 'due_memories')
     AND (created_at AT TIME ZONE p_timezone)::date = p_local_day
 $$;
@@ -148,6 +172,32 @@ GRANT EXECUTE ON FUNCTION memora_notifications_delivery_exists(uuid, text) TO me
 GRANT EXECUTE ON FUNCTION memora_notifications_reminders_sent(uuid, text, date) TO memora_api, memora_worker;
 GRANT EXECUTE ON FUNCTION memora_notifications_record_delivery(uuid, text, text, text, text, text, uuid, text, text, text, text, timestamptz) TO memora_api, memora_worker;
 
+CREATE FUNCTION memora_notifications_expire_stale_sending(
+  p_now timestamptz,
+  p_stale_after interval
+)
+RETURNS integer
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = pg_catalog
+AS $$
+DECLARE
+  v_expired integer;
+BEGIN
+  UPDATE public.notification_deliveries
+  SET status = 'failed',
+      provider_code = 'send_outcome_unknown'
+  WHERE status = 'sending'
+    AND created_at < p_now - p_stale_after;
+  GET DIAGNOSTICS v_expired = ROW_COUNT;
+  RETURN v_expired;
+END $$;
+
+REVOKE ALL ON FUNCTION memora_notifications_expire_stale_sending(timestamptz, interval) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION memora_notifications_expire_stale_sending(timestamptz, interval) TO memora_api, memora_worker;
+
 -- Default privileges from migration 0001 only cover that role's future
--- tables; grant this table's roles explicitly (worker stays function-only).
-GRANT SELECT, INSERT ON notification_deliveries TO memora_api;
+-- tables; grant this table's roles explicitly (worker keeps function-only
+-- access for cross-user maintenance; UPDATE is required for the two-phase
+-- completion under the owner context).
+GRANT SELECT, INSERT, UPDATE ON notification_deliveries TO memora_api;

@@ -31,6 +31,7 @@ from memora.modules.notifications.constants import (
     CATEGORY_VERIFICATION_REQUIRED,
 )
 from memora.modules.notifications.providers import ProviderResult
+from memora.modules.notifications.service import complete_dispatch
 from memora.worker.memory import NonRetryableJobError
 from memora.worker.notifications import (
     CODE_INVALID_EVENT_PAYLOAD,
@@ -263,6 +264,31 @@ def build_job(event_id: UUID) -> dict:
     }
 
 
+def run_job(database: Engine, provider: RecordingProvider, event_id: UUID) -> object:
+    """Run the two-phase send exactly like the worker loop does.
+
+    Phase 1 (handle_notification_job) plans and records inside its own
+    transaction; phase 2 performs the provider calls with no transaction
+    open; phase 3 completes the ledger rows.
+    """
+
+    plan = handle_notification_job(
+        database, build_job(event_id), now=NOW, dispatcher=dispatcher(provider)
+    )
+    if plan is not None and plan.is_send:
+        results = {
+            send.device_id: provider.send(plan.payload, send.push_token) for send in plan.devices
+        }
+        with database.begin() as connection:
+            connection.execute(text("SET LOCAL ROLE memora_api"))
+            connection.execute(
+                text("SELECT set_config('memora.user_id', :user_id, true)"),
+                {"user_id": str(plan.user_id)},
+            )
+            complete_dispatch(connection, plan=plan, results=results, now=NOW)
+    return plan
+
+
 def delivery_rows(engine: Engine, user_id: UUID) -> list[dict]:
     with engine.begin() as connection:
         rows = connection.execute(
@@ -341,7 +367,7 @@ def test_mission_ready_trigger_sends_push(database: Engine) -> None:
         aggregate="mission",
     )
     provider = RecordingProvider()
-    handle_notification_job(database, build_job(event_id), now=NOW, dispatcher=dispatcher(provider))
+    run_job(database, provider, event_id)
 
     assert len(provider.tokens) == 1
     assert provider.tokens[0] == PUSH_TOKEN
@@ -370,7 +396,7 @@ def test_due_memories_trigger_resolves_open_mission(database: Engine) -> None:
         aggregate="memory_decision",
     )
     provider = RecordingProvider()
-    handle_notification_job(database, build_job(event_id), now=NOW, dispatcher=dispatcher(provider))
+    run_job(database, provider, event_id)
 
     assert provider.payloads[0]["category"] == CATEGORY_DUE_MEMORIES
     assert provider.payloads[0]["resource_id"] == str(mission_id)
@@ -388,7 +414,7 @@ def test_due_memories_without_open_mission_consumes_trigger(database: Engine) ->
         aggregate="memory_decision",
     )
     provider = RecordingProvider()
-    handle_notification_job(database, build_job(event_id), now=NOW, dispatcher=dispatcher(provider))
+    run_job(database, provider, event_id)
 
     assert provider.tokens == []
     rows = delivery_rows(database, user_id)
@@ -436,9 +462,7 @@ def test_workflow_triggers_send_with_resolved_resources(database: Engine) -> Non
     ):
         event_id = insert_trigger_event(database, event_type, payload)
         provider = RecordingProvider()
-        handle_notification_job(
-            database, build_job(event_id), now=NOW, dispatcher=dispatcher(provider)
-        )
+        run_job(database, provider, event_id)
         assert provider.payloads[0]["category"] == expected_category
         if resource is not None:
             assert provider.payloads[0]["resource_id"] == resource
@@ -457,9 +481,7 @@ def test_duplicate_resource_triggers_converge_to_one_send(database: Engine) -> N
             "ingestion.verification_required",
             {"schema_version": "1", "user_id": str(user_id), "update_id": str(update_id)},
         )
-        handle_notification_job(
-            database, build_job(event_id), now=NOW, dispatcher=dispatcher(provider)
-        )
+        run_job(database, provider, event_id)
 
     assert len(provider.tokens) == 1
     rows = delivery_rows(database, user_id)
@@ -477,10 +499,9 @@ def test_rerunning_the_same_job_is_replayed(database: Engine) -> None:
         {"schema_version": "1", "user_id": str(user_id), "mission_id": str(uuid4())},
         aggregate="mission",
     )
-    job = build_job(event_id)
     provider = RecordingProvider()
-    handle_notification_job(database, job, now=NOW, dispatcher=dispatcher(provider))
-    handle_notification_job(database, job, now=NOW, dispatcher=dispatcher(provider))
+    run_job(database, provider, event_id)
+    run_job(database, provider, event_id)
     assert len(provider.tokens) == 1
 
 

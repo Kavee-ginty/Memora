@@ -24,6 +24,7 @@ import jwt
 from memora.modules.notifications.payload import (
     NotificationPayload,
     payload_to_data,
+    tray_body,
 )
 
 logger = logging.getLogger(__name__)
@@ -240,7 +241,20 @@ class FcmNotificationProvider:
     def _send_once(self, payload: NotificationPayload, push_token: str) -> FcmTransportResponse:
         token = self._access_token()
         body = json.dumps(
-            {"message": {"token": push_token, "data": payload_to_data(payload)}}
+            {
+                "message": {
+                    "token": push_token,
+                    # A visible notification payload so FCM renders the tray
+                    # notification in background/terminated states, where no
+                    # client code runs to display the data-only variant. The
+                    # data payload still drives intent validation on tap.
+                    "notification": {
+                        "title": "Memora",
+                        "body": tray_body(payload),
+                    },
+                    "data": payload_to_data(payload),
+                }
+            }
         ).encode("utf-8")
         return self._transport.post(
             _FCM_SEND_URL_TEMPLATE.format(project=self._project_id),

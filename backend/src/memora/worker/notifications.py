@@ -18,7 +18,7 @@ from __future__ import annotations
 import base64
 import logging
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any
 from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
@@ -38,12 +38,19 @@ from memora.modules.notifications.constants import (
 from memora.modules.notifications.payload import NotificationPayload, build_payload
 from memora.modules.notifications.providers import (
     NotificationProvider,
+    ProviderResult,
     build_provider,
+)
+from memora.modules.notifications.repository import (
+    expire_stale_sending as _expire_stale_sending,
 )
 from memora.modules.notifications.repository import load_preferences
 from memora.modules.notifications.service import (
     SKIP_RESOURCE_UNAVAILABLE,
-    dispatch,
+    DeliveryOutcome,
+    DispatchPlan,
+    complete_dispatch,
+    plan_dispatch,
     record_skip_once,
 )
 from memora.worker.memory import (
@@ -56,6 +63,11 @@ from memora.worker.memory import (
 logger = logging.getLogger(__name__)
 
 JOB_TYPE_NOTIFICATION_SEND = "notification.send"
+
+# In-flight sends unresolved for longer than this are crashed workers; the
+# outcome is unknown and resolves to a bounded failure (T22 spirit: unknown
+# outcomes never duplicate).
+STALE_SENDING_AFTER = timedelta(minutes=15)
 
 # Outbox event types that may trigger a push. ``reward.granted`` is reserved
 # for T15; consumers accept the documented envelope and tests exercise it
@@ -423,18 +435,60 @@ def handle_notification_job(
             lock_screen_detail=lock_screen_detail,
             envelope=envelope,
         )
-        dispatch(
+        return plan_dispatch(
             connection,
-            resolved.provider,
             user_id=user_id,
             payload=payload_out,
             dedupe_key=dedupe_key,
             now=now,
             token_encryption_key=resolved.token_encryption_key,
         )
-        logger.info(
-            "notification.trigger_processed category=%s event_type=%s notification_id=%s",
-            category,
-            event_type,
-            payload_out.notification_id,
+
+
+def _send_plan_outside_transaction(
+    engine: Engine,
+    plan: DispatchPlan,
+    resolved: NotificationDispatcher,
+    now: datetime,
+) -> DeliveryOutcome:
+    """External provider calls outside any database transaction.
+
+    The plan transaction already recorded every in-flight row (the send
+    index keeps consume-once and crash safety); this phase performs only the
+    network calls, and a short second transaction persists the outcomes.
+    """
+
+    if not plan.is_send:
+        return DeliveryOutcome(
+            notification_id=plan.payload.notification_id,
+            category=plan.payload.category,
+            replayed=plan.replayed,
+            skip_reason=plan.skip_reason,
         )
+
+    results: dict[UUID, ProviderResult] = {}
+    for send in plan.devices:
+        results[send.device_id] = resolved.provider.send(plan.payload, send.push_token)
+
+    with engine.begin() as connection:
+        connection.execute(text("SET LOCAL ROLE memora_api"))
+        connection.execute(
+            text("SELECT set_config('memora.user_id', :user_id, true)"),
+            {"user_id": str(plan.user_id)},
+        )
+        return complete_dispatch(
+            connection,
+            plan=plan,
+            results=results,
+            now=now,
+        )
+
+
+def reconcile_stale_sending(connection: Connection, *, now: datetime) -> int:
+    """Resolve crashed in-flight sends (worker reconcile pass)."""
+
+    return _expire_stale_sending(
+        connection,
+        now=now,
+        stale_after=STALE_SENDING_AFTER,
+    )

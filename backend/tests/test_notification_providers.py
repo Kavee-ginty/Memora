@@ -101,6 +101,18 @@ def fcm_provider(responses) -> tuple[FcmNotificationProvider, FakeTransport]:
     return provider, transport
 
 
+def test_fcm_tray_body_omits_params_outside_the_detail_band() -> None:
+    provider, transport = fcm_provider(
+        [token_ok(), (200, {"name": "projects/test-project/messages/1"})]
+    )
+    minimal = payload(detail="minimal", params={"subject_name": "Physics"})
+    provider.send(minimal, PUSH_TOKEN)
+    body = json.loads(transport.calls[1]["body"])
+    assert body["message"]["notification"]["body"] == (
+        "A few memories are ready for care. Review when it suits you."
+    )
+
+
 def test_logging_provider_reports_sent_without_leaking_content() -> None:
     """Attach a dedicated capture handler: other suites reconfigure root
     logging, so the assertion must not depend on global propagation state."""
@@ -148,6 +160,13 @@ def test_fcm_success_returns_provider_message_id() -> None:
     assert body["message"]["token"] == PUSH_TOKEN
     assert body["message"]["data"]["category"] == "due_memories"
     assert body["message"]["data"]["param.subject_name"] == "Physics"
+    # Visible tray payload for background/terminated display (Flow 13.2):
+    # the copy renders from the closed template set, not payload params.
+    assert body["message"]["notification"]["title"] == "Memora"
+    assert (
+        body["message"]["notification"]["body"]
+        == "A few memories are ready for care. Review when it suits you."
+    )
 
 
 def test_fcm_caches_access_token_across_sends() -> None:

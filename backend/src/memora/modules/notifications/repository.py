@@ -11,7 +11,7 @@ are appended only through the SECURITY DEFINER functions of migration
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from uuid import UUID
 
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
@@ -215,6 +215,71 @@ def record_delivery(
     return RecordedDelivery(delivery_id=UUID(str(delivery_id)), replayed=False)
 
 
+def complete_send_outcome(
+    connection: Connection,
+    *,
+    user_id: UUID,
+    notification_id: str,
+    device_id: UUID,
+    status: str,
+    provider_code: str | None,
+    provider_message_id: str | None,
+) -> bool:
+    """Complete an in-flight send row (sending -> sent/failed).
+
+    The lifecycle trigger only permits this exact transition, so a completed
+    row can never be rewritten. Returns ``False`` when no in-flight row
+    matched (already resolved by the stale-sending reconciler).
+    """
+
+    updated = connection.execute(
+        text(
+            """
+            UPDATE notification_deliveries
+            SET status = :status,
+                provider_code = :provider_code,
+                provider_message_id = :provider_message_id
+            WHERE user_id = :user_id
+              AND notification_id = :notification_id
+              AND device_id = :device_id
+              AND status = 'sending'
+            """
+        ),
+        {
+            "user_id": user_id,
+            "notification_id": notification_id,
+            "device_id": device_id,
+            "status": status,
+            "provider_code": provider_code,
+            "provider_message_id": provider_message_id,
+        },
+    ).rowcount
+    return bool(updated)
+
+
+def expire_stale_sending(
+    connection: Connection,
+    *,
+    now: datetime,
+    stale_after: timedelta,
+) -> int:
+    """Resolve crashed in-flight sends to a bounded failed outcome.
+
+    Cross-user maintenance: runs through the SECURITY DEFINER function, which
+    the reconciler executes as ``memora_worker``. Unknown outcomes are
+    terminal failures — the client reads truth from the status endpoint, and
+    a later natural trigger re-attempts (API 16.3).
+    """
+
+    return int(
+        connection.scalar(
+            text("SELECT memora_notifications_expire_stale_sending(:now, :stale_after)"),
+            {"now": now, "stale_after": stale_after},
+        )
+        or 0
+    )
+
+
 def take_delivery_lock(connection: Connection, dedupe_key: str) -> None:
     """Serialize consume-once decisions for one trigger dedupe key.
 
@@ -258,7 +323,9 @@ __all__ = [
     "NotificationPreferences",
     "PushDevice",
     "RecordedDelivery",
+    "complete_send_outcome",
     "decrypt_push_token",
+    "expire_stale_sending",
     "delivery_exists",
     "load_preferences",
     "load_sendable_devices",
