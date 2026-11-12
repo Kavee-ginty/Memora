@@ -139,9 +139,14 @@ class DeepLinkController extends StateNotifier<DeepLinkDecision?> {
     }
   }
 
-  /// Test seam: handles one foreground-originated tap explicitly.
-  Future<DeepLinkDecision> handleTapData(Map<String, String> data) {
-    return _resolvedCoordinator.handleTap(data);
+  /// Handles one foreground-originated tap (notice host and tests) and
+  /// publishes the decision like stream-originated taps do.
+  Future<DeepLinkDecision> handleTapData(Map<String, String> data) async {
+    final decision = await _resolvedCoordinator.handleTap(data);
+    if (mounted) {
+      state = decision;
+    }
+    return decision;
   }
 
   void _handleTapMessage(NotificationMessage message) {

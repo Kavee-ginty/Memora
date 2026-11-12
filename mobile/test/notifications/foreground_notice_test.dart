@@ -237,6 +237,52 @@ void main() {
     await tester.pumpAndSettle(const Duration(seconds: 7));
   });
 
+  testWidgets('fallback taps surface the brief explanation snackbar', (
+    WidgetTester tester,
+  ) async {
+    final gateway = FakeNotificationGateway();
+    final keyStore = InMemoryKeyStore();
+    final navigations = <String>[];
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: <Override>[
+          notificationGatewayProvider.overrideWithValue(gateway),
+          currentRoutePathProvider.overrideWithValue('/home'),
+          deepLinkControllerProvider.overrideWith((ref) {
+            return DeepLinkController(
+              gateway: gateway,
+              // Stub validation reports unavailable: the tap resolves to the
+              // stable parent with an explanation (Flow §13.1).
+              validationApi: const _StubValidationApi(),
+              ledger: ConsumedIntentLedger(keyStore: keyStore),
+              navigate: navigations.add,
+              sessionStates: const Stream<AppSessionState>.empty(),
+              isAuthenticated: () => true,
+            );
+          }),
+        ],
+        child: MaterialApp(
+          home: ForegroundNoticeHost(
+            child: const Scaffold(body: SizedBox.expand()),
+          ),
+        ),
+      ),
+    );
+
+    gateway.emitForeground(const NotificationMessage(data: _missionPayload));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('notice_tap')));
+    await tester.pumpAndSettle();
+
+    expect(navigations, isNotEmpty);
+    expect(find.byKey(const ValueKey('notice_explanation')), findsOneWidget);
+    expect(find.textContaining('workflow already moved on'), findsOneWidget);
+
+    await tester.pumpAndSettle(const Duration(seconds: 7));
+  });
+
   testWidgets('renders within 320 px and 200 percent text scale', (
     WidgetTester tester,
   ) async {

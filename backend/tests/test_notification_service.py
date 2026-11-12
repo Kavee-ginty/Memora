@@ -336,6 +336,48 @@ def test_preferred_window_overrides_quiet_hours() -> None:
     )
 
 
+def test_quiet_hours_across_dst_spring_forward_boundary() -> None:
+    # Europe/London skips 01:00-01:59 local on 2026-03-29 (spring forward).
+    # Before the jump London is UTC+0; after it UTC+1. The quiet window
+    # 01:00-06:00 local must evaluate correctly on both sides of the gap.
+    # 00:30 local (00:30 UTC, before the jump) is before the window.
+    assert (
+        quiet_hours_block(
+            datetime(2026, 3, 29, 0, 30, tzinfo=UTC),
+            timezone_name="Europe/London",
+            quiet_start="01:00",
+            quiet_end="06:00",
+            preferred_start=None,
+            preferred_end=None,
+        )
+        is False
+    )
+    # 01:00 UTC = 02:00 local (after the jump): inside the window.
+    assert (
+        quiet_hours_block(
+            datetime(2026, 3, 29, 1, 0, tzinfo=UTC),
+            timezone_name="Europe/London",
+            quiet_start="01:00",
+            quiet_end="06:00",
+            preferred_start=None,
+            preferred_end=None,
+        )
+        is True
+    )
+    # 05:30 UTC = 06:30 local (after the jump): the window has closed.
+    assert (
+        quiet_hours_block(
+            datetime(2026, 3, 29, 5, 30, tzinfo=UTC),
+            timezone_name="Europe/London",
+            quiet_start="01:00",
+            quiet_end="06:00",
+            preferred_start=None,
+            preferred_end=None,
+        )
+        is False
+    )
+
+
 def test_invalid_timezone_blocks_instead_of_crashing() -> None:
     assert (
         quiet_hours_block(
@@ -506,6 +548,53 @@ def test_expired_intent_skips(database: Engine) -> None:
     outcome = run_dispatch(database, provider, user_id, payload, "due:day0")
     assert outcome.skip_reason == "expired"
     assert provider.tokens == []
+
+
+def test_revoked_devices_never_receive_sends(database: Engine) -> None:
+    user_id = create_user(database)
+    create_device(database, user_id)
+    with database.begin() as connection:
+        connection.execute(
+            text(
+                """
+                UPDATE device_registrations
+                SET revoked_at = now()
+                WHERE user_id = :user_id
+                """
+            ),
+            {"user_id": user_id},
+        )
+    set_preferences(database, user_id)
+
+    provider = RecordingProvider()
+    run_dispatch(database, provider, user_id, reminder_payload(), "due:day0")
+
+    # The only device is revoked: no send, no crash, and the trigger is
+    # consumed once with the no-devices skip reason.
+    assert provider.tokens == []
+    rows = delivery_rows(database, user_id)
+    assert rows[0]["status"] == "skipped"
+    assert rows[0]["skip_reason"] == "no_devices"
+
+
+def test_worker_cannot_insert_deliveries_directly(database: Engine) -> None:
+    user_id = create_user(database)
+
+    with pytest.raises(ProgrammingError), database.begin() as connection:
+        connection.execute(text("SET LOCAL ROLE memora_worker"))
+        connection.execute(
+            text(
+                """
+                    INSERT INTO notification_deliveries(
+                        user_id, notification_id, category, resource_type,
+                        resource_id, dedupe_key, status
+                    ) VALUES (
+                        :user_id, 'x', 'mission_ready', 'mission', 'x', 'x', 'sent'
+                    )
+                    """
+            ),
+            {"user_id": user_id},
+        )
 
 
 def test_dispatch_without_devices_skips(database: Engine) -> None:

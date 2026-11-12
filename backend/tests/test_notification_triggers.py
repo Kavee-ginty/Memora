@@ -161,7 +161,8 @@ def outbox_rows(engine: Engine, event_type: str, *, aggregate_id: UUID | None = 
                 SELECT payload, domain_event_key
                 FROM outbox_events
                 WHERE event_type = :event_type
-                  AND (CAST(:aggregate_id AS uuid) IS NULL OR aggregate_id = CAST(:aggregate_id AS uuid))
+                  AND (CAST(:aggregate_id AS uuid) IS NULL
+                       OR aggregate_id = CAST(:aggregate_id AS uuid))
                 """
             ),
             {"event_type": event_type, "aggregate_id": aggregate_id},
@@ -510,6 +511,4 @@ def test_export_completion_emits_export_ready_trigger(
     # Remove this test's completed request so shared-database runs do not
     # accumulate expired exports for the privacy suite's reconcile counts.
     with database.begin() as connection:
-        connection.execute(
-            text("DELETE FROM privacy_requests WHERE id = :id"), {"id": export.id}
-        )
+        connection.execute(text("DELETE FROM privacy_requests WHERE id = :id"), {"id": export.id})

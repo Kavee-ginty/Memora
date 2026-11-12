@@ -135,10 +135,24 @@ class _ForegroundNoticeHostState extends ConsumerState<ForegroundNoticeHost> {
   }
 
   Future<void> _onTap(NotificationMessage message) async {
+    final messenger = ScaffoldMessenger.maybeOf(context);
     setState(() => _visible = null);
-    await ref
+    final decision = await ref
         .read(deepLinkControllerProvider.notifier)
         .handleTapData(message.data);
+    // Brief fallback explanations surface after the navigation (Flow §13.1:
+    // invalid links "resolve to the stable parent with a brief explanation").
+    final explanation = decision.explanationLocKey;
+    if (explanation != null && messenger != null) {
+      messenger.showSnackBar(
+        SnackBar(
+          key: const ValueKey('notice_explanation'),
+          content: Text(NotificationCopy.forLocKey(explanation)),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    }
     _drainQueue();
   }
 
