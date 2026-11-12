@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:memora_mobile/src/features/auth/domain/app_session_state.dart';
@@ -9,7 +8,6 @@ import 'package:memora_mobile/src/features/notifications/application/deep_link_c
 import 'package:memora_mobile/src/features/notifications/application/push_registration_controller.dart';
 import 'package:memora_mobile/src/features/notifications/domain/consumed_intent_ledger.dart';
 import 'package:memora_mobile/src/features/notifications/domain/notification_message.dart';
-import 'package:memora_mobile/src/features/notifications/domain/deep_link_coordinator.dart';
 import 'package:memora_mobile/src/features/notifications/infrastructure/deep_link_validation_api.dart';
 import 'package:memora_mobile/src/features/notifications/infrastructure/notification_gateway.dart';
 import 'package:memora_mobile/src/features/notifications/presentation/foreground_notice.dart';
@@ -53,7 +51,10 @@ Widget _wrap({required FakeNotificationGateway gateway}) {
   return ProviderScope(
     overrides: <Override>[
       notificationGatewayProvider.overrideWithValue(gateway),
-      currentRoutePathProvider.overrideWithValue('/home'),
+      currentRoutePathProvider.overrideWith(
+        (ref) =>
+            () => '/home',
+      ),
     ],
     child: MaterialApp(
       home: ForegroundNoticeHost(
@@ -89,7 +90,10 @@ void main() {
       ProviderScope(
         overrides: <Override>[
           notificationGatewayProvider.overrideWithValue(gateway),
-          currentRoutePathProvider.overrideWithValue('/home'),
+          currentRoutePathProvider.overrideWith(
+            (ref) =>
+                () => '/home',
+          ),
           deepLinkControllerProvider.overrideWith((ref) {
             controller = DeepLinkController(
               gateway: gateway,
@@ -136,7 +140,10 @@ void main() {
       ProviderScope(
         overrides: <Override>[
           notificationGatewayProvider.overrideWithValue(gateway),
-          currentRoutePathProvider.overrideWithValue('/home'),
+          currentRoutePathProvider.overrideWith(
+            (ref) =>
+                () => '/home',
+          ),
           deepLinkControllerProvider.overrideWith((ref) {
             return DeepLinkController(
               gateway: gateway,
@@ -183,7 +190,10 @@ void main() {
           return ProviderScope(
             overrides: <Override>[
               notificationGatewayProvider.overrideWithValue(gateway),
-              currentRoutePathProvider.overrideWith((ref) => pathBox[0]),
+              currentRoutePathProvider.overrideWith(
+                (ref) =>
+                    () => pathBox[0],
+              ),
             ],
             child: MaterialApp(
               home: ForegroundNoticeHost(
@@ -232,7 +242,7 @@ void main() {
           )
           .first,
     );
-    expect(semantics.hasFlag(SemanticsFlag.isLiveRegion), isTrue);
+    expect(semantics.flagsCollection.isLiveRegion, isTrue);
 
     await tester.pumpAndSettle(const Duration(seconds: 7));
   });
@@ -248,7 +258,10 @@ void main() {
       ProviderScope(
         overrides: <Override>[
           notificationGatewayProvider.overrideWithValue(gateway),
-          currentRoutePathProvider.overrideWithValue('/home'),
+          currentRoutePathProvider.overrideWith(
+            (ref) =>
+                () => '/home',
+          ),
           deepLinkControllerProvider.overrideWith((ref) {
             return DeepLinkController(
               gateway: gateway,
@@ -295,7 +308,10 @@ void main() {
       ProviderScope(
         overrides: <Override>[
           notificationGatewayProvider.overrideWithValue(gateway),
-          currentRoutePathProvider.overrideWithValue('/home'),
+          currentRoutePathProvider.overrideWith(
+            (ref) =>
+                () => '/home',
+          ),
         ],
         child: MediaQuery(
           data: const MediaQueryData(textScaler: TextScaler.linear(2.0)),

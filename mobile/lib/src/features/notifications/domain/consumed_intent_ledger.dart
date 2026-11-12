@@ -1,7 +1,5 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
-
 import '../../auth/data/secure_auth_storage.dart';
 
 /// Durable consume-once ledger for push intents (Flow §20.3: a consumed

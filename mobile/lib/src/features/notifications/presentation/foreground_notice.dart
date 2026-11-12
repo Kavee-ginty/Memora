@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../routing/app_router.dart';
 
@@ -11,13 +10,11 @@ import '../application/push_registration_controller.dart';
 import '../domain/deep_link_coordinator.dart';
 import '../domain/notification_intent.dart';
 import '../domain/notification_message.dart';
-import '../infrastructure/notification_gateway.dart';
 import 'notification_copy.dart';
 
-/// Route prefixes where an active answer must never be interrupted
-/// (Flow §13.2, D11): mission items, feedback, explanation and the quiz.
-const List<String> _activeAnswerPrefixes = <String>['/missions/', '/quiz'];
-
+/// Whether the current route is an active answer that must never be
+/// interrupted (Flow §13.2, D11): mission item, feedback or explanation
+/// surfaces beneath a mission, and the quiz.
 bool _isActiveAnswerRoute(String? currentPath) {
   if (currentPath == null) {
     return false;
@@ -31,15 +28,19 @@ bool _isActiveAnswerRoute(String? currentPath) {
   return currentPath.startsWith('/quiz');
 }
 
-/// Provider the host uses to read the current route path from the
-/// application router. Widget tests override it to simulate routes.
-final currentRoutePathProvider = Provider<String?>((ref) {
+/// Reader for the current route path from the application router, resolved
+/// at call time so route changes are always observed (a cached value could
+/// hide an active-answer route reached after the first read). Widget tests
+/// override it to simulate routes.
+final currentRoutePathProvider = Provider<String? Function()>((ref) {
   final router = ref.watch(appRouterProvider);
-  try {
-    return router.routerDelegate.currentConfiguration.last.matchedLocation;
-  } on Exception catch (_) {
-    return null;
-  }
+  return () {
+    try {
+      return router.routerDelegate.currentConfiguration.last.matchedLocation;
+    } on Exception catch (_) {
+      return null;
+    }
+  };
 });
 
 /// Renders one non-blocking foreground notice above the app (UI/UX §6.6):
@@ -94,8 +95,9 @@ class _ForegroundNoticeHostState extends ConsumerState<ForegroundNoticeHost> {
   }
 
   String? _currentPath() {
-    final reader = widget.routePathReader;
-    return reader != null ? reader() : ref.read(currentRoutePathProvider);
+    final RoutePathReader reader =
+        widget.routePathReader ?? ref.read(currentRoutePathProvider);
+    return reader();
   }
 
   void _enqueue(NotificationMessage message) {

@@ -103,6 +103,11 @@ class FirebaseNotificationGateway implements NotificationGateway {
       return null;
     }
     try {
+      // The backend targets the classic FCM token in FCM HTTP v1
+      // `message.token`; v17's register()/onRegistered return Firebase
+      // Installation IDs for a different send path, so the deprecated
+      // token API remains the contract-correct choice.
+      // ignore: deprecated_member_use
       return await messaging.getToken();
     } on FirebaseException catch (_) {
       return null;
@@ -115,6 +120,8 @@ class FirebaseNotificationGateway implements NotificationGateway {
     if (messaging == null) {
       return;
     }
+    // See currentToken(): the classic token stream is the backend contract.
+    // ignore: deprecated_member_use
     yield* messaging.onTokenRefresh;
   }
 

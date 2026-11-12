@@ -19,6 +19,7 @@ import 'src/features/notifications/application/deep_link_controller.dart';
 import 'src/features/notifications/application/push_registration_controller.dart';
 import 'src/features/notifications/domain/notification_permission.dart';
 import 'src/features/notifications/infrastructure/device_token_registrar.dart';
+import 'src/features/notifications/infrastructure/firebase_notification_gateway.dart';
 import 'src/features/notifications/infrastructure/notification_gateway.dart';
 import 'src/features/privacy/application/privacy_controller.dart';
 import 'src/features/privacy/data/privacy_download_launcher.dart';
@@ -93,6 +94,9 @@ void main() async {
       configuration: config,
     );
     deepLinkApiClient = apiClient;
+    // Real pushes on configured builds; the gateway still degrades to
+    // `unavailable` when the platform Firebase configuration is missing.
+    notificationGateway = FirebaseNotificationGateway();
   } else {
     authRepository = MockAuthRepository()
       ..shouldFailSignIn = true
@@ -127,7 +131,7 @@ void main() async {
           deviceRegistrationApi ?? _UnconfiguredDeviceRegistrationApi(),
         ),
         if (deepLinkApiClient != null)
-          memoraApiClientProvider.overrideWithValue(deepLinkApiClient!),
+          memoraApiClientProvider.overrideWithValue(deepLinkApiClient),
       ],
       child: const MemoraApp(),
     ),

@@ -126,7 +126,6 @@ class DeepLinkCoordinator {
 
     // 6. Consume once, then navigate or fall back.
     await ledger.markConsumed(intent.notificationId);
-    final navigated = target.resolution == DeepLinkResolution.navigate;
     navigate(target.navigationPath!);
     return target;
   }

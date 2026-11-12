@@ -1,13 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:memora_api_client/memora_api_client.dart';
 
-import '../../../configuration/app_configuration.dart';
 import '../../../routing/app_router.dart';
 import '../../auth/application/session_controller.dart';
-import '../../auth/data/secure_auth_storage.dart';
 import '../../auth/domain/app_session_state.dart';
 import '../domain/consumed_intent_ledger.dart';
 import '../domain/deep_link_coordinator.dart';
