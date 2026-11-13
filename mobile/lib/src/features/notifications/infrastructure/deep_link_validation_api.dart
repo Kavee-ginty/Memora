@@ -39,13 +39,16 @@ class MissionValidation {
 abstract class DeepLinkValidationApi {
   Future<MissionValidation> todayMission();
 
-  /// Validates a learning update; [requireCommitted] additionally demands
-  /// the committed workflow state (learning-path previews).
+  /// Validates a learning update in the [requiredStatus] workflow state:
+  /// verification taps demand `verification_required`, learning-path taps
+  /// demand `committed` (review finding 4).
   Future<DeepLinkResourceState> learningUpdate(
     String updateId, {
-    required bool requireCommitted,
+    required LearningUpdateStatus requiredStatus,
   });
 
+  /// Validates a privacy export; only a `completed` request is actionable
+  /// for an "export ready" tap.
   Future<DeepLinkResourceState> privacyExport(String requestId);
 }
 
@@ -86,7 +89,7 @@ class MemoraDeepLinkValidationApi implements DeepLinkValidationApi {
   @override
   Future<DeepLinkResourceState> learningUpdate(
     String updateId, {
-    required bool requireCommitted,
+    required LearningUpdateStatus requiredStatus,
   }) async {
     try {
       final response = await apiClient
@@ -101,7 +104,7 @@ class MemoraDeepLinkValidationApi implements DeepLinkValidationApi {
       if (update == null) {
         return DeepLinkResourceState.missing;
       }
-      if (requireCommitted && update.status != LearningUpdateStatus.committed) {
+      if (update.status != requiredStatus) {
         return DeepLinkResourceState.invalidState;
       }
       return DeepLinkResourceState.valid;
@@ -119,9 +122,20 @@ class MemoraDeepLinkValidationApi implements DeepLinkValidationApi {
         xClientVersion: configuration.clientVersion,
         xPlatform: configuration.platform,
       );
-      return response.data == null
-          ? DeepLinkResourceState.missing
-          : DeepLinkResourceState.valid;
+      final request = response.data;
+      if (request == null) {
+        return DeepLinkResourceState.missing;
+      }
+      // An "export ready" tap is actionable only for a completed request
+      // with a download reference (review finding 4); pending, failed or
+      // cancelled states fall back to the privacy parent.
+      final download = request.downloadUrl;
+      if (request.status != PrivacyExportResponseStatusEnum.completed ||
+          !download.isPresent ||
+          download.value == null) {
+        return DeepLinkResourceState.invalidState;
+      }
+      return DeepLinkResourceState.valid;
     } on DioException catch (error) {
       return _mapError(error);
     }

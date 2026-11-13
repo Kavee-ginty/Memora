@@ -106,6 +106,40 @@ void main() {
       expect(NotificationIntent.parse(payload), isNull);
     });
 
+    test('rejects a missing or mismatched resource type', () {
+      expect(
+        NotificationIntent.parse(_validPayload()..remove('resource_type')),
+        isNull,
+      );
+      expect(
+        NotificationIntent.parse(
+          _validPayload()..['resource_type'] = 'learning_update',
+        ),
+        isNull,
+      );
+    });
+
+    test('rejects malformed resource identifiers', () {
+      expect(
+        NotificationIntent.parse(_validPayload()..['resource_id'] = 'short'),
+        isNull,
+      );
+      expect(
+        NotificationIntent.parse(
+          _validPayload()..['resource_id'] = 'has spaces inside',
+        ),
+        isNull,
+      );
+      expect(
+        NotificationIntent.parse(_validPayload()..['resource_id'] = 'a' * 65),
+        isNull,
+      );
+      expect(
+        NotificationIntent.parse(_validPayload()..['notification_id'] = 'tiny'),
+        isNull,
+      );
+    });
+
     test('expired detection respects the boundary instant', () {
       final intent = NotificationIntent.parse(
         _validPayload(

@@ -10,11 +10,13 @@ import '../../auth/data/secure_auth_storage.dart';
 import '../domain/notification_permission.dart';
 import 'notification_gateway.dart';
 
-/// Transport for the `POST /v1/devices` registration (T06 operation).
+/// Transport for the `POST /v1/devices` registration and the
+/// `DELETE /v1/devices/{device_id}` revocation (T06 operations).
 ///
 /// Indirection keeps the registrar testable without the generated client.
 abstract class DeviceRegistrationApi {
-  Future<void> register({
+  /// Registers the device; completes only after server confirmation.
+  Future<String> register({
     required String installationId,
     required String pushToken,
     required String idempotencyKey,
@@ -22,6 +24,9 @@ abstract class DeviceRegistrationApi {
     required String platform,
     required String locale,
   });
+
+  /// Revokes a device registration while the session is still valid.
+  Future<void> revoke({required String deviceId, required String accessToken});
 }
 
 class MemoraDeviceRegistrationApi implements DeviceRegistrationApi {
@@ -34,7 +39,7 @@ class MemoraDeviceRegistrationApi implements DeviceRegistrationApi {
   });
 
   @override
-  Future<void> register({
+  Future<String> register({
     required String installationId,
     required String pushToken,
     required String idempotencyKey,
@@ -52,12 +57,29 @@ class MemoraDeviceRegistrationApi implements DeviceRegistrationApi {
             ? DeviceRegistrationRequestPlatformEnum.ios
             : DeviceRegistrationRequestPlatformEnum.android;
     });
-    await apiClient.getSessionApi().registerDevice(
+    final response = await apiClient.getSessionApi().registerDevice(
       xCorrelationID: generateUuid(),
       xClientVersion: appVersion,
       xPlatform: platform,
       idempotencyKey: idempotencyKey,
       deviceRegistrationRequest: request,
+    );
+    return response.data?.id ?? '';
+  }
+
+  @override
+  Future<void> revoke({
+    required String deviceId,
+    required String accessToken,
+  }) async {
+    // Explicit bearer header: the shared client may already hold a cleared
+    // or rotated token by the time sign-out revocation runs.
+    await apiClient.getSessionApi().deleteDevice(
+      deviceId: deviceId,
+      xCorrelationID: generateUuid(),
+      xClientVersion: configuration.clientVersion,
+      xPlatform: configuration.platform,
+      headers: <String, String>{'Authorization': 'Bearer $accessToken'},
     );
   }
 }
@@ -76,7 +98,7 @@ class DeviceTokenRegistrar {
   final SecureKeyStore keyStore;
   final AppConfiguration configuration;
 
-  const DeviceTokenRegistrar({
+  DeviceTokenRegistrar({
     required this.gateway,
     required this.api,
     required this.keyStore,
@@ -94,16 +116,20 @@ class DeviceTokenRegistrar {
     if (token == null || token.isEmpty) {
       return;
     }
-    await registerToken(token);
+    await registerToken(token, accessToken: '', userId: '');
   }
 
-  /// Registers one token. Safe to call repeatedly: the installation id and
-  /// the idempotency key are stable per installation and token, so retries
-  /// converge on the server (T06 idempotent device registration).
-  Future<void> registerToken(String pushToken) async {
+  /// Registers one token and reports whether the server confirmed it
+  /// (Flow §12.1: registration failure is recoverable — the caller decides
+  /// when to retry). Failures are logged code-only, never the token.
+  Future<bool> registerToken(
+    String pushToken, {
+    required String accessToken,
+    required String userId,
+  }) async {
     try {
       final installationId = await _installationId();
-      await api.register(
+      final deviceId = await api.register(
         installationId: installationId,
         pushToken: pushToken,
         idempotencyKey: _idempotencyKey(installationId, pushToken),
@@ -112,13 +138,53 @@ class DeviceTokenRegistrar {
         // MVP ships English (Sri Lanka) only (PRD §9.1).
         locale: 'en-LK',
       );
+      if (deviceId.isEmpty) {
+        return false;
+      }
+      _lastDeviceId = deviceId;
+      _lastAccessToken = accessToken;
+      _lastUserId = userId;
+      return true;
     } catch (error) {
       debugPrint(
         '$_logName: device registration failed '
         '(${error.runtimeType})',
       ); // never the token itself
+      return false;
     }
   }
+
+  /// Revokes the last confirmed registration while its session token is
+  /// still valid (review finding 2: sign-out removes the server-side
+  /// registration). Returns whether the revocation succeeded; on failure
+  /// the tracking is kept so a later attempt can retry.
+  Future<bool> revokeLastRegistration() async {
+    final deviceId = _lastDeviceId;
+    final accessToken = _lastAccessToken;
+    if (deviceId == null || accessToken == null) {
+      return true; // nothing registered: nothing to revoke
+    }
+    try {
+      await api.revoke(deviceId: deviceId, accessToken: accessToken);
+    } catch (error) {
+      debugPrint(
+        '$_logName: device revocation failed '
+        '(${error.runtimeType})',
+      ); // offline: keep tracking for retry
+      return false;
+    }
+    _lastDeviceId = null;
+    _lastAccessToken = null;
+    _lastUserId = null;
+    return true;
+  }
+
+  /// The account the last confirmed registration belongs to.
+  String? get lastUserId => _lastUserId;
+
+  String? _lastDeviceId;
+  String? _lastAccessToken;
+  String? _lastUserId;
 
   /// Stable per-installation identifier, generated once and persisted in
   /// the OS-protected key store.

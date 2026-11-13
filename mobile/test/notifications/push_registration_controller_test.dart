@@ -22,9 +22,9 @@ const _testConfiguration = AppConfiguration(
   environment: 'development',
 );
 
-AppSessionState _activeSession() {
+AppSessionState _activeSession({String userId = 'usr_1'}) {
   return AppSessionState.active(
-    session: const AuthSession(accessToken: 'token', userId: 'usr_1'),
+    session: AuthSession(accessToken: 'token', userId: userId),
     bootstrapData: BootstrapData(
       accountStatus: AccountStatusDomain.active,
       profileSummary: const ProfileSummaryDomain(
@@ -42,42 +42,9 @@ AppSessionState _activeSession() {
 
 void main() {
   group('PushRegistrationController', () {
-    test(
-      'registers after session activation with granted permission',
-      () async {
-        final gateway = FakeNotificationGateway(
-          initialPermission: NotificationPermission.notDetermined,
-          initialToken: 'push-token-1',
-        );
-        final api = RecordingRegistrationApi();
-        final sessions = StreamController<AppSessionState>.broadcast();
-        addTearDown(sessions.close);
-
-        final controller = PushRegistrationController(
-          gateway: gateway,
-          registrar: DeviceTokenRegistrar(
-            gateway: gateway,
-            api: api,
-            keyStore: InMemoryKeyStore(),
-            configuration: _testConfiguration,
-          ),
-          keyStore: InMemoryKeyStore(),
-          sessionStates: sessions.stream,
-        );
-        controller.start();
-        addTearDown(controller.dispose);
-
-        sessions.add(_activeSession());
-        await pumpEventQueue();
-
-        expect(api.calls, hasLength(1));
-        expect(controller.state, PushRegistrationPhase.ready);
-      },
-    );
-
-    test('denied permission never registers and never re-prompts', () async {
+    test('awaits the in-app explanation before the OS prompt', () async {
       final gateway = FakeNotificationGateway(
-        initialPermission: NotificationPermission.denied,
+        initialPermission: NotificationPermission.notDetermined,
         initialToken: 'push-token-1',
       );
       final api = RecordingRegistrationApi();
@@ -99,15 +66,48 @@ void main() {
       addTearDown(controller.dispose);
 
       sessions.add(_activeSession());
-      sessions.add(_activeSession());
       await pumpEventQueue();
 
-      expect(api.calls, isEmpty);
-      expect(controller.state, PushRegistrationPhase.denied);
+      // Flow 12.1: no OS prompt before the in-app explanation.
+      expect(controller.state, PushRegistrationPhase.awaitingExplanation);
       expect(gateway.askWasCalled, isFalse);
+      expect(api.calls, isEmpty);
     });
 
-    test('sign-out stops the flow and resets the phase', () async {
+    test('confirming the explanation prompts and registers', () async {
+      final gateway = FakeNotificationGateway(
+        initialPermission: NotificationPermission.notDetermined,
+        initialToken: 'push-token-1',
+      );
+      final api = RecordingRegistrationApi();
+      final sessions = StreamController<AppSessionState>.broadcast();
+      addTearDown(sessions.close);
+
+      final controller = PushRegistrationController(
+        gateway: gateway,
+        registrar: DeviceTokenRegistrar(
+          gateway: gateway,
+          api: api,
+          keyStore: InMemoryKeyStore(),
+          configuration: _testConfiguration,
+        ),
+        keyStore: InMemoryKeyStore(),
+        sessionStates: sessions.stream,
+      );
+      controller.start();
+      addTearDown(controller.dispose);
+
+      sessions.add(_activeSession());
+      await pumpEventQueue();
+      await controller.confirmNotificationExplanation();
+      await pumpEventQueue();
+
+      expect(api.calls, hasLength(1));
+      expect(controller.state, PushRegistrationPhase.ready);
+      expect(gateway.askWasCalled, isTrue);
+    });
+
+    test('granted permission registers without an explanation wait', () async {
       final gateway = FakeNotificationGateway(
         initialPermission: NotificationPermission.granted,
         initialToken: 'push-token-1',
@@ -133,10 +133,196 @@ void main() {
       sessions.add(_activeSession());
       await pumpEventQueue();
       expect(controller.state, PushRegistrationPhase.ready);
+      expect(api.calls, hasLength(1));
+    });
+
+    test('denial is recoverable through requestPermissionAgain', () async {
+      final gateway = FakeNotificationGateway(
+        initialPermission: NotificationPermission.notDetermined,
+        initialToken: 'push-token-1',
+      );
+      final api = RecordingRegistrationApi();
+      final sessions = StreamController<AppSessionState>.broadcast();
+      addTearDown(sessions.close);
+
+      final controller = PushRegistrationController(
+        gateway: gateway,
+        registrar: DeviceTokenRegistrar(
+          gateway: gateway,
+          api: api,
+          keyStore: InMemoryKeyStore(),
+          configuration: _testConfiguration,
+        ),
+        keyStore: InMemoryKeyStore(),
+        sessionStates: sessions.stream,
+      );
+      controller.start();
+      addTearDown(controller.dispose);
+
+      sessions.add(_activeSession());
+      await pumpEventQueue();
+      gateway.setPermission(NotificationPermission.denied);
+      await controller.confirmNotificationExplanation();
+      await pumpEventQueue();
+      expect(controller.state, PushRegistrationPhase.denied);
+      expect(api.calls, isEmpty);
+
+      // The user grants from settings later: the controller recovers.
+      gateway.setPermission(NotificationPermission.granted);
+      await controller.requestPermissionAgain();
+      await pumpEventQueue();
+      expect(controller.state, PushRegistrationPhase.ready);
+      expect(api.calls, hasLength(1));
+    });
+
+    test(
+      'registration failure is recoverable on session re-emission',
+      () async {
+        final gateway = FakeNotificationGateway(
+          initialPermission: NotificationPermission.granted,
+          initialToken: 'push-token-1',
+        );
+        final api = RecordingRegistrationApi()
+          ..registerFailure = Exception('offline');
+        final sessions = StreamController<AppSessionState>.broadcast();
+        addTearDown(sessions.close);
+
+        final controller = PushRegistrationController(
+          gateway: gateway,
+          registrar: DeviceTokenRegistrar(
+            gateway: gateway,
+            api: api,
+            keyStore: InMemoryKeyStore(),
+            configuration: _testConfiguration,
+          ),
+          keyStore: InMemoryKeyStore(),
+          sessionStates: sessions.stream,
+        );
+        controller.start();
+        addTearDown(controller.dispose);
+
+        sessions.add(_activeSession());
+        await pumpEventQueue();
+        expect(controller.state, PushRegistrationPhase.registrationFailed);
+        expect(api.calls, isEmpty);
+
+        // Connectivity returns: the next authenticated emission retries and
+        // marks ready only after server confirmation.
+        api.registerFailure = null;
+        sessions.add(_activeSession());
+        await pumpEventQueue();
+        expect(controller.state, PushRegistrationPhase.ready);
+        expect(api.calls, hasLength(1));
+      },
+    );
+
+    test('sign-out revokes the device registration while it can', () async {
+      final gateway = FakeNotificationGateway(
+        initialPermission: NotificationPermission.granted,
+        initialToken: 'push-token-1',
+      );
+      final api = RecordingRegistrationApi();
+      final sessions = StreamController<AppSessionState>.broadcast();
+      addTearDown(sessions.close);
+
+      final controller = PushRegistrationController(
+        gateway: gateway,
+        registrar: DeviceTokenRegistrar(
+          gateway: gateway,
+          api: api,
+          keyStore: InMemoryKeyStore(),
+          configuration: _testConfiguration,
+        ),
+        keyStore: InMemoryKeyStore(),
+        sessionStates: sessions.stream,
+      );
+      controller.start();
+      addTearDown(controller.dispose);
+
+      sessions.add(_activeSession());
+      await pumpEventQueue();
+      expect(api.calls, hasLength(1));
 
       sessions.add(const AppSessionState.signedOut());
       await pumpEventQueue();
       expect(controller.state, PushRegistrationPhase.idle);
+      expect(api.revocations, hasLength(1));
+      expect(api.revocations.single['access_token'], 'token');
+    });
+
+    test(
+      'sign-out with unreachable backend keeps the revocation tracked',
+      () async {
+        final gateway = FakeNotificationGateway(
+          initialPermission: NotificationPermission.granted,
+          initialToken: 'push-token-1',
+        );
+        final api = RecordingRegistrationApi()
+          ..revokeFailure = Exception('offline');
+        final sessions = StreamController<AppSessionState>.broadcast();
+        addTearDown(sessions.close);
+
+        final controller = PushRegistrationController(
+          gateway: gateway,
+          registrar: DeviceTokenRegistrar(
+            gateway: gateway,
+            api: api,
+            keyStore: InMemoryKeyStore(),
+            configuration: _testConfiguration,
+          ),
+          keyStore: InMemoryKeyStore(),
+          sessionStates: sessions.stream,
+        );
+        controller.start();
+        addTearDown(controller.dispose);
+
+        sessions.add(_activeSession());
+        await pumpEventQueue();
+        sessions.add(const AppSessionState.signedOut());
+        await pumpEventQueue();
+
+        // Offline: the revocation stays tracked for a later attempt.
+        expect(api.revocations, isEmpty);
+        api.revokeFailure = null;
+        await controller.onSessionState(const AppSessionState.signedOut());
+        await pumpEventQueue();
+        expect(api.revocations, hasLength(1));
+      },
+    );
+
+    test('account switch revokes the previous registration first', () async {
+      final gateway = FakeNotificationGateway(
+        initialPermission: NotificationPermission.granted,
+        initialToken: 'push-token-1',
+      );
+      final api = RecordingRegistrationApi();
+      final sessions = StreamController<AppSessionState>.broadcast();
+      addTearDown(sessions.close);
+
+      final controller = PushRegistrationController(
+        gateway: gateway,
+        registrar: DeviceTokenRegistrar(
+          gateway: gateway,
+          api: api,
+          keyStore: InMemoryKeyStore(),
+          configuration: _testConfiguration,
+        ),
+        keyStore: InMemoryKeyStore(),
+        sessionStates: sessions.stream,
+      );
+      controller.start();
+      addTearDown(controller.dispose);
+
+      sessions.add(_activeSession(userId: 'usr_1'));
+      await pumpEventQueue();
+      expect(api.calls, hasLength(1));
+
+      final other = _activeSession(userId: 'usr_2');
+      sessions.add(other);
+      await pumpEventQueue();
+
+      expect(api.revocations, hasLength(1));
+      expect(api.calls, hasLength(2));
     });
 
     test('unavailable provider is a terminal safe state', () async {

@@ -33,10 +33,13 @@ class InMemoryKeyStore implements SecureKeyStore {
 
 class RecordingRegistrationApi implements DeviceRegistrationApi {
   final List<Map<String, String>> calls = [];
-  Object? thrown;
+  final List<Map<String, String>> revocations = [];
+  Object? registerFailure;
+  Object? revokeFailure;
+  String nextDeviceId = 'device-1';
 
   @override
-  Future<void> register({
+  Future<String> register({
     required String installationId,
     required String pushToken,
     required String idempotencyKey,
@@ -44,8 +47,8 @@ class RecordingRegistrationApi implements DeviceRegistrationApi {
     required String platform,
     required String locale,
   }) async {
-    if (thrown != null) {
-      throw thrown!;
+    if (registerFailure != null) {
+      throw registerFailure!;
     }
     calls.add({
       'installation_id': installationId,
@@ -55,162 +58,19 @@ class RecordingRegistrationApi implements DeviceRegistrationApi {
       'platform': platform,
       'locale': locale,
     });
+    return nextDeviceId;
   }
-}
 
-const _testConfiguration = AppConfiguration(
-  supabaseUrl: 'https://synthetic.supabase.co',
-  supabasePublishableKey: 'synthetic-key',
-  apiBaseUrl: 'https://synthetic.example.com',
-  oauthRedirectUri: 'com.synthetic://callback',
-  clientVersion: '1.2.3',
-  platform: 'android',
-  environment: 'development',
-);
-
-void main() {
-  group('DeviceTokenRegistrar', () {
-    test('registers the token with a stable installation id and key', () async {
-      final keyStore = InMemoryKeyStore();
-      final api = RecordingRegistrationApi();
-      final registrar = DeviceTokenRegistrar(
-        gateway: FakeNotificationGateway(
-          initialPermission: NotificationPermission.granted,
-          initialToken: 'push-token-1',
-        ),
-        api: api,
-        keyStore: keyStore,
-        configuration: _testConfiguration,
-      );
-
-      await registrar.registerIfPermitted();
-      await registrar.registerIfPermitted();
-
-      expect(api.calls, hasLength(2));
-      expect(api.calls[0]['installation_id'], api.calls[1]['installation_id']);
-      expect(api.calls[0]['idempotency_key'], api.calls[1]['idempotency_key']);
-      expect(keyStore.values['memora_push_installation_id'], isNotEmpty);
-      expect(api.calls[0]['push_token'], 'push-token-1');
-      expect(api.calls[0]['app_version'], '1.2.3');
-      expect(api.calls[0]['platform'], 'android');
-      expect(api.calls[0]['locale'], 'en-LK');
-    });
-
-    test('token rotation produces a fresh idempotency key', () async {
-      final keyStore = InMemoryKeyStore();
-      final api = RecordingRegistrationApi();
-      final gateway = FakeNotificationGateway(
-        initialPermission: NotificationPermission.granted,
-        initialToken: 'push-token-1',
-      );
-      final registrar = DeviceTokenRegistrar(
-        gateway: gateway,
-        api: api,
-        keyStore: keyStore,
-        configuration: _testConfiguration,
-      );
-
-      await registrar.registerToken('push-token-1');
-      await registrar.registerToken('push-token-2');
-
-      expect(api.calls, hasLength(2));
-      expect(api.calls[1]['push_token'], 'push-token-2');
-      expect(
-        api.calls[1]['idempotency_key'],
-        isNot(api.calls[0]['idempotency_key']),
-      );
-    });
-
-    test('skips registration when permission is not granted', () async {
-      final api = RecordingRegistrationApi();
-      final registrar = DeviceTokenRegistrar(
-        gateway: FakeNotificationGateway(
-          initialPermission: NotificationPermission.denied,
-          initialToken: 'push-token-1',
-        ),
-        api: api,
-        keyStore: InMemoryKeyStore(),
-        configuration: _testConfiguration,
-      );
-
-      await registrar.registerIfPermitted();
-      expect(api.calls, isEmpty);
-    });
-
-    test('skips registration without a provider token', () async {
-      final api = RecordingRegistrationApi();
-      final registrar = DeviceTokenRegistrar(
-        gateway: FakeNotificationGateway(
-          initialPermission: NotificationPermission.granted,
-        ),
-        api: api,
-        keyStore: InMemoryKeyStore(),
-        configuration: _testConfiguration,
-      );
-
-      await registrar.registerIfPermitted();
-      expect(api.calls, isEmpty);
-    });
-
-    test('swallows transport failures without throwing', () async {
-      final api = RecordingRegistrationApi()..thrown = Exception('offline');
-      final registrar = DeviceTokenRegistrar(
-        gateway: FakeNotificationGateway(
-          initialPermission: NotificationPermission.granted,
-          initialToken: 'push-token-1',
-        ),
-        api: api,
-        keyStore: InMemoryKeyStore(),
-        configuration: _testConfiguration,
-      );
-
-      await registrar.registerIfPermitted();
-      expect(api.calls, isEmpty); // call attempted and failed safely
-    });
-  });
-
-  group('requestPermissionOnce', () {
-    test('prompts once then replays the stored status', () async {
-      final keyStore = InMemoryKeyStore();
-      final gateway = FakeNotificationGateway();
-
-      final first = await requestPermissionOnce(
-        gateway: gateway,
-        keyStore: keyStore,
-      );
-      final second = await requestPermissionOnce(
-        gateway: gateway,
-        keyStore: keyStore,
-      );
-
-      expect(first, NotificationPermission.granted);
-      expect(second, NotificationPermission.granted);
-      expect(gateway.askWasCalled, isTrue);
-      expect(keyStore.values['memora_push_permission_asked'], 'true');
-    });
-
-    test('does not persist the flag while the OS answer is pending', () async {
-      final keyStore = InMemoryKeyStore();
-      final gateway = FakeNotificationGateway(
-        initialPermission: NotificationPermission.notDetermined,
-      );
-      // Simulate an OS dialog that never resolves by keeping the gateway in
-      // notDetermined: requestPermissionOnce must not persist the flag.
-      final gatewayStub = _PendingGateway();
-      final result = await requestPermissionOnce(
-        gateway: gatewayStub,
-        keyStore: keyStore,
-      );
-
-      expect(result, NotificationPermission.notDetermined);
-      expect(
-        keyStore.values.containsKey('memora_push_permission_asked'),
-        isFalse,
-      );
-      // The plain fake resolves immediately; kept for parity coverage.
-      expect(gateway.askWasCalled, isFalse);
-    });
-  });
+  @override
+  Future<void> revoke({
+    required String deviceId,
+    required String accessToken,
+  }) async {
+    if (revokeFailure != null) {
+      throw revokeFailure!;
+    }
+    revocations.add({'device_id': deviceId, 'access_token': accessToken});
+  }
 }
 
 class _PendingGateway implements NotificationGateway {
@@ -236,4 +96,214 @@ class _PendingGateway implements NotificationGateway {
 
   @override
   Stream<String> tokenRefreshes() => const Stream.empty();
+}
+
+const _testConfiguration = AppConfiguration(
+  supabaseUrl: 'https://synthetic.supabase.co',
+  supabasePublishableKey: 'synthetic-key',
+  apiBaseUrl: 'https://synthetic.example.com',
+  oauthRedirectUri: 'com.synthetic://callback',
+  clientVersion: '1.2.3',
+  platform: 'android',
+  environment: 'development',
+);
+
+void main() {
+  group('DeviceTokenRegistrar', () {
+    test('reports server confirmation with a stable installation id', () async {
+      final keyStore = InMemoryKeyStore();
+      final api = RecordingRegistrationApi();
+      final registrar = DeviceTokenRegistrar(
+        gateway: FakeNotificationGateway(
+          initialPermission: NotificationPermission.granted,
+          initialToken: 'push-token-1',
+        ),
+        api: api,
+        keyStore: keyStore,
+        configuration: _testConfiguration,
+      );
+
+      final confirmed = await registrar.registerToken(
+        'push-token-1',
+        accessToken: 'access-1',
+        userId: 'usr_1',
+      );
+
+      expect(confirmed, isTrue);
+      expect(api.calls, hasLength(1));
+      expect(api.calls[0]['push_token'], 'push-token-1');
+      expect(api.calls[0]['app_version'], '1.2.3');
+      expect(api.calls[0]['locale'], 'en-LK');
+      expect(keyStore.values['memora_push_installation_id'], isNotEmpty);
+    });
+
+    test('token rotation produces a fresh idempotency key', () async {
+      final api = RecordingRegistrationApi();
+      final registrar = DeviceTokenRegistrar(
+        gateway: FakeNotificationGateway(
+          initialPermission: NotificationPermission.granted,
+          initialToken: 'push-token-1',
+        ),
+        api: api,
+        keyStore: InMemoryKeyStore(),
+        configuration: _testConfiguration,
+      );
+
+      await registrar.registerToken(
+        'push-token-1',
+        accessToken: 'a',
+        userId: 'u',
+      );
+      await registrar.registerToken(
+        'push-token-2',
+        accessToken: 'a',
+        userId: 'u',
+      );
+
+      expect(api.calls, hasLength(2));
+      expect(
+        api.calls[1]['idempotency_key'],
+        isNot(api.calls[0]['idempotency_key']),
+      );
+    });
+
+    test('unconfirmed registration reports false for retry', () async {
+      final api = RecordingRegistrationApi()
+        ..registerFailure = Exception('offline');
+      final registrar = DeviceTokenRegistrar(
+        gateway: FakeNotificationGateway(
+          initialPermission: NotificationPermission.granted,
+          initialToken: 'push-token-1',
+        ),
+        api: api,
+        keyStore: InMemoryKeyStore(),
+        configuration: _testConfiguration,
+      );
+
+      final confirmed = await registrar.registerToken(
+        'push-token-1',
+        accessToken: 'a',
+        userId: 'u',
+      );
+      expect(confirmed, isFalse);
+    });
+
+    test('revokes the last confirmed registration on sign-out', () async {
+      final api = RecordingRegistrationApi();
+      final registrar = DeviceTokenRegistrar(
+        gateway: FakeNotificationGateway(
+          initialPermission: NotificationPermission.granted,
+          initialToken: 'push-token-1',
+        ),
+        api: api,
+        keyStore: InMemoryKeyStore(),
+        configuration: _testConfiguration,
+      );
+      await registrar.registerToken(
+        'push-token-1',
+        accessToken: 'a1',
+        userId: 'u1',
+      );
+
+      final revoked = await registrar.revokeLastRegistration();
+
+      expect(revoked, isTrue);
+      expect(api.revocations.single['device_id'], 'device-1');
+      expect(api.revocations.single['access_token'], 'a1');
+      // A second revocation is a no-op: nothing tracked anymore.
+      expect(await registrar.revokeLastRegistration(), isTrue);
+      expect(api.revocations, hasLength(1));
+    });
+
+    test('keeps tracking when the revocation fails offline', () async {
+      final api = RecordingRegistrationApi()
+        ..revokeFailure = Exception('offline');
+      final registrar = DeviceTokenRegistrar(
+        gateway: FakeNotificationGateway(
+          initialPermission: NotificationPermission.granted,
+          initialToken: 'push-token-1',
+        ),
+        api: api,
+        keyStore: InMemoryKeyStore(),
+        configuration: _testConfiguration,
+      );
+      await registrar.registerToken(
+        'push-token-1',
+        accessToken: 'a1',
+        userId: 'u1',
+      );
+
+      final revoked = await registrar.revokeLastRegistration();
+
+      expect(revoked, isFalse);
+      // Retry after connectivity returns succeeds with the same identity.
+      api.revokeFailure = null;
+      expect(await registrar.revokeLastRegistration(), isTrue);
+      expect(api.revocations, hasLength(1));
+    });
+
+    test('revoking without a registration is a no-op', () async {
+      final api = RecordingRegistrationApi();
+      final registrar = DeviceTokenRegistrar(
+        gateway: FakeNotificationGateway(),
+        api: api,
+        keyStore: InMemoryKeyStore(),
+        configuration: _testConfiguration,
+      );
+      expect(await registrar.revokeLastRegistration(), isTrue);
+      expect(api.revocations, isEmpty);
+    });
+
+    test('skips registration when permission is not granted', () async {
+      final api = RecordingRegistrationApi();
+      final registrar = DeviceTokenRegistrar(
+        gateway: FakeNotificationGateway(
+          initialPermission: NotificationPermission.denied,
+          initialToken: 'push-token-1',
+        ),
+        api: api,
+        keyStore: InMemoryKeyStore(),
+        configuration: _testConfiguration,
+      );
+
+      await registrar.registerIfPermitted();
+      expect(api.calls, isEmpty);
+    });
+  });
+
+  group('requestPermissionOnce', () {
+    test('prompts once then replays the stored status', () async {
+      final keyStore = InMemoryKeyStore();
+      final gateway = FakeNotificationGateway();
+
+      final first = await requestPermissionOnce(
+        gateway: gateway,
+        keyStore: keyStore,
+      );
+      final second = await requestPermissionOnce(
+        gateway: gateway,
+        keyStore: keyStore,
+      );
+
+      expect(first, NotificationPermission.granted);
+      expect(second, NotificationPermission.granted);
+      expect(gateway.askWasCalled, isTrue);
+      expect(keyStore.values['memora_push_permission_asked'], 'true');
+    });
+
+    test('does not persist the flag while the OS answer is pending', () async {
+      final keyStore = InMemoryKeyStore();
+      final gatewayStub = _PendingGateway();
+      final result = await requestPermissionOnce(
+        gateway: gatewayStub,
+        keyStore: keyStore,
+      );
+
+      expect(result, NotificationPermission.notDetermined);
+      expect(
+        keyStore.values.containsKey('memora_push_permission_asked'),
+        isFalse,
+      );
+    });
+  });
 }

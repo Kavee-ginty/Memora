@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:memora_mobile/src/features/notifications/domain/consumed_intent_ledger.dart';
 import 'package:memora_mobile/src/features/notifications/domain/deep_link_coordinator.dart';
+import 'package:memora_api_client/memora_api_client.dart';
+import 'package:memora_mobile/src/features/auth/data/secure_auth_storage.dart';
 import 'package:memora_mobile/src/features/notifications/infrastructure/deep_link_validation_api.dart';
 
 import 'device_token_registrar_test.dart' show InMemoryKeyStore;
@@ -16,7 +18,7 @@ class FakeValidationApi implements DeepLinkValidationApi {
   @override
   Future<DeepLinkResourceState> learningUpdate(
     String updateId, {
-    required bool requireCommitted,
+    required LearningUpdateStatus requiredStatus,
   }) async => updateResult;
 
   @override
@@ -42,11 +44,27 @@ Map<String, String> _payload(
     'notification_id': notificationId,
     'category': category,
     'route_intent': routeIntent ?? _defaultRouteIntent(category),
-    'resource_type': 'resource',
+    'resource_type': _defaultResourceType(category),
     'resource_id': resourceId ?? '018f3c2a-7b9c-4d1e-9f2a-3b4c5d6e7f80',
     'expires_at': expiresAt ?? _expiry(),
     'loc_key': locKey ?? _defaultLocKey(category),
   };
+}
+
+String _defaultResourceType(String category) {
+  switch (category) {
+    case 'mission_ready':
+    case 'due_memories':
+      return 'mission';
+    case 'verification_required':
+    case 'learning_path_ready':
+      return 'learning_update';
+    case 'reward_ready':
+      return 'reward_grant';
+    case 'privacy_export_ready':
+      return 'privacy_request';
+  }
+  return '';
 }
 
 String _defaultRouteIntent(String category) {
@@ -68,15 +86,38 @@ String _defaultRouteIntent(String category) {
 
 String _defaultLocKey(String category) => 'notification.$category';
 
+class FailingWriteKeyStore implements SecureKeyStore {
+  final Map<String, String> values = {};
+
+  @override
+  Future<bool> containsKey(String key) async => values.containsKey(key);
+
+  @override
+  Future<void> delete(String key) async {
+    values.remove(key);
+  }
+
+  @override
+  Future<void> deleteAll() async {
+    values.clear();
+  }
+
+  @override
+  Future<String?> read(String key) async => values[key];
+
+  @override
+  Future<void> write(String key, String value) async {
+    throw StateError('secure storage unavailable');
+  }
+}
+
 class Harness {
-  final FakeValidationApi validationApi = FakeValidationApi();
-  final InMemoryKeyStore keyStore = InMemoryKeyStore();
+  FakeValidationApi validationApi = FakeValidationApi();
+  SecureKeyStore keyStore = InMemoryKeyStore();
   final List<String> navigations = [];
   bool authenticated = true;
 
-  late final ConsumedIntentLedger ledger = ConsumedIntentLedger(
-    keyStore: keyStore,
-  );
+  late ConsumedIntentLedger ledger = ConsumedIntentLedger(keyStore: keyStore);
   late final DeepLinkCoordinator coordinator = DeepLinkCoordinator(
     validationApi: validationApi,
     ledger: ledger,
@@ -165,11 +206,28 @@ void main() {
       final harness = Harness();
 
       final decision = await harness.coordinator.handleTap(
-        _payload('due_memories'),
+        _payload('due_memories', resourceId: 'mission-1'),
       );
 
       expect(decision.resolution, DeepLinkResolution.navigate);
       expect(decision.navigationPath, '/missions/mission-1/preview');
+    });
+
+    test('stale pushed mission id falls back instead of opening the current mission', () async {
+      final harness = Harness();
+
+      // The pushed resource id names a mission the student no longer has
+      // open: the server-confirmed open mission is a different one.
+      final decision = await harness.coordinator.handleTap(
+        _payload(
+          'due_memories',
+          resourceId: '018f3c2a-7b9c-4d1e-9f2a-3b4c5d6e7f80',
+        ),
+      );
+
+      expect(decision.resolution, DeepLinkResolution.fallback);
+      expect(decision.navigationPath, '/home');
+      expect(decision.explanationLocKey, DeepLinkExplanations.workflowMovedOn);
     });
 
     test('mission intents fall home when no open mission exists', () async {
@@ -177,7 +235,7 @@ void main() {
         ..validationApi.missionResult = const MissionValidation.invalid();
 
       final decision = await harness.coordinator.handleTap(
-        _payload('due_memories'),
+        _payload('due_memories', resourceId: 'mission-1'),
       );
 
       expect(decision.resolution, DeepLinkResolution.fallback);
@@ -294,5 +352,74 @@ void main() {
       expect(decision.resolution, DeepLinkResolution.fallback);
       expect(decision.navigationPath, '/profile/privacy');
     });
+
+    test('reward intents enforce expiry against the stable parent', () async {
+      // Reward ownership/state validation is the T15 boundary (reviewer
+      // decision requested); expiry is enforced by T19 itself.
+      final harness = Harness();
+      final decision = await harness.coordinator.handleTap(
+        _payload(
+          'reward_ready',
+          routeIntent: 'open_progress',
+          locKey: 'notification.reward_ready',
+          expiresAt: _fixedClock()
+              .subtract(const Duration(hours: 1))
+              .toIso8601String(),
+        ),
+      );
+
+      expect(decision.resolution, DeepLinkResolution.fallback);
+      expect(decision.navigationPath, '/progress');
+      expect(decision.explanationLocKey, DeepLinkExplanations.linkExpired);
+    });
+
+    test('navigation is refused when consumption cannot be recorded', () async {
+      final harness = Harness()
+        ..keyStore = FailingWriteKeyStore()
+        ..ledger = ConsumedIntentLedger(keyStore: FailingWriteKeyStore());
+
+      final decision = await harness.coordinator.handleTap(
+        _payload(
+          'reward_ready',
+          routeIntent: 'open_progress',
+          locKey: 'notification.reward_ready',
+        ),
+      );
+
+      // Consume-once must never be silently skipped: without a durable
+      // record nothing navigates (review finding 6).
+      expect(decision.resolution, DeepLinkResolution.notConsumed);
+      expect(harness.navigations, isEmpty);
+      expect(decision.explanationLocKey, DeepLinkExplanations.notConfirmed);
+    });
+
+    test(
+      'simultaneous taps on one notification produce one navigation',
+      () async {
+        final harness = Harness();
+
+        final payload = _payload(
+          'reward_ready',
+          routeIntent: 'open_progress',
+          locKey: 'notification.reward_ready',
+        );
+        final futures = [
+          harness.coordinator.handleTap(payload),
+          harness.coordinator.handleTap(payload),
+          harness.coordinator.handleTap(payload),
+        ];
+        final decisions = await futures.wait;
+
+        final navigated = decisions
+            .where((d) => d.resolution == DeepLinkResolution.navigate)
+            .length;
+        final consumed = decisions
+            .where((d) => d.resolution == DeepLinkResolution.alreadyConsumed)
+            .length;
+        expect(navigated, 1);
+        expect(consumed, 2);
+        expect(harness.navigations, hasLength(1));
+      },
+    );
   });
 }

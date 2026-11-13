@@ -3,16 +3,24 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
+import 'package:memora_api_client/memora_api_client.dart';
+import 'package:memora_mobile/src/configuration/app_configuration.dart';
 import 'package:memora_mobile/src/features/auth/domain/app_session_state.dart';
+import 'package:memora_mobile/src/features/auth/domain/bootstrap_state.dart';
 import 'package:memora_mobile/src/features/notifications/application/deep_link_controller.dart';
 import 'package:memora_mobile/src/features/notifications/application/push_registration_controller.dart';
 import 'package:memora_mobile/src/features/notifications/domain/consumed_intent_ledger.dart';
 import 'package:memora_mobile/src/features/notifications/domain/notification_message.dart';
+import 'package:memora_mobile/src/features/notifications/domain/notification_permission.dart';
 import 'package:memora_mobile/src/features/notifications/infrastructure/deep_link_validation_api.dart';
+import 'package:memora_mobile/src/features/notifications/infrastructure/device_token_registrar.dart';
 import 'package:memora_mobile/src/features/notifications/infrastructure/notification_gateway.dart';
 import 'package:memora_mobile/src/features/notifications/presentation/foreground_notice.dart';
+import 'package:memora_mobile/src/routing/app_router.dart';
 
-import 'device_token_registrar_test.dart' show InMemoryKeyStore;
+import 'device_token_registrar_test.dart'
+    show InMemoryKeyStore, RecordingRegistrationApi;
 
 class _StubValidationApi implements DeepLinkValidationApi {
   const _StubValidationApi();
@@ -24,7 +32,7 @@ class _StubValidationApi implements DeepLinkValidationApi {
   @override
   Future<DeepLinkResourceState> learningUpdate(
     String updateId, {
-    required bool requireCommitted,
+    required LearningUpdateStatus requiredStatus,
   }) async {
     return DeepLinkResourceState.unavailable;
   }
@@ -63,6 +71,16 @@ Widget _wrap({required FakeNotificationGateway gateway}) {
     ),
   );
 }
+
+const _testConfiguration = AppConfiguration(
+  supabaseUrl: 'https://synthetic.supabase.co',
+  supabasePublishableKey: 'synthetic-key',
+  apiBaseUrl: 'https://synthetic.example.com',
+  oauthRedirectUri: 'com.synthetic://callback',
+  clientVersion: '1.2.3',
+  platform: 'android',
+  environment: 'development',
+);
 
 void main() {
   testWidgets('shows the foreground notice with contextual copy', (
@@ -181,48 +199,178 @@ void main() {
   testWidgets('queues notices during an active answer and drains after', (
     WidgetTester tester,
   ) async {
+    // Production router: the host observes real route changes (review
+    // finding 7) instead of relying on an injected reader.
     final gateway = FakeNotificationGateway();
-    final pathBox = <String?>['/missions/m1/item/i1'];
+    late final GoRouter router;
+    router = GoRouter(
+      initialLocation: '/missions/m1/item/i1',
+      routes: <RouteBase>[
+        GoRoute(
+          path: '/home',
+          builder: (_, _) => const Scaffold(body: Text('home')),
+        ),
+        GoRoute(
+          path: '/missions/m1/item/i1',
+          builder: (_, _) => Scaffold(
+            body: TextButton(
+              onPressed: () => router.go('/home'),
+              child: const Text('go home'),
+            ),
+          ),
+        ),
+      ],
+    );
 
     await tester.pumpWidget(
-      StatefulBuilder(
-        builder: (BuildContext context, StateSetter setState) {
-          return ProviderScope(
-            overrides: <Override>[
-              notificationGatewayProvider.overrideWithValue(gateway),
-              currentRoutePathProvider.overrideWith(
-                (ref) =>
-                    () => pathBox[0],
-              ),
-            ],
-            child: MaterialApp(
-              home: ForegroundNoticeHost(
-                routePathReader: () => pathBox[0],
-                child: Scaffold(
-                  body: TextButton(
-                    onPressed: () {
-                      pathBox[0] = '/home';
-                      setState(() {});
-                    },
-                    child: const Text('leave mission'),
-                  ),
-                ),
-              ),
-            ),
-          );
-        },
+      ProviderScope(
+        overrides: <Override>[
+          notificationGatewayProvider.overrideWithValue(gateway),
+          appRouterProvider.overrideWithValue(router),
+        ],
+        child: MaterialApp.router(
+          routerConfig: router,
+          builder: (context, child) =>
+              ForegroundNoticeHost(child: child ?? const SizedBox.shrink()),
+        ),
       ),
     );
 
     gateway.emitForeground(const NotificationMessage(data: _missionPayload));
     await tester.pumpAndSettle();
+    // Suppressed while the active answer is on screen.
     expect(find.byKey(const ValueKey('notice_tap')), findsNothing);
 
-    await tester.tap(find.text('leave mission'));
+    await tester.tap(find.text('go home'));
     await tester.pumpAndSettle();
+    expect(find.text('go home'), findsNothing); // route left the answer
     expect(find.byKey(const ValueKey('notice_tap')), findsOneWidget);
 
     await tester.pumpAndSettle(const Duration(seconds: 7));
+  });
+
+  testWidgets('background taps surface the explanation snackbar too', (
+    WidgetTester tester,
+  ) async {
+    final gateway = FakeNotificationGateway();
+    final navigations = <String>[];
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: <Override>[
+          notificationGatewayProvider.overrideWithValue(gateway),
+          currentRoutePathProvider.overrideWith(
+            (ref) =>
+                () => '/home',
+          ),
+          deepLinkControllerProvider.overrideWith((ref) {
+            final controller = DeepLinkController(
+              gateway: gateway,
+              // Unavailable validation: the expired intent below resolves to
+              // the stable parent with an explanation.
+              validationApi: const _StubValidationApi(),
+              ledger: ConsumedIntentLedger(keyStore: InMemoryKeyStore()),
+              navigate: navigations.add,
+              sessionStates: const Stream<AppSessionState>.empty(),
+              isAuthenticated: () => true,
+            );
+            controller.start();
+            return controller;
+          }),
+        ],
+        child: MaterialApp(
+          home: ForegroundNoticeHost(
+            child: const Scaffold(body: SizedBox.expand()),
+          ),
+        ),
+      ),
+    );
+
+    // A background tap with an expired intent: no notice banner exists in
+    // the foreground stream path — the explanation must still surface
+    // (review finding 8).
+    final expired = Map<String, String>.from(_missionPayload)
+      ..['expires_at'] = '2026-01-01T00:00:00Z';
+    gateway.emitTap(NotificationMessage(data: expired));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('notice_explanation')), findsOneWidget);
+    expect(find.textContaining('has expired'), findsOneWidget);
+
+    await tester.pumpAndSettle(const Duration(seconds: 7));
+  });
+
+  testWidgets('explains notification value before requesting permission', (
+    WidgetTester tester,
+  ) async {
+    final gateway = FakeNotificationGateway(
+      initialPermission: NotificationPermission.notDetermined,
+      initialToken: 'push-token-1',
+    );
+    final api = RecordingRegistrationApi();
+    final sessions = StreamController<AppSessionState>.broadcast();
+    addTearDown(sessions.close);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: <Override>[
+          notificationGatewayProvider.overrideWithValue(gateway),
+          currentRoutePathProvider.overrideWith(
+            (ref) =>
+                () => '/home',
+          ),
+          pushRegistrationControllerProvider.overrideWith((ref) {
+            final controller = PushRegistrationController(
+              gateway: gateway,
+              registrar: DeviceTokenRegistrar(
+                gateway: gateway,
+                api: api,
+                keyStore: InMemoryKeyStore(),
+                configuration: _testConfiguration,
+              ),
+              keyStore: InMemoryKeyStore(),
+              sessionStates: sessions.stream,
+            );
+            controller.start();
+            return controller;
+          }),
+        ],
+        child: MaterialApp(
+          home: ForegroundNoticeHost(
+            child: const Scaffold(body: SizedBox.expand()),
+          ),
+        ),
+      ),
+    );
+
+    sessions.add(
+      AppSessionState.active(
+        session: const AuthSession(accessToken: 'token', userId: 'usr_1'),
+        bootstrapData: BootstrapData(
+          accountStatus: AccountStatusDomain.active,
+          profileSummary: const ProfileSummaryDomain(
+            userId: 'usr_1',
+            displayName: 'Amani Perera',
+            streakDays: 4,
+          ),
+          consentStatus: const ConsentStatusDomain(requiresReview: false),
+          subjects: const <SubjectSummaryDomain>[],
+          capabilities: const CapabilityFlagsDomain(),
+          serverTime: DateTime.utc(2026, 11, 11),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // The explanation banner is visible and the OS prompt has NOT run yet
+    // (Flow §12.1).
+    expect(find.byKey(const ValueKey('push_explanation')), findsOneWidget);
+    expect(gateway.askWasCalled, isFalse);
+
+    await tester.tap(find.byKey(const ValueKey('push_explanation_enable')));
+    await tester.pumpAndSettle();
+    expect(gateway.askWasCalled, isTrue);
+    expect(api.calls, hasLength(1));
   });
 
   testWidgets('announces the notice politely for screen readers', (

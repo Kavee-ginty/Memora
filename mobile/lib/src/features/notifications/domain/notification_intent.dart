@@ -69,8 +69,15 @@ class NotificationIntent {
     final resourceId = data['resource_id'] ?? '';
     final routeIntent = data['route_intent'] ?? '';
     final locKey = data['loc_key'] ?? '';
+    final resourceType = data['resource_type'] ?? '';
     final expiresRaw = data['expires_at'] ?? '';
-    if (notificationId.isEmpty || resourceId.isEmpty) {
+    // Closed contract (API 16.2 mirror): identifiers are opaque and bounded,
+    // and the resource type must match the category exactly as the backend
+    // builder enforces. Malformed payloads never navigate.
+    if (!_isOpaqueId(notificationId) || !_isOpaqueId(resourceId)) {
+      return null;
+    }
+    if (resourceType != _expectedResourceType(category)) {
       return null;
     }
     // The wire contract emits Z-suffixed UTC only (payload_to_data);
@@ -104,7 +111,7 @@ class NotificationIntent {
     return NotificationIntent(
       category: category,
       routeIntent: routeIntent,
-      resourceType: data['resource_type'] ?? '',
+      resourceType: resourceType,
       resourceId: resourceId,
       notificationId: notificationId,
       expiresAt: expiresAt.toUtc(),
@@ -127,6 +134,28 @@ class NotificationIntent {
         return 'open_progress';
       case NotificationCategory.privacyExportReady:
         return 'open_export_status';
+    }
+  }
+
+  static bool _isOpaqueId(String value) {
+    if (value.length < 8 || value.length > 64) {
+      return false;
+    }
+    return RegExp(r'^[0-9a-zA-Z_-]+$').hasMatch(value);
+  }
+
+  static String _expectedResourceType(NotificationCategory category) {
+    switch (category) {
+      case NotificationCategory.missionReady:
+      case NotificationCategory.dueMemories:
+        return 'mission';
+      case NotificationCategory.verificationRequired:
+      case NotificationCategory.learningPathReady:
+        return 'learning_update';
+      case NotificationCategory.rewardReady:
+        return 'reward_grant';
+      case NotificationCategory.privacyExportReady:
+        return 'privacy_request';
     }
   }
 

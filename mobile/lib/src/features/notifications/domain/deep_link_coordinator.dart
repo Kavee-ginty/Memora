@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:memora_api_client/memora_api_client.dart';
 
 import '../../../routing/app_routes.dart';
 import '../infrastructure/deep_link_validation_api.dart';
@@ -24,6 +25,10 @@ enum DeepLinkResolution {
 
   /// Malformed payload: discard silently (nothing to consume or navigate).
   discarded,
+
+  /// Consumption could not be recorded durably; navigation is refused so
+  /// replay protection is never skipped. Nothing navigated.
+  notConsumed,
 }
 
 /// The outcome of one deep-link tap, consumed by the notice host (Commit 8)
@@ -49,6 +54,7 @@ class DeepLinkExplanations {
   static const String linkUnavailable = 'notification.fallback.unavailable';
   static const String workflowMovedOn = 'notification.fallback.workflow';
   static const String malformedLink = 'notification.fallback.malformed';
+  static const String notConfirmed = 'notification.fallback.not_confirmed';
 
   const DeepLinkExplanations._();
 }
@@ -59,6 +65,9 @@ class DeepLinkExplanations {
 /// API resource validation → navigate destination or resolve to the stable
 /// parent. Question surfaces (mission item, feedback, explanation) are
 /// structurally unreachable: the registry cannot produce those routes.
+///
+/// Taps for the same notification id serialize: a second tap waits for the
+/// first to finish and then observes the consumed record.
 class DeepLinkCoordinator {
   final DeepLinkValidationApi validationApi;
   final ConsumedIntentLedger ledger;
@@ -66,7 +75,9 @@ class DeepLinkCoordinator {
   final DateTime Function() clock;
   final bool Function() isAuthenticated;
 
-  const DeepLinkCoordinator({
+  final Map<String, Future<DeepLinkDecision>> _inFlightTaps = {};
+
+  DeepLinkCoordinator({
     required this.validationApi,
     required this.ledger,
     required this.navigate,
@@ -74,7 +85,28 @@ class DeepLinkCoordinator {
     required this.isAuthenticated,
   });
 
-  Future<DeepLinkDecision> handleTap(Map<String, String> data) async {
+  Future<DeepLinkDecision> handleTap(Map<String, String> data) {
+    // Serialize per notification id so simultaneous taps cannot both pass
+    // the consumed check before either records (review finding 6).
+    final id = data['notification_id'] ?? '';
+    final inFlight = _inFlightTaps[id];
+    if (inFlight != null) {
+      return inFlight.then(
+        (_) => const DeepLinkDecision(
+          resolution: DeepLinkResolution.alreadyConsumed,
+        ),
+      );
+    }
+    final future = _handleTap(data).whenComplete(() {
+      // Void callback on purpose: remove() returns the stored future itself,
+      // and whenComplete would await it, deadlocking the tap.
+      _inFlightTaps.remove(id);
+    });
+    _inFlightTaps[id] = future;
+    return future;
+  }
+
+  Future<DeepLinkDecision> _handleTap(Map<String, String> data) async {
     // 1. Parse: malformed payloads discard silently.
     final intent = NotificationIntent.parse(data);
     if (intent == null) {
@@ -124,8 +156,18 @@ class DeepLinkCoordinator {
     // 5. Validate the referenced resource through the API (D7).
     final target = await _validatedTarget(intent);
 
-    // 6. Consume once, then navigate or fall back.
-    await ledger.markConsumed(intent.notificationId);
+    // Consume once, then navigate or fall back. If consumption cannot be
+    // recorded durably, do not navigate: replay protection must never be
+    // silently skipped (review finding 6). The user can tap again once
+    // storage recovers; the server-side ledger still prevents duplicate
+    // pushes in the meantime.
+    final consumed = await ledger.markConsumed(intent.notificationId);
+    if (!consumed) {
+      return DeepLinkDecision(
+        resolution: DeepLinkResolution.notConsumed,
+        explanationLocKey: DeepLinkExplanations.notConfirmed,
+      );
+    }
     navigate(target.navigationPath!);
     return target;
   }
@@ -166,20 +208,33 @@ class DeepLinkCoordinator {
             explanationLocKey: DeepLinkExplanations.workflowMovedOn,
           );
         }
+        // The pushed mission id must still be the student's open mission: a
+        // stale push (mission replaced or completed since) falls back rather
+        // than opening an unintended mission (review finding 3).
+        if (mission.missionId != intent.resourceId) {
+          return DeepLinkDecision(
+            resolution: DeepLinkResolution.fallback,
+            navigationPath: target.fallbackPath,
+            explanationLocKey: DeepLinkExplanations.workflowMovedOn,
+          );
+        }
         return DeepLinkDecision(
           resolution: DeepLinkResolution.navigate,
           navigationPath: target.destinationPath,
         );
       case NotificationCategory.verificationRequired:
+        // Only an update still awaiting verification is actionable (review
+        // finding 4): committed, failed or expired updates fall back to the
+        // material-status parent.
         final state = await validationApi.learningUpdate(
           intent.resourceId,
-          requireCommitted: false,
+          requiredStatus: LearningUpdateStatus.verificationRequired,
         );
         return _stateDecision(intent, state);
       case NotificationCategory.learningPathReady:
         final state = await validationApi.learningUpdate(
           intent.resourceId,
-          requireCommitted: true,
+          requiredStatus: LearningUpdateStatus.committed,
         );
         return _stateDecision(
           intent,
@@ -187,8 +242,13 @@ class DeepLinkCoordinator {
           fallbackOverride: AppRoutes.learning,
         );
       case NotificationCategory.rewardReady:
-        // No validation endpoint until T15 ships; progress is both
-        // destination and stable parent (Flow §13.1).
+        // Explicit T19/T15 boundary (reviewer decision requested): no
+        // reward-validation endpoint exists in the merged API, so ownership
+        // and workflow state cannot be checked here. What the gate requires
+        // and T19 can enforce is enforced: expiry (checked in the pipeline
+        // above) falls back to this same stable parent, and the intent is
+        // consumed once. Ownership/state validation lands with the T15
+        // producer; see the PR follow-ups and study note section 6.
         return const DeepLinkDecision(
           resolution: DeepLinkResolution.navigate,
           navigationPath: AppRoutes.progress,

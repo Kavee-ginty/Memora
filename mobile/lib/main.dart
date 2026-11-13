@@ -142,13 +142,21 @@ void main() async {
 /// gateway reports unavailable there, so this is never reached in practice.
 class _UnconfiguredDeviceRegistrationApi implements DeviceRegistrationApi {
   @override
-  Future<void> register({
+  Future<String> register({
     required String installationId,
     required String pushToken,
     required String idempotencyKey,
     required String appVersion,
     required String platform,
     required String locale,
+  }) async {
+    throw UnimplementedError('Push registration requires a configured API.');
+  }
+
+  @override
+  Future<void> revoke({
+    required String deviceId,
+    required String accessToken,
   }) async {
     throw UnimplementedError('Push registration requires a configured API.');
   }

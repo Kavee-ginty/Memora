@@ -38,20 +38,19 @@ class NotificationCopy {
     return _templates[locKey] ?? 'You have a new update in Memora.';
   }
 
-  /// Renders notification body copy for an intent, interpolating only the
-  /// safe detail-band parameters ({subject_name}, {count}).
+  /// Renders notification body copy for an intent. Sentence parts adapt to
+  /// the safe detail band so every band stays grammatical (review finding
+  /// 10): the subject names the curriculum subject per PRD 031's default,
+  /// and the duration clause appears only when a count is present.
   static String forIntent(NotificationIntent intent) {
-    var template = forLocKey(intent.locKey);
-    if (intent.subjectName != null && template.contains('{subject_name}')) {
-      template = template.replaceFirst('{subject_name}', intent.subjectName!);
+    if (intent.locKey == 'notification.mission_ready') {
+      final subject = intent.subjectName;
+      final base = subject == null || subject.isEmpty
+          ? 'Your daily mission is ready.'
+          : 'Your $subject daily mission is ready.';
+      final count = intent.count;
+      return count == null ? base : '$base About $count minutes.';
     }
-    if (intent.count != null && template.contains('{count}')) {
-      template = template.replaceFirst('{count}', '${intent.count}');
-    }
-    return template
-        .replaceAll('{subject_name}', '')
-        .replaceAll('{count}', '')
-        .replaceAll(RegExp(r'\s+'), ' ')
-        .trim();
+    return forLocKey(intent.locKey);
   }
 }

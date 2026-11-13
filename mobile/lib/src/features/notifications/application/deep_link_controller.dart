@@ -47,7 +47,7 @@ class StubDeepLinkValidationApi implements DeepLinkValidationApi {
   @override
   Future<DeepLinkResourceState> learningUpdate(
     String updateId, {
-    required bool requireCommitted,
+    required LearningUpdateStatus requiredStatus,
   }) async {
     return DeepLinkResourceState.unavailable;
   }

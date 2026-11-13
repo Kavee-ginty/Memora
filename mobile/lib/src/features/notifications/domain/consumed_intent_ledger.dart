@@ -23,13 +23,17 @@ class ConsumedIntentLedger {
     return ids.contains(notificationId);
   }
 
-  Future<void> markConsumed(String notificationId) async {
+  /// Records the intent; returns whether consumption is durably recorded.
+  ///
+  /// A failed write returns ``false`` so the caller can refuse navigation:
+  /// consume-once must never be silently skipped (Flow 20.3).
+  Future<bool> markConsumed(String notificationId) async {
     if (notificationId.isEmpty) {
-      return;
+      return false;
     }
     final ids = await _load();
     if (ids.contains(notificationId)) {
-      return;
+      return true;
     }
     ids.add(notificationId);
     while (ids.length > _maxEntries) {
@@ -37,9 +41,11 @@ class ConsumedIntentLedger {
     }
     try {
       await keyStore.write(_storageKey, jsonEncode(ids));
+      return true;
     } catch (_) {
-      // A failed write leaves the intent unconsumed; the server-side
-      // delivery ledger still prevents duplicate pushes (D9 counterpart).
+      // The server-side delivery ledger still prevents duplicate pushes,
+      // but client-side navigation is refused until consumption records.
+      return false;
     }
   }
 

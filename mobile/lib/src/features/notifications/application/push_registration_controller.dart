@@ -26,13 +26,21 @@ final deviceRegistrationApiProvider = Provider<DeviceRegistrationApi>((ref) {
 /// throws), used when no API client is configured.
 class SilentDeviceRegistrationApi implements DeviceRegistrationApi {
   @override
-  Future<void> register({
+  Future<String> register({
     required String installationId,
     required String pushToken,
     required String idempotencyKey,
     required String appVersion,
     required String platform,
     required String locale,
+  }) async {
+    return '';
+  }
+
+  @override
+  Future<void> revoke({
+    required String deviceId,
+    required String accessToken,
   }) async {}
 }
 
@@ -73,7 +81,20 @@ final pushRegistrationControllerProvider =
     });
 
 /// Lifecycle phase of the registration flow (safe, non-blocking states).
-enum PushRegistrationPhase { idle, registering, ready, unavailable, denied }
+///
+/// `awaitingExplanation` holds before the OS prompt until the in-app value
+/// explanation is confirmed (Flow 12.1: the app explains notification value
+/// before the system prompt). `registrationFailed` is recoverable: the
+/// controller retries on the next authenticated session emission.
+enum PushRegistrationPhase {
+  idle,
+  awaitingExplanation,
+  registering,
+  ready,
+  registrationFailed,
+  unavailable,
+  denied,
+}
 
 class PushRegistrationController extends StateNotifier<PushRegistrationPhase> {
   final NotificationGateway gateway;
@@ -85,6 +106,8 @@ class PushRegistrationController extends StateNotifier<PushRegistrationPhase> {
   StreamSubscription<String>? _tokenSubscription;
   bool _started = false;
   String? _lastRegisteredToken;
+  String? _lastRegisteredUserId;
+  AppSessionState? _lastSessionState;
   bool _registering = false;
 
   PushRegistrationController({
@@ -103,9 +126,12 @@ class PushRegistrationController extends StateNotifier<PushRegistrationPhase> {
     _sessionSubscription = sessionStates.listen(onSessionState);
   }
 
-  /// Called on every session-state emission; registers only for active
-  /// authenticated sessions and silently resets on sign-out.
+  /// Called on every session-state emission. Sign-out revokes the device
+  /// registration while the token may still be valid (review finding 2);
+  /// authenticated states register, and also revoke a stale registration
+  /// from a previously signed-in account before switching.
   Future<void> onSessionState(AppSessionState sessionState) async {
+    _lastSessionState = sessionState;
     if (!mounted) {
       return;
     }
@@ -113,24 +139,57 @@ class PushRegistrationController extends StateNotifier<PushRegistrationPhase> {
       await _tokenSubscription?.cancel();
       _tokenSubscription = null;
       _lastRegisteredToken = null;
+      await _revokeTrackedRegistration();
       if (mounted && state != PushRegistrationPhase.idle) {
         state = PushRegistrationPhase.idle;
       }
       return;
     }
-    await _registerForActiveSession();
+    final userId = sessionState.session?.userId;
+    if (_lastRegisteredUserId != null &&
+        userId != null &&
+        _lastRegisteredUserId != userId) {
+      // Account switch: the previous account's registration must not keep
+      // receiving pushes on this installation.
+      await _revokeTrackedRegistration();
+    }
+    _lastRegisteredUserId = userId;
+    await _handleAuthenticatedSession(sessionState);
   }
 
-  Future<void> _registerForActiveSession() async {
+  /// Confirms the in-app notification-value explanation and proceeds to the
+  /// OS prompt (Flow 12.1). No-op unless awaiting the explanation.
+  Future<void> confirmNotificationExplanation() async {
+    if (state != PushRegistrationPhase.awaitingExplanation) {
+      return;
+    }
+    final sessionState = _lastSessionState;
+    if (sessionState == null || !sessionState.isAuthenticated) {
+      return;
+    }
+    await _requestPermissionAndRegister(sessionState);
+  }
+
+  /// Recoverable denial (Flow 12.1): the user may re-attempt from settings
+  /// once the OS allows prompting again.
+  Future<void> requestPermissionAgain() async {
+    if (state != PushRegistrationPhase.denied) {
+      return;
+    }
+    final sessionState = _lastSessionState;
+    if (sessionState == null || !sessionState.isAuthenticated) {
+      return;
+    }
+    await _requestPermissionAndRegister(sessionState);
+  }
+
+  Future<void> _handleAuthenticatedSession(AppSessionState sessionState) async {
     if (_registering) {
       return;
     }
     _registering = true;
     try {
-      final permission = await requestPermissionOnce(
-        gateway: gateway,
-        keyStore: keyStore,
-      );
+      final permission = await gateway.permissionStatus();
       if (!mounted) {
         return;
       }
@@ -142,8 +201,11 @@ class PushRegistrationController extends StateNotifier<PushRegistrationPhase> {
         state = PushRegistrationPhase.denied;
         return;
       }
-      if (permission != NotificationPermission.granted) {
-        state = PushRegistrationPhase.idle;
+      if (permission == NotificationPermission.notDetermined) {
+        // Flow 12.1: explain the notification value BEFORE the system
+        // prompt. The host surfaces the explanation; the prompt runs only
+        // after confirmNotificationExplanation().
+        state = PushRegistrationPhase.awaitingExplanation;
         return;
       }
 
@@ -155,27 +217,108 @@ class PushRegistrationController extends StateNotifier<PushRegistrationPhase> {
         state = PushRegistrationPhase.idle;
         return;
       }
-      state = PushRegistrationPhase.registering;
-      await registrar.registerToken(token);
-      _lastRegisteredToken = token;
-      if (!mounted) {
-        return;
-      }
-      state = PushRegistrationPhase.ready;
-
-      // Re-register when the provider rotates the token. Server-side
-      // registration is idempotent per installation and token (API-003),
-      // so replays converge.
-      _tokenSubscription ??= gateway.tokenRefreshes().listen((token) async {
-        if (token == _lastRegisteredToken || !mounted) {
-          return;
-        }
-        await registrar.registerToken(token);
-        _lastRegisteredToken = token;
-      });
+      await _registerToken(sessionState, token);
     } finally {
       _registering = false;
     }
+  }
+
+  Future<void> _requestPermissionAndRegister(
+    AppSessionState sessionState,
+  ) async {
+    if (_registering) {
+      return;
+    }
+    _registering = true;
+    try {
+      final permission = await gateway.requestPermission();
+      if (!mounted) {
+        return;
+      }
+      if (permission == NotificationPermission.notDetermined) {
+        state = PushRegistrationPhase.awaitingExplanation;
+        return;
+      }
+      if (permission == NotificationPermission.unavailable) {
+        state = PushRegistrationPhase.unavailable;
+        return;
+      }
+      if (permission == NotificationPermission.denied) {
+        state = PushRegistrationPhase.denied;
+        return;
+      }
+      // The decided answer is persisted so restarts skip straight to it.
+      const askedKey = 'memora_push_permission_asked';
+      await keyStore.write(askedKey, 'true');
+
+      final token = await gateway.currentToken();
+      if (!mounted) {
+        return;
+      }
+      if (token == null || token.isEmpty) {
+        state = PushRegistrationPhase.idle;
+        return;
+      }
+      await _registerToken(sessionState, token);
+    } finally {
+      _registering = false;
+    }
+  }
+
+  Future<void> _registerToken(
+    AppSessionState sessionState,
+    String token,
+  ) async {
+    state = PushRegistrationPhase.registering;
+    final accessToken = sessionState.session?.accessToken ?? '';
+    final userId = sessionState.session?.userId ?? '';
+    // Ready only after server confirmation (review finding 1); a failure is
+    // recoverable and retried on the next authenticated session emission
+    // (bootstrap refresh after reconnect) or token rotation.
+    final confirmed = await registrar.registerToken(
+      token,
+      accessToken: accessToken,
+      userId: userId,
+    );
+    if (!mounted) {
+      return;
+    }
+    if (!confirmed) {
+      state = PushRegistrationPhase.registrationFailed;
+      return;
+    }
+    _lastRegisteredToken = token;
+    _lastRegisteredUserId = userId;
+    state = PushRegistrationPhase.ready;
+
+    // Re-register when the provider rotates the token. Server-side
+    // registration is idempotent per installation and token (API-003), so
+    // replays converge.
+    _tokenSubscription ??= gateway.tokenRefreshes().listen((token) async {
+      if (token == _lastRegisteredToken || !mounted) {
+        return;
+      }
+      final sessionState = _lastSessionState;
+      if (sessionState == null || !sessionState.isAuthenticated) {
+        return;
+      }
+      final confirmed = await registrar.registerToken(
+        token,
+        accessToken: sessionState.session?.accessToken ?? '',
+        userId: sessionState.session?.userId ?? '',
+      );
+      if (!mounted) {
+        return;
+      }
+      if (confirmed) {
+        _lastRegisteredToken = token;
+      }
+    });
+  }
+
+  Future<void> _revokeTrackedRegistration() async {
+    await registrar.revokeLastRegistration();
+    _lastRegisteredUserId = null;
   }
 
   @override

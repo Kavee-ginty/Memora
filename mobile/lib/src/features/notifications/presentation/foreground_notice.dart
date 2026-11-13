@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../routing/app_router.dart';
-
 import '../application/deep_link_controller.dart';
 import '../application/push_registration_controller.dart';
 import '../domain/deep_link_coordinator.dart';
@@ -36,19 +35,31 @@ final currentRoutePathProvider = Provider<String? Function()>((ref) {
   final router = ref.watch(appRouterProvider);
   return () {
     try {
-      return router.routerDelegate.currentConfiguration.last.matchedLocation;
+      final configuration = router.routerDelegate.currentConfiguration;
+      if (configuration.isEmpty) {
+        return null;
+      }
+      return configuration.last.matchedLocation;
     } on Exception catch (_) {
       return null;
     }
   };
 });
 
-/// Renders one non-blocking foreground notice above the app (UI/UX §6.6):
+/// Renders non-blocking foreground notices above the app (UI/UX §6.6):
 /// visible long enough to read, announced politely, tap consumes the intent
 /// through the deep-link coordinator, dismissal changes nothing.
 ///
 /// Notices arriving while an active answer is on screen (D11) queue and
-/// surface only after the route leaves the answer surface.
+/// surface when the route leaves the answer surface; a visible notice is
+/// hidden again when an answer surface opens. Route changes are observed
+/// directly through the router delegate (review finding 7).
+///
+/// The host is also the single presenter for fallback explanations (review
+/// finding 8): every tap source — foreground, background and cold start —
+/// publishes its decision to the deep-link controller, and the host surfaces
+/// the brief explanation here. It further carries the notification-value
+/// explanation required before the OS permission prompt (Flow §12.1).
 typedef RoutePathReader = String? Function();
 
 class ForegroundNoticeHost extends ConsumerStatefulWidget {
@@ -77,6 +88,8 @@ class _ForegroundNoticeHostState extends ConsumerState<ForegroundNoticeHost> {
   final List<NotificationMessage> _queue = <NotificationMessage>[];
   NotificationMessage? _visible;
   Timer? _visibleTimer;
+  Listenable? _routeListenable;
+  bool _explanationDismissed = false;
 
   @override
   void initState() {
@@ -85,12 +98,21 @@ class _ForegroundNoticeHostState extends ConsumerState<ForegroundNoticeHost> {
         .read(notificationGatewayProvider)
         .foregroundMessages()
         .listen(_enqueue);
+    // Observe route changes directly (review finding 7): queued notices
+    // surface as soon as the route leaves an active answer, and a visible
+    // notice hides when an answer surface opens.
+    if (widget.routePathReader == null) {
+      final delegate = ref.read(appRouterProvider).routerDelegate;
+      delegate.addListener(_onRouteChanged);
+      _routeListenable = delegate;
+    }
   }
 
   @override
   void dispose() {
     _foregroundSubscription?.cancel();
     _visibleTimer?.cancel();
+    _routeListenable?.removeListener(_onRouteChanged);
     super.dispose();
   }
 
@@ -98,6 +120,20 @@ class _ForegroundNoticeHostState extends ConsumerState<ForegroundNoticeHost> {
     final RoutePathReader reader =
         widget.routePathReader ?? ref.read(currentRoutePathProvider);
     return reader();
+  }
+
+  void _onRouteChanged() {
+    if (!mounted) {
+      return;
+    }
+    final active = _isActiveAnswerRoute(_currentPath());
+    if (active && _visible != null) {
+      // Defer the visible notice: it returns when the answer surface closes.
+      _visibleTimer?.cancel();
+      _queue.insert(0, _visible!);
+      setState(() => _visible = null);
+    }
+    _drainQueue();
   }
 
   void _enqueue(NotificationMessage message) {
@@ -137,24 +173,10 @@ class _ForegroundNoticeHostState extends ConsumerState<ForegroundNoticeHost> {
   }
 
   Future<void> _onTap(NotificationMessage message) async {
-    final messenger = ScaffoldMessenger.maybeOf(context);
     setState(() => _visible = null);
-    final decision = await ref
+    await ref
         .read(deepLinkControllerProvider.notifier)
         .handleTapData(message.data);
-    // Brief fallback explanations surface after the navigation (Flow §13.1:
-    // invalid links "resolve to the stable parent with a brief explanation").
-    final explanation = decision.explanationLocKey;
-    if (explanation != null && messenger != null) {
-      messenger.showSnackBar(
-        SnackBar(
-          key: const ValueKey('notice_explanation'),
-          content: Text(NotificationCopy.forLocKey(explanation)),
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 4),
-        ),
-      );
-    }
     _drainQueue();
   }
 
@@ -165,12 +187,40 @@ class _ForegroundNoticeHostState extends ConsumerState<ForegroundNoticeHost> {
     _drainQueue();
   }
 
+  void _showExplanationSnackBar(DeepLinkDecision? decision) {
+    final explanation = decision?.explanationLocKey;
+    if (explanation == null) {
+      return;
+    }
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    if (messenger == null) {
+      return;
+    }
+    messenger.showSnackBar(
+      SnackBar(
+        key: const ValueKey('notice_explanation'),
+        content: Text(NotificationCopy.forLocKey(explanation)),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 4),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final reducedMotion = MediaQuery.disableAnimationsOf(context);
     final visible = _visible;
 
-    // Route changes rebuild this host (it sits inside the router); drain a
+    // Single explanation presenter (review finding 8): all tap sources
+    // publish their decision to the controller; any decision carrying an
+    // explanation surfaces here, wherever the tap originated.
+    ref.listen<DeepLinkDecision?>(deepLinkControllerProvider, (_, next) {
+      _showExplanationSnackBar(next);
+    });
+
+    final registrationPhase = ref.watch(pushRegistrationControllerProvider);
+
+    // Rebuilds (including injected-reader route changes in tests) drain a
     // queued notice once the route has left an active-answer surface.
     if (_queue.isNotEmpty && _visible == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -183,6 +233,63 @@ class _ForegroundNoticeHostState extends ConsumerState<ForegroundNoticeHost> {
     return Stack(
       children: <Widget>[
         widget.child,
+        if (registrationPhase == PushRegistrationPhase.awaitingExplanation &&
+            !_explanationDismissed)
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: SafeArea(
+              bottom: false,
+              child: Material(
+                color: Colors.transparent,
+                child: Container(
+                  key: const ValueKey('push_explanation'),
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.outlineVariant,
+                    ),
+                  ),
+                  child: Row(
+                    children: <Widget>[
+                      Expanded(
+                        child: Text(
+                          'Get reminders for daily missions, due memories and '
+                          'rewards. You choose the categories and quiet hours '
+                          'in settings.',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                      ),
+                      TextButton(
+                        key: const ValueKey('push_explanation_enable'),
+                        onPressed: () => ref
+                            .read(pushRegistrationControllerProvider.notifier)
+                            .confirmNotificationExplanation(),
+                        child: const Text('Enable'),
+                      ),
+                      IconButton(
+                        key: const ValueKey('push_explanation_dismiss'),
+                        tooltip: 'Dismiss explanation',
+                        onPressed: () =>
+                            setState(() => _explanationDismissed = true),
+                        icon: const Icon(Icons.close),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
         if (visible != null)
           Positioned(
             top: 0,
@@ -236,11 +343,14 @@ class _ForegroundNoticeHostState extends ConsumerState<ForegroundNoticeHost> {
                             onPressed: () => _onTap(visible),
                             child: const Text('Open'),
                           ),
-                          IconButton(
-                            key: const ValueKey('notice_dismiss'),
-                            tooltip: 'Dismiss notification',
-                            onPressed: _onDismiss,
-                            icon: const Icon(Icons.close),
+                          Semantics(
+                            label: 'Dismiss notification',
+                            button: true,
+                            child: IconButton(
+                              key: const ValueKey('notice_dismiss'),
+                              onPressed: _onDismiss,
+                              icon: const Icon(Icons.close),
+                            ),
                           ),
                         ],
                       ),
