@@ -53,7 +53,7 @@ If two sources appear inconsistent, stop implementation and resolve the conflict
 | T18 | Profile and settings mobile | **In Progress** | Codex | 4 | T07, T17 | `task/T18-profile-mobile` | Mobile feature |
 | T19 | Push notifications and deep links | **Ready** | - | 4 | T07, T17 | `task/T19-push-deep-links` | Mobile and backend |
 | T20 | Privacy export and deletion backend | **Done** | Dima | 5 | T06, T04 | `task/T20-privacy-backend` | Backend privacy |
-| T21 | Privacy mobile experience | **Review** | Neleesha Peiris | 3 | T07, T20 | `task/T21-privacy-mobile` | Mobile feature |
+| T21 | Privacy mobile experience | **Done** | Neleesha Peiris | 3 | T07, T20 | `task/T21-privacy-mobile` | Mobile feature |
 | T22 | Offline sync and idempotency hardening | Blocked | - | 6 | T09, T13, T07 | `task/T22-offline-idempotency` | Cross-platform |
 | T23 | Observability and security hardening | Blocked | - | 5 | T02, T09, T13, T17, T20 | `task/T23-security-observability` | Platform |
 | T24 | Verified Physics pilot content | **Review** | Neleesha | 6 | T08, T12 | `task/T24-physics-content` | Academic content |
@@ -301,6 +301,25 @@ This records the Section 6 checklist for T11. Pull request #37 was reviewed and 
 | Security and privacy | Ownership is derived from the validated session and enforced by RLS plus explicit predicates; cross-user reads return `404`; responses are `private, no-store` and band-only; logs contain no learning text, event payloads or authorization headers. Worker roles are limited to the granted tables. |
 | Deviations and follow-ups | No approved deviation. Follow-ups: composite `memory_decisions` history index, `disable_existing_loggers=False` in migration logging, real T09 producer wiring, and T13/T15 additive extensions. All are recorded in `docs/learning/T11_Study_Note.md` and are outside the T11 merge boundary. |
 
+### T21 pull-request evidence
+
+Pull request #49 was reviewed and merged into `develop` at `d387506`, and all
+required checks passed. The task is **Done** with the Android manual-device
+record accepted by the repository owner as an approved deviation on 11 November
+2026; T27 retains the full device accessibility sweep.
+
+| Checklist item | T21 evidence |
+| --- | --- |
+| Task ID and branch | T21, `task/T21-privacy-mobile`, pull request #49 |
+| Completed acceptance boundary | Retained-data overview, export request/status/download readiness, deletion confirmation/status/cancellation, recent-authentication recovery, truthful pending/failure/proof-missing states, offline disabling and confirmed-deletion local clearing. |
+| Specification sections | PRD 033-035 and 10.3; TRD 5, 14-16 and 19; UI/UX 7 and 12-16; Schema 13.5 and 17; Flow 3.3, 12.2, 14 and 17; API 4.3 and 17-19. Full traceability is in `docs/learning/T21_Study_Note.md`. |
+| Tests and exact commands | `flutter test test/privacy`: 112 passed. `python -m pytest backend/tests/test_privacy_api.py backend/tests/test_privacy_workflows.py`: 16 passed. `python -m pytest backend/tests/test_privacy_db_contracts.py` with the designated PostgreSQL test database: 8 passed against the real durable worker contracts. PR #49 passed all required CI checks, including the Flutter APK and backend container builds. |
+| Section 5 DoD mapping | Widget/controller/repository tests cover retained data, request, polling, download gating, reauthentication, cancellation, failure, offline and confirmed clearing. Automated evidence covers 320 px, 200% text, semantics, focus and reduced motion. |
+| Migration, OpenAPI and client changes | None in T21; it consumes the merged T20 contract. The OpenAPI/generated-client drift check passed. |
+| UI and accessibility evidence | Seven checked-in golden comparisons plus the automated responsive/accessibility matrix are recorded in `docs/evidence/T21_Privacy_Evidence.md`. |
+| Security and privacy | Ownership remains server-derived; signed URLs and credentials are not logged, rendered or persisted; local account data clears only after server-confirmed deletion with proof state. |
+| Deviations and follow-ups | The repository owner accepted the missing Android TalkBack/keyboard-switch/manual-device record on 11 November 2026. T27 owns the full Android/device accessibility and visual QA sweep; this deviation does not claim that manual evidence was run. |
+
 ### T24 review evidence
 
 T24 is in **Review**, not Done. Route A is complete on
@@ -322,16 +341,17 @@ in `docs/evidence/T24_Content_Evidence.md`.
 
 ## 7 Current next action
 
-T01-T09, T11-T12, T17 and T20 are merged and Done. T10, T21 and T24 are in
+T01-T09, T11-T12, T17 and T20-T21 are merged and Done. T10 and T24 are in
 Review; T13 is In Progress. T18 and T19 are Ready. T14, T15, T22 and T23 remain
 Blocked until T13 is Done; later tasks remain blocked until all listed
 dependencies are Done.
 
-T21's implementation and automated evidence are recorded in its study note and
-privacy evidence. Before marking it Done, complete a real T20 backend/worker
-exercise and Android manual accessibility/device record. The current PR merge
-also requires final CI artifact uploads to succeed; this run hit the GitHub
-Actions artifact storage quota. T27 remains Blocked until T21 is Done.
+T21 completed through pull request #49, merged into `develop` at `d387506`. All
+required CI checks passed, and the real T20 PostgreSQL/durable-worker privacy
+contracts passed locally. The repository owner accepted the missing Android
+manual-device record as an approved deviation; T27 retains that full
+accessibility/device sweep. T26 and T27 remain Blocked by their other incomplete
+dependencies.
 
 T24's next action is user commit, push, pull request and merge of the Route A
 changes. Do not mark T24 Done until that merge occurs. The qualified-review record

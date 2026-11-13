@@ -145,26 +145,28 @@ Final local checks after the review corrections and golden regeneration:
 | `flutter test` | Pass; all 602 mobile tests, including T21 privacy and merged T10 ingestion coverage |
 | `flutter build apk --debug` | Not completed locally; Gradle failed before compilation with `Unable to establish loopback connection` on this Windows host |
 
-The required GitHub run for the pre-merge PR commit passed format/analyze/tests,
-contract drift, migrations, compose validation and secret/dependency scans. The
-backend container and Flutter APK jobs built their outputs but failed while
-uploading them because the repository's GitHub Actions artifact storage quota
-was exhausted. A fresh required run is still needed for the merged branch.
+The final required GitHub run for pull request #49 passed format/analyze/tests,
+contract drift, migrations, compose validation, secret/dependency scans, the
+backend container build and the Flutter APK build. Pull request #49 merged into
+`develop` at `d387506`.
 
-## Outstanding verification
+## Closeout verification
 
-T21 remains in **Review**. The following acceptance evidence is not yet
-recorded and must be completed before the task can be marked Done:
+After merge, the privacy suites were rerun against the designated test
+resources:
 
-- Exercise the flows against the real T20 backend and durable deletion worker,
-  including recent-auth rejection, export completion with a live signed URL,
-  deletion completion with proofs, cancellation and proof-missing behavior.
-- Record Android device or emulator TalkBack, keyboard/switch, reduced-motion
-  and 320 px / 200% text manual results for the privacy routes.
-- Capture a successful required CI run on the updated pull request.
+- `flutter test test/privacy`: 112 passed.
+- `python -m pytest backend/tests/test_privacy_api.py
+  backend/tests/test_privacy_workflows.py`: 16 passed.
+- `python -m pytest backend/tests/test_privacy_db_contracts.py`: 8 passed
+  against PostgreSQL and the real durable worker contracts, covering export,
+  deletion/proofs, cancellation, retry/outage, lease reconciliation,
+  cross-user isolation and restore reconciliation.
 
-The local Docker engine is unavailable and there is no local `.env`, so the real
-T20 API/worker exercise could not run here. Flutter lists an Android emulator
-image but no connected Android device; the local APK build is also blocked by
-Gradle's loopback error. The checked-in Windows golden captures do not replace
-the Android manual record. T21 remains in **Review** until those items pass.
+The repository owner accepted the missing Android TalkBack,
+keyboard/switch and manual-device record as an approved deviation on 11
+November 2026 and directed that T21 be marked **Done**. The local emulator was
+available, but the current APK could not be rebuilt because Gradle failed with
+`Unable to establish loopback connection`; downloading the CI artifact also
+stalled. This deviation does not claim that the manual evidence ran. T27 retains
+the full Android/device accessibility and visual QA sweep.
