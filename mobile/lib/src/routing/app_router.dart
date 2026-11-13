@@ -378,30 +378,21 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 routes: [
                   GoRoute(
                     path: 'edit',
-                    pageBuilder: (context, state) => _buildPage(
-                      context,
-                      state,
-                      const ProfileSettingsScreen(SettingsSection.profile),
-                    ),
+                    pageBuilder: (_, state) =>
+                        _profileSettingsPage(state, SettingsSection.profile),
                   ),
                   GoRoute(
                     path: 'notifications',
-                    pageBuilder: (context, state) => _buildPage(
-                      context,
+                    pageBuilder: (_, state) => _profileSettingsPage(
                       state,
-                      const ProfileSettingsScreen(
-                        SettingsSection.notifications,
-                      ),
+                      SettingsSection.notifications,
                     ),
                   ),
                   GoRoute(
                     path: 'accessibility',
-                    pageBuilder: (context, state) => _buildPage(
-                      context,
+                    pageBuilder: (_, state) => _profileSettingsPage(
                       state,
-                      const ProfileSettingsScreen(
-                        SettingsSection.accessibility,
-                      ),
+                      SettingsSection.accessibility,
                     ),
                   ),
                 ],
@@ -428,6 +419,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     errorBuilder: (context, state) => const NotFoundScreen(),
   );
 });
+
+// Keep settings pages mounted while a reduced-motion draft changes MediaQuery.
+Page<void> _profileSettingsPage(GoRouterState state, SettingsSection section) =>
+    NoTransitionPage<void>(
+      key: state.pageKey,
+      child: ProfileSettingsScreen(section),
+    );
 
 /// Builds an immediate page when the platform requests reduced motion and a
 /// standard platform transition otherwise.

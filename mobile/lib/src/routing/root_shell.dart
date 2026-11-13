@@ -18,6 +18,10 @@ class RootShell extends StatelessWidget {
         currentIndex: navigationShell.currentIndex,
         reflowLabels: true,
         onTap: (index) {
+          if (index == MemoraDestination.profile.index &&
+              index == navigationShell.currentIndex) {
+            return;
+          }
           navigationShell.goBranch(
             index,
             initialLocation: index == navigationShell.currentIndex,

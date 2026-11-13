@@ -54,10 +54,17 @@ class ProfileEntryScreen extends ConsumerWidget {
         ? profile!.email
         : sessionState.session?.email;
     final streak = profile?.streakDays ?? 0;
+    final contrast = MediaQuery.highContrastOf(context);
+    final titleStyle = MemoraTypography.cardTitle.copyWith(
+      color: contrast ? Colors.black : null,
+    );
+    final metadataStyle = MemoraTypography.metadata.copyWith(
+      color: contrast ? Colors.black : null,
+    );
 
     return Scaffold(
       backgroundColor: MemoraColors.surfaceSoft,
-      appBar: const MemoraHeader.root(title: 'Profile'),
+      appBar: const MemoraHeader.root(title: 'Profile', headingOnTitle: true),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(
           horizontal: MemoraSpacing.space16,
@@ -68,21 +75,27 @@ class ProfileEntryScreen extends ConsumerWidget {
           children: <Widget>[
             // Profile Card
             MemoraCard(
+              semanticLabel: 'Account identity',
+              borderColor: contrast ? Colors.black : null,
               child: Padding(
                 padding: const EdgeInsets.all(MemoraSpacing.space8),
                 child: Row(
                   children: [
-                    CircleAvatar(
-                      radius: 32,
-                      backgroundColor: const Color(0xFFD4E9F9),
-                      child: Text(
-                        (name?.isNotEmpty == true)
-                            ? name!.characters.first.toUpperCase()
-                            : 'M',
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF0072B2),
+                    ExcludeSemantics(
+                      child: CircleAvatar(
+                        radius: 32,
+                        backgroundColor: const Color(0xFFD4E9F9),
+                        child: Text(
+                          (name?.isNotEmpty == true)
+                              ? name!.characters.first.toUpperCase()
+                              : 'M',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w700,
+                            color: contrast
+                                ? Colors.black
+                                : const Color(0xFF0072B2),
+                          ),
                         ),
                       ),
                     ),
@@ -91,21 +104,17 @@ class ProfileEntryScreen extends ConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Semantics(
-                            header: true,
-                            child: Text(
-                              name ?? 'Your account',
-                              style: MemoraTypography.cardTitle,
-                            ),
-                          ),
+                          Text(name ?? 'Your account', style: titleStyle),
                           if (email != null && email.isNotEmpty)
-                            Text(email, style: MemoraTypography.metadata),
+                            Text(email, style: metadataStyle),
                           if (streak > 0)
                             Text(
                               'Streak: $streak days',
-                              style: MemoraTypography.metadata.copyWith(
+                              style: metadataStyle.copyWith(
                                 fontWeight: FontWeight.w600,
-                                color: const Color(0xFF0072B2),
+                                color: contrast
+                                    ? Colors.black
+                                    : const Color(0xFF0072B2),
                               ),
                             ),
                         ],
@@ -142,12 +151,13 @@ class ProfileEntryScreen extends ConsumerWidget {
             // Privacy entry owned by T21
             MemoraCard(
               key: const Key('profile_privacy_entry'),
+              borderColor: contrast ? Colors.black : null,
               onTap: () => context.go(AppRoutes.privacy),
               child: Row(
                 children: <Widget>[
-                  const Icon(
+                  Icon(
                     Icons.shield_outlined,
-                    color: MemoraColors.brandBlue,
+                    color: contrast ? Colors.black : MemoraColors.brandBlue,
                     size: 24,
                   ),
                   const SizedBox(width: MemoraSpacing.space12),
@@ -155,18 +165,18 @@ class ProfileEntryScreen extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        Text('Privacy', style: MemoraTypography.cardTitle),
+                        Text('Privacy', style: titleStyle),
                         const SizedBox(height: MemoraSpacing.space4),
                         Text(
                           'Export your data or delete your account',
-                          style: MemoraTypography.metadata,
+                          style: metadataStyle,
                         ),
                       ],
                     ),
                   ),
-                  const Icon(
+                  Icon(
                     Icons.chevron_right,
-                    color: MemoraColors.textMuted,
+                    color: contrast ? Colors.black : MemoraColors.textMuted,
                   ),
                 ],
               ),

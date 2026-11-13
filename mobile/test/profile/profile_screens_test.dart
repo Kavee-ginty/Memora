@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:memora_mobile/src/app.dart';
+import 'package:memora_mobile/src/design_system/tokens/colors.dart';
 import 'package:memora_mobile/src/features/auth/application/session_controller.dart';
 import 'package:memora_mobile/src/features/auth/data/auth_repository.dart';
 import 'package:memora_mobile/src/features/auth/data/secure_auth_storage.dart';
@@ -15,6 +16,7 @@ import 'package:memora_mobile/src/features/profile/domain/profile_settings.dart'
 import 'package:memora_mobile/src/features/profile/presentation/profile_entry_screen.dart';
 import 'package:memora_mobile/src/features/profile/presentation/profile_settings_screen.dart';
 import 'package:memora_mobile/src/routing/app_routes.dart';
+import 'package:memora_mobile/src/routing/app_router.dart';
 
 import 'profile_fixtures.dart';
 
@@ -52,6 +54,7 @@ void main() {
   testWidgets(
     'Profile shows the authorized subject, settings, and Privacy entry',
     (tester) async {
+      final semantics = tester.ensureSemantics();
       await tester.pumpWidget(
         profileHarness(const ProfileEntryScreen(), FakeProfileRepository()),
       );
@@ -63,6 +66,103 @@ void main() {
       expect(find.text('Privacy'), findsOneWidget);
       expect(find.textContaining('Streak:'), findsNothing);
       expect(find.textContaining('XP'), findsNothing);
+      final headings = find.byWidgetPredicate(
+        (widget) => widget is Semantics && widget.properties.header == true,
+      );
+      expect(headings, findsOneWidget);
+      expect(tester.getSemantics(headings).label, contains('Profile'));
+      expect(find.bySemanticsLabel(RegExp('Account identity')), findsOneWidget);
+      semantics.dispose();
+    },
+  );
+
+  testWidgets(
+    'high contrast strengthens rendered Profile and settings colors',
+    (tester) async {
+      final repository = FakeProfileRepository();
+      final storage = AppLocalStorage(InMemorySecureKeyStore());
+      final container = ProviderContainer(
+        overrides: [
+          appLocalStorageProvider.overrideWithValue(storage),
+          profileRepositoryProvider.overrideWithValue(repository),
+          sessionControllerProvider.overrideWith(
+            (ref) => SessionController(
+              authRepository: MockAuthRepository(),
+              sessionRepository: MockSessionRepository(),
+              localStorage: storage,
+              initialState: signedIn(),
+            ),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const MemoraApp(),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final router = container.read(appRouterProvider);
+      Future<void> go(String path) async {
+        router.go(path);
+        await tester.pumpAndSettle();
+      }
+
+      double ratio(Color foreground, Color background) =>
+          (background.computeLuminance() + 0.05) /
+          (foreground.computeLuminance() + 0.05);
+
+      Color profileText() =>
+          tester.widget<Text>(find.text('Privacy')).style!.color!;
+      Color inputText() => tester
+          .widget<EditableText>(find.byType(EditableText).first)
+          .style
+          .color!;
+      Color notificationLink() {
+        final context = tester.element(find.text('Clear quiet hours'));
+        return Theme.of(context).textButtonTheme.style!.foregroundColor!
+            .resolve({})!;
+      }
+
+      await go(AppRoutes.profile);
+      final standardProfile = ratio(profileText(), MemoraColors.surfaceOcean);
+      await go(AppRoutes.editProfile);
+      final standardInput = ratio(inputText(), MemoraColors.surfaceOcean);
+      await go(AppRoutes.profileNotifications);
+      expect(
+        ratio(notificationLink(), MemoraColors.surfaceSoft),
+        greaterThan(4.5),
+      );
+      await go(AppRoutes.profileAccessibility);
+      final contrast = find.widgetWithText(SwitchListTile, 'High contrast');
+      await tester.ensureVisible(contrast);
+      await tester.tap(contrast);
+      await tester.pumpAndSettle();
+      final switchTheme = Theme.of(tester.element(contrast)).switchTheme;
+      expect(
+        switchTheme.thumbColor!.resolve({WidgetState.selected}),
+        Colors.white,
+      );
+      expect(
+        switchTheme.trackColor!.resolve({WidgetState.selected}),
+        Colors.black,
+      );
+
+      await go(AppRoutes.profile);
+      expect(profileText(), Colors.black);
+      expect(
+        ratio(profileText(), MemoraColors.surfaceOcean),
+        greaterThan(standardProfile),
+      );
+      await go(AppRoutes.editProfile);
+      expect(inputText(), Colors.black);
+      expect(
+        ratio(inputText(), MemoraColors.surfaceOcean),
+        greaterThan(standardInput),
+      );
+      await go(AppRoutes.profileNotifications);
+      expect(notificationLink(), Colors.black);
     },
   );
 

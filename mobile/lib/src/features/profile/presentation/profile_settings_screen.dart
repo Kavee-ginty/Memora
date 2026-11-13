@@ -35,90 +35,107 @@ class ProfileSettingsScreen extends ConsumerWidget {
       ),
     );
     void leave() => context.go(AppRoutes.profile);
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          tooltip: 'Back to Profile',
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).maybePop(),
-        ),
+    final theme = Theme.of(context);
+    final linkStyle = MediaQuery.highContrastOf(context)
+        ? theme.textButtonTheme.style
+        : theme.textButtonTheme.style?.copyWith(
+            foregroundColor: WidgetStateProperty.resolveWith(
+              (states) => states.contains(WidgetState.disabled)
+                  ? null
+                  : const Color(0xFF0056A3),
+            ),
+          );
+    return Theme(
+      data: theme.copyWith(
+        textButtonTheme: TextButtonThemeData(style: linkStyle),
       ),
-      body: SafeArea(
-        top: false,
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final gutter = constraints.maxWidth < 360 ? 16.0 : 24.0;
-            return SingleChildScrollView(
-              padding: EdgeInsets.fromLTRB(gutter, 16, gutter, 32),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 560),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Focus(
-                        autofocus: true,
-                        child: Semantics(
-                          header: true,
-                          child: Text(
-                            title,
-                            style: Theme.of(context).textTheme.headlineSmall,
+      child: Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            tooltip: 'Back to Profile',
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => Navigator.of(context).maybePop(),
+          ),
+        ),
+        body: SafeArea(
+          top: false,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final gutter = constraints.maxWidth < 360 ? 16.0 : 24.0;
+              return SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(gutter, 16, gutter, 32),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 560),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Focus(
+                          autofocus: true,
+                          child: Semantics(
+                            header: true,
+                            child: Text(
+                              title,
+                              style: Theme.of(context).textTheme.headlineSmall,
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 16),
-                      if (state.cached)
-                        const _Status('Showing the last confirmed settings.'),
-                      if (state.phase == ProfilePhase.failed &&
-                          (state.section == null || state.section == section))
-                        _FailureNotice(state, onRetry: controller.retry),
-                      if (state.phase == ProfilePhase.conflict &&
-                          state.section == section)
-                        const _Status(
-                          'These settings changed elsewhere. Review the updated values before saving again.',
-                        ),
-                      if (state.phase == ProfilePhase.saving &&
-                          state.section == section)
-                        const _Status('Saving settings…'),
-                      if (state.phase == ProfilePhase.saved &&
-                          state.section == section)
-                        const _Status('Settings saved.'),
-                      if (state.cacheWriteFailed)
-                        const _Status(
-                          'Saved online. Settings could not be stored on this device.',
-                        ),
-                      if (confirmed != null)
-                        _SettingsForm(
-                          key: ValueKey(account),
-                          section: section,
-                          confirmed: confirmed,
-                          state: state,
-                        )
-                      else if (state.phase == ProfilePhase.loading)
-                        MemoraLoadingTimeoutView(
-                          skeleton: const Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              MemoraSkeleton(height: 56),
-                              SizedBox(height: 16),
-                              MemoraSkeleton(height: 56),
-                            ],
+                        const SizedBox(height: 16),
+                        if (state.cached)
+                          const _Status('Showing the last confirmed settings.'),
+                        if (confirmed == null &&
+                            state.phase == ProfilePhase.failed &&
+                            (state.section == null || state.section == section))
+                          _FailureNotice(state, onRetry: controller.retry),
+                        if (state.phase == ProfilePhase.conflict &&
+                            state.section == section)
+                          const _Status(
+                            'These settings changed elsewhere. Review the updated values before saving again.',
                           ),
-                          loadingMessage: 'Loading settings…',
-                          timeoutMessage: 'Settings are taking longer to load.',
-                          onLeave: leave,
-                        )
-                      else
-                        TextButton(
-                          onPressed: leave,
-                          child: const Text('Return to Profile'),
-                        ),
-                    ],
+                        if (state.phase == ProfilePhase.saving &&
+                            state.section == section)
+                          const _Status('Saving settings…'),
+                        if (state.phase == ProfilePhase.saved &&
+                            state.section == section)
+                          const _Status('Settings saved.'),
+                        if (state.cacheWriteFailed)
+                          const _Status(
+                            'Saved online. Settings could not be stored on this device.',
+                          ),
+                        if (confirmed != null)
+                          _SettingsForm(
+                            key: ValueKey(account),
+                            section: section,
+                            confirmed: confirmed,
+                            state: state,
+                          )
+                        else if (state.phase == ProfilePhase.loading)
+                          MemoraLoadingTimeoutView(
+                            skeleton: const Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                MemoraSkeleton(height: 56),
+                                SizedBox(height: 16),
+                                MemoraSkeleton(height: 56),
+                              ],
+                            ),
+                            loadingMessage: 'Loading settings…',
+                            timeoutMessage:
+                                'Settings are taking longer to load.',
+                            onLeave: leave,
+                          )
+                        else
+                          TextButton(
+                            onPressed: leave,
+                            child: const Text('Return to Profile'),
+                          ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
       ),
     );
@@ -140,9 +157,9 @@ class _Status extends StatelessWidget {
 }
 
 class _FailureNotice extends StatelessWidget {
-  const _FailureNotice(this.state, {required this.onRetry});
+  const _FailureNotice(this.state, {this.onRetry});
   final ProfileState state;
-  final VoidCallback onRetry;
+  final VoidCallback? onRetry;
 
   @override
   Widget build(BuildContext context) {
@@ -155,7 +172,7 @@ class _FailureNotice extends StatelessWidget {
               ? 'You may be offline. Check your connection and try again.'
               : failure?.message ?? 'Settings are unavailable.',
         ),
-        if (failure?.retryable == true)
+        if (failure?.retryable == true && onRetry != null)
           TextButton(
             onPressed: state.waitingToRetry ? null : onRetry,
             child: Text(
@@ -195,6 +212,7 @@ class _SettingsFormState extends ConsumerState<_SettingsForm> {
   bool _invalid = false;
   bool _discard = false;
   bool _dialogOpen = false;
+  bool _canRetrySave = false;
   VoidCallback? _restoreConflictDraft;
   int _formRevision = 0;
 
@@ -244,6 +262,7 @@ class _SettingsFormState extends ConsumerState<_SettingsForm> {
         : _notifications.timezone;
     _accessibility = widget.confirmed.preferences.fields.accessibility;
     _invalid = false;
+    _canRetrySave = false;
     _formRevision++;
   }
 
@@ -365,6 +384,7 @@ class _SettingsFormState extends ConsumerState<_SettingsForm> {
       _focusErrors();
       return;
     }
+    setState(() => _canRetrySave = true);
     await switch (_section) {
       SettingsSection.profile => _controller.saveProfile(_profileDraft),
       SettingsSection.notifications => _controller.saveNotifications(
@@ -375,6 +395,15 @@ class _SettingsFormState extends ConsumerState<_SettingsForm> {
       ),
     };
   }
+
+  void _editDraft(VoidCallback update) {
+    setState(() {
+      update();
+      _canRetrySave = false;
+    });
+  }
+
+  void _textEdited(String _) => _editDraft(() {});
 
   void _focusErrors() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -435,16 +464,27 @@ class _SettingsFormState extends ConsumerState<_SettingsForm> {
       },
       child: Form(
         key: _form,
-        onChanged: () => setState(() {}),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            if (widget.state.phase == ProfilePhase.failed &&
+                (widget.state.section == null ||
+                    widget.state.section == _section))
+              _FailureNotice(
+                widget.state,
+                onRetry:
+                    widget.state.section == null ||
+                        widget.state.reconciling ||
+                        _canRetrySave
+                    ? _controller.retry
+                    : null,
+              ),
             if (_restoreConflictDraft != null)
               TextButton(
                 onPressed: _locked
                     ? null
                     : () {
-                        setState(() {
+                        _editDraft(() {
                           _restoreConflictDraft!.call();
                           _restoreConflictDraft = null;
                           _formRevision++;
@@ -483,6 +523,7 @@ class _SettingsFormState extends ConsumerState<_SettingsForm> {
     MemoraTextField(
       label: 'Display name',
       controller: _name,
+      onChanged: _textEdited,
       enabled: !_locked,
       errorText: _serverError('display_name'),
       validator: (_) {
@@ -500,6 +541,7 @@ class _SettingsFormState extends ConsumerState<_SettingsForm> {
       label: 'Language and region',
       hintText: 'en-LK',
       controller: _locale,
+      onChanged: _textEdited,
       enabled: !_locked,
       errorText: _serverError('locale'),
       validator: (input) {
@@ -518,6 +560,7 @@ class _SettingsFormState extends ConsumerState<_SettingsForm> {
     label: 'Time zone',
     hintText: 'Asia/Colombo',
     controller: _timezone,
+    onChanged: _textEdited,
     enabled: !_locked,
     errorText: _serverError('timezone'),
     validator: (input) {
@@ -554,7 +597,7 @@ class _SettingsFormState extends ConsumerState<_SettingsForm> {
     LocalWindow? Function()? preferred,
   }) {
     final current = _notifications;
-    setState(() {
+    _editDraft(() {
       _notifications = (
         enabled: enabled ?? current.enabled,
         mission: mission ?? current.mission,
@@ -574,7 +617,9 @@ class _SettingsFormState extends ConsumerState<_SettingsForm> {
       'Notifications',
       _notifications.enabled,
       (value) => _changeNotifications(enabled: value),
-      subtitle: 'You can keep using Memora with notifications off.',
+      subtitle:
+          'You can keep using Memora with notifications off. '
+          'Manage device notification permission in your device settings.',
     ),
     _toggle(
       'Mission reminders',
@@ -704,7 +749,7 @@ class _SettingsFormState extends ConsumerState<_SettingsForm> {
     bool? contrast,
   }) {
     final current = _accessibility;
-    setState(() {
+    _editDraft(() {
       _accessibility = (
         reducedMotion: reduced ?? current.reducedMotion,
         soundEnabled: sound ?? current.soundEnabled,

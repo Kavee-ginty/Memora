@@ -45,11 +45,40 @@ class _MemoraAppContent extends ConsumerWidget {
     );
     final baseTheme = MemoraTheme.light();
     final contrastTheme = baseTheme.copyWith(
+      textTheme: baseTheme.textTheme.apply(
+        bodyColor: Colors.black,
+        displayColor: Colors.black,
+      ),
       colorScheme: baseTheme.colorScheme.copyWith(
         onSurface: Colors.black,
         onSurfaceVariant: Colors.black,
         outline: Colors.black,
         outlineVariant: Colors.black,
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: baseTheme.textButtonTheme.style?.copyWith(
+          foregroundColor: WidgetStateProperty.resolveWith(
+            (states) => states.contains(WidgetState.disabled)
+                ? Colors.black54
+                : Colors.black,
+          ),
+        ),
+      ),
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? Colors.white
+              : Colors.black,
+        ),
+        trackColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? Colors.black
+              : Colors.white,
+        ),
+        trackOutlineColor: const WidgetStatePropertyAll(Colors.black),
+      ),
+      appBarTheme: baseTheme.appBarTheme.copyWith(
+        foregroundColor: Colors.black,
       ),
     );
 
