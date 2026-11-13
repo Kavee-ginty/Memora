@@ -65,11 +65,11 @@ Windows verification used Flutter 3.47.5 and Dart 3.13.4.
 
 The previous Windows APK attempt at `89b9a94` failed because NDK `28.2.13676358` was unavailable. The [debug APK job for that commit](https://github.com/Kavee-ginty/Memora/actions/runs/43067639378/job/130686743342) passed. The Windows NDK was then installed from the checksum-verified Google archive.
 
-On the updated branch, `flutter build apk --debug --no-pub` reached `:app:mergeDebugNativeLibs` and failed when the Windows system drive ran out of space.
+On the updated branch, `flutter build apk --debug --no-pub` reached `:app:mergeDebugNativeLibs` and failed when the Windows system drive ran out of space. An x64-only synthetic fixture APK built after freeing temporary disk space. The [CI debug APK job for `977cd88`](https://github.com/Kavee-ginty/Memora/actions/runs/43426450877/job/131888918101), Flutter checks, and API contract checks passed. The [repository-wide secret scan](https://github.com/Kavee-ginty/Memora/actions/runs/43426450877/job/131888917871) flagged an unrelated T19 test commit (`62af858`) and blocked the aggregate CI gate.
 
 ## Device verification
 
-Android API 37 x86_64 test emulator `Medium_Phone_API_37.0` booted with TalkBack and Switch Access installed. Confirmed reduced motion and high contrast are applied in the app. Sound, haptics, and timer visibility persist for mission screens that consume those settings.
+Android API 37 x86_64 test emulator `Medium_Phone_API_37.0` booted with TalkBack and Switch Access installed. ADB installed the synthetic x64 APK and accepted its launch intent. This fixture used the production screens, controller and Android secure storage with synthetic sign-in and simulated repository responses. ADB went offline before interaction results could be collected, and a non-persistent reboot did not restore the connection. TalkBack announcements, Switch Access or physical keyboard traversal, 200% system font, reduced motion, high contrast, restart, offline save and rollback still need Android interaction evidence. Widget and integration results are recorded above. Sound, haptics, and timer visibility persist for mission screens that consume those settings.
 
 ## Open acceptance items
 
