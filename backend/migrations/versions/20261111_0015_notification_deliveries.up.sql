@@ -57,6 +57,14 @@ CREATE FUNCTION memora_protect_notification_delivery() RETURNS trigger
 LANGUAGE plpgsql AS $$
 BEGIN
   IF TG_OP = 'DELETE' THEN
+    -- The audited account-deletion purge (memora_delete_learner_data sets
+    -- the privacy_deletion flag) is the only permitted delete.
+    IF current_setting('memora.privacy_deletion', true) = 'on'
+       AND current_user NOT IN ('memora_api', 'memora_worker') THEN
+      -- Matches the 0013 forbid-mutation semantics: inside the SECURITY
+      -- DEFINER executor, current_user is the function owner.
+      RETURN OLD;
+    END IF;
     RAISE EXCEPTION 'notification_deliveries is append-only' USING ERRCODE = '55000';
   END IF;
   -- The foreign key's ON DELETE SET NULL action nulls device_id when the
@@ -201,3 +209,78 @@ GRANT EXECUTE ON FUNCTION memora_notifications_expire_stale_sending(timestamptz,
 -- access for cross-user maintenance; UPDATE is required for the two-phase
 -- completion under the owner context).
 GRANT SELECT, INSERT, UPDATE ON notification_deliveries TO memora_api;
+
+
+-- Account deletion (review finding 11 / retention decision): delivery rows
+-- carry the recipient and resource identifiers, so they are purged with the
+-- learner's data when the privacy deletion executor runs. The function is
+-- replaced with its 0013 body plus this one purge statement; grants are
+-- preserved by CREATE OR REPLACE.
+CREATE OR REPLACE FUNCTION memora_delete_learner_data(p_user_id uuid) RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+  caller_role text := current_setting('role', true);
+  scoped_user text := current_setting('memora.user_id', true);
+BEGIN
+  IF caller_role = 'memora_api' THEN
+    IF scoped_user IS NULL
+       OR scoped_user = ''
+       OR scoped_user::uuid <> p_user_id
+       OR NOT EXISTS (
+         SELECT 1 FROM privacy_requests
+         WHERE user_id = p_user_id
+           AND request_type = 'delete'
+           AND status = 'processing'
+       ) THEN
+      RAISE EXCEPTION 'privacy deletion user scope mismatch' USING ERRCODE = '42501';
+    END IF;
+  ELSIF caller_role = 'memora_worker' THEN
+    IF NOT EXISTS (
+      SELECT 1
+      FROM users u
+      LEFT JOIN privacy_requests pr
+        ON pr.user_id = u.id
+       AND pr.request_type = 'delete'
+       AND pr.status = 'completed'
+      WHERE u.id = p_user_id
+        AND (u.status = 'deleted' OR pr.id IS NOT NULL)
+    ) THEN
+      RAISE EXCEPTION 'privacy reconciliation target is not deleted' USING ERRCODE = '42501';
+    END IF;
+  ELSE
+    RAISE EXCEPTION 'privacy deletion executor is not available to role %', caller_role
+      USING ERRCODE = '42501';
+  END IF;
+
+  PERFORM set_config('memora.privacy_deletion', 'on', true);
+
+  DELETE FROM question_reports WHERE user_id = p_user_id;
+  DELETE FROM grading_results
+    WHERE attempt_id IN (SELECT id FROM attempts WHERE user_id = p_user_id);
+  DELETE FROM attempts WHERE user_id = p_user_id;
+  DELETE FROM mission_items WHERE user_id = p_user_id;
+  DELETE FROM streak_days WHERE user_id = p_user_id;
+  DELETE FROM missions WHERE user_id = p_user_id;
+  DELETE FROM memory_decisions WHERE user_id = p_user_id;
+  DELETE FROM memory_events WHERE user_id = p_user_id;
+  DELETE FROM learner_concept_states WHERE user_id = p_user_id;
+  DELETE FROM reward_grants WHERE user_id = p_user_id;
+  DELETE FROM xp_ledger WHERE user_id = p_user_id;
+  DELETE FROM reef_projections WHERE user_id = p_user_id;
+  DELETE FROM verification_decisions WHERE user_id = p_user_id;
+  DELETE FROM verification_requests WHERE user_id = p_user_id;
+  DELETE FROM knowledge_commits WHERE user_id = p_user_id;
+  DELETE FROM private_knowledge_items WHERE user_id = p_user_id;
+  DELETE FROM extraction_candidates WHERE user_id = p_user_id;
+  DELETE FROM source_uploads WHERE user_id = p_user_id;
+  DELETE FROM learning_updates WHERE user_id = p_user_id;
+  DELETE FROM device_registrations WHERE user_id = p_user_id;
+  DELETE FROM notification_preferences WHERE user_id = p_user_id;
+  DELETE FROM user_profiles WHERE user_id = p_user_id;
+  DELETE FROM idempotency_records WHERE user_id = p_user_id;
+  DELETE FROM notification_deliveries WHERE user_id = p_user_id;
+END
+$$;

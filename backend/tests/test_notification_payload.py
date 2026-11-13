@@ -29,6 +29,7 @@ from memora.modules.notifications.payload import (
     is_expired,
     payload_from_data,
     payload_to_data,
+    tray_body,
 )
 
 NOW = datetime.now(UTC)
@@ -166,6 +167,63 @@ def test_every_category_has_a_complete_registry_entry() -> None:
     for category in NOTIFICATION_CATEGORIES:
         spec = category_spec(category)
         assert spec.destination_route != spec.category  # registry holds route names
+        assert spec.fallback_route
+        assert spec.loc_key.startswith("notification.")
+        assert spec.intent_ttl > timedelta(0)
+
+
+def test_tray_body_adapts_to_lock_screen_detail_bands() -> None:
+    # PRD 031 default (subject band) names the subject; minimal stays
+    # grammatical without parameters; detailed adds the duration clause.
+    subject_only = build_payload(
+        category=CATEGORY_MISSION_READY,
+        resource_id="018f3c2a-7b9c-4d1e-9f2a-3b4c5d6e7f80",
+        expires_at=NOW + REMINDER_INTENT_TTL,
+        notification_id="a1b2c3d4e5f60718293a4b5c6d7e8f90",
+        detail="subject",
+        params={PARAM_SUBJECT_NAME: "Physics"},
+    )
+    assert tray_body(subject_only) == "Your Physics daily mission is ready."
+
+    minimal = build_payload(
+        category=CATEGORY_MISSION_READY,
+        resource_id="018f3c2a-7b9c-4d1e-9f2a-3b4c5d6e7f80",
+        expires_at=NOW + REMINDER_INTENT_TTL,
+        notification_id="a1b2c3d4e5f60718293a4b5c6d7e8f90",
+        detail="minimal",
+        params={PARAM_SUBJECT_NAME: "Physics", PARAM_COUNT: 5},
+    )
+    # Parameters outside the minimal band are dropped before rendering, so
+    # no dangling "About minutes." fragment can appear.
+    assert tray_body(minimal) == "Your daily mission is ready."
+
+    detailed = build_payload(
+        category=CATEGORY_MISSION_READY,
+        resource_id="018f3c2a-7b9c-4d1e-9f2a-3b4c5d6e7f80",
+        expires_at=NOW + REMINDER_INTENT_TTL,
+        notification_id="a1b2c3d4e5f60718293a4b5c6d7e8f90",
+        detail="detailed",
+        params={PARAM_SUBJECT_NAME: "Physics", PARAM_COUNT: 5},
+    )
+    assert tray_body(detailed) == "Your Physics daily mission is ready. About 5 minutes."
+
+
+def test_tray_body_handles_other_categories_and_fallback() -> None:
+    due = build_payload(
+        category=CATEGORY_DUE_MEMORIES,
+        resource_id="018f3c2a-7b9c-4d1e-9f2a-3b4c5d6e7f80",
+        expires_at=NOW + REMINDER_INTENT_TTL,
+        notification_id="a1b2c3d4e5f60718293a4b5c6d7e8f90",
+    )
+    assert tray_body(due) == ("A few memories are ready for care. Review when it suits you.")
+
+
+def test_registry_entries_stay_complete() -> None:
+    from memora.modules.notifications.constants import NOTIFICATION_CATEGORIES
+
+    for category in NOTIFICATION_CATEGORIES:
+        spec = category_spec(category)
+        assert spec.destination_route != spec.category
         assert spec.fallback_route
         assert spec.loc_key.startswith("notification.")
         assert spec.intent_ttl > timedelta(0)

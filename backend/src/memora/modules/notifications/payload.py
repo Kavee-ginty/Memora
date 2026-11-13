@@ -268,7 +268,6 @@ def payload_from_data(data: Mapping[str, str]) -> NotificationPayload:
 # UI/UX §9.21 templates so background/terminated taps show the same calm copy
 # the foreground banner renders. Only safe band parameters interpolate.
 _TRAY_BODY_TEMPLATES: Final[dict[str, str]] = {
-    "notification.mission_ready": "Your daily mission is ready. About {count} minutes.",
     "notification.due_memories": "A few memories are ready for care. Review when it suits you.",
     "notification.verification_required": (
         "Your material needs a quick check before it joins your learning path."
@@ -282,15 +281,27 @@ _TRAY_FALLBACK = "You have a new update in Memora."
 
 
 def tray_body(payload: NotificationPayload) -> str:
-    """Render the visible FCM notification body for one payload."""
+    """Render the visible FCM notification body for one payload.
 
+    Sentence parts adapt to the safe detail band so every band stays
+    grammatical (PRD 031: the subject names the curriculum subject by
+    default; minimal stays correct without any parameters). Mirrors the
+    mobile copy renderer in ``notification_copy.dart``.
+    """
+
+    if payload.loc_key == "notification.mission_ready":
+        subject = payload.params.get(PARAM_SUBJECT_NAME)
+        base = (
+            f"Your {subject} daily mission is ready."
+            if subject
+            else "Your daily mission is ready."
+        )
+        count = payload.params.get(PARAM_COUNT)
+        if count is not None:
+            return f"{base} About {count} minutes."
+        return base
     template = _TRAY_BODY_TEMPLATES.get(payload.loc_key, _TRAY_FALLBACK)
-    params = dict(payload.params)
-    if PARAM_SUBJECT_NAME in params:
-        template = template.replace("{subject_name}", str(params[PARAM_SUBJECT_NAME]))
-    if PARAM_COUNT in params:
-        template = template.replace("{count}", str(params[PARAM_COUNT]))
-    return template.replace("{subject_name}", "").replace("{count}", "").strip()
+    return template
 
 
 def is_expired(payload: NotificationPayload, now: datetime) -> bool:

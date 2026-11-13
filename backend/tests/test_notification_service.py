@@ -1072,3 +1072,52 @@ def test_worker_role_uses_functions_but_not_direct_dml(database: Engine) -> None
 
         with pytest.raises(ProgrammingError):
             connection.execute(text("SELECT count(*) FROM notification_deliveries"))
+
+
+def test_account_deletion_purges_delivery_rows(database: Engine) -> None:
+    """Full account deletion removes delivery evidence (review finding 11).
+
+    The deletion executor purges the ledger alongside the learner data; the
+    retention decision (purge at deletion execution) is recorded in the
+    evidence document.
+    """
+
+    user_id = create_user(database)
+    create_device(database, user_id)
+    set_preferences(database, user_id)
+    run_dispatch(database, RecordingProvider(), user_id, reminder_payload(), "due:day0")
+
+    with database.begin() as connection:
+        before = connection.execute(
+            text("SELECT count(*) FROM notification_deliveries WHERE user_id = :u"),
+            {"u": user_id},
+        ).scalar_one()
+    assert before == 1
+
+    # The deletion flow soft-deletes the account first; the executor then
+    # purges learner data and delivery evidence.
+    with database.begin() as connection:
+        connection.execute(
+            text("UPDATE users SET status = 'deleted', deleted_at = now() WHERE id = :u"),
+            {"u": user_id},
+        )
+        connection.execute(text("SET LOCAL ROLE memora_worker"))
+        connection.execute(
+            text("SELECT memora_delete_learner_data(:user_id)"), {"user_id": user_id}
+        )
+
+    with database.begin() as connection:
+        deliveries = connection.execute(
+            text("SELECT count(*) FROM notification_deliveries WHERE user_id = :u"),
+            {"u": user_id},
+        ).scalar_one()
+        devices = connection.execute(
+            text("SELECT count(*) FROM device_registrations WHERE user_id = :u"),
+            {"u": user_id},
+        ).scalar_one()
+        user_status = connection.execute(
+            text("SELECT status FROM users WHERE id = :u"), {"u": user_id}
+        ).scalar_one()
+    assert deliveries == 0
+    assert devices == 0
+    assert user_status == "deleted"
