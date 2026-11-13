@@ -292,9 +292,7 @@ def tray_body(payload: NotificationPayload) -> str:
     if payload.loc_key == "notification.mission_ready":
         subject = payload.params.get(PARAM_SUBJECT_NAME)
         base = (
-            f"Your {subject} daily mission is ready."
-            if subject
-            else "Your daily mission is ready."
+            f"Your {subject} daily mission is ready." if subject else "Your daily mission is ready."
         )
         count = payload.params.get(PARAM_COUNT)
         if count is not None:
