@@ -182,6 +182,13 @@ class ProfileEntryScreen extends ConsumerWidget {
               ),
             ),
 
+            ListTile(
+              title: const Text('Support'),
+              subtitle: const Text('Get help with Memora'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.go(AppRoutes.profileSupport),
+            ),
+
             const SizedBox(height: MemoraSpacing.space32),
 
             // Sign out button

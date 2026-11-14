@@ -52,7 +52,7 @@ Widget profileHarness(
 
 void main() {
   testWidgets(
-    'Profile shows the authorized subject, settings, and Privacy entry',
+    'Profile shows the authorized subject, settings, Privacy, and Support',
     (tester) async {
       final semantics = tester.ensureSemantics();
       await tester.pumpWidget(
@@ -64,6 +64,7 @@ void main() {
       expect(find.text('Edit profile'), findsOneWidget);
       expect(find.text('Notifications'), findsOneWidget);
       expect(find.text('Privacy'), findsOneWidget);
+      expect(find.text('Support'), findsOneWidget);
       expect(find.textContaining('Streak:'), findsNothing);
       expect(find.textContaining('XP'), findsNothing);
       final headings = find.byWidgetPredicate(
@@ -75,6 +76,41 @@ void main() {
       semantics.dispose();
     },
   );
+
+  testWidgets('Support opens an honest in-app fallback', (tester) async {
+    final repository = FakeProfileRepository();
+    final storage = AppLocalStorage(InMemorySecureKeyStore());
+    final container = ProviderContainer(
+      overrides: [
+        appLocalStorageProvider.overrideWithValue(storage),
+        profileRepositoryProvider.overrideWithValue(repository),
+        sessionControllerProvider.overrideWith(
+          (ref) => SessionController(
+            authRepository: MockAuthRepository(),
+            sessionRepository: MockSessionRepository(),
+            localStorage: storage,
+            initialState: signedIn(),
+          ),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    await tester.pumpWidget(
+      UncontrolledProviderScope(container: container, child: const MemoraApp()),
+    );
+    await tester.pumpAndSettle();
+    container.read(appRouterProvider).go(AppRoutes.profile);
+    await tester.pumpAndSettle();
+
+    final support = find.text('Support');
+    await tester.ensureVisible(support);
+    await tester.tap(support);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Support'), findsOneWidget);
+    expect(find.textContaining('support contact details'), findsOneWidget);
+    expect(find.textContaining('request ID'), findsOneWidget);
+  });
 
   testWidgets(
     'high contrast strengthens rendered Profile and settings colors',

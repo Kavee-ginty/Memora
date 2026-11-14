@@ -343,8 +343,9 @@ in `docs/evidence/T24_Content_Evidence.md`.
 
 T01-T09, T11-T13, T15, T17 and T20-T21 are merged and Done. T10 and T24 are in
 Review. T15 completed through pull request #57, merged into `develop` at
-`c4966aa`; all required CI checks passed. T14, T16, T18, T19, T22, T23 and T25
-are Ready; later tasks remain blocked until all listed dependencies are Done.
+`c4966aa`; all required CI checks passed. T14, T16, T19, T22, T23 and T25 are
+Ready; T18 is In Progress; later tasks remain blocked until all listed dependencies
+are Done.
 
 T21 completed through pull request #49, merged into `develop` at `d387506`. All
 required CI checks passed, and the real T20 PostgreSQL/durable-worker privacy

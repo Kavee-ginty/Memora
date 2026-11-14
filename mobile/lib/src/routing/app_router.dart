@@ -395,6 +395,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                       SettingsSection.accessibility,
                     ),
                   ),
+                  GoRoute(
+                    path: 'support',
+                    pageBuilder: (context, state) => _buildPage(
+                      context,
+                      state,
+                      const FeatureUnavailableScreen(
+                        featureName: 'Support',
+                        message:
+                            'Memora support contact details are being finalized. '
+                            'Keep any request ID shown with an error so support can '
+                            'trace it when the pilot support channel opens.',
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ],
