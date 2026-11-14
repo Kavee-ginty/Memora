@@ -45,19 +45,19 @@ If two sources appear inconsistent, stop implementation and resolve the conflict
 | T10 | Learning ingestion mobile | **Review** | Dasun | 6 | T07, T09 | `task/T10-ingestion-mobile` | Mobile feature |
 | T11 | Memory engine v1 | **Done** | Dasun | 7 | T08 | `task/T11-memory-engine` | Learning engine |
 | T12 | Question bank and grading backend | **Done** | Neleesha | 7 | T08, T05 | `task/T12-questions-grading` | Backend learning |
-| T13 | Mission assembly and completion backend | **In Progress** | Ginodh | 7 | T06, T11, T12 | `task/T13-mission-backend` | Backend learning |
-| T14 | Mission mobile experience | Blocked | - | 7 | T07, T13 | `task/T14-mission-mobile` | Mobile feature |
-| T15 | Progress XP streak and reef backend | Blocked | - | 5 | T11, T13 | `task/T15-progress-backend` | Backend engagement |
-| T16 | Progress mobile experience | Blocked | - | 5 | T07, T15 | `task/T16-progress-mobile` | Mobile feature |
+| T13 | Mission assembly and completion backend | **Done** | Ginodh | 7 | T06, T11, T12 | `task/T13-mission-backend` | Backend learning |
+| T14 | Mission mobile experience | **Ready** | - | 7 | T07, T13 | `task/T14-mission-mobile` | Mobile feature |
+| T15 | Progress XP streak and reef backend | **Done** | Ginodh | 5 | T11, T13 | `task/T15-progress-backend` | Backend engagement |
+| T16 | Progress mobile experience | **Ready** | - | 5 | T07, T15 | `task/T16-progress-mobile` | Mobile feature |
 | T17 | Profile preferences and notifications backend | **Done** | Harsha | 4 | T06 | `task/T17-profile-backend` | Backend account |
 | T18 | Profile and settings mobile | **In Progress** | Codex | 4 | T07, T17 | `task/T18-profile-mobile` | Mobile feature |
 | T19 | Push notifications and deep links | **Ready** | - | 4 | T07, T17 | `task/T19-push-deep-links` | Mobile and backend |
 | T20 | Privacy export and deletion backend | **Done** | Dima | 5 | T06, T04 | `task/T20-privacy-backend` | Backend privacy |
 | T21 | Privacy mobile experience | **Done** | Neleesha Peiris | 3 | T07, T20 | `task/T21-privacy-mobile` | Mobile feature |
-| T22 | Offline sync and idempotency hardening | Blocked | - | 6 | T09, T13, T07 | `task/T22-offline-idempotency` | Cross-platform |
-| T23 | Observability and security hardening | Blocked | - | 5 | T02, T09, T13, T17, T20 | `task/T23-security-observability` | Platform |
+| T22 | Offline sync and idempotency hardening | **Ready** | - | 6 | T09, T13, T07 | `task/T22-offline-idempotency` | Cross-platform |
+| T23 | Observability and security hardening | **Ready** | - | 5 | T02, T09, T13, T17, T20 | `task/T23-security-observability` | Platform |
 | T24 | Verified Physics pilot content | **Review** | Neleesha | 6 | T08, T12 | `task/T24-physics-content` | Academic content |
-| T25 | API contract and authorization tests | Blocked | - | 5 | T09, T13, T15, T17, T20 | `task/T25-api-auth-tests` | QA and backend |
+| T25 | API contract and authorization tests | **Ready** | - | 5 | T09, T13, T15, T17, T20 | `task/T25-api-auth-tests` | QA and backend |
 | T26 | Cross-feature end-to-end integration | Blocked | - | 6 | T10, T14, T16, T18, T19, T21, T22, T25 | `task/T26-e2e-integration` | Integration |
 | T27 | Accessibility and visual QA | Blocked | - | 5 | T10, T14, T16, T18, T19, T21 | `task/T27-accessibility-visual-qa` | QA and mobile |
 | T28 | Load security and failure testing | Blocked | - | 5 | T23, T26 | `task/T28-load-security-tests` | QA and platform |
@@ -341,10 +341,10 @@ in `docs/evidence/T24_Content_Evidence.md`.
 
 ## 7 Current next action
 
-T01-T09, T11-T12, T17 and T20-T21 are merged and Done. T10 and T24 are in
-Review; T13 is In Progress. T18 and T19 are Ready. T14, T15, T22 and T23 remain
-Blocked until T13 is Done; later tasks remain blocked until all listed
-dependencies are Done.
+T01-T09, T11-T13, T15, T17 and T20-T21 are merged and Done. T10 and T24 are in
+Review. T15 completed through pull request #57, merged into `develop` at
+`c4966aa`; all required CI checks passed. T14, T16, T18, T19, T22, T23 and T25
+are Ready; later tasks remain blocked until all listed dependencies are Done.
 
 T21 completed through pull request #49, merged into `develop` at `d387506`. All
 required CI checks passed, and the real T20 PostgreSQL/durable-worker privacy

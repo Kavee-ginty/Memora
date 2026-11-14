@@ -26,6 +26,11 @@ ALTER TABLE deletion_proofs
   DROP CONSTRAINT deletion_proofs_target_check,
   DROP CONSTRAINT deletion_proofs_source_upload_id_fkey;
 
+-- Target-only reconciliation proofs did not exist before this revision and
+-- cannot satisfy the restored exclusive-source constraint.
+DELETE FROM deletion_proofs
+WHERE privacy_request_id IS NULL AND source_upload_id IS NULL;
+
 ALTER TABLE deletion_proofs
   ADD CONSTRAINT deletion_proofs_source_upload_id_fkey
     FOREIGN KEY (source_upload_id) REFERENCES source_uploads(id),

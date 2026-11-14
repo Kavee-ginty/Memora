@@ -256,7 +256,7 @@ A capability enters the MVP only when it is required to complete, trust, measure
 | PRD 023 | Home presents Today's Mission as the dominant action with due memories, estimated duration and reward. | The student can begin in one action and is not sent into an endless activity feed. |
 | PRD 024 | The Progress screen shows one continuous seabed with one Physics reef in the MVP and room for future subject reefs. | The world does not imply separate disconnected maps for each subject. |
 | PRD 025 | Reef health is derived from current recall, overdue work, prerequisite risk and recent evidence. | The displayed state can be recomputed from the recorded product state. |
-| PRD 026 | Thriving, Healthy, Needs Care, Stressed and Dormant states are distinguishable without colour alone. | State variants differ through activity, density, lighting and clarity and pass accessibility review. |
+| PRD 026 | New, Thriving, Healthy, Needs Care and Dormant states are distinguishable without colour alone. | State variants differ through activity, density, lighting and clarity and pass accessibility review; an untested reef is neutral New. |
 | PRD 027 | Incorrect answers highlight weak areas and create repair work without damaging the whole reef immediately. | A single mistake cannot move the whole subject directly to a punitive state. |
 | PRD 028 | XP rewards meaningful scheduled learning and is applied once per eligible event. | Opening the app or repeating an upload cannot farm XP. |
 | PRD 029 | Earned decorations and Mora cosmetics are permanent and provide no academic advantage. | Declining retention cannot remove an owned reward or change scheduling priority. |

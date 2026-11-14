@@ -443,6 +443,18 @@ A reported question or grading decision enters a review state and is excluded fr
 | Reef condition | Memory projection | Rebuildable from recall, overdue burden, prerequisite risk and recent evidence |
 | Visual variant | Condition plus approved design tokens | State differs by structure, lighting, clarity and activity as well as colour |
 
+The initial versioned policies are `xp-v1`, `streak-v1` and `reef-v1`. `xp-v1`
+awards 6 XP per protected or repaired memory, 10 XP for completing a mission
+with at least one such outcome, and 6 additional XP for a comeback mission.
+Normal and comeback awards are capped at 46 and 52 XP respectively; an
+all-skipped or unresolved mission awards zero. `streak-v1` anchors the day to
+the persisted mission date and timezone, permits one immediately preceding
+grace day in a rolling seven-date window, and never rewrites history after a
+timezone change. `reef-v1` uses a deterministic weighted projection: 50 percent
+retrievability, 25 percent non-due share, 15 percent inverse prerequisite risk
+and 10 percent recent eligible evidence. Policy changes require a new version
+and calibration fixtures rather than changing historical results.
+
 ## 14 Identity authorization and security
 
 ### 14.1 Identity

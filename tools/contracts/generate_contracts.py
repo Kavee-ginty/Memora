@@ -25,6 +25,7 @@ IGNORED_COMPARE_DIRS = frozenset({".dart_tool", ".git", ".packages", ".pub", "bu
 NORMALIZED_MARKDOWN_FILES = frozenset(
     {
         "doc/AccessibilityPreferences.md",
+        "doc/MissionCompletionResult.md",
         "doc/ProfileApi.md",
         "doc/ProfilePreferencesResponse.md",
         "doc/ProfilePreferencesUpdateRequest.md",

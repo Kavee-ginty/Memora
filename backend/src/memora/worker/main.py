@@ -19,7 +19,9 @@ from sqlalchemy import Engine, text
 
 from memora.core.config import get_settings
 from memora.db.runtime import database_engine
+from memora.modules.engagement.constants import ENGAGEMENT_JOB_TYPE
 from memora.modules.privacy.repository import PrivacyRepository
+from memora.worker.engagement import enqueue_engagement_backlog, handle_engagement_job
 from memora.worker.ingestion import build_worker
 from memora.worker.memory import (
     JOB_TYPE_MEMORY_PROCESS_EVENT,
@@ -46,6 +48,7 @@ logger = logging.getLogger(__name__)
 
 ALL_JOB_TYPES: tuple[str, ...] = (
     JOB_TYPE_MEMORY_PROCESS_EVENT,
+    ENGAGEMENT_JOB_TYPE,
     "privacy.export",
     "privacy.deletion",
 )
@@ -129,6 +132,8 @@ def process_next_job(
     try:
         if job_type == JOB_TYPE_MEMORY_PROCESS_EVENT:
             handle_memory_job(engine, job, now=now)
+        elif job_type == ENGAGEMENT_JOB_TYPE:
+            handle_engagement_job(engine, job, now=now)
         elif job_type == "privacy.export":
             request_id = UUID(str(payload["request_id"]))
             user_id = UUID(str(payload["user_id"]))
@@ -218,6 +223,7 @@ def run_worker(
                 connection.execute(text(f"SET LOCAL ROLE {WORKER_ROLE}"))
                 recovered = recover_expired_leases(connection, now=now)
                 enqueued = enqueue_outbox_backlog(connection, now=now)
+                engagement_enqueued = enqueue_engagement_backlog(connection, now=now)
                 from memora.modules.privacy.repository import (
                     reconcile_expired_export_archives,
                     reconcile_privacy_deletions,
@@ -225,12 +231,20 @@ def run_worker(
 
                 privacy_reconciled = reconcile_privacy_deletions(connection, now=now)
                 exports_expired = reconcile_expired_export_archives(connection, now=now)
-            if recovered or enqueued or privacy_reconciled or exports_expired:
+            if (
+                recovered
+                or enqueued
+                or engagement_enqueued
+                or privacy_reconciled
+                or exports_expired
+            ):
                 logger.info(
-                    "Worker reconcile: recovered=%s enqueued=%s privacy_reconciled=%s "
+                    "Worker reconcile: recovered=%s enqueued=%s "
+                    "engagement_enqueued=%s privacy_reconciled=%s "
                     "exports_expired=%s",
                     recovered,
                     enqueued,
+                    engagement_enqueued,
                     privacy_reconciled,
                     exports_expired,
                 )

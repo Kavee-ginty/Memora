@@ -54,6 +54,10 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(FirstMissionSummary.serializer)
       ..add(HealthResponse.serializer)
       ..add(HealthStatus.serializer)
+      ..add(HomeMission.serializer)
+      ..add(HomeMissionStatusEnum.serializer)
+      ..add(HomeResponse.serializer)
+      ..add(HomeResponseStateEnum.serializer)
       ..add(IdempotencyHeaders.serializer)
       ..add(InputType.serializer)
       ..add(KnowledgeCommitResponse.serializer)
@@ -76,6 +80,11 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(MissionManifestItemMissionTypeEnum.serializer)
       ..add(MissionManifestItemQuestionTypeEnum.serializer)
       ..add(MissionManifestItemStatusEnum.serializer)
+      ..add(MissionReefResult.serializer)
+      ..add(MissionReefResultConditionEnum.serializer)
+      ..add(MissionRewardGrant.serializer)
+      ..add(MissionStreakResult.serializer)
+      ..add(MissionStreakResultQualificationEnum.serializer)
       ..add(MissionSummary.serializer)
       ..add(MissionSummaryStatusEnum.serializer)
       ..add(MultipleChoiceAnswer.serializer)
@@ -100,6 +109,7 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(ProfileResponse.serializer)
       ..add(ProfileSummary.serializer)
       ..add(ProfileUpdateRequest.serializer)
+      ..add(ProgressStatisticsResponse.serializer)
       ..add(PublicQuestion.serializer)
       ..add(PublicQuestionOption.serializer)
       ..add(PublicQuestionQuestionTypeEnum.serializer)
@@ -115,14 +125,27 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(QuestionReportSummaryEvidenceStateEnum.serializer)
       ..add(QuestionReportSummaryReportTypeEnum.serializer)
       ..add(QuestionReportSummaryStatusEnum.serializer)
+      ..add(ReefDetail.serializer)
+      ..add(ReefDetailConditionEnum.serializer)
+      ..add(ReefSummary.serializer)
+      ..add(ReefSummaryConditionEnum.serializer)
       ..add(RequestHeaders.serializer)
       ..add(RequestHeadersXPlatformEnum.serializer)
       ..add(RetryLearningUpdateRequest.serializer)
       ..add(RetryLearningUpdateRequestStageEnum.serializer)
+      ..add(RewardGrant.serializer)
+      ..add(RewardGrantPermittedActionsEnum.serializer)
+      ..add(RewardGrantPlacementStateEnum.serializer)
+      ..add(RewardGrantRewardTypeEnum.serializer)
+      ..add(RewardInventoryResponse.serializer)
+      ..add(RewardPlacementRequest.serializer)
       ..add(SchedulingExplanation.serializer)
       ..add(SchedulingExplanationReasonCodesEnum.serializer)
       ..add(SchedulingExplanationTemplateKeyEnum.serializer)
       ..add(SchedulingExplanationTriggerEventTypeEnum.serializer)
+      ..add(SeabedReef.serializer)
+      ..add(SeabedReefConditionEnum.serializer)
+      ..add(SeabedResponse.serializer)
       ..add(SessionBootstrapResponse.serializer)
       ..add(SessionRevocationScope.serializer)
       ..add(SessionRevokeRequest.serializer)
@@ -146,6 +169,7 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(VerificationDecision.serializer)
       ..add(VerificationDecisionResult.serializer)
       ..add(VerificationDecisionValue.serializer)
+      ..add(XpSeriesPoint.serializer)
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(CandidateResponse)]),
           () => ListBuilder<CandidateResponse>())
@@ -203,9 +227,22 @@ Serializers _$serializers = (Serializers().toBuilder()
               BuiltList, const [const FullType(MissionManifestItem)]),
           () => ListBuilder<MissionManifestItem>())
       ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(MissionRewardGrant)]),
+          () => ListBuilder<MissionRewardGrant>())
+      ..addBuilderFactory(
           const FullType(
               BuiltList, const [const FullType(QuestionReportSummary)]),
           () => ListBuilder<QuestionReportSummary>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(RewardGrant)]),
+          () => ListBuilder<RewardGrant>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(RewardGrant)]),
+          () => ListBuilder<RewardGrant>())
+      ..addBuilderFactory(
+          const FullType(BuiltList,
+              const [const FullType(RewardGrantPermittedActionsEnum)]),
+          () => ListBuilder<RewardGrantPermittedActionsEnum>())
       ..addBuilderFactory(
           const FullType(
               BuiltList, const [const FullType(SchedulingExplanation)]),
@@ -214,6 +251,9 @@ Serializers _$serializers = (Serializers().toBuilder()
           const FullType(BuiltList,
               const [const FullType(SchedulingExplanationReasonCodesEnum)]),
           () => ListBuilder<SchedulingExplanationReasonCodesEnum>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(SeabedReef)]),
+          () => ListBuilder<SeabedReef>())
       ..addBuilderFactory(
           const FullType(
               BuiltList, const [const FullType(SourceUploadSummary)]),
@@ -244,6 +284,9 @@ Serializers _$serializers = (Serializers().toBuilder()
           const FullType(
               BuiltList, const [const FullType(VerificationDecisionResult)]),
           () => ListBuilder<VerificationDecisionResult>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(XpSeriesPoint)]),
+          () => ListBuilder<XpSeriesPoint>())
       ..addBuilderFactory(
           const FullType(
               BuiltMap, const [const FullType(String), const FullType(String)]),

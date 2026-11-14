@@ -32,8 +32,23 @@ void main() {
       // TODO
     });
 
+    // Optional<MissionReefResult?> reefAfter
+    test('to test the property `reefAfter`', () async {
+      // TODO
+    });
+
+    // Optional<MissionReefResult?> reefBefore
+    test('to test the property `reefBefore`', () async {
+      // TODO
+    });
+
     // int repairedCount
     test('to test the property `repairedCount`', () async {
+      // TODO
+    });
+
+    // BuiltList<MissionRewardGrant> rewardGrants
+    test('to test the property `rewardGrants`', () async {
       // TODO
     });
 
@@ -44,6 +59,21 @@ void main() {
 
     // String status
     test('to test the property `status`', () async {
+      // TODO
+    });
+
+    // Optional<MissionStreakResult?> streak
+    test('to test the property `streak`', () async {
+      // TODO
+    });
+
+    // Optional<int?> xpBalance
+    test('to test the property `xpBalance`', () async {
+      // TODO
+    });
+
+    // Optional<int?> xpDelta
+    test('to test the property `xpDelta`', () async {
       // TODO
     });
 

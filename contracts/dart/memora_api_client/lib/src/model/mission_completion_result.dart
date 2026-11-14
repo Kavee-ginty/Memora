@@ -3,9 +3,13 @@
 //
 
 // ignore_for_file: unused_element
+import 'package:memora_api_client/src/model/mission_reef_result.dart';
 import 'package:built_collection/built_collection.dart';
+import 'package:memora_api_client/src/model/mission_streak_result.dart';
+import 'package:memora_api_client/src/model/mission_reward_grant.dart';
 import 'package:built_value/built_value.dart';
 import 'package:built_value/serializer.dart';
+import 'package:memora_api_client/src/optional.dart';
 
 part 'mission_completion_result.g.dart';
 
@@ -17,9 +21,15 @@ part 'mission_completion_result.g.dart';
 /// * [missionId]
 /// * [nextSuggestedAction]
 /// * [protectedCount]
+/// * [reefAfter]
+/// * [reefBefore]
 /// * [repairedCount]
+/// * [rewardGrants]
 /// * [skippedCount]
 /// * [status]
+/// * [streak]
+/// * [xpBalance]
+/// * [xpDelta]
 @BuiltValue()
 abstract class MissionCompletionResult
     implements Built<MissionCompletionResult, MissionCompletionResultBuilder> {
@@ -28,7 +38,7 @@ abstract class MissionCompletionResult
 
   @BuiltValueField(wireName: r'engagement_status')
   MissionCompletionResultEngagementStatusEnum get engagementStatus;
-  // enum engagementStatusEnum {  pending,  };
+  // enum engagementStatusEnum {  pending,  applied,  };
 
   @BuiltValueField(wireName: r'mission_id')
   String get missionId;
@@ -40,8 +50,17 @@ abstract class MissionCompletionResult
   @BuiltValueField(wireName: r'protected_count')
   int get protectedCount;
 
+  @BuiltValueField(wireName: r'reef_after')
+  Optional<MissionReefResult?> get reefAfter;
+
+  @BuiltValueField(wireName: r'reef_before')
+  Optional<MissionReefResult?> get reefBefore;
+
   @BuiltValueField(wireName: r'repaired_count')
   int get repairedCount;
+
+  @BuiltValueField(wireName: r'reward_grants')
+  BuiltList<MissionRewardGrant> get rewardGrants;
 
   @BuiltValueField(wireName: r'skipped_count')
   int get skippedCount;
@@ -50,6 +69,15 @@ abstract class MissionCompletionResult
   MissionCompletionResultStatusEnum get status;
   // enum statusEnum {  completed,  };
 
+  @BuiltValueField(wireName: r'streak')
+  Optional<MissionStreakResult?> get streak;
+
+  @BuiltValueField(wireName: r'xp_balance')
+  Optional<int?> get xpBalance;
+
+  @BuiltValueField(wireName: r'xp_delta')
+  Optional<int?> get xpDelta;
+
   MissionCompletionResult._();
 
   factory MissionCompletionResult(
@@ -57,7 +85,12 @@ abstract class MissionCompletionResult
       _$MissionCompletionResult;
 
   @BuiltValueHook(initializeBuilder: true)
-  static void _defaults(MissionCompletionResultBuilder b) => b;
+  static void _defaults(MissionCompletionResultBuilder b) => b
+    ..reefAfter = Optional.absent()
+    ..reefBefore = Optional.absent()
+    ..streak = Optional.absent()
+    ..xpBalance = Optional.absent()
+    ..xpDelta = Optional.absent();
 
   @BuiltValueSerializer(custom: true)
   static Serializer<MissionCompletionResult> get serializer =>
@@ -107,10 +140,39 @@ class _$MissionCompletionResultSerializer
       object.protectedCount,
       specifiedType: const FullType(int),
     );
+    if (object.reefAfter.isPresent) {
+      yield r'reef_after';
+      final optionalValue = object.reefAfter.value;
+      if (optionalValue == null) {
+        yield null;
+      } else {
+        yield serializers.serialize(
+          optionalValue,
+          specifiedType: const FullType.nullable(MissionReefResult),
+        );
+      }
+    }
+    if (object.reefBefore.isPresent) {
+      yield r'reef_before';
+      final optionalValue = object.reefBefore.value;
+      if (optionalValue == null) {
+        yield null;
+      } else {
+        yield serializers.serialize(
+          optionalValue,
+          specifiedType: const FullType.nullable(MissionReefResult),
+        );
+      }
+    }
     yield r'repaired_count';
     yield serializers.serialize(
       object.repairedCount,
       specifiedType: const FullType(int),
+    );
+    yield r'reward_grants';
+    yield serializers.serialize(
+      object.rewardGrants,
+      specifiedType: const FullType(BuiltList, [FullType(MissionRewardGrant)]),
     );
     yield r'skipped_count';
     yield serializers.serialize(
@@ -122,6 +184,42 @@ class _$MissionCompletionResultSerializer
       object.status,
       specifiedType: const FullType(MissionCompletionResultStatusEnum),
     );
+    if (object.streak.isPresent) {
+      yield r'streak';
+      final optionalValue = object.streak.value;
+      if (optionalValue == null) {
+        yield null;
+      } else {
+        yield serializers.serialize(
+          optionalValue,
+          specifiedType: const FullType.nullable(MissionStreakResult),
+        );
+      }
+    }
+    if (object.xpBalance.isPresent) {
+      yield r'xp_balance';
+      final optionalValue = object.xpBalance.value;
+      if (optionalValue == null) {
+        yield null;
+      } else {
+        yield serializers.serialize(
+          optionalValue,
+          specifiedType: const FullType.nullable(int),
+        );
+      }
+    }
+    if (object.xpDelta.isPresent) {
+      yield r'xp_delta';
+      final optionalValue = object.xpDelta.value;
+      if (optionalValue == null) {
+        yield null;
+      } else {
+        yield serializers.serialize(
+          optionalValue,
+          specifiedType: const FullType.nullable(int),
+        );
+      }
+    }
   }
 
   @override
@@ -184,12 +282,34 @@ class _$MissionCompletionResultSerializer
           ) as int;
           result.protectedCount = valueDes;
           break;
+        case r'reef_after':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(MissionReefResult),
+          ) as MissionReefResult?;
+          result.reefAfter = Optional.present(valueDes);
+          break;
+        case r'reef_before':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(MissionReefResult),
+          ) as MissionReefResult?;
+          result.reefBefore = Optional.present(valueDes);
+          break;
         case r'repaired_count':
           final valueDes = serializers.deserialize(
             value,
             specifiedType: const FullType(int),
           ) as int;
           result.repairedCount = valueDes;
+          break;
+        case r'reward_grants':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType:
+                const FullType(BuiltList, [FullType(MissionRewardGrant)]),
+          ) as BuiltList<MissionRewardGrant>;
+          result.rewardGrants.replace(valueDes);
           break;
         case r'skipped_count':
           final valueDes = serializers.deserialize(
@@ -204,6 +324,27 @@ class _$MissionCompletionResultSerializer
             specifiedType: const FullType(MissionCompletionResultStatusEnum),
           ) as MissionCompletionResultStatusEnum;
           result.status = valueDes;
+          break;
+        case r'streak':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(MissionStreakResult),
+          ) as MissionStreakResult?;
+          result.streak = Optional.present(valueDes);
+          break;
+        case r'xp_balance':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(int),
+          ) as int?;
+          result.xpBalance = Optional.present(valueDes);
+          break;
+        case r'xp_delta':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(int),
+          ) as int?;
+          result.xpDelta = Optional.present(valueDes);
           break;
         default:
           unhandled.add(key);
@@ -238,6 +379,9 @@ class MissionCompletionResultEngagementStatusEnum extends EnumClass {
   @BuiltValueEnumConst(wireName: r'pending')
   static const MissionCompletionResultEngagementStatusEnum pending =
       _$missionCompletionResultEngagementStatusEnum_pending;
+  @BuiltValueEnumConst(wireName: r'applied')
+  static const MissionCompletionResultEngagementStatusEnum applied =
+      _$missionCompletionResultEngagementStatusEnum_applied;
   @BuiltValueEnumConst(wireName: r'unknown_default_open_api', fallback: true)
   static const MissionCompletionResultEngagementStatusEnum
       unknownDefaultOpenApi =
