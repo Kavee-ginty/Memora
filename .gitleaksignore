@@ -10,3 +10,23 @@ fbca586400a72d0f215af209e9decb2cf61c0913:backend/tests/test_ingestion_upload_lif
 5c8e2f95ce46ea6462814ae41e8d23c39459bbf4:backend/tests/test_ingestion_verification.py:generic-api-key:35
 fb449863ed3dc5da23b645575101d9132261c4a7:backend/tests/test_ingestion_updates.py:generic-api-key:32
 383e7e4566d44086e792b3664068c571de979a48:backend/tests/test_ingestion_worker.py:generic-api-key:37
+
+# Synthetic ingestion encryption-key fixture reused by the T19 notification
+# trigger tests; same non-credential test constant as the T09 entries above.
+62af85806fc8315165797dc37eb7634a78dee854:backend/tests/test_notification_triggers.py:generic-api-key:56
+
+# The same synthetic ingestion fixture re-appears at the historical commit
+# hashes where the T09 test files were rebased onto develop; these entries
+# suppress exactly those historical findings.
+1ca4684103ed11a4c85bd6870fd15f4704e49e9e:backend/tests/test_ingestion_bug_hunt.py:generic-api-key:56
+1ca4684103ed11a4c85bd6870fd15f4704e49e9e:backend/tests/test_ingestion_commit.py:generic-api-key:38
+1ca4684103ed11a4c85bd6870fd15f4704e49e9e:backend/tests/test_ingestion_updates.py:generic-api-key:32
+1ca4684103ed11a4c85bd6870fd15f4704e49e9e:backend/tests/test_ingestion_upload_lifecycle.py:generic-api-key:36
+1ca4684103ed11a4c85bd6870fd15f4704e49e9e:backend/tests/test_ingestion_verification.py:generic-api-key:35
+1ca4684103ed11a4c85bd6870fd15f4704e49e9e:backend/tests/test_ingestion_worker.py:generic-api-key:38
+9ca95d2fe0bb02a4c61c0c180833633290ec3e44:backend/tests/test_ingestion_bug_hunt.py:generic-api-key:56
+9ca95d2fe0bb02a4c61c0c180833633290ec3e44:backend/tests/test_ingestion_commit.py:generic-api-key:38
+9ca95d2fe0bb02a4c61c0c180833633290ec3e44:backend/tests/test_ingestion_updates.py:generic-api-key:32
+9ca95d2fe0bb02a4c61c0c180833633290ec3e44:backend/tests/test_ingestion_upload_lifecycle.py:generic-api-key:36
+9ca95d2fe0bb02a4c61c0c180833633290ec3e44:backend/tests/test_ingestion_verification.py:generic-api-key:35
+9ca95d2fe0bb02a4c61c0c180833633290ec3e44:backend/tests/test_ingestion_worker.py:generic-api-key:38

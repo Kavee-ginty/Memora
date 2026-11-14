@@ -53,6 +53,14 @@ class Settings(BaseSettings):
     consent_model_processing_version: str | None = None
     consent_notifications_version: str | None = None
 
+    # Push notification provider allowlist (T19). ``logging`` records dispatches
+    # without external calls and is the safe default for local and CI. ``fcm``
+    # requires the project id and a service-account key JSON, both provided via
+    # environment only and never logged.
+    notification_provider: Literal["logging", "fcm"] = "logging"
+    fcm_project_id: str | None = None
+    fcm_service_account_json: SecretStr | None = Field(default=None, repr=False)
+
     ingestion_encryption_key: SecretStr | None = Field(default=None, repr=False)
     extraction_provider: Literal["deterministic", "openrouter"] = "deterministic"
     openrouter_api_key: SecretStr | None = Field(default=None, repr=False)

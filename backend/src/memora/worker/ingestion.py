@@ -427,6 +427,37 @@ class IngestionWorker:
                 ),
                 {"update_id": update["id"], "user_id": update["user_id"]},
             )
+            # T19 trigger: verification-needed push signal, written in the
+            # same transaction as the status transition. Identifiers only —
+            # never question text or candidate content.
+            connection.execute(
+                text(
+                    """
+                    INSERT INTO outbox_events(
+                        domain_event_key, aggregate_type, aggregate_id, event_type,
+                        event_version, payload, correlation_id, publication_status
+                    ) VALUES (
+                        :event_key, 'learning_update', CAST(:update_id AS uuid),
+                        'ingestion.verification_required', 1,
+                        CAST(:payload AS jsonb), gen_random_uuid(), 'pending'
+                    )
+                    """
+                ),
+                {
+                    # Attempt-scoped: a re-extraction round legitimately
+                    # re-emits for the same update; the notification worker's
+                    # per-resource dispatch dedupe keeps pushes consume-once.
+                    "event_key": (f"ingestion.verification_required:{update['id']}:{job['id']}"),
+                    "update_id": str(update["id"]),
+                    "payload": json.dumps(
+                        {
+                            "schema_version": "1",
+                            "user_id": str(update["user_id"]),
+                            "update_id": str(update["id"]),
+                        }
+                    ),
+                },
+            )
             self._finish_job(connection, job, "succeeded", None)
 
     def _fail_extraction(

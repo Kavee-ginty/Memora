@@ -51,7 +51,7 @@ If two sources appear inconsistent, stop implementation and resolve the conflict
 | T16 | Progress mobile experience | Blocked | - | 5 | T07, T15 | `task/T16-progress-mobile` | Mobile feature |
 | T17 | Profile preferences and notifications backend | **Done** | Harsha | 4 | T06 | `task/T17-profile-backend` | Backend account |
 | T18 | Profile and settings mobile | **Ready** | - | 4 | T07, T17 | `task/T18-profile-mobile` | Mobile feature |
-| T19 | Push notifications and deep links | **Ready** | - | 4 | T07, T17 | `task/T19-push-deep-links` | Mobile and backend |
+| T19 | Push notifications and deep links | **Review** | - | 4 | T07, T17 | `task/T19-push-deep-links` | Mobile and backend |
 | T20 | Privacy export and deletion backend | **Done** | Dima | 5 | T06, T04 | `task/T20-privacy-backend` | Backend privacy |
 | T21 | Privacy mobile experience | **Done** | Neleesha Peiris | 3 | T07, T20 | `task/T21-privacy-mobile` | Mobile feature |
 | T22 | Offline sync and idempotency hardening | Blocked | - | 6 | T09, T13, T07 | `task/T22-offline-idempotency` | Cross-platform |
@@ -241,6 +241,24 @@ This expands the acceptance gate in Section 4 and the T11 row in Section 5.1. It
 
 Known cross-task boundaries: exposure ingestion consumes the documented `learning_update.committed` envelope until T09 merges, so T11 exercises it with synthetic outbox rows only. Attempt-graded evidence uses the envelope D9 reserves for T13. `concept-progress` gains reef, XP and streak fields only when T15 extends it additively. Mission assembly, ranking, diversity and workload caps remain T13's boundary.
 
+### T19 Definition of Done
+
+This expands the acceptance gate in Section 4 and the T19 row in Section 5.1. It does not replace the board rule in Section 2.
+
+| Area | Done criteria | Evidence |
+| --- | --- | --- |
+| Payload safety | Push payloads contain only the closed API §16.2 allowlist (category, opaque resource id, route intent, expiry, localization key, safe parameters, per-send notification id); `lock_screen_detail` bands govern parameters; note text, answers, misconception details and tokens are structurally inexpressible. | `test_notification_payload.py`; mobile `notification_intent_test.dart` wire-contract mirror; redaction assertions |
+| Provider boundary | One provider protocol selected by configuration allowlist; logging provider is the safe default; FCM adapter signs the service-account assertion with the existing PyJWT dependency and classifies outcomes into bounded reason codes; credential absence degrades without crashing. | `test_notification_providers.py`; zero new backend runtime dependencies; credentials env-only |
+| Enforcement | Dispatch honours expiry, notification preferences, per-category choice, reminder caps per user-local day in the recipient's IANA timezone and quiet hours with the preferred-window exception; every blocked send records one append-only ledger row with a closed skip reason; denial never blocks use. | `test_notification_service.py` (DB-gated), incl. DST spring-forward boundary and cap-boundary cases |
+| Consume-once | One send per logical trigger server-side (outbox domain key + delivery ledger + advisory lock, proven under a real two-connection race); one navigation per notification id client-side, durable across process recreation and bounded at 200 entries. | `test_notification_worker.py`; `consumed_intent_ledger_test.dart`; coordinator replay tests |
+| Safe fallbacks | Signed-out, expired, wrong-owner (404/403), invalid-workflow-state, unavailable and malformed intents resolve to the Flow §13.1 stable parent with a brief explanation; question surfaces are structurally unreachable from intents. | `deep_link_coordinator_test.dart` 12-case matrix; `foreground_notice_test.dart` explanation-snackbar test |
+| Active-answer protection | Foreground notices are suppressed while a mission item, feedback, explanation or quiz route is active, queue and drain after the surface closes; taps never open a timed question. | `foreground_notice_test.dart` queue/suppression tests |
+| Trigger coverage | All six Flow §13.1 intents have a producer path: `memory.schedule_changed` (T11), `mission.ready` (T13), `ingestion.verification_required` + `ingestion.learning_path_committed` (T09), `privacy.export_ready` (T20), `reward.granted` reserved for T15 with synthetic fixtures; all emissions commit in the producer's transaction with IDs and safe counts only. | `test_notification_triggers.py` |
+| Platform integration | Android and iOS push delivery, permission flow, foreground/background/cold-start taps, fallback screenshots and quiet-hours/cap ledger evidence are recorded on the designated non-production Firebase project. | `docs/evidence/T19_Push_Evidence.md` device table — **pending rows complete before Review clears** |
+| Contracts | No public API operation added; OpenAPI and generated clients unchanged and drift-clean; migration `20261111_0015` up/down verified with RLS and worker-grant boundaries. | `generate_contracts.py --check` exit 0; `test_migrations.py`; `test_notification_service.py` RLS/role tests |
+
+Known cross-task boundaries: the `reward.granted` producer and reef-detail destination arrive with T15; circuit breakers and alerting for notification routes arrive with T23; cross-feature deep-link end-to-end runs in T26; real-device delivery evidence requires the human-attached non-production Firebase project.
+
 ### 5.2 Missions progress account and privacy
 
 | ID | Done criteria | Required evidence |
@@ -342,9 +360,18 @@ in `docs/evidence/T24_Content_Evidence.md`.
 ## 7 Current next action
 
 T01-T09, T11-T12, T17 and T20-T21 are merged and Done. T10 and T24 are in
-Review; T13 is In Progress. T18 and T19 are Ready. T14, T15, T22 and T23 remain
-Blocked until T13 is Done; later tasks remain blocked until all listed
-dependencies are Done.
+Review; T13 is In Progress. T18 is Ready; T19 is in Review on its task branch.
+T14, T15, T22 and T23 remain Blocked until T13 is Done; later tasks remain
+blocked until all listed dependencies are Done.
+
+T19's implementation, automated evidence and the pending device-integration
+checklist are recorded in `docs/evidence/T19_Push_Evidence.md` and the study
+note. The task stays in Review until the Android/iOS device rows complete on
+the designated non-production Firebase project; the reviewers must also
+acknowledge the shared-surface additions (migration `20261111_0015`, the four
+new outbox trigger event types and the cross-module preference/device reads).
+The owner chose to wait for T15's reward API before completing reward-link
+validation; no T19 acceptance exception was approved.
 
 T21 completed through pull request #49, merged into `develop` at `d387506`. All
 required CI checks passed, and the real T20 PostgreSQL/durable-worker privacy
@@ -352,6 +379,7 @@ contracts passed locally. The repository owner accepted the missing Android
 manual-device record as an approved deviation; T27 retains that full
 accessibility/device sweep. T26 and T27 remain Blocked by their other incomplete
 dependencies.
+
 
 T24's next action is user commit, push, pull request and merge of the Route A
 changes. Do not mark T24 Done until that merge occurs. The qualified-review record

@@ -54,6 +54,10 @@ class SessionController extends StateNotifier<AppSessionState> {
   final SessionRepository sessionRepository;
   final AppLocalStorage localStorage;
 
+  /// Registered by the T19 push controller while it is alive. Runs before
+  /// session revocation so device deletion can use the valid bearer token.
+  Future<bool> Function(String accessToken)? revokePushBeforeSignOut;
+
   StreamSubscription<AuthSession?>? _authSubscription;
   SafeReturnLocation? _pendingReturnLocation;
 
@@ -530,6 +534,14 @@ class SessionController extends StateNotifier<AppSessionState> {
     bool remoteRevocationSuccess = true;
 
     if (currentSession != null) {
+      try {
+        final revoke = revokePushBeforeSignOut;
+        if (revoke != null && !await revoke(currentSession.accessToken)) {
+          remoteRevocationSuccess = false;
+        }
+      } catch (_) {
+        remoteRevocationSuccess = false;
+      }
       try {
         final idempotencyKey = generateUuid();
         await sessionRepository.revokeSession(

@@ -830,6 +830,34 @@ class IngestionRepository:
                     "correlation_id": uuid4(),
                 },
             )
+            # T19 trigger: learning-path-ready push signal, written in the
+            # same transaction as the commit itself. Identifiers and the safe
+            # committed-concept count only — never learning text.
+            connection.execute(
+                text("""
+                    INSERT INTO outbox_events(
+                        domain_event_key, aggregate_type, aggregate_id, event_type,
+                        event_version, payload, correlation_id, publication_status
+                    ) VALUES (
+                        :event_key, 'learning_update', :update_id,
+                        'ingestion.learning_path_committed', 1,
+                        CAST(:payload AS jsonb), :correlation_id, 'pending'
+                    )
+                    """),
+                {
+                    "event_key": f"ingestion.learning_path_committed:{update_id}:{commit_version}",
+                    "update_id": update_id,
+                    "payload": json.dumps(
+                        {
+                            "schema_version": "1",
+                            "user_id": str(user_id),
+                            "update_id": str(update_id),
+                            "count": len(committed_concepts),
+                        }
+                    ),
+                    "correlation_id": uuid4(),
+                },
+            )
             committed_counts = {"concept": 0, "claim": 0, "edge": 0, "private": 0}
             concept_mappings = []
             for candidate in candidates:

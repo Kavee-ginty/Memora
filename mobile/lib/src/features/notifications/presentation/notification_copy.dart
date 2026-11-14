@@ -1,0 +1,56 @@
+import 'package:flutter/foundation.dart';
+
+import '../domain/deep_link_coordinator.dart';
+import '../domain/notification_intent.dart';
+
+/// Contextual notification copy rendered on-device from wire localization
+/// keys (UI/UX §9.21: replace generic push text with useful, calm copy).
+/// Parameters interpolate only the safe band values the payload carries.
+@immutable
+class NotificationCopy {
+  final String locKey;
+  final String text;
+
+  const NotificationCopy({required this.locKey, required this.text});
+
+  static const Map<String, String> _templates = {
+    'notification.mission_ready': 'Your Physics daily mission is ready.',
+    'notification.due_memories':
+        'A few Physics memories are ready for care. Review when it suits you.',
+    'notification.verification_required': 'Your Physics material needs a quick check before it joins your learning path.',
+    'notification.learning_path_ready':
+        'Your Physics learning path is ready to preview.',
+    'notification.reward_ready':
+        'Your Physics reef decoration is ready to place.',
+    'notification.privacy_export_ready':
+        'Your data export is ready to download.',
+    DeepLinkExplanations.linkExpired: 'That notification has expired.',
+    DeepLinkExplanations.linkUnavailable:
+        'That update is not available right now.',
+    DeepLinkExplanations.workflowMovedOn: 'That workflow already moved on.',
+    DeepLinkExplanations.malformedLink: 'That notification could not be read.',
+    DeepLinkExplanations.notConfirmed:
+        'That notification could not be opened. Please try again.',
+  };
+
+  /// Renders copy for a localization key; unknown keys degrade to neutral
+  /// copy instead of surfacing raw wire values.
+  static String forLocKey(String locKey) {
+    return _templates[locKey] ?? 'You have a new update in Memora.';
+  }
+
+  /// Renders notification body copy for an intent. Sentence parts adapt to
+  /// the safe detail band so every band stays grammatical (review finding
+  /// 10): the subject names the curriculum subject per PRD 031's default,
+  /// and the duration clause appears only when a count is present.
+  static String forIntent(NotificationIntent intent) {
+    if (intent.locKey == 'notification.mission_ready') {
+      final subject = intent.subjectName;
+      final base =
+          'Your ${subject == null || subject.isEmpty ? 'Physics' : subject} daily mission is ready.';
+      final count = intent.count;
+      return count == null ? base : '$base About $count minutes.';
+    }
+    return forLocKey(intent.locKey);
+  }
+}
