@@ -85,6 +85,28 @@ class SubmitAttemptRequest(BaseModel):
     elapsed_ms: Annotated[int, Field(ge=0, le=86_400_000)] | None = None
 
 
+class MissionStreakResult(BaseModel):
+    qualification: Literal["standard_completed", "comeback_completed"]
+    current_days: Annotated[int, Field(ge=1)]
+    grace_used: bool
+    policy_version: str
+
+
+class MissionReefResult(BaseModel):
+    subject_id: UUID
+    condition: Literal["new", "thriving", "healthy", "needs_care", "dormant"]
+    health_score: Annotated[float, Field(ge=0, le=1)]
+    due_memory_count: Annotated[int, Field(ge=0)]
+    projection_version: str
+    source_watermark: str
+    projected_at: UtcDatetime
+
+
+class MissionRewardGrant(BaseModel):
+    grant_id: UUID
+    reward_code: str
+
+
 class MissionCompletionResult(BaseModel):
     mission_id: UUID
     status: Literal["completed"]
@@ -95,10 +117,10 @@ class MissionCompletionResult(BaseModel):
     engagement_status: Literal["pending", "applied"]
     xp_delta: Annotated[int, Field(ge=0)] | None = None
     xp_balance: Annotated[int, Field(ge=0)] | None = None
-    streak: dict[str, Any] | None = None
-    reef_before: dict[str, Any] | None = None
-    reef_after: dict[str, Any] | None = None
-    reward_grants: list[dict[str, Any]] = Field(default_factory=list)
+    streak: MissionStreakResult | None = None
+    reef_before: MissionReefResult | None = None
+    reef_after: MissionReefResult | None = None
+    reward_grants: list[MissionRewardGrant]
     next_suggested_action: Literal["home", "progress"]
 
 

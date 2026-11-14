@@ -1333,14 +1333,12 @@
           "completion_summary": {
             "anyOf": [
               {
-                "additionalProperties": true,
-                "type": "object"
+                "$ref": "#/components/schemas/MissionCompletionResult"
               },
               {
                 "type": "null"
               }
-            ],
-            "title": "Completion Summary"
+            ]
           },
           "estimated_minutes": {
             "maximum": 7.0,
@@ -1860,26 +1858,22 @@
           "reef_after": {
             "anyOf": [
               {
-                "additionalProperties": true,
-                "type": "object"
+                "$ref": "#/components/schemas/MissionReefResult"
               },
               {
                 "type": "null"
               }
-            ],
-            "title": "Reef After"
+            ]
           },
           "reef_before": {
             "anyOf": [
               {
-                "additionalProperties": true,
-                "type": "object"
+                "$ref": "#/components/schemas/MissionReefResult"
               },
               {
                 "type": "null"
               }
-            ],
-            "title": "Reef Before"
+            ]
           },
           "repaired_count": {
             "maximum": 7.0,
@@ -1889,8 +1883,7 @@
           },
           "reward_grants": {
             "items": {
-              "additionalProperties": true,
-              "type": "object"
+              "$ref": "#/components/schemas/MissionRewardGrant"
             },
             "title": "Reward Grants",
             "type": "array"
@@ -1909,14 +1902,12 @@
           "streak": {
             "anyOf": [
               {
-                "additionalProperties": true,
-                "type": "object"
+                "$ref": "#/components/schemas/MissionStreakResult"
               },
               {
                 "type": "null"
               }
-            ],
-            "title": "Streak"
+            ]
           },
           "xp_balance": {
             "anyOf": [
@@ -1951,6 +1942,7 @@
           "skipped_count",
           "completed_at",
           "engagement_status",
+          "reward_grants",
           "next_suggested_action"
         ],
         "title": "MissionCompletionResult",
@@ -2108,6 +2100,112 @@
           "status"
         ],
         "title": "MissionManifestItem",
+        "type": "object"
+      },
+      "MissionReefResult": {
+        "properties": {
+          "condition": {
+            "enum": [
+              "new",
+              "thriving",
+              "healthy",
+              "needs_care",
+              "dormant"
+            ],
+            "title": "Condition",
+            "type": "string"
+          },
+          "due_memory_count": {
+            "minimum": 0.0,
+            "title": "Due Memory Count",
+            "type": "integer"
+          },
+          "health_score": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Health Score",
+            "type": "number"
+          },
+          "projected_at": {
+            "title": "Projected At",
+            "type": "string"
+          },
+          "projection_version": {
+            "title": "Projection Version",
+            "type": "string"
+          },
+          "source_watermark": {
+            "title": "Source Watermark",
+            "type": "string"
+          },
+          "subject_id": {
+            "format": "uuid",
+            "title": "Subject Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "subject_id",
+          "condition",
+          "health_score",
+          "due_memory_count",
+          "projection_version",
+          "source_watermark",
+          "projected_at"
+        ],
+        "title": "MissionReefResult",
+        "type": "object"
+      },
+      "MissionRewardGrant": {
+        "properties": {
+          "grant_id": {
+            "format": "uuid",
+            "title": "Grant Id",
+            "type": "string"
+          },
+          "reward_code": {
+            "title": "Reward Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "grant_id",
+          "reward_code"
+        ],
+        "title": "MissionRewardGrant",
+        "type": "object"
+      },
+      "MissionStreakResult": {
+        "properties": {
+          "current_days": {
+            "minimum": 1.0,
+            "title": "Current Days",
+            "type": "integer"
+          },
+          "grace_used": {
+            "title": "Grace Used",
+            "type": "boolean"
+          },
+          "policy_version": {
+            "title": "Policy Version",
+            "type": "string"
+          },
+          "qualification": {
+            "enum": [
+              "standard_completed",
+              "comeback_completed"
+            ],
+            "title": "Qualification",
+            "type": "string"
+          }
+        },
+        "required": [
+          "qualification",
+          "current_days",
+          "grace_used",
+          "policy_version"
+        ],
+        "title": "MissionStreakResult",
         "type": "object"
       },
       "MissionSummary": {

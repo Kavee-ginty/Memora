@@ -185,7 +185,14 @@ class EngagementRepository:
             )
             balance = int(
                 connection.scalar(
-                    text("SELECT COALESCE(max(balance_after), 0) FROM xp_ledger WHERE user_id=:u"),
+                    text(
+                        """
+                        SELECT COALESCE((
+                          SELECT balance_after FROM xp_ledger WHERE user_id=:u
+                          ORDER BY earned_at DESC, created_at DESC, id DESC LIMIT 1
+                        ), 0)
+                        """
+                    ),
                     {"u": user_id},
                 )
                 or 0
@@ -310,7 +317,14 @@ class EngagementRepository:
             )
             balance = int(
                 connection.scalar(
-                    text("SELECT COALESCE(max(balance_after),0) FROM xp_ledger WHERE user_id=:u"),
+                    text(
+                        """
+                        SELECT COALESCE((
+                          SELECT balance_after FROM xp_ledger WHERE user_id=:u
+                          ORDER BY earned_at DESC, created_at DESC, id DESC LIMIT 1
+                        ), 0)
+                        """
+                    ),
                     {"u": user_id},
                 )
                 or 0
@@ -785,7 +799,9 @@ class EngagementRepository:
         latest = connection.scalar(
             text("SELECT max(local_date) FROM streak_days WHERE user_id=:u"), {"u": user_id}
         )
-        return self._streak_length(connection, user_id, latest) if latest else 0
+        if latest is None or latest < today - timedelta(days=1):
+            return 0
+        return self._streak_length(connection, user_id, latest)
 
     @staticmethod
     def _reward_rows(

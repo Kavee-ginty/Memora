@@ -47,6 +47,8 @@ import 'package:memora_api_client/src/model/finalize_upload_request.dart';
 import 'package:memora_api_client/src/model/first_mission_summary.dart';
 import 'package:memora_api_client/src/model/health_response.dart';
 import 'package:memora_api_client/src/model/health_status.dart';
+import 'package:memora_api_client/src/model/home_mission.dart';
+import 'package:memora_api_client/src/model/home_response.dart';
 import 'package:memora_api_client/src/model/idempotency_headers.dart';
 import 'package:memora_api_client/src/model/input_type.dart';
 import 'package:memora_api_client/src/model/knowledge_commit_response.dart';
@@ -60,6 +62,9 @@ import 'package:memora_api_client/src/model/mission_completion_result.dart';
 import 'package:memora_api_client/src/model/mission_item_response.dart';
 import 'package:memora_api_client/src/model/mission_manifest.dart';
 import 'package:memora_api_client/src/model/mission_manifest_item.dart';
+import 'package:memora_api_client/src/model/mission_reef_result.dart';
+import 'package:memora_api_client/src/model/mission_reward_grant.dart';
+import 'package:memora_api_client/src/model/mission_streak_result.dart';
 import 'package:memora_api_client/src/model/mission_summary.dart';
 import 'package:memora_api_client/src/model/multiple_choice_answer.dart';
 import 'package:memora_api_client/src/model/numeric_answer.dart';
@@ -78,15 +83,23 @@ import 'package:memora_api_client/src/model/profile_preferences_update_request.d
 import 'package:memora_api_client/src/model/profile_response.dart';
 import 'package:memora_api_client/src/model/profile_summary.dart';
 import 'package:memora_api_client/src/model/profile_update_request.dart';
+import 'package:memora_api_client/src/model/progress_statistics_response.dart';
 import 'package:memora_api_client/src/model/public_question.dart';
 import 'package:memora_api_client/src/model/public_question_option.dart';
 import 'package:memora_api_client/src/model/public_response_config.dart';
 import 'package:memora_api_client/src/model/question_report_create_request.dart';
 import 'package:memora_api_client/src/model/question_report_response.dart';
 import 'package:memora_api_client/src/model/question_report_summary.dart';
+import 'package:memora_api_client/src/model/reef_detail.dart';
+import 'package:memora_api_client/src/model/reef_summary.dart';
 import 'package:memora_api_client/src/model/request_headers.dart';
 import 'package:memora_api_client/src/model/retry_learning_update_request.dart';
+import 'package:memora_api_client/src/model/reward_grant.dart';
+import 'package:memora_api_client/src/model/reward_inventory_response.dart';
+import 'package:memora_api_client/src/model/reward_placement_request.dart';
 import 'package:memora_api_client/src/model/scheduling_explanation.dart';
+import 'package:memora_api_client/src/model/seabed_reef.dart';
+import 'package:memora_api_client/src/model/seabed_response.dart';
 import 'package:memora_api_client/src/model/session_bootstrap_response.dart';
 import 'package:memora_api_client/src/model/session_revocation_scope.dart';
 import 'package:memora_api_client/src/model/session_revoke_request.dart';
@@ -106,6 +119,7 @@ import 'package:memora_api_client/src/model/value.dart';
 import 'package:memora_api_client/src/model/verification_decision.dart';
 import 'package:memora_api_client/src/model/verification_decision_result.dart';
 import 'package:memora_api_client/src/model/verification_decision_value.dart';
+import 'package:memora_api_client/src/model/xp_series_point.dart';
 
 part 'serializers.g.dart';
 
@@ -143,6 +157,8 @@ part 'serializers.g.dart';
   FirstMissionSummary,
   HealthResponse,
   HealthStatus,
+  HomeMission,
+  HomeResponse,
   IdempotencyHeaders,
   InputType,
   KnowledgeCommitResponse,
@@ -156,6 +172,9 @@ part 'serializers.g.dart';
   MissionItemResponse,
   MissionManifest,
   MissionManifestItem,
+  MissionReefResult,
+  MissionRewardGrant,
+  MissionStreakResult,
   MissionSummary,
   MultipleChoiceAnswer,
   NumericAnswer,
@@ -174,15 +193,23 @@ part 'serializers.g.dart';
   ProfileResponse,
   ProfileSummary,
   ProfileUpdateRequest,
+  ProgressStatisticsResponse,
   PublicQuestion,
   PublicQuestionOption,
   PublicResponseConfig,
   QuestionReportCreateRequest,
   QuestionReportResponse,
   QuestionReportSummary,
+  ReefDetail,
+  ReefSummary,
   RequestHeaders,
   RetryLearningUpdateRequest,
+  RewardGrant,
+  RewardInventoryResponse,
+  RewardPlacementRequest,
   SchedulingExplanation,
+  SeabedReef,
+  SeabedResponse,
   SessionBootstrapResponse,
   SessionRevocationScope,
   SessionRevokeRequest,
@@ -202,27 +229,16 @@ part 'serializers.g.dart';
   VerificationDecision,
   VerificationDecisionResult,
   VerificationDecisionValue,
+  XpSeriesPoint,
 ])
 Serializers serializers = (_$serializers.toBuilder()
-      ..addBuilderFactory(
-        const FullType(BuiltList, [FullType(SubjectSummary)]),
-        () => ListBuilder<SubjectSummary>(),
-      )
       ..addBuilderFactory(
         const FullType(BuiltMap, [FullType(String), FullType(String)]),
         () => MapBuilder<String, String>(),
       )
       ..addBuilderFactory(
-        const FullType(BuiltList, [FullType(MissionManifestItem)]),
-        () => ListBuilder<MissionManifestItem>(),
-      )
-      ..addBuilderFactory(
-        const FullType(BuiltList, [FullType(PublicQuestionOption)]),
-        () => ListBuilder<PublicQuestionOption>(),
-      )
-      ..addBuilderFactory(
-        const FullType(BuiltList, [FullType(FieldError)]),
-        () => ListBuilder<FieldError>(),
+        const FullType(BuiltList, [FullType(RewardGrant)]),
+        () => ListBuilder<RewardGrant>(),
       )
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(LearningUpdateResponse)]),
@@ -241,12 +257,56 @@ Serializers serializers = (_$serializers.toBuilder()
         () => ListBuilder<DeclaredFile>(),
       )
       ..addBuilderFactory(
-        const FullType(BuiltList, [FullType(LearningPathPreviewConcept)]),
-        () => ListBuilder<LearningPathPreviewConcept>(),
-      )
-      ..addBuilderFactory(
         const FullType(BuiltList, [FullType(DeletionProofSummary)]),
         () => ListBuilder<DeletionProofSummary>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(CandidateResponse)]),
+        () => ListBuilder<CandidateResponse>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(MissionRewardGrant)]),
+        () => ListBuilder<MissionRewardGrant>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltMap, [FullType(String), FullType(int)]),
+        () => MapBuilder<String, int>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(XpSeriesPoint)]),
+        () => ListBuilder<XpSeriesPoint>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(SchedulingExplanation)]),
+        () => ListBuilder<SchedulingExplanation>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(SourceUploadSummary)]),
+        () => ListBuilder<SourceUploadSummary>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(ConceptProgressItem)]),
+        () => ListBuilder<ConceptProgressItem>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(SubjectSummary)]),
+        () => ListBuilder<SubjectSummary>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(MissionManifestItem)]),
+        () => ListBuilder<MissionManifestItem>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(PublicQuestionOption)]),
+        () => ListBuilder<PublicQuestionOption>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(FieldError)]),
+        () => ListBuilder<FieldError>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(LearningPathPreviewConcept)]),
+        () => ListBuilder<LearningPathPreviewConcept>(),
       )
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(ConsentStatus)]),
@@ -265,33 +325,17 @@ Serializers serializers = (_$serializers.toBuilder()
         () => ListBuilder<PendingResourceSummary>(),
       )
       ..addBuilderFactory(
-        const FullType(BuiltList, [FullType(CandidateResponse)]),
-        () => ListBuilder<CandidateResponse>(),
-      )
-      ..addBuilderFactory(
         const FullType(
             BuiltMap, [FullType(String), FullType.nullable(JsonObject)]),
         () => MapBuilder<String, JsonObject?>(),
-      )
-      ..addBuilderFactory(
-        const FullType(BuiltMap, [FullType(String), FullType(int)]),
-        () => MapBuilder<String, int>(),
       )
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(String)]),
         () => ListBuilder<String>(),
       )
       ..addBuilderFactory(
-        const FullType(BuiltList, [FullType(SchedulingExplanation)]),
-        () => ListBuilder<SchedulingExplanation>(),
-      )
-      ..addBuilderFactory(
-        const FullType(BuiltList, [FullType(SourceUploadSummary)]),
-        () => ListBuilder<SourceUploadSummary>(),
-      )
-      ..addBuilderFactory(
-        const FullType(BuiltList, [FullType(ConceptProgressItem)]),
-        () => ListBuilder<ConceptProgressItem>(),
+        const FullType(BuiltList, [FullType(SeabedReef)]),
+        () => ListBuilder<SeabedReef>(),
       )
       ..add(const OneOfSerializer())
       ..add(const AnyOfSerializer())

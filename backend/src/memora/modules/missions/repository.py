@@ -440,6 +440,7 @@ class MissionRepository:
                 "skipped_count": int(counts["skipped_count"] or 0),
                 "completed_at": now.isoformat(),
                 "engagement_status": "pending",
+                "reward_grants": [],
                 "next_suggested_action": "home",
             }
             connection.execute(

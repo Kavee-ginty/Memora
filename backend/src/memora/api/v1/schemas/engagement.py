@@ -8,6 +8,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from memora.api.v1.schemas.common import CalendarDate, UtcDatetime, Version
+from memora.api.v1.schemas.missions import MissionCompletionResult
 
 ReefCondition = Literal["new", "thriving", "healthy", "needs_care", "dormant"]
 
@@ -29,7 +30,7 @@ class HomeMission(BaseModel):
     mission_date: CalendarDate
     estimated_minutes: Annotated[int, Field(ge=1, le=7)]
     planned_item_count: Annotated[int, Field(ge=1, le=7)]
-    completion_summary: dict | None = None
+    completion_summary: MissionCompletionResult | None = None
 
 
 class HomeResponse(BaseModel):

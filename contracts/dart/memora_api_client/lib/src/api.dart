@@ -11,11 +11,14 @@ import 'package:memora_api_client/src/auth/bearer_auth.dart';
 import 'package:memora_api_client/src/auth/oauth.dart';
 import 'package:memora_api_client/src/api/curriculum_api.dart';
 import 'package:memora_api_client/src/api/health_api.dart';
+import 'package:memora_api_client/src/api/home_api.dart';
 import 'package:memora_api_client/src/api/learning_updates_api.dart';
 import 'package:memora_api_client/src/api/missions_api.dart';
 import 'package:memora_api_client/src/api/privacy_api.dart';
 import 'package:memora_api_client/src/api/profile_api.dart';
+import 'package:memora_api_client/src/api/progress_api.dart';
 import 'package:memora_api_client/src/api/reports_api.dart';
+import 'package:memora_api_client/src/api/rewards_api.dart';
 import 'package:memora_api_client/src/api/session_api.dart';
 import 'package:memora_api_client/src/api/verification_api.dart';
 
@@ -151,6 +154,12 @@ class MemoraApiClient {
     return HealthApi(dio, serializers);
   }
 
+  /// Get HomeApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  HomeApi getHomeApi() {
+    return HomeApi(dio, serializers);
+  }
+
   /// Get LearningUpdatesApi instance, base route and serializer can be overridden by a given but be careful,
   /// by doing that all interceptors will not be executed
   LearningUpdatesApi getLearningUpdatesApi() {
@@ -175,10 +184,22 @@ class MemoraApiClient {
     return ProfileApi(dio, serializers);
   }
 
+  /// Get ProgressApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  ProgressApi getProgressApi() {
+    return ProgressApi(dio, serializers);
+  }
+
   /// Get ReportsApi instance, base route and serializer can be overridden by a given but be careful,
   /// by doing that all interceptors will not be executed
   ReportsApi getReportsApi() {
     return ReportsApi(dio, serializers);
+  }
+
+  /// Get RewardsApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  RewardsApi getRewardsApi() {
+    return RewardsApi(dio, serializers);
   }
 
   /// Get SessionApi instance, base route and serializer can be overridden by a given but be careful,
