@@ -92,7 +92,13 @@ class MissionCompletionResult(BaseModel):
     repaired_count: Annotated[int, Field(ge=0, le=7)]
     skipped_count: Annotated[int, Field(ge=0, le=7)]
     completed_at: UtcDatetime
-    engagement_status: Literal["pending"]
+    engagement_status: Literal["pending", "applied"]
+    xp_delta: Annotated[int, Field(ge=0)] | None = None
+    xp_balance: Annotated[int, Field(ge=0)] | None = None
+    streak: dict[str, Any] | None = None
+    reef_before: dict[str, Any] | None = None
+    reef_after: dict[str, Any] | None = None
+    reward_grants: list[dict[str, Any]] = Field(default_factory=list)
     next_suggested_action: Literal["home", "progress"]
 
 

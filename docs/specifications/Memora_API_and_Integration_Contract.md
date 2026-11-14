@@ -332,6 +332,15 @@ Reef condition is exactly `new`, `thriving`, `healthy`, `needs_care` or `dormant
 
 Statistics use an explicit period and timezone context. Charts receive accessible summary text and bounded series. The API does not describe model estimates as measured brain activity.
 
+`GET /v1/rewards` accepts an optional owner-scoped `grant_id` filter used to
+validate a `reward_ready` deep link. Each grant returns stable definition data,
+grant time, `unplaced` or `placed` state, nullable placement, version and
+permitted actions. An absent or wrong-owner grant discloses no resource. T15
+emits `reward.granted` with schema version, server-derived `user_id` and opaque
+`grant_id`; notification delivery remains non-authoritative. Placement patches
+require `Idempotency-Key` and the current version, and cannot change ownership,
+XP, scheduling or reef health.
+
 ## 15 Reports disputes and corrections
 
 | Method and path | Purpose | Success |

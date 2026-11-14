@@ -602,12 +602,13 @@ Only one grading result per attempt may be authoritative at a time. A replacemen
 | `reason_code` | text | NN |
 | `balance_after` | bigint | NN; CHK non-negative |
 | `earned_at` | timestamptz | NN |
+| `policy_version` | text | NN; initial value `xp-v1` |
 
 Required uniqueness: `(user_id, source_event_type, source_event_id, entry_type)`. Uploads and app opens are never eligible sources.
 
 ### 12.2 streak_days
 
-One row per user-local day containing `user_id`, `local_date`, `timezone`, `qualification_type`, `mission_id`, `grace_window_key`, and `created_at`. Qualification types are `mission_completed`, `grace_used` and `comeback_completed`. Unique `(user_id, local_date)`. The rolling seven-day grace rule is calculated by policy, not a mutable counter supplied by the client.
+One row per user-local day containing `user_id`, `local_date`, `timezone`, `qualification_type`, `mission_id`, `grace_window_key`, `policy_version`, and `created_at`. Qualification types are `mission_completed`, `grace_used` and `comeback_completed`. Unique `(user_id, local_date)`. The rolling seven-day grace rule is calculated by versioned policy, not a mutable counter supplied by the client. The persisted mission date and timezone are authoritative; later timezone changes do not rewrite prior rows.
 
 ### 12.3 reward_definitions and reward_grants
 
@@ -617,6 +618,13 @@ One row per user-local day containing `user_id`, `local_date`, `timezone`, `qual
 | `reward_grants` | `id`; `user_id`; `reward_definition_id`; `source_xp_ledger_id`; `granted_at`; UQ `(user_id, reward_definition_id)`; APPEND |
 
 Reward grants are permanent. A compensating XP entry cannot delete a granted reward unless fraud or administrative correction policy explicitly requires an audited exceptional workflow.
+
+Placement is mutable presentation state and therefore is not stored on the
+append-only grant. `reward_placements` has `reward_grant_id` as its primary key,
+the matching `user_id`, nullable paired `subject_id` and `placement_slot`,
+timestamps and `row_version`. Removing a placement clears both nullable fields;
+it never deletes the grant. The table is owner-scoped with RLS and is deleted
+only with its parent grant during the approved account-deletion workflow.
 
 ### 12.4 reef_projections
 
