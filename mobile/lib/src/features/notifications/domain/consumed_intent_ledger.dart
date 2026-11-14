@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import '../../auth/data/secure_auth_storage.dart';
@@ -15,6 +16,7 @@ class ConsumedIntentLedger {
   static const int _maxEntries = 200;
 
   final SecureKeyStore keyStore;
+  Future<void> _pendingWrite = Future<void>.value();
 
   ConsumedIntentLedger({required this.keyStore});
 
@@ -23,7 +25,7 @@ class ConsumedIntentLedger {
     return ids.contains(notificationId);
   }
 
-  /// Records the intent; returns whether consumption is durably recorded.
+  /// Records a new intent; returns false for a duplicate or failed write.
   ///
   /// A failed write returns ``false`` so the caller can refuse navigation:
   /// consume-once must never be silently skipped (Flow 20.3).
@@ -31,21 +33,27 @@ class ConsumedIntentLedger {
     if (notificationId.isEmpty) {
       return false;
     }
-    final ids = await _load();
-    if (ids.contains(notificationId)) {
-      return true;
-    }
-    ids.add(notificationId);
-    while (ids.length > _maxEntries) {
-      ids.removeAt(0);
-    }
+    final previous = _pendingWrite;
+    final finished = Completer<void>();
+    _pendingWrite = finished.future;
+    await previous;
     try {
+      final ids = await _load();
+      if (ids.contains(notificationId)) {
+        return false;
+      }
+      ids.add(notificationId);
+      while (ids.length > _maxEntries) {
+        ids.removeAt(0);
+      }
       await keyStore.write(_storageKey, jsonEncode(ids));
       return true;
     } catch (_) {
       // The server-side delivery ledger still prevents duplicate pushes,
       // but client-side navigation is refused until consumption records.
       return false;
+    } finally {
+      finished.complete();
     }
   }
 

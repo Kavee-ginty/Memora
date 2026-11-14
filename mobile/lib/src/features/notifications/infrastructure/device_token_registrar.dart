@@ -158,14 +158,14 @@ class DeviceTokenRegistrar {
   /// still valid (review finding 2: sign-out removes the server-side
   /// registration). Returns whether the revocation succeeded; on failure
   /// the tracking is kept so a later attempt can retry.
-  Future<bool> revokeLastRegistration() async {
+  Future<bool> revokeLastRegistration({String? accessToken}) async {
     final deviceId = _lastDeviceId;
-    final accessToken = _lastAccessToken;
-    if (deviceId == null || accessToken == null) {
+    final token = accessToken ?? _lastAccessToken;
+    if (deviceId == null || token == null) {
       return true; // nothing registered: nothing to revoke
     }
     try {
-      await api.revoke(deviceId: deviceId, accessToken: accessToken);
+      await api.revoke(deviceId: deviceId, accessToken: token);
     } catch (error) {
       debugPrint(
         '$_logName: device revocation failed '

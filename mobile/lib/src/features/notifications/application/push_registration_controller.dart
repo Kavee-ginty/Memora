@@ -59,8 +59,9 @@ final deviceTokenRegistrarProvider = Provider<DeviceTokenRegistrar>((ref) {
 
 /// Keep-alive orchestrator (T19 D12): on session activation, asks for
 /// permission once per installation, registers the push token, and
-/// re-registers whenever the provider rotates the token. Every failure
-/// stays silent — notification denial never blocks use (PRD 031, T17 gate).
+/// re-registers whenever the provider rotates the token. Registration
+/// failures offer a non-blocking retry; denial never blocks use (PRD 031,
+/// T17 gate).
 ///
 /// The app widget keeps this provider alive with `ref.watch`; tests drive
 /// [PushRegistrationController] directly with fakes.
@@ -68,12 +69,16 @@ final pushRegistrationControllerProvider =
     StateNotifierProvider<PushRegistrationController, PushRegistrationPhase>((
       ref,
     ) {
+      final sessionController = ref.read(sessionControllerProvider.notifier);
       final controller = PushRegistrationController(
         gateway: ref.watch(notificationGatewayProvider),
         registrar: ref.watch(deviceTokenRegistrarProvider),
         keyStore: ref.watch(pushKeyStoreProvider),
         sessionStates: ref.watch(sessionControllerProvider.notifier).stream,
       );
+      sessionController.revokePushBeforeSignOut =
+          controller.revokeBeforeSignOut;
+      ref.onDispose(() => sessionController.revokePushBeforeSignOut = null);
       controller.start();
       // StateNotifierProvider disposes the controller itself; an extra
       // onDispose hook would double-dispose and throw "use after dispose".
@@ -85,7 +90,7 @@ final pushRegistrationControllerProvider =
 /// `awaitingExplanation` holds before the OS prompt until the in-app value
 /// explanation is confirmed (Flow 12.1: the app explains notification value
 /// before the system prompt). `registrationFailed` is recoverable: the
-/// controller retries on the next authenticated session emission.
+/// controller retries on request or the next authenticated session emission.
 enum PushRegistrationPhase {
   idle,
   awaitingExplanation,
@@ -140,6 +145,7 @@ class PushRegistrationController extends StateNotifier<PushRegistrationPhase> {
       _tokenSubscription = null;
       _lastRegisteredToken = null;
       await _revokeTrackedRegistration();
+      await gateway.invalidateToken();
       if (mounted && state != PushRegistrationPhase.idle) {
         state = PushRegistrationPhase.idle;
       }
@@ -155,6 +161,19 @@ class PushRegistrationController extends StateNotifier<PushRegistrationPhase> {
     }
     _lastRegisteredUserId = userId;
     await _handleAuthenticatedSession(sessionState);
+  }
+
+  /// Runs before ordinary sign-out revokes the session. If the backend is
+  /// offline, invalidating the provider token still stops delivery here.
+  Future<bool> revokeBeforeSignOut(String accessToken) async {
+    await _tokenSubscription?.cancel();
+    _tokenSubscription = null;
+    _lastRegisteredToken = null;
+    final revoked = await registrar.revokeLastRegistration(
+      accessToken: accessToken,
+    );
+    await gateway.invalidateToken();
+    return revoked;
   }
 
   /// Confirms the in-app notification-value explanation and proceeds to the
@@ -181,6 +200,18 @@ class PushRegistrationController extends StateNotifier<PushRegistrationPhase> {
       return;
     }
     await _requestPermissionAndRegister(sessionState);
+  }
+
+  /// Allows recovery from a failed registration without waiting for another
+  /// auth event or provider token rotation.
+  Future<void> retryRegistration() async {
+    if (state != PushRegistrationPhase.registrationFailed) {
+      return;
+    }
+    final sessionState = _lastSessionState;
+    if (sessionState != null && sessionState.isAuthenticated) {
+      await _handleAuthenticatedSession(sessionState);
+    }
   }
 
   Future<void> _handleAuthenticatedSession(AppSessionState sessionState) async {
@@ -312,6 +343,9 @@ class PushRegistrationController extends StateNotifier<PushRegistrationPhase> {
       }
       if (confirmed) {
         _lastRegisteredToken = token;
+        state = PushRegistrationPhase.ready;
+      } else {
+        state = PushRegistrationPhase.registrationFailed;
       }
     });
   }

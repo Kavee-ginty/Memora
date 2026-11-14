@@ -268,12 +268,14 @@ def payload_from_data(data: Mapping[str, str]) -> NotificationPayload:
 # UI/UX §9.21 templates so background/terminated taps show the same calm copy
 # the foreground banner renders. Only safe band parameters interpolate.
 _TRAY_BODY_TEMPLATES: Final[dict[str, str]] = {
-    "notification.due_memories": "A few memories are ready for care. Review when it suits you.",
-    "notification.verification_required": (
-        "Your material needs a quick check before it joins your learning path."
+    "notification.due_memories": (
+        "A few Physics memories are ready for care. Review when it suits you."
     ),
-    "notification.learning_path_ready": "Your learning path is ready to preview.",
-    "notification.reward_ready": "Your reef decoration is ready to place.",
+    "notification.verification_required": (
+        "Your Physics material needs a quick check before it joins your learning path."
+    ),
+    "notification.learning_path_ready": "Your Physics learning path is ready to preview.",
+    "notification.reward_ready": "Your Physics reef decoration is ready to place.",
     "notification.privacy_export_ready": "Your data export is ready to download.",
 }
 
@@ -291,9 +293,7 @@ def tray_body(payload: NotificationPayload) -> str:
 
     if payload.loc_key == "notification.mission_ready":
         subject = payload.params.get(PARAM_SUBJECT_NAME)
-        base = (
-            f"Your {subject} daily mission is ready." if subject else "Your daily mission is ready."
-        )
+        base = f"Your {subject or 'Physics'} daily mission is ready."
         count = payload.params.get(PARAM_COUNT)
         if count is not None:
             return f"{base} About {count} minutes."

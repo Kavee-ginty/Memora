@@ -116,7 +116,31 @@ class DeepLinkCoordinator {
       );
     }
 
-    // 2. Signed out: hand the destination to the router guard chain, which
+    // 2. A replayed intent never navigates, including an expired one.
+    if (await ledger.alreadyConsumed(intent.notificationId)) {
+      return const DeepLinkDecision(
+        resolution: DeepLinkResolution.alreadyConsumed,
+      );
+    }
+
+    // 3. Expired intents fall back once, after durable consumption.
+    if (intent.isExpired(clock())) {
+      if (!await ledger.markConsumed(intent.notificationId)) {
+        return const DeepLinkDecision(
+          resolution: DeepLinkResolution.notConsumed,
+          explanationLocKey: DeepLinkExplanations.notConfirmed,
+        );
+      }
+      final fallback = resolveDeepLinkTarget(intent).fallbackPath;
+      navigate(fallback);
+      return DeepLinkDecision(
+        resolution: DeepLinkResolution.fallback,
+        navigationPath: fallback,
+        explanationLocKey: DeepLinkExplanations.linkExpired,
+      );
+    }
+
+    // 4. Signed out: hand the destination to the router guard chain, which
     // captures an allowlisted one-time return location for sign-in (D10).
     // The intent stays unconsumed so post-auth replay revalidates.
     if (!isAuthenticated()) {
@@ -130,26 +154,6 @@ class DeepLinkCoordinator {
       return DeepLinkDecision(
         resolution: DeepLinkResolution.handedToSignIn,
         navigationPath: fallback,
-      );
-    }
-
-    // 3. Expiry: an expired intent never navigates; it is consumed so it
-    // cannot replay later either.
-    if (intent.isExpired(clock())) {
-      await ledger.markConsumed(intent.notificationId);
-      final fallback = resolveDeepLinkTarget(intent).fallbackPath;
-      navigate(fallback);
-      return DeepLinkDecision(
-        resolution: DeepLinkResolution.fallback,
-        navigationPath: fallback,
-        explanationLocKey: DeepLinkExplanations.linkExpired,
-      );
-    }
-
-    // 4. Consume-once: a replayed intent does nothing at all (Flow §20.3).
-    if (await ledger.alreadyConsumed(intent.notificationId)) {
-      return const DeepLinkDecision(
-        resolution: DeepLinkResolution.alreadyConsumed,
       );
     }
 

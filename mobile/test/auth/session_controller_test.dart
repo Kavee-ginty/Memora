@@ -126,6 +126,36 @@ void main() {
       },
     );
 
+    test('revokes push before revoking the session', () async {
+      await controller.signInWithEmailPassword(
+        email: 'student@memora.internal',
+        password: 'Password123!',
+      );
+      var pushRevokeCalled = false;
+      controller.revokePushBeforeSignOut = (accessToken) async {
+        expect(accessToken, isNotEmpty);
+        expect(mockSession.revokeCallCount, 0);
+        pushRevokeCalled = true;
+        return true;
+      };
+
+      expect(await controller.signOut(), isTrue);
+      expect(pushRevokeCalled, isTrue);
+      expect(mockSession.revokeCallCount, 1);
+    });
+
+    test('reports unconfirmed push revocation after local sign-out', () async {
+      await controller.signInWithEmailPassword(
+        email: 'student@memora.internal',
+        password: 'Password123!',
+      );
+      controller.revokePushBeforeSignOut = (_) async => false;
+
+      expect(await controller.signOut(), isFalse);
+      expect(controller.state.phase, AppSessionPhase.signedOut);
+      expect(controller.state.failure?.code, 'remote_revocation_unconfirmed');
+    });
+
     test(
       'Sign out completes locally even when remote revocation fails',
       () async {

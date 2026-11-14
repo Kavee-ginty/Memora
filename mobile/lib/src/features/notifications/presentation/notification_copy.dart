@@ -14,15 +14,14 @@ class NotificationCopy {
   const NotificationCopy({required this.locKey, required this.text});
 
   static const Map<String, String> _templates = {
-    'notification.mission_ready':
-        'Your daily mission is ready. About {count} minutes.',
+    'notification.mission_ready': 'Your Physics daily mission is ready.',
     'notification.due_memories':
-        'A few memories are ready for care. Review when it suits you.',
-    'notification.verification_required':
-        'Your material needs a quick check before it joins your learning path.',
+        'A few Physics memories are ready for care. Review when it suits you.',
+    'notification.verification_required': 'Your Physics material needs a quick check before it joins your learning path.',
     'notification.learning_path_ready':
-        'Your learning path is ready to preview.',
-    'notification.reward_ready': 'Your reef decoration is ready to place.',
+        'Your Physics learning path is ready to preview.',
+    'notification.reward_ready':
+        'Your Physics reef decoration is ready to place.',
     'notification.privacy_export_ready':
         'Your data export is ready to download.',
     DeepLinkExplanations.linkExpired: 'That notification has expired.',
@@ -30,6 +29,8 @@ class NotificationCopy {
         'That update is not available right now.',
     DeepLinkExplanations.workflowMovedOn: 'That workflow already moved on.',
     DeepLinkExplanations.malformedLink: 'That notification could not be read.',
+    DeepLinkExplanations.notConfirmed:
+        'That notification could not be opened. Please try again.',
   };
 
   /// Renders copy for a localization key; unknown keys degrade to neutral
@@ -45,9 +46,8 @@ class NotificationCopy {
   static String forIntent(NotificationIntent intent) {
     if (intent.locKey == 'notification.mission_ready') {
       final subject = intent.subjectName;
-      final base = subject == null || subject.isEmpty
-          ? 'Your daily mission is ready.'
-          : 'Your $subject daily mission is ready.';
+      final base =
+          'Your ${subject == null || subject.isEmpty ? 'Physics' : subject} daily mission is ready.';
       final count = intent.count;
       return count == null ? base : '$base About $count minutes.';
     }

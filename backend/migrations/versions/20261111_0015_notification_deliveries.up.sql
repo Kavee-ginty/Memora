@@ -210,6 +210,18 @@ GRANT EXECUTE ON FUNCTION memora_notifications_expire_stale_sending(timestamptz,
 -- completion under the owner context).
 GRANT SELECT, INSERT, UPDATE ON notification_deliveries TO memora_api;
 
+-- The restore reconciler runs as memora_worker without direct table SELECT.
+CREATE FUNCTION memora_notifications_user_rows_exist(p_user_id uuid) RETURNS boolean
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = pg_catalog
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.notification_deliveries WHERE user_id = p_user_id
+  )
+$$;
+REVOKE ALL ON FUNCTION memora_notifications_user_rows_exist(uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION memora_notifications_user_rows_exist(uuid) TO memora_worker;
+
 
 -- Account deletion (review finding 11 / retention decision): delivery rows
 -- carry the recipient and resource identifiers, so they are purged with the

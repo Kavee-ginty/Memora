@@ -115,6 +115,22 @@ class FirebaseNotificationGateway implements NotificationGateway {
   }
 
   @override
+  Future<bool> invalidateToken() async {
+    final messaging = await _messaging;
+    if (messaging == null) {
+      return false;
+    }
+    try {
+      // The backend sends to classic FCM tokens; see currentToken().
+      // ignore: deprecated_member_use
+      await messaging.deleteToken();
+      return true;
+    } on FirebaseException catch (_) {
+      return false;
+    }
+  }
+
+  @override
   Stream<String> tokenRefreshes() async* {
     final messaging = await _messaging;
     if (messaging == null) {

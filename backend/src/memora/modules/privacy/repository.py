@@ -1215,6 +1215,7 @@ def unreconciled_deletions_exist(connection: Connection) -> bool:
                 SELECT EXISTS(
                   SELECT 1 FROM memora_privacy_reconciliation_state()
                   WHERE oidc_subject NOT LIKE 'deleted:%' OR learner_rows_exist
+                     OR memora_notifications_user_rows_exist(user_id)
                 )
                 """
             )
@@ -1238,7 +1239,9 @@ def reconcile_privacy_deletions(
         connection.execute(
             text(
                 """
-                SELECT user_id AS id, oidc_subject, learner_rows_exist,
+                SELECT user_id AS id, oidc_subject,
+                       learner_rows_exist OR memora_notifications_user_rows_exist(user_id)
+                         AS learner_rows_exist,
                        upload_keys, export_request_ids
                 FROM memora_privacy_reconciliation_state()
                 """

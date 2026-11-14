@@ -173,8 +173,8 @@ def test_every_category_has_a_complete_registry_entry() -> None:
 
 
 def test_tray_body_adapts_to_lock_screen_detail_bands() -> None:
-    # PRD 031 default (subject band) names the subject; minimal stays
-    # grammatical without parameters; detailed adds the duration clause.
+    # The MVP's fixed Physics subject is safe in every detail band;
+    # detailed alone adds the duration clause.
     subject_only = build_payload(
         category=CATEGORY_MISSION_READY,
         resource_id="018f3c2a-7b9c-4d1e-9f2a-3b4c5d6e7f80",
@@ -195,7 +195,7 @@ def test_tray_body_adapts_to_lock_screen_detail_bands() -> None:
     )
     # Parameters outside the minimal band are dropped before rendering, so
     # no dangling "About minutes." fragment can appear.
-    assert tray_body(minimal) == "Your daily mission is ready."
+    assert tray_body(minimal) == "Your Physics daily mission is ready."
 
     detailed = build_payload(
         category=CATEGORY_MISSION_READY,
@@ -215,7 +215,9 @@ def test_tray_body_handles_other_categories_and_fallback() -> None:
         expires_at=NOW + REMINDER_INTENT_TTL,
         notification_id="a1b2c3d4e5f60718293a4b5c6d7e8f90",
     )
-    assert tray_body(due) == ("A few memories are ready for care. Review when it suits you.")
+    assert tray_body(due) == (
+        "A few Physics memories are ready for care. Review when it suits you."
+    )
 
 
 def test_registry_entries_stay_complete() -> None:

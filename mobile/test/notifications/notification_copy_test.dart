@@ -32,7 +32,7 @@ void main() {
       final intent = _intent();
       expect(
         NotificationCopy.forIntent(intent),
-        'Your daily mission is ready.',
+        'Your Physics daily mission is ready.',
       );
     });
 
@@ -56,7 +56,7 @@ void main() {
       final intent = _intent(count: 5);
       expect(
         NotificationCopy.forIntent(intent),
-        'Your daily mission is ready. About 5 minutes.',
+        'Your Physics daily mission is ready. About 5 minutes.',
       );
     });
 
@@ -73,7 +73,7 @@ void main() {
       })!;
       expect(
         NotificationCopy.forIntent(due),
-        'A few memories are ready for care. Review when it suits you.',
+        'A few Physics memories are ready for care. Review when it suits you.',
       );
     });
 
@@ -81,6 +81,10 @@ void main() {
       expect(
         NotificationCopy.forLocKey('notification.fallback.expired'),
         'That notification has expired.',
+      );
+      expect(
+        NotificationCopy.forLocKey('notification.fallback.not_confirmed'),
+        'That notification could not be opened. Please try again.',
       );
     });
   });

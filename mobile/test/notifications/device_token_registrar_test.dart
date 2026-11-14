@@ -78,6 +78,9 @@ class _PendingGateway implements NotificationGateway {
   Future<String?> currentToken() async => null;
 
   @override
+  Future<bool> invalidateToken() async => true;
+
+  @override
   Future<NotificationMessage?> initialTapMessage() async => null;
 
   @override

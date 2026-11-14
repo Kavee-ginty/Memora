@@ -29,6 +29,10 @@ evidence below; the device record is the explicit human checklist in the last
 section and is completed on the designated non-production Firebase project
 before the task leaves Review.
 
+On 14 November 2026, the owner chose to wait for T15's reward API rather than
+approve an exception to reward-link ownership and state validation. T19 remains
+in Review until that validation and the device rows below are complete.
+
 ## Automated backend evidence
 
 Environment: Windows, Python 3.12 venv, disposable `memora_test` PostgreSQL
@@ -38,13 +42,13 @@ database from the Compose stack (synthetic fixtures only).
 | --- | --- |
 | Payload contract (redaction, bands, expiry, opaque ids) | `backend/tests/test_notification_payload.py` — 18 tests: allowlist rejection, detail bands, non-UTC expiry rejection, wire-form round trip, registry-mismatch rejection |
 | Provider adapters (contract, failure classes, token cache, redaction) | `backend/tests/test_notification_providers.py` — 12 tests: success/retryable/permanent classification, 401 refresh-and-retry, unregistered-token permanence, transport timeout, credential-absent degradation, no parameter or token in logs |
-| Enforcement (quiet hours incl. DST, caps, category, consume-once, RLS, append-only) | `backend/tests/test_notification_service.py` — 27 tests, DB-gated: quiet hours in the recipient timezone with preferred-window exception and spring-forward boundary, cap at exactly the boundary, zero-cap, category disabled, duplicate trigger convergence under a real advisory-lock race, revoked-device skip, corrupt-token failure, worker role boundary, cross-owner RLS denial, ledger append-only trigger |
+| Enforcement (quiet hours incl. DST, caps, category, consume-once, RLS, append-only) | `backend/tests/test_notification_service.py`, DB-gated: quiet hours in the recipient timezone with preferred-window exception and spring-forward boundary, cap at exactly the boundary, zero-cap, category disabled, duplicate trigger convergence under a real advisory-lock race, revoked-device skip, corrupt-token failure, worker role boundary, cross-owner RLS denial, ledger append-only trigger, and restored notification-row reconciliation |
 | Worker (one send per unseen trigger, envelope tolerance, resource resolution) | `backend/tests/test_notification_worker.py` — 11 tests, DB-gated: backlog idempotence, all six trigger types, due-memories mission resolution and `resource_unavailable` consumption, duplicate-resource convergence, job replay refusal, unknown-type/malformed/missing-event dead-letters |
 | Producer emissions (same-transaction, safe payloads) | `backend/tests/test_notification_triggers.py` — 4 tests, DB-gated: `mission.ready` at today-mission materialization (replay emits nothing new), `ingestion.learning_path_committed` at commit (alongside the untouched T09 event), `ingestion.verification_required` at extraction finish with pending requests, `privacy.export_ready` at export completion |
 | Migration | `backend/tests/test_migrations.py` full round trip incl. `20261111_0015` up/down |
 | Contracts | `tools/contracts/generate_contracts.py --check` — exit 0, zero OpenAPI/client diff (T19 adds no public operation) |
 
-Full-suite results at implementation close: **741 passed, 7 skipped**
+Original PR full-suite results at implementation close: **741 passed, 7 skipped**
 (backend, with `MEMORA_TEST_DATABASE_URL`; skips are unrelated suites needing
 additional disposable resources) with `ruff format` and `ruff check` clean.
 
@@ -56,16 +60,39 @@ required (the gateway degrades to `unavailable` under test).
 | Requirement | Evidence |
 | --- | --- |
 | Gateway contract and degradation | `mobile/test/notifications/notification_gateway_test.dart` — 5 tests: permission states, sticky denial, broadcast streams, cold-start message |
-| Token registration (idempotency, rotation, denial, failure swallowing) | `mobile/test/notifications/device_token_registrar_test.dart` — 8 tests: stable installation id, token-scoped idempotency key, denied/missing-token skips, transport-failure swallowing, prompt-once flag |
-| Registration orchestration | `mobile/test/notifications/push_registration_controller_test.dart` — 5 tests: register on activation, denied never registers or re-prompts, sign-out reset, unavailable terminal state, token-rotation re-registration |
+| Token registration (idempotency, rotation, denial, failure handling) | `mobile/test/notifications/device_token_registrar_test.dart`: stable installation id, token-scoped idempotency key, denied/missing-token skips, failed registration and revocation, prompt-once flag |
+| Registration orchestration | `mobile/test/notifications/push_registration_controller_test.dart` and `mobile/test/auth/session_controller_test.dart`: pre-sign-out device revocation, local token invalidation, explicit retry after failure, denied/unavailable states and token rotation |
 | Intent parsing (wire contract mirror) | `mobile/test/notifications/notification_intent_test.dart` — 8 tests: six categories, schema/registry mismatch rejection, non-UTC expiry rejection, boundary expiry |
-| Consume-once ledger (durable, bounded, corrupt-safe) | `mobile/test/notifications/consumed_intent_ledger_test.dart` — 4 tests: survives instance recreation, 200-entry trim, corrupt-store degradation |
-| Deep-link validation matrix | `mobile/test/notifications/deep_link_coordinator_test.dart` — 12 tests: malformed discard, expired fallback + consume, replay refusal, signed-out hand-off without consumption, per-category validation (mission, verification, learning-path committed-state, reward, privacy), wrong-owner/invalid-state fallbacks with explanations |
-| Foreground notice (non-blocking, suppression, a11y) | `mobile/test/notifications/foreground_notice_test.dart` — 7 tests: contextual copy, tap consumes + navigates, dismiss changes nothing, queue during active answer drains after route change, polite live region, 320 px + 200% text |
+| Consume-once ledger (durable, bounded, corrupt-safe) | `mobile/test/notifications/consumed_intent_ledger_test.dart`: survives instance recreation, 200-entry trim, corrupt-store degradation, concurrent duplicate and distinct writes |
+| Deep-link validation matrix | `mobile/test/notifications/deep_link_coordinator_test.dart`: malformed discard, expired fallback and replay refusal, failed ledger write, signed-out hand-off, mission ID and workflow validation, wrong-owner/invalid-state explanations |
+| Foreground notice (non-blocking, suppression, a11y) | `mobile/test/notifications/foreground_notice_test.dart`: contextual copy, tap/dismiss behavior, route-change queueing, retry action, polite live region, reduced motion, 320 px + 200% text |
 | Regression: fallback explanation surfaced after navigation | included in the notice suite (`notice_explanation` snackbar) |
 
-Full-suite results at implementation close: **651 passed** with
+Original PR full-suite results at implementation close: **651 passed** with
 `flutter analyze` at zero errors.
+
+## Local fix verification (14 November 2026)
+
+Run from the task worktree after the sign-out, retry, copy, fallback and
+restore-reconciliation fixes:
+
+| Command | Result |
+| --- | --- |
+| `dart format` on the 14 affected Dart files | 0 changes |
+| `flutter analyze --no-pub` | Exit 0; no issues |
+| `flutter test --no-pub -r compact` | Exit 0; 678 passed |
+| `flutter test --no-pub test/notifications/foreground_notice_test.dart -r expanded` | Exit 0; 10 passed, including the added reduced-motion case |
+| `python -m ruff format --check` and `python -m ruff check` on the five affected backend Python files | Exit 0; clean |
+| `python -m pytest backend/tests --ignore=backend/tests/test_migrations.py -q` | Exit 0; non-database tests passed; database-gated tests skipped |
+| `python -m pytest backend/tests/test_migrations.py -q` | Exit 0; three tests ran, eight skipped without `MEMORA_TEST_DATABASE_URL` |
+| `python tools/contracts/generate_contracts.py --check` | Exit 0; no generated contract drift |
+| `git diff --check` | Exit 0 |
+
+This local session has no disposable PostgreSQL service or configured
+`MEMORA_TEST_DATABASE_URL`, so the new restore-reconciliation integration test
+and the edited migration have not run against a database here. The original PR
+CI migration result predates these local edits. They require a fresh database
+CI run after the task branch is pushed by an authorized human.
 
 ## Safe fallback screenshots (automated placeholders)
 

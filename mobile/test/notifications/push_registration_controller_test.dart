@@ -176,7 +176,7 @@ void main() {
     });
 
     test(
-      'registration failure is recoverable on session re-emission',
+      'registration failure is recoverable through explicit retry',
       () async {
         final gateway = FakeNotificationGateway(
           initialPermission: NotificationPermission.granted,
@@ -206,10 +206,9 @@ void main() {
         expect(controller.state, PushRegistrationPhase.registrationFailed);
         expect(api.calls, isEmpty);
 
-        // Connectivity returns: the next authenticated emission retries and
-        // marks ready only after server confirmation.
+        // Connectivity returns without any new auth event.
         api.registerFailure = null;
-        sessions.add(_activeSession());
+        await controller.retryRegistration();
         await pumpEventQueue();
         expect(controller.state, PushRegistrationPhase.ready);
         expect(api.calls, hasLength(1));
@@ -283,10 +282,44 @@ void main() {
 
         // Offline: the revocation stays tracked for a later attempt.
         expect(api.revocations, isEmpty);
+        expect(await gateway.currentToken(), isNull);
         api.revokeFailure = null;
         await controller.onSessionState(const AppSessionState.signedOut());
         await pumpEventQueue();
         expect(api.revocations, hasLength(1));
+      },
+    );
+
+    test(
+      'pre-sign-out invalidates the token when server revocation fails',
+      () async {
+        final gateway = FakeNotificationGateway(
+          initialPermission: NotificationPermission.granted,
+          initialToken: 'push-token-1',
+        );
+        final api = RecordingRegistrationApi()
+          ..revokeFailure = Exception('offline');
+        final sessions = StreamController<AppSessionState>.broadcast();
+        addTearDown(sessions.close);
+        final controller = PushRegistrationController(
+          gateway: gateway,
+          registrar: DeviceTokenRegistrar(
+            gateway: gateway,
+            api: api,
+            keyStore: InMemoryKeyStore(),
+            configuration: _testConfiguration,
+          ),
+          keyStore: InMemoryKeyStore(),
+          sessionStates: sessions.stream,
+        );
+        controller.start();
+        addTearDown(controller.dispose);
+        sessions.add(_activeSession());
+        await pumpEventQueue();
+
+        expect(await controller.revokeBeforeSignOut('fresh-token'), isFalse);
+        expect(await gateway.currentToken(), isNull);
+        expect(api.revocations, isEmpty);
       },
     );
 

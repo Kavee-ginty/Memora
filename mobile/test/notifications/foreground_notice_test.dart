@@ -55,7 +55,10 @@ const _missionPayload = <String, String>{
   'param.count': '5',
 };
 
-Widget _wrap({required FakeNotificationGateway gateway}) {
+Widget _wrap({
+  required FakeNotificationGateway gateway,
+  bool reducedMotion = false,
+}) {
   return ProviderScope(
     overrides: <Override>[
       notificationGatewayProvider.overrideWithValue(gateway),
@@ -65,8 +68,14 @@ Widget _wrap({required FakeNotificationGateway gateway}) {
       ),
     ],
     child: MaterialApp(
-      home: ForegroundNoticeHost(
-        child: const Scaffold(body: SizedBox.expand()),
+      home: Builder(
+        builder: (context) => MediaQuery(
+          data: MediaQuery.of(context)
+              .copyWith(disableAnimations: reducedMotion),
+          child: ForegroundNoticeHost(
+            child: const Scaffold(body: SizedBox.expand()),
+          ),
+        ),
       ),
     ),
   );
@@ -94,6 +103,20 @@ void main() {
 
     expect(find.byKey(const ValueKey('notice_tap')), findsOneWidget);
     expect(find.textContaining('daily mission is ready'), findsOneWidget);
+  });
+
+  testWidgets('removes notice motion when reduced motion is requested', (
+    WidgetTester tester,
+  ) async {
+    final gateway = FakeNotificationGateway();
+    await tester.pumpWidget(_wrap(gateway: gateway, reducedMotion: true));
+
+    gateway.emitForeground(const NotificationMessage(data: _missionPayload));
+    await tester.pumpAndSettle();
+
+    final slide = tester.widget<AnimatedSlide>(find.byType(AnimatedSlide));
+    expect(slide.duration, Duration.zero);
+    expect(slide.offset, Offset.zero);
   });
 
   testWidgets('tap consumes the intent through the coordinator', (
@@ -303,11 +326,15 @@ void main() {
   testWidgets('explains notification value before requesting permission', (
     WidgetTester tester,
   ) async {
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
     final gateway = FakeNotificationGateway(
       initialPermission: NotificationPermission.notDetermined,
       initialToken: 'push-token-1',
     );
-    final api = RecordingRegistrationApi();
+    final api = RecordingRegistrationApi()
+      ..registerFailure = Exception('offline');
     final sessions = StreamController<AppSessionState>.broadcast();
     addTearDown(sessions.close);
 
@@ -335,9 +362,12 @@ void main() {
             return controller;
           }),
         ],
-        child: MaterialApp(
-          home: ForegroundNoticeHost(
-            child: const Scaffold(body: SizedBox.expand()),
+        child: MediaQuery(
+          data: const MediaQueryData(textScaler: TextScaler.linear(2.0)),
+          child: MaterialApp(
+            home: ForegroundNoticeHost(
+              child: const Scaffold(body: SizedBox.expand()),
+            ),
           ),
         ),
       ),
@@ -370,7 +400,19 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('push_explanation_enable')));
     await tester.pumpAndSettle();
     expect(gateway.askWasCalled, isTrue);
+    expect(
+      find.byKey(const ValueKey('push_registration_retry_notice')),
+      findsOneWidget,
+    );
+    api.registerFailure = null;
+    await tester.tap(find.byKey(const ValueKey('push_registration_retry')));
+    await tester.pumpAndSettle();
     expect(api.calls, hasLength(1));
+    expect(
+      find.byKey(const ValueKey('push_registration_retry_notice')),
+      findsNothing,
+    );
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('announces the notice politely for screen readers', (

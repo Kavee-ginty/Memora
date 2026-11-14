@@ -165,6 +165,20 @@ void main() {
         ),
         isTrue,
       );
+      final replay = await harness.coordinator.handleTap(payload);
+      expect(replay.resolution, DeepLinkResolution.alreadyConsumed);
+      expect(harness.navigations, hasLength(1));
+    });
+
+    test('expired intent does not navigate when storage fails', () async {
+      final harness = Harness()
+        ..keyStore = FailingWriteKeyStore()
+        ..ledger = ConsumedIntentLedger(keyStore: FailingWriteKeyStore());
+      final decision = await harness.coordinator.handleTap(
+        _payload('verification_required', expiresAt: _expiry(hours: -1)),
+      );
+      expect(decision.resolution, DeepLinkResolution.notConsumed);
+      expect(harness.navigations, isEmpty);
     });
 
     test('consumed intents never replay after later navigation', () async {

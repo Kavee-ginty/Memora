@@ -109,7 +109,7 @@ def test_fcm_tray_body_omits_params_outside_the_detail_band() -> None:
     provider.send(minimal, PUSH_TOKEN)
     body = json.loads(transport.calls[1]["body"])
     assert body["message"]["notification"]["body"] == (
-        "A few memories are ready for care. Review when it suits you."
+        "A few Physics memories are ready for care. Review when it suits you."
     )
 
 
@@ -165,7 +165,7 @@ def test_fcm_success_returns_provider_message_id() -> None:
     assert body["message"]["notification"]["title"] == "Memora"
     assert (
         body["message"]["notification"]["body"]
-        == "A few memories are ready for care. Review when it suits you."
+        == "A few Physics memories are ready for care. Review when it suits you."
     )
 
 

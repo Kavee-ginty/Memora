@@ -57,11 +57,13 @@ designated non-production Firebase project is attached.
 7. **Token registration** — permission requested once per installation,
    token registered through the existing idempotent `registerDevice`
    operation with a stable installation id and a stable idempotency key per
-   installation+token; token rotation re-registers. Every failure is
-   swallowed with a code-only log; denial never blocks use.
+   installation+token; token rotation re-registers. A failed registration
+   exposes a non-blocking Retry action. Ordinary sign-out revokes the device
+   before the session and invalidates the local FCM token if the server is
+   unavailable. Logs contain a safe failure class only; denial never blocks use.
 8. **Deep-link validation and consume-once** — payloads parse into typed
    intents (registry-mismatched route intents or localization keys are
-   rejected), expiry is checked at tap time, each validated intent is
+   rejected), consumed IDs are checked before expiry, and each intent is
    recorded in a durable bounded ledger (survives process recreation,
    trimmed at 200 entries), and every mission/verification/learning-path/
    privacy target is validated through its existing GET endpoint before
@@ -76,6 +78,8 @@ designated non-production Firebase project is attached.
    navigate, dismiss = state unchanged. Notices arriving while a mission
    item, feedback, explanation or quiz route is active queue and surface
    only after the route leaves the answer surface (D11).
+   The MVP's fixed Physics subject appears in learning notification copy even
+   in the parameter-free minimal band; privacy export copy remains account-wide.
 
 ## 2. Decisions and why
 
@@ -87,7 +91,7 @@ designated non-production Firebase project is attached.
 | D4 | Append-only `notification_deliveries` + SECURITY DEFINER worker functions | Schema §13.3, §16.2; migration 0004 removed direct worker DML; T09/T11 pattern keeps the boundary identical |
 | D5 | Enforcement order expiry → enabled → category → cap → quiet → consume-once | PRD 032; cheapest checks first; the preferred window is the PRD's "user-configured exception" |
 | D6 | Six trigger event types; four emitted by merged modules this task, one reserved for T15 | Flow §13.1 coverage; same-transaction outbox discipline (Schema §13.2); T11 D9 precedent for producer envelopes — reviewer acknowledgement requested |
-| D7 | Push never authoritative; client validates via existing GETs | API §16.3; no new endpoints needed at all (D14) |
+| D7 | Push never authoritative; client validates merged resources via existing GETs | API §16.3; reward-grant validation awaits T15 |
 | D8 | Question surfaces unreachable from deep links | Flow §13.1; UI/UX §9.21 "tapping a mission notification deep-links to its preview, not directly into a timed question" |
 | D9 | Durable bounded consume-once ledger keyed by payload notification id | Flow §20.3 "consumed deep link is not replayed"; survives process recreation; server-side dedupe is the authoritative counterpart |
 | D10 | Fallbacks follow Flow §13.1 exactly; signed-out taps use the T07 safe-return hand-off | Reuse of the existing guard chain; no parallel auth logic |
@@ -182,8 +186,8 @@ disposable resources (pilot content fixtures). New T19 suites run fully:
    `due_memories` deliveries per user-local day; workflow signals are not
    capped. Confirm the PRD 032 reading.
 5. **T15 follow-up**: `reward.granted` producer and the reef-detail
-   destination; the mobile registry currently resolves reward taps to
-   Progress (Flow §13.1 fallback).
+   destination and ownership/state validation. The owner chose to wait for
+   T15 on 14 November 2026, so T19 remains in Review without an exception.
 
 ## 7. Follow-ups
 

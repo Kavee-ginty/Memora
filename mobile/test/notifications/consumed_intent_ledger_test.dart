@@ -60,5 +60,29 @@ void main() {
       await ledger.markConsumed('');
       expect(keyStore.values.containsKey('memora_consumed_intents'), isFalse);
     });
+
+    test('concurrent taps claim the same intent only once', () async {
+      final ledger = ConsumedIntentLedger(keyStore: InMemoryKeyStore());
+
+      final results = await Future.wait(<Future<bool>>[
+        ledger.markConsumed('intent-1'),
+        ledger.markConsumed('intent-1'),
+      ]);
+
+      expect(results, <bool>[true, false]);
+    });
+
+    test('concurrent writes preserve distinct intents', () async {
+      final ledger = ConsumedIntentLedger(keyStore: InMemoryKeyStore());
+
+      final results = await Future.wait(<Future<bool>>[
+        ledger.markConsumed('intent-1'),
+        ledger.markConsumed('intent-2'),
+      ]);
+
+      expect(results, <bool>[true, true]);
+      expect(await ledger.alreadyConsumed('intent-1'), isTrue);
+      expect(await ledger.alreadyConsumed('intent-2'), isTrue);
+    });
   });
 }

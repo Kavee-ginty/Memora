@@ -1121,3 +1121,59 @@ def test_account_deletion_purges_delivery_rows(database: Engine) -> None:
     assert deliveries == 0
     assert devices == 0
     assert user_status == "deleted"
+
+
+def test_restore_reconciles_delivery_rows_without_other_learner_data(database: Engine) -> None:
+    from memora.modules.privacy.repository import (
+        reconcile_privacy_deletions,
+        unreconciled_deletions_exist,
+    )
+
+    user_id = create_user(database)
+    with database.begin() as connection:
+        connection.execute(
+            text(
+                """UPDATE users SET status = 'deleted', deleted_at = now(),
+                   oidc_subject = :deleted_subject WHERE id = :user_id"""
+            ),
+            {"deleted_subject": f"deleted:{user_id}", "user_id": user_id},
+        )
+        connection.execute(
+            text(
+                """INSERT INTO notification_deliveries(
+                     user_id, notification_id, category, resource_type,
+                     resource_id, dedupe_key, status, skip_reason
+                   ) VALUES (
+                     :user_id, :notification_id, 'due_memories', 'mission',
+                     :resource_id, :dedupe_key, 'skipped', 'no_devices'
+                   )"""
+            ),
+            {
+                "user_id": user_id,
+                "notification_id": uuid4().hex,
+                "resource_id": str(uuid4()),
+                "dedupe_key": uuid4().hex,
+            },
+        )
+
+    with pytest.raises(ProgrammingError), database.begin() as connection:
+        connection.execute(text("SET LOCAL ROLE memora_api"))
+        connection.execute(
+            text("SELECT memora_notifications_user_rows_exist(:user_id)"),
+            {"user_id": user_id},
+        )
+
+    with database.begin() as connection:
+        connection.execute(text("SET LOCAL ROLE memora_worker"))
+        assert unreconciled_deletions_exist(connection) is True
+        assert reconcile_privacy_deletions(connection) == 1
+        assert unreconciled_deletions_exist(connection) is False
+
+    with database.begin() as connection:
+        assert (
+            connection.scalar(
+                text("SELECT count(*) FROM notification_deliveries WHERE user_id = :user_id"),
+                {"user_id": user_id},
+            )
+            == 0
+        )

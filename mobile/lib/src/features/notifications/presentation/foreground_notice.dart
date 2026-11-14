@@ -134,6 +134,11 @@ class _ForegroundNoticeHostState extends ConsumerState<ForegroundNoticeHost> {
       setState(() => _visible = null);
     }
     _drainQueue();
+    final phase = ref.read(pushRegistrationControllerProvider);
+    if (phase == PushRegistrationPhase.awaitingExplanation ||
+        phase == PushRegistrationPhase.registrationFailed) {
+      setState(() {});
+    }
   }
 
   void _enqueue(NotificationMessage message) {
@@ -219,6 +224,13 @@ class _ForegroundNoticeHostState extends ConsumerState<ForegroundNoticeHost> {
     });
 
     final registrationPhase = ref.watch(pushRegistrationControllerProvider);
+    final registrationFailed =
+        registrationPhase == PushRegistrationPhase.registrationFailed;
+    final showRegistrationPrompt =
+        ((registrationPhase == PushRegistrationPhase.awaitingExplanation &&
+                !_explanationDismissed) ||
+            registrationFailed) &&
+        !_isActiveAnswerRoute(_currentPath());
 
     // Rebuilds (including injected-reader route changes in tests) drain a
     // queued notice once the route has left an active-answer surface.
@@ -233,8 +245,7 @@ class _ForegroundNoticeHostState extends ConsumerState<ForegroundNoticeHost> {
     return Stack(
       children: <Widget>[
         widget.child,
-        if (registrationPhase == PushRegistrationPhase.awaitingExplanation &&
-            !_explanationDismissed)
+        if (showRegistrationPrompt)
           Positioned(
             top: 0,
             left: 0,
@@ -244,7 +255,11 @@ class _ForegroundNoticeHostState extends ConsumerState<ForegroundNoticeHost> {
               child: Material(
                 color: Colors.transparent,
                 child: Container(
-                  key: const ValueKey('push_explanation'),
+                  key: ValueKey(
+                    registrationFailed
+                        ? 'push_registration_retry_notice'
+                        : 'push_explanation',
+                  ),
                   margin: const EdgeInsets.symmetric(
                     horizontal: 12,
                     vertical: 8,
@@ -260,29 +275,49 @@ class _ForegroundNoticeHostState extends ConsumerState<ForegroundNoticeHost> {
                       color: Theme.of(context).colorScheme.outlineVariant,
                     ),
                   ),
-                  child: Row(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      Expanded(
-                        child: Text(
-                          'Get reminders for daily missions, due memories and '
-                          'rewards. You choose the categories and quiet hours '
-                          'in settings.',
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
+                      Text(
+                        registrationFailed
+                            ? 'Notifications could not be set up. Try again when connected.'
+                            : 'Get reminders for missions, due memories and rewards. '
+                                  'Choose categories and quiet hours in Settings.',
+                        style: Theme.of(context).textTheme.bodyMedium,
                       ),
-                      TextButton(
-                        key: const ValueKey('push_explanation_enable'),
-                        onPressed: () => ref
-                            .read(pushRegistrationControllerProvider.notifier)
-                            .confirmNotificationExplanation(),
-                        child: const Text('Enable'),
-                      ),
-                      IconButton(
-                        key: const ValueKey('push_explanation_dismiss'),
-                        tooltip: 'Dismiss explanation',
-                        onPressed: () =>
-                            setState(() => _explanationDismissed = true),
-                        icon: const Icon(Icons.close),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: <Widget>[
+                          TextButton(
+                            key: ValueKey(
+                              registrationFailed
+                                  ? 'push_registration_retry'
+                                  : 'push_explanation_enable',
+                            ),
+                            onPressed: () {
+                              final controller = ref.read(
+                                pushRegistrationControllerProvider.notifier,
+                              );
+                              if (registrationFailed) {
+                                controller.retryRegistration();
+                              } else {
+                                controller.confirmNotificationExplanation();
+                              }
+                            },
+                            child: Text(
+                              registrationFailed ? 'Retry' : 'Enable',
+                            ),
+                          ),
+                          if (!registrationFailed)
+                            IconButton(
+                              key: const ValueKey('push_explanation_dismiss'),
+                              tooltip: 'Dismiss explanation',
+                              onPressed: () =>
+                                  setState(() => _explanationDismissed = true),
+                              icon: const Icon(Icons.close),
+                            ),
+                        ],
                       ),
                     ],
                   ),

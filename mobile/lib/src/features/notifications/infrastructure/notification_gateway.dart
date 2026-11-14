@@ -22,6 +22,10 @@ abstract class NotificationGateway {
   /// The current provider token, or null when unavailable.
   Future<String?> currentToken();
 
+  /// Invalidates this installation's token so a signed-out account cannot
+  /// receive pushes while server revocation is unavailable.
+  Future<bool> invalidateToken();
+
   /// Fires whenever the provider rotates the token.
   Stream<String> tokenRefreshes();
 
@@ -97,6 +101,12 @@ class FakeNotificationGateway implements NotificationGateway {
 
   @override
   Future<String?> currentToken() async => _token;
+
+  @override
+  Future<bool> invalidateToken() async {
+    _token = null;
+    return true;
+  }
 
   @override
   Stream<String> tokenRefreshes() => _tokenRefreshes.stream;

@@ -370,10 +370,8 @@ note. The task stays in Review until the Android/iOS device rows complete on
 the designated non-production Firebase project; the reviewers must also
 acknowledge the shared-surface additions (migration `20261111_0015`, the four
 new outbox trigger event types and the cross-module preference/device reads).
-T01-T09, T11-T12, T17 and T20-T21 are merged and Done. T10 and T24 are in
-Review; T13 is In Progress. T18 and T19 are Ready. T14, T15, T22 and T23 remain
-Blocked until T13 is Done; later tasks remain blocked until all listed
-dependencies are Done.
+The owner chose to wait for T15's reward API before completing reward-link
+validation; no T19 acceptance exception was approved.
 
 T21 completed through pull request #49, merged into `develop` at `d387506`. All
 required CI checks passed, and the real T20 PostgreSQL/durable-worker privacy
