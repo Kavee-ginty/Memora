@@ -131,6 +131,21 @@ void main() {
       },
     );
 
+    testWidgets('Signed out student cannot open Profile support', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        createTestApp(initialState: const AppSessionState.signedOut()),
+      );
+      await tester.pumpAndSettle();
+
+      await goTo(tester, AppRoutes.profileSupport);
+
+      expect(find.text('Welcome back'), findsOneWidget);
+      expect(find.text('Log in'), findsOneWidget);
+      expect(find.textContaining('support contact details'), findsNothing);
+    });
+
     testWidgets(
       'Signed out student on first launch is routed to onboarding step 1',
       (tester) async {

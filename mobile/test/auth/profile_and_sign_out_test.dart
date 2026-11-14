@@ -91,7 +91,9 @@ void main() {
 
         await tester.pumpWidget(createTestWidget(bootstrap: bootstrap));
 
-        await tester.tap(find.text('Sign Out'));
+        final signOut = find.text('Sign Out');
+        await tester.ensureVisible(signOut);
+        await tester.tap(signOut);
         await tester.pumpAndSettle();
 
         expect(
@@ -138,7 +140,9 @@ void main() {
 
       await tester.pumpWidget(createTestWidget(bootstrap: bootstrap));
 
-      await tester.tap(find.text('Sign Out'));
+      final signOut = find.text('Sign Out');
+      await tester.ensureVisible(signOut);
+      await tester.tap(signOut);
       await tester.pumpAndSettle();
 
       expect(

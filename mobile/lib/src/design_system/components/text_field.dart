@@ -92,6 +92,12 @@ class _MemoraTextFieldState extends State<MemoraTextField> {
 
   @override
   Widget build(BuildContext context) {
+    final highContrast = MediaQuery.highContrastOf(context);
+    final foreground = highContrast
+        ? Colors.black
+        : widget.enabled
+        ? MemoraColors.textPrimary
+        : MemoraColors.textMuted;
     final bool hasError =
         widget.errorText != null && widget.errorText!.isNotEmpty;
     final bool hasSuccess =
@@ -108,9 +114,7 @@ class _MemoraTextFieldState extends State<MemoraTextField> {
             widget.label,
             style: MemoraTypography.bodyStrong.copyWith(
               fontSize: 14,
-              color: widget.enabled
-                  ? MemoraColors.textPrimary
-                  : MemoraColors.textMuted,
+              color: foreground,
             ),
           ),
         ),
@@ -130,6 +134,8 @@ class _MemoraTextFieldState extends State<MemoraTextField> {
                   ? MemoraColors.feedbackCritical
                   : (_isFocused
                         ? MemoraColors.focus
+                        : highContrast
+                        ? Colors.black
                         : MemoraColors.borderDefault),
               width: hasError || _isFocused ? 2.0 : 1.0,
             ),
@@ -163,11 +169,7 @@ class _MemoraTextFieldState extends State<MemoraTextField> {
                   onChanged: widget.onChanged,
                   onFieldSubmitted: widget.onSubmitted,
                   validator: widget.validator,
-                  style: MemoraTypography.body.copyWith(
-                    color: widget.enabled
-                        ? MemoraColors.textPrimary
-                        : MemoraColors.textMuted,
-                  ),
+                  style: MemoraTypography.body.copyWith(color: foreground),
                   decoration: InputDecoration(
                     hintText: widget.hintText,
                     border: InputBorder.none,

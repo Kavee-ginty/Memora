@@ -57,7 +57,7 @@ const Set<String> _retryableCodes = <String>{
 AuthFailure mapDioExceptionToFailure(DioException error) {
   final status = error.response?.statusCode;
 
-  final envelope = _parseEnvelope(error.response?.data);
+  final envelope = parseApiErrorEnvelope(error.response?.data);
 
   if (envelope != null) {
     final code = envelope.error.code;
@@ -95,7 +95,7 @@ AuthFailure mapDioExceptionToFailure(DioException error) {
   return AuthFailure.unknown();
 }
 
-ErrorEnvelope? _parseEnvelope(Object? data) {
+ErrorEnvelope? parseApiErrorEnvelope(Object? data) {
   if (data is! Map) return null;
 
   try {

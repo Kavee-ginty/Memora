@@ -19,6 +19,8 @@ import 'src/features/privacy/application/privacy_controller.dart';
 import 'src/features/privacy/data/privacy_download_launcher.dart';
 import 'src/features/privacy/data/privacy_reachability.dart';
 import 'src/features/privacy/data/privacy_repository.dart';
+import 'src/features/profile/application/profile_controller.dart';
+import 'src/features/profile/data/profile_repository.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -38,6 +40,7 @@ void main() async {
   PrivacyDownloadLauncher privacyDownloadLauncher =
       UrlLauncherPrivacyDownloadLauncher();
   IngestionRepository ingestionRepository = MockIngestionRepository();
+  ProfileApi? profileApi;
 
   if (config.isValid &&
       config.supabaseUrl != 'https://placeholder.supabase.co') {
@@ -59,6 +62,11 @@ void main() async {
       ),
     );
     final apiClient = MemoraApiClient(dio: dio);
+    final profileClient = MemoraApiClient(
+      dio: Dio(dio.options.copyWith()),
+      interceptors: const [],
+    );
+    profileApi = profileClient.getProfileApi();
     sessionRepository = MemoraSessionRepository(
       apiClient: apiClient,
       configuration: config,
@@ -104,6 +112,14 @@ void main() async {
           privacyDownloadLauncher,
         ),
         ingestionRepositoryProvider.overrideWithValue(ingestionRepository),
+        if (profileApi != null)
+          profileRepositoryProvider.overrideWith(
+            (ref) => MemoraProfileRepository(
+              profileApi!,
+              config,
+              ref.read(sessionControllerProvider.notifier).refreshForSettings,
+            ),
+          ),
       ],
       child: const MemoraApp(),
     ),

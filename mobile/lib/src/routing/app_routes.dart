@@ -16,6 +16,10 @@ abstract class AppRoutes {
   static const String learning = '/learning';
   static const String progress = '/progress';
   static const String profile = '/profile';
+  static const String editProfile = '/profile/edit';
+  static const String profileNotifications = '/profile/notifications';
+  static const String profileAccessibility = '/profile/accessibility';
+  static const String profileSupport = '/profile/support';
 
   /// Privacy hub reached from Profile.
   static const String privacy = '/profile/privacy';

@@ -30,6 +30,8 @@ import '../features/privacy/presentation/privacy_export_screen.dart';
 import '../features/privacy/presentation/privacy_overview_screen.dart';
 import '../features/privacy/presentation/privacy_reauth_screen.dart';
 import '../features/profile/presentation/profile_entry_screen.dart';
+import '../features/profile/application/profile_controller.dart';
+import '../features/profile/presentation/profile_settings_screen.dart';
 import '../features/progress/presentation/progress_entry_screen.dart';
 import '../features/quiz/presentation/quiz_screen.dart';
 import 'app_routes.dart';
@@ -373,6 +375,41 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 name: 'profile',
                 pageBuilder: (context, state) =>
                     _buildPage(context, state, const ProfileEntryScreen()),
+                routes: [
+                  GoRoute(
+                    path: 'edit',
+                    pageBuilder: (_, state) =>
+                        _profileSettingsPage(state, SettingsSection.profile),
+                  ),
+                  GoRoute(
+                    path: 'notifications',
+                    pageBuilder: (_, state) => _profileSettingsPage(
+                      state,
+                      SettingsSection.notifications,
+                    ),
+                  ),
+                  GoRoute(
+                    path: 'accessibility',
+                    pageBuilder: (_, state) => _profileSettingsPage(
+                      state,
+                      SettingsSection.accessibility,
+                    ),
+                  ),
+                  GoRoute(
+                    path: 'support',
+                    pageBuilder: (context, state) => _buildPage(
+                      context,
+                      state,
+                      const FeatureUnavailableScreen(
+                        featureName: 'Support',
+                        message:
+                            'Memora support contact details are being finalized. '
+                            'Keep any request ID shown with an error so support can '
+                            'trace it when the pilot support channel opens.',
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -396,6 +433,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     errorBuilder: (context, state) => const NotFoundScreen(),
   );
 });
+
+// Keep settings pages mounted while a reduced-motion draft changes MediaQuery.
+Page<void> _profileSettingsPage(GoRouterState state, SettingsSection section) =>
+    NoTransitionPage<void>(
+      key: state.pageKey,
+      child: ProfileSettingsScreen(section),
+    );
 
 /// Builds an immediate page when the platform requests reduced motion and a
 /// standard platform transition otherwise.

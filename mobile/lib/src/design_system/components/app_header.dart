@@ -15,6 +15,7 @@ class MemoraHeader extends StatelessWidget implements PreferredSizeWidget {
     this.onMenuPressed,
     this.onProfilePressed,
     this.bottom,
+    this.headingOnTitle = false,
   }) : variant = MemoraHeaderVariant.root,
        subtitle = null,
        onBackPressed = null,
@@ -32,6 +33,7 @@ class MemoraHeader extends StatelessWidget implements PreferredSizeWidget {
     this.contextualAction,
     this.bottom,
   }) : variant = MemoraHeaderVariant.detail,
+       headingOnTitle = false,
        streakDays = null,
        onMenuPressed = null,
        onProfilePressed = null,
@@ -48,6 +50,7 @@ class MemoraHeader extends StatelessWidget implements PreferredSizeWidget {
     this.onTimerToggle,
     this.bottom,
   }) : variant = MemoraHeaderVariant.mission,
+       headingOnTitle = false,
        title = 'Mission',
        subtitle = null,
        streakDays = null,
@@ -69,6 +72,7 @@ class MemoraHeader extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback? onTimerToggle;
   final VoidCallback? onPauseMission;
   final PreferredSizeWidget? bottom;
+  final bool headingOnTitle;
 
   @override
   Size get preferredSize {
@@ -87,7 +91,7 @@ class MemoraHeader extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      header: true,
+      header: !headingOnTitle,
       child: SafeArea(
         bottom: false,
         child: Container(
@@ -178,14 +182,20 @@ class MemoraHeader extends StatelessWidget implements PreferredSizeWidget {
             ),
             const SizedBox(width: MemoraSpacing.space12),
             Expanded(
-              child: Text(
-                title,
-                style: MemoraTypography.pageTitle.copyWith(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
+              child: Semantics(
+                header: headingOnTitle ? true : null,
+                child: Text(
+                  title,
+                  style: MemoraTypography.pageTitle.copyWith(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    color: MediaQuery.highContrastOf(context)
+                        ? Colors.black
+                        : null,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],

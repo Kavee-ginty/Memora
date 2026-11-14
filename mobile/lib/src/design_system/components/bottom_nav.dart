@@ -12,10 +12,12 @@ class MemoraBottomNavigationBar extends StatelessWidget {
     super.key,
     required this.currentIndex,
     required this.onTap,
+    this.reflowLabels = false,
   });
 
   final int currentIndex;
   final ValueChanged<int> onTap;
+  final bool reflowLabels;
 
   static const List<_NavDestinationItem> _destinations = <_NavDestinationItem>[
     _NavDestinationItem(
@@ -66,21 +68,57 @@ class MemoraBottomNavigationBar extends StatelessWidget {
             horizontal: MemoraSpacing.space8,
             vertical: MemoraSpacing.space8,
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: List<Widget>.generate(_destinations.length, (int index) {
-              final _NavDestinationItem item = _destinations[index];
-              final bool isSelected = index == currentIndex;
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final availableLabelWidth =
+                  constraints.maxWidth / 4 - 2 * MemoraSpacing.space8;
+              final columns =
+                  reflowLabels &&
+                      _destinations.any((item) {
+                        final label = TextPainter(
+                          text: TextSpan(
+                            text: item.label,
+                            style: _labelStyle(true),
+                          ),
+                          textScaler: MediaQuery.textScalerOf(context),
+                          textDirection: Directionality.of(context),
+                          maxLines: 1,
+                        )..layout();
+                        final fits = label.width <= availableLabelWidth;
+                        label.dispose();
+                        return !fits;
+                      })
+                  ? 2
+                  : 4;
 
-              return Expanded(
-                child: _buildNavItem(
-                  context: context,
-                  item: item,
-                  index: index,
-                  isSelected: isSelected,
-                ),
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (
+                    var start = 0;
+                    start < _destinations.length;
+                    start += columns
+                  )
+                    Row(
+                      children: [
+                        for (
+                          var index = start;
+                          index < start + columns;
+                          index++
+                        )
+                          Expanded(
+                            child: _buildNavItem(
+                              item: _destinations[index],
+                              index: index,
+                              isSelected: index == currentIndex,
+                              allowLabelWrap: columns == 2,
+                            ),
+                          ),
+                      ],
+                    ),
+                ],
               );
-            }),
+            },
           ),
         ),
       ),
@@ -88,10 +126,10 @@ class MemoraBottomNavigationBar extends StatelessWidget {
   }
 
   Widget _buildNavItem({
-    required BuildContext context,
     required _NavDestinationItem item,
     required int index,
     required bool isSelected,
+    required bool allowLabelWrap,
   }) {
     return Semantics(
       button: true,
@@ -128,12 +166,10 @@ class MemoraBottomNavigationBar extends StatelessWidget {
                 const SizedBox(height: MemoraSpacing.space4),
                 Text(
                   item.label,
-                  style: MemoraTypography.navigation.copyWith(
-                    color: MemoraColors.textPrimary,
-                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  style: _labelStyle(isSelected),
+                  maxLines: allowLabelWrap ? null : 1,
+                  overflow: allowLabelWrap ? null : TextOverflow.ellipsis,
+                  textAlign: allowLabelWrap ? TextAlign.center : null,
                 ),
               ],
             ),
@@ -142,6 +178,12 @@ class MemoraBottomNavigationBar extends StatelessWidget {
       ),
     );
   }
+
+  TextStyle _labelStyle(bool isSelected) =>
+      MemoraTypography.navigation.copyWith(
+        color: MemoraColors.textPrimary,
+        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+      );
 }
 
 class _NavDestinationItem {
