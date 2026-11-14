@@ -7,8 +7,8 @@ part of 'mission_streak_result.dart';
 // **************************************************************************
 
 const MissionStreakResultQualificationEnum
-    _$missionStreakResultQualificationEnum_standardCompleted =
-    const MissionStreakResultQualificationEnum._('standardCompleted');
+    _$missionStreakResultQualificationEnum_missionCompleted =
+    const MissionStreakResultQualificationEnum._('missionCompleted');
 const MissionStreakResultQualificationEnum
     _$missionStreakResultQualificationEnum_comebackCompleted =
     const MissionStreakResultQualificationEnum._('comebackCompleted');
@@ -19,8 +19,8 @@ const MissionStreakResultQualificationEnum
 MissionStreakResultQualificationEnum
     _$missionStreakResultQualificationEnumValueOf(String name) {
   switch (name) {
-    case 'standardCompleted':
-      return _$missionStreakResultQualificationEnum_standardCompleted;
+    case 'missionCompleted':
+      return _$missionStreakResultQualificationEnum_missionCompleted;
     case 'comebackCompleted':
       return _$missionStreakResultQualificationEnum_comebackCompleted;
     case 'unknownDefaultOpenApi':
@@ -33,7 +33,7 @@ MissionStreakResultQualificationEnum
 final BuiltSet<MissionStreakResultQualificationEnum>
     _$missionStreakResultQualificationEnumValues = BuiltSet<
         MissionStreakResultQualificationEnum>(const <MissionStreakResultQualificationEnum>[
-  _$missionStreakResultQualificationEnum_standardCompleted,
+  _$missionStreakResultQualificationEnum_missionCompleted,
   _$missionStreakResultQualificationEnum_comebackCompleted,
   _$missionStreakResultQualificationEnum_unknownDefaultOpenApi,
 ]);
@@ -45,12 +45,12 @@ Serializer<MissionStreakResultQualificationEnum>
 class _$MissionStreakResultQualificationEnumSerializer
     implements PrimitiveSerializer<MissionStreakResultQualificationEnum> {
   static const Map<String, Object> _toWire = const <String, Object>{
-    'standardCompleted': 'standard_completed',
+    'missionCompleted': 'mission_completed',
     'comebackCompleted': 'comeback_completed',
     'unknownDefaultOpenApi': 'unknown_default_open_api',
   };
   static const Map<Object, String> _fromWire = const <Object, String>{
-    'standard_completed': 'standardCompleted',
+    'mission_completed': 'missionCompleted',
     'comeback_completed': 'comebackCompleted',
     'unknown_default_open_api': 'unknownDefaultOpenApi',
   };

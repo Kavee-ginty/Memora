@@ -2192,7 +2192,7 @@
           },
           "qualification": {
             "enum": [
-              "standard_completed",
+              "mission_completed",
               "comeback_completed"
             ],
             "title": "Qualification",

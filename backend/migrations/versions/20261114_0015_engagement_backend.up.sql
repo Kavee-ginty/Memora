@@ -25,7 +25,7 @@ CREATE POLICY reward_placements_owner ON reward_placements
 GRANT SELECT, INSERT, UPDATE, DELETE ON reward_placements TO memora_api;
 REVOKE ALL ON reward_placements FROM memora_worker;
 
-CREATE INDEX ix_xp_ledger_balance ON xp_ledger(user_id, earned_at DESC, id DESC);
+CREATE INDEX ix_xp_ledger_balance ON xp_ledger(user_id, created_at DESC, id DESC);
 CREATE INDEX ix_streak_days_recent ON streak_days(user_id, local_date DESC);
 CREATE INDEX ix_reward_grants_inventory ON reward_grants(user_id, granted_at DESC, id DESC);
 CREATE INDEX ix_reef_projections_projected ON reef_projections(user_id, projected_at DESC);

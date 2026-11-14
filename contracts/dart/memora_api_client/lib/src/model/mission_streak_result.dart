@@ -30,7 +30,7 @@ abstract class MissionStreakResult
 
   @BuiltValueField(wireName: r'qualification')
   MissionStreakResultQualificationEnum get qualification;
-  // enum qualificationEnum {  standard_completed,  comeback_completed,  };
+  // enum qualificationEnum {  mission_completed,  comeback_completed,  };
 
   MissionStreakResult._();
 
@@ -164,9 +164,9 @@ class _$MissionStreakResultSerializer
 }
 
 class MissionStreakResultQualificationEnum extends EnumClass {
-  @BuiltValueEnumConst(wireName: r'standard_completed')
-  static const MissionStreakResultQualificationEnum standardCompleted =
-      _$missionStreakResultQualificationEnum_standardCompleted;
+  @BuiltValueEnumConst(wireName: r'mission_completed')
+  static const MissionStreakResultQualificationEnum missionCompleted =
+      _$missionStreakResultQualificationEnum_missionCompleted;
   @BuiltValueEnumConst(wireName: r'comeback_completed')
   static const MissionStreakResultQualificationEnum comebackCompleted =
       _$missionStreakResultQualificationEnum_comebackCompleted;

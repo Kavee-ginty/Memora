@@ -96,3 +96,33 @@ idempotency key.
 T15 does not render the seabed or statistics, deliver push notifications,
 invent offline projections, or alter memory schedules. Those remain T16, T19,
 T22 and the memory module respectively.
+
+## Audit and acceptance evidence
+
+The final audit added database-backed coverage for one-event/one-ledger-entry
+processing, replay-stable completion results, permanent reward grants,
+wrong-owner reward reads and placement, deterministic projection rebuilds,
+authoritative Home/statistics reads, learner-local Home dates and late-effective
+XP corrections. It also verifies the T15 columns, placement RLS, role grants and
+balance index through the migration contract.
+
+Audit fixes made before handoff:
+
+- Completion streaks use the schema value `mission_completed`, matching the
+  persisted streak contract.
+- Home selects only the learner's current local-day mission and evaluates streak
+  freshness in the learner's timezone.
+- Current XP balance follows append order, while statistics continue to group by
+  the effective `earned_at` date.
+- Engagement replay returns the same JSON-normalized result as the first run.
+- The historical privacy downgrade removes target-only proof rows that its older
+  exclusive-source schema cannot represent, allowing a complete downgrade and
+  re-upgrade on the disposable database.
+- The generated-client analyzer baseline includes the three T15 API groups, and
+  `opentelemetry-api` is locked to the vulnerability-fixed `1.45.2` release.
+
+Verified on 2026-11-14 with backend Ruff format/lint, the complete PostgreSQL
+backend suite including downgrade/re-upgrade, OpenAPI/client drift generation,
+generated Dart tests, generated-client contract analysis/tests, full Flutter
+format/analyze/tests, Compose configuration and production/development Python
+dependency audits.

@@ -189,7 +189,7 @@ class EngagementRepository:
                         """
                         SELECT COALESCE((
                           SELECT balance_after FROM xp_ledger WHERE user_id=:u
-                          ORDER BY earned_at DESC, created_at DESC, id DESC LIMIT 1
+                          ORDER BY created_at DESC, id DESC LIMIT 1
                         ), 0)
                         """
                     ),
@@ -258,6 +258,7 @@ class EngagementRepository:
                 "reward_grants": grants,
                 "next_suggested_action": "progress",
             }
+            result = json.loads(json.dumps(result, default=str))
             connection.execute(
                 text(
                     """
@@ -267,7 +268,7 @@ class EngagementRepository:
                     """
                 ),
                 {
-                    "summary": json.dumps(result, default=str),
+                    "summary": json.dumps(result),
                     "now": now,
                     "mission_id": mission_id,
                     "user_id": user_id,
@@ -277,17 +278,21 @@ class EngagementRepository:
 
     def home(self, auth: AuthContext, *, now: datetime) -> dict[str, Any]:
         with self._connection(auth) as (connection, user_id):
+            local_today = connection.scalar(
+                text("SELECT timezone(default_timezone, :now)::date FROM users WHERE id=:user_id"),
+                {"now": now, "user_id": user_id},
+            )
             mission = (
                 connection.execute(
                     text(
                         """
                     SELECT id, subject_id, status, mission_date, estimated_minutes,
                            planned_item_count, completion_summary
-                    FROM missions WHERE user_id=:user_id
+                    FROM missions WHERE user_id=:user_id AND mission_date=:local_today
                     ORDER BY mission_date DESC, sequence_no DESC LIMIT 1
                     """
                     ),
-                    {"user_id": user_id},
+                    {"user_id": user_id, "local_today": local_today},
                 )
                 .mappings()
                 .first()
@@ -321,7 +326,7 @@ class EngagementRepository:
                         """
                         SELECT COALESCE((
                           SELECT balance_after FROM xp_ledger WHERE user_id=:u
-                          ORDER BY earned_at DESC, created_at DESC, id DESC LIMIT 1
+                          ORDER BY created_at DESC, id DESC LIMIT 1
                         ), 0)
                         """
                     ),
@@ -329,7 +334,7 @@ class EngagementRepository:
                 )
                 or 0
             )
-            streak = self._current_streak(connection, user_id, now.date())
+            streak = self._current_streak(connection, user_id, local_today)
             if mission is None:
                 state = "setup" if reef is None else "cared_for"
             else:

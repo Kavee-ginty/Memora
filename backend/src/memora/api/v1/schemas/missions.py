@@ -86,7 +86,7 @@ class SubmitAttemptRequest(BaseModel):
 
 
 class MissionStreakResult(BaseModel):
-    qualification: Literal["standard_completed", "comeback_completed"]
+    qualification: Literal["mission_completed", "comeback_completed"]
     current_days: Annotated[int, Field(ge=1)]
     grace_used: bool
     policy_version: str
