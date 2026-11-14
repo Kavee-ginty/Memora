@@ -47,7 +47,7 @@ If two sources appear inconsistent, stop implementation and resolve the conflict
 | T12 | Question bank and grading backend | **Done** | Neleesha | 7 | T08, T05 | `task/T12-questions-grading` | Backend learning |
 | T13 | Mission assembly and completion backend | **Done** | Ginodh | 7 | T06, T11, T12 | `task/T13-mission-backend` | Backend learning |
 | T14 | Mission mobile experience | **Ready** | - | 7 | T07, T13 | `task/T14-mission-mobile` | Mobile feature |
-| T15 | Progress XP streak and reef backend | **Ready** | - | 5 | T11, T13 | `task/T15-progress-backend` | Backend engagement |
+| T15 | Progress XP streak and reef backend | **In Progress** | - | 5 | T11, T13 | `task/T15-progress-backend` | Backend engagement |
 | T16 | Progress mobile experience | Blocked | - | 5 | T07, T15 | `task/T16-progress-mobile` | Mobile feature |
 | T17 | Profile preferences and notifications backend | **Done** | Harsha | 4 | T06 | `task/T17-profile-backend` | Backend account |
 | T18 | Profile and settings mobile | **Ready** | - | 4 | T07, T17 | `task/T18-profile-mobile` | Mobile feature |

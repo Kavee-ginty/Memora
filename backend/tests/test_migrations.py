@@ -1092,3 +1092,71 @@ def test_ingestion_operations_migration_grants_and_indexes(
         )
 
     engine.dispose()
+
+
+def test_engagement_migration_contract(migration_database_url: str) -> None:
+    command.upgrade(alembic_config(migration_database_url), "head")
+    engine = create_test_engine(migration_database_url)
+    with engine.connect() as connection:
+        columns = {
+            (row["table_name"], row["column_name"])
+            for row in connection.execute(
+                text(
+                    """
+                    SELECT table_name,column_name FROM information_schema.columns
+                    WHERE table_schema='public'
+                      AND ((table_name='xp_ledger' AND column_name='policy_version')
+                        OR (table_name='streak_days' AND column_name='policy_version')
+                        OR table_name='reward_placements')
+                    """
+                )
+            ).mappings()
+        }
+        assert ("xp_ledger", "policy_version") in columns
+        assert ("streak_days", "policy_version") in columns
+        assert {
+            ("reward_placements", "reward_grant_id"),
+            ("reward_placements", "user_id"),
+            ("reward_placements", "subject_id"),
+            ("reward_placements", "placement_slot"),
+            ("reward_placements", "row_version"),
+        } <= columns
+        assert connection.scalar(
+            text(
+                """
+                SELECT relrowsecurity AND relforcerowsecurity
+                FROM pg_class WHERE oid='reward_placements'::regclass
+                """
+            )
+        )
+        assert (
+            connection.scalar(
+                text(
+                    """
+                SELECT count(*) FROM pg_policies
+                WHERE schemaname='public' AND tablename='reward_placements'
+                  AND policyname='reward_placements_owner'
+                """
+                )
+            )
+            == 1
+        )
+        assert connection.scalar(
+            text(
+                "SELECT has_table_privilege("
+                "'memora_api','reward_placements','SELECT,INSERT,UPDATE,DELETE')"
+            )
+        )
+        assert not connection.scalar(
+            text("SELECT has_table_privilege('memora_worker','reward_placements','SELECT')")
+        )
+        index_definition = connection.scalar(
+            text(
+                """
+                SELECT indexdef FROM pg_indexes
+                WHERE schemaname='public' AND indexname='ix_xp_ledger_balance'
+                """
+            )
+        )
+        assert "created_at DESC" in index_definition
+    engine.dispose()

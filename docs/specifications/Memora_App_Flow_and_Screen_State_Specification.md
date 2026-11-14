@@ -312,6 +312,13 @@ Selecting a reef opens its detail sheet. Start review mission routes through pre
 
 Offline Progress may show a labeled cached projection and last-synced time. It cannot claim queued answers already changed the reef.
 
+Streak qualification uses the server-created mission date and its persisted
+IANA timezone. An active mission retains that date and timezone if the profile
+preference changes. New missions use the new confirmed preference; historical
+days are never shifted. A one-day gap may be filled only as the immediately
+preceding grace day when no grace was used in the rolling seven-date window.
+Longer gaps produce a supportive comeback state.
+
 ## 12 Profile settings and privacy flows
 
 ### 12.1 Preferences and notifications

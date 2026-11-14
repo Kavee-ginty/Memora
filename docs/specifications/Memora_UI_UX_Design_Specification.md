@@ -622,6 +622,13 @@ XP is the only reward currency in the MVP. Award it for completed learning actio
 
 XP presentation must state the action that earned it. A total may appear on Progress/Profile; a transient increment appears on mission results.
 
+The MVP `xp-v1` presentation uses 6 XP for each protected or repaired memory,
+plus 10 XP when a mission contains at least one such outcome. A comeback
+completion adds 6 XP. Normal and comeback missions are capped at 46 and 52 XP.
+Skipped or unresolved items earn no item XP, and a mission with no protected or
+repaired memory earns zero. The UI explains the total by learning outcome and
+does not expose correctness multipliers, boosts or competitive ranking.
+
 ### 10.2 Streak
 
 A streak day is secured by completing the Daily Mission. The experience supports one grace day within a rolling seven-day period and a supportive comeback mission after a break, as defined in the PRD.

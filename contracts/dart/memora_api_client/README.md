@@ -75,6 +75,7 @@ Class | Method | HTTP request | Description
 [*CurriculumApi*](doc/CurriculumApi.md) | [**listConceptProgress**](doc/CurriculumApi.md#listconceptprogress) | **GET** /v1/subjects/{subject_id}/concept-progress | List due and near-due concept progress for a subject
 [*HealthApi*](doc/HealthApi.md) | [**healthLive**](doc/HealthApi.md#healthlive) | **GET** /health/live | Live
 [*HealthApi*](doc/HealthApi.md) | [**healthReady**](doc/HealthApi.md#healthready) | **GET** /health/ready | Ready
+[*HomeApi*](doc/HomeApi.md) | [**getHome**](doc/HomeApi.md#gethome) | **GET** /v1/home | Get Home
 [*LearningUpdatesApi*](doc/LearningUpdatesApi.md) | [**createLearningUpdate**](doc/LearningUpdatesApi.md#createlearningupdate) | **POST** /v1/learning-updates | Create a text or upload-backed learning update
 [*LearningUpdatesApi*](doc/LearningUpdatesApi.md) | [**createUploadGrant**](doc/LearningUpdatesApi.md#createuploadgrant) | **POST** /v1/learning-updates/{update_id}/uploads | Request a temporary signed upload grant
 [*LearningUpdatesApi*](doc/LearningUpdatesApi.md) | [**deleteLearningUpdate**](doc/LearningUpdatesApi.md#deletelearningupdate) | **DELETE** /v1/learning-updates/{update_id} | Discard a draft or cancel an unfinished workflow
@@ -103,9 +104,14 @@ Class | Method | HTTP request | Description
 [*ProfileApi*](doc/ProfileApi.md) | [**getProfilePreferences**](doc/ProfileApi.md#getprofilepreferences) | **GET** /v1/profile/preferences | Get profile preferences
 [*ProfileApi*](doc/ProfileApi.md) | [**updateProfile**](doc/ProfileApi.md#updateprofile) | **PATCH** /v1/profile | Update the authenticated profile
 [*ProfileApi*](doc/ProfileApi.md) | [**updateProfilePreferences**](doc/ProfileApi.md#updateprofilepreferences) | **PATCH** /v1/profile/preferences | Update profile preferences
+[*ProgressApi*](doc/ProgressApi.md) | [**getProgressStatistics**](doc/ProgressApi.md#getprogressstatistics) | **GET** /v1/progress/statistics | Get Progress Statistics
+[*ProgressApi*](doc/ProgressApi.md) | [**getReef**](doc/ProgressApi.md#getreef) | **GET** /v1/seabed/reefs/{subject_id} | Get Reef
+[*ProgressApi*](doc/ProgressApi.md) | [**getSeabed**](doc/ProgressApi.md#getseabed) | **GET** /v1/seabed | Get Seabed
 [*ReportsApi*](doc/ReportsApi.md) | [**createQuestionReport**](doc/ReportsApi.md#createquestionreport) | **POST** /v1/questions/{question_version_id}/reports | Report a question, answer, explanation or grading issue
 [*ReportsApi*](doc/ReportsApi.md) | [**getQuestionReport**](doc/ReportsApi.md#getquestionreport) | **GET** /v1/question-reports/{report_id} | Read a question report and its safe resolution state
 [*ReportsApi*](doc/ReportsApi.md) | [**listQuestionReports**](doc/ReportsApi.md#listquestionreports) | **GET** /v1/question-reports | List the authenticated student&#39;s question reports
+[*RewardsApi*](doc/RewardsApi.md) | [**listRewards**](doc/RewardsApi.md#listrewards) | **GET** /v1/rewards | List Rewards
+[*RewardsApi*](doc/RewardsApi.md) | [**updateRewardPlacement**](doc/RewardsApi.md#updaterewardplacement) | **PATCH** /v1/rewards/{reward_grant_id} | Update Reward Placement
 [*SessionApi*](doc/SessionApi.md) | [**bootstrapSession**](doc/SessionApi.md#bootstrapsession) | **GET** /v1/session/bootstrap | Bootstrap the authenticated session
 [*SessionApi*](doc/SessionApi.md) | [**deleteDevice**](doc/SessionApi.md#deletedevice) | **DELETE** /v1/devices/{device_id} | Remove a notification device
 [*SessionApi*](doc/SessionApi.md) | [**registerDevice**](doc/SessionApi.md#registerdevice) | **POST** /v1/devices | Register or refresh a notification device
@@ -151,6 +157,8 @@ Class | Method | HTTP request | Description
  - [FirstMissionSummary](doc/FirstMissionSummary.md)
  - [HealthResponse](doc/HealthResponse.md)
  - [HealthStatus](doc/HealthStatus.md)
+ - [HomeMission](doc/HomeMission.md)
+ - [HomeResponse](doc/HomeResponse.md)
  - [IdempotencyHeaders](doc/IdempotencyHeaders.md)
  - [InputType](doc/InputType.md)
  - [KnowledgeCommitResponse](doc/KnowledgeCommitResponse.md)
@@ -164,6 +172,9 @@ Class | Method | HTTP request | Description
  - [MissionItemResponse](doc/MissionItemResponse.md)
  - [MissionManifest](doc/MissionManifest.md)
  - [MissionManifestItem](doc/MissionManifestItem.md)
+ - [MissionReefResult](doc/MissionReefResult.md)
+ - [MissionRewardGrant](doc/MissionRewardGrant.md)
+ - [MissionStreakResult](doc/MissionStreakResult.md)
  - [MissionSummary](doc/MissionSummary.md)
  - [MultipleChoiceAnswer](doc/MultipleChoiceAnswer.md)
  - [NumericAnswer](doc/NumericAnswer.md)
@@ -182,15 +193,23 @@ Class | Method | HTTP request | Description
  - [ProfileResponse](doc/ProfileResponse.md)
  - [ProfileSummary](doc/ProfileSummary.md)
  - [ProfileUpdateRequest](doc/ProfileUpdateRequest.md)
+ - [ProgressStatisticsResponse](doc/ProgressStatisticsResponse.md)
  - [PublicQuestion](doc/PublicQuestion.md)
  - [PublicQuestionOption](doc/PublicQuestionOption.md)
  - [PublicResponseConfig](doc/PublicResponseConfig.md)
  - [QuestionReportCreateRequest](doc/QuestionReportCreateRequest.md)
  - [QuestionReportResponse](doc/QuestionReportResponse.md)
  - [QuestionReportSummary](doc/QuestionReportSummary.md)
+ - [ReefDetail](doc/ReefDetail.md)
+ - [ReefSummary](doc/ReefSummary.md)
  - [RequestHeaders](doc/RequestHeaders.md)
  - [RetryLearningUpdateRequest](doc/RetryLearningUpdateRequest.md)
+ - [RewardGrant](doc/RewardGrant.md)
+ - [RewardInventoryResponse](doc/RewardInventoryResponse.md)
+ - [RewardPlacementRequest](doc/RewardPlacementRequest.md)
  - [SchedulingExplanation](doc/SchedulingExplanation.md)
+ - [SeabedReef](doc/SeabedReef.md)
+ - [SeabedResponse](doc/SeabedResponse.md)
  - [SessionBootstrapResponse](doc/SessionBootstrapResponse.md)
  - [SessionRevocationScope](doc/SessionRevocationScope.md)
  - [SessionRevokeRequest](doc/SessionRevokeRequest.md)
@@ -210,6 +229,7 @@ Class | Method | HTTP request | Description
  - [VerificationDecision](doc/VerificationDecision.md)
  - [VerificationDecisionResult](doc/VerificationDecisionResult.md)
  - [VerificationDecisionValue](doc/VerificationDecisionValue.md)
+ - [XpSeriesPoint](doc/XpSeriesPoint.md)
 
 
 ## Documentation For Authorization

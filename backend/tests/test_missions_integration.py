@@ -22,6 +22,7 @@ from sqlalchemy.exc import DBAPIError
 from memora.api.errors import ApiError
 from memora.api.security import AuthContext
 from memora.db.seed import seed_database
+from memora.modules.engagement.repository import EngagementRepository
 from memora.modules.missions.repository import MissionRepository
 from memora.modules.questions.models import QuestionImportBundle, SingleChoiceAnswer
 from memora.modules.questions.repository import QuestionImportRepository
@@ -218,6 +219,23 @@ def test_full_lifecycle_is_owner_scoped_idempotent_and_outbox_driven(
     other_subject = f"other-{uuid4()}"
     owner_id = create_user(database, owner_subject)
     create_user(database, other_subject)
+    with database.begin() as connection:
+        connection.execute(
+            text(
+                """
+                INSERT INTO user_profiles(
+                    user_id,display_name,onboarding_completed_at,
+                    active_subject_id,curriculum_version_id
+                ) VALUES (:user_id,'T15 learner',:now,:subject_id,:curriculum_id)
+                """
+            ),
+            {
+                "user_id": owner_id,
+                "now": NOW,
+                "subject_id": SUBJECT_ID,
+                "curriculum_id": CURRICULUM_ID,
+            },
+        )
     prepare_due_work(database, owner_id)
     repository = MissionRepository(database)
 
@@ -411,7 +429,7 @@ def test_full_lifecycle_is_owner_scoped_idempotent_and_outbox_driven(
             connection.execute(
                 text(
                     """
-                    SELECT aggregate_type, event_type, aggregate_id, payload
+                    SELECT id, aggregate_type, event_type, aggregate_id, payload, correlation_id
                     FROM outbox_events
                     WHERE (event_type='mission.attempt_graded' AND payload->>'user_id'=:user_id)
                        OR (event_type='mission.completed' AND aggregate_id=:mission_id)
@@ -478,6 +496,142 @@ def test_full_lifecycle_is_owner_scoped_idempotent_and_outbox_driven(
                     "WHERE source_type='attempt' AND source_id=:attempt_id"
                 ),
                 {"attempt_id": attempt_id},
+            )
+            == 1
+        )
+
+    with database.begin() as connection:
+        connection.execute(
+            text(
+                """
+                INSERT INTO reward_definitions(
+                    reward_code,reward_type,title,asset_key,xp_threshold,status
+                ) VALUES (
+                    :code,'decoration','Integration reward','test/reward',1,'approved'
+                )
+                """
+            ),
+            {"code": f"integration-{uuid4()}"},
+        )
+
+    engagement = EngagementRepository(database)
+    completion_event = completion_events[0]
+    applied = engagement.process_mission_completed(
+        outbox_event_id=UUID(str(completion_event["id"])),
+        payload=dict(completion_event["payload"]),
+        correlation_id=UUID(str(completion_event["correlation_id"])),
+        now=NOW,
+    )
+    replayed = engagement.process_mission_completed(
+        outbox_event_id=UUID(str(completion_event["id"])),
+        payload=dict(completion_event["payload"]),
+        correlation_id=UUID(str(completion_event["correlation_id"])),
+        now=NOW,
+    )
+    assert replayed == applied
+    assert applied["engagement_status"] == "applied"
+    assert applied["xp_delta"] == 16
+    assert applied["streak"]["qualification"] == "mission_completed"
+    assert applied["reef_after"]["condition"] in {
+        "thriving",
+        "healthy",
+        "needs_care",
+        "dormant",
+    }
+    assert len(applied["reward_grants"]) == 1
+
+    grant_id = UUID(applied["reward_grants"][0]["grant_id"])
+    assert engagement.rewards(auth(owner_subject), grant_id)[0]["grant_id"] == grant_id
+    assert engagement.rewards(auth(other_subject), grant_id) == []
+    with pytest.raises(ApiError) as wrong_owner_reward:
+        engagement.update_placement(
+            auth(other_subject),
+            grant_id,
+            subject_id=SUBJECT_ID,
+            placement_slot="foreground",
+            version=1,
+            idempotency_key=f"wrong-owner-{uuid4()}",
+            request_hash="f" * 64,
+            now=NOW,
+        )
+    assert wrong_owner_reward.value.status_code == 404
+
+    with database.begin() as connection:
+        connection.execute(
+            text(
+                """
+                INSERT INTO xp_ledger(
+                    user_id,amount,entry_type,source_event_type,source_event_id,
+                    reason_code,balance_after,earned_at,policy_version
+                ) VALUES (
+                    :user_id,-1,'correction','administrative.correction',:source_id,
+                    'integration_correction',15,:earned_at,'xp-v1'
+                )
+                """
+            ),
+            {
+                "user_id": owner_id,
+                "source_id": uuid4(),
+                "earned_at": NOW - timedelta(days=10),
+            },
+        )
+
+    home = engagement.home(auth(owner_subject), now=NOW)
+    statistics = engagement.statistics(
+        auth(owner_subject),
+        start=NOW.date(),
+        end=NOW.date(),
+        timezone="Asia/Colombo",
+    )
+    assert home["xp_balance"] == 15
+    assert home["streak_days"] == 1
+    assert home["reef"]["condition"] == applied["reef_after"]["condition"]
+    assert home["reef"]["source_watermark"] == applied["reef_after"]["source_watermark"]
+    assert statistics["xp_earned"] == 16
+    assert statistics["missions_completed"] == 1
+    next_day_home = engagement.home(auth(owner_subject), now=NOW + timedelta(days=1))
+    assert next_day_home["state"] == "cared_for"
+    assert next_day_home["mission"] is None
+    assert next_day_home["xp_balance"] == 15
+    assert next_day_home["streak_days"] == 1
+
+    with database.begin() as connection:
+        first_rebuild = engagement._rebuild_reef(
+            connection, user_id=owner_id, subject_id=SUBJECT_ID, now=NOW
+        )
+        second_rebuild = engagement._rebuild_reef(
+            connection, user_id=owner_id, subject_id=SUBJECT_ID, now=NOW
+        )
+    assert engagement._reef_descriptor(first_rebuild) == engagement._reef_descriptor(second_rebuild)
+    with database.connect() as connection:
+        assert (
+            connection.scalar(
+                text(
+                    """
+                SELECT count(*) FROM xp_ledger
+                WHERE user_id=:user_id AND source_event_id=:event_id
+                """
+                ),
+                {"user_id": owner_id, "event_id": completion_event["id"]},
+            )
+            == 1
+        )
+        assert (
+            connection.scalar(
+                text("SELECT count(*) FROM reward_grants WHERE user_id=:user_id"),
+                {"user_id": owner_id},
+            )
+            == 1
+        )
+        assert (
+            connection.scalar(
+                text(
+                    """
+                SELECT count(*) FROM outbox_events
+                WHERE event_type='reward.granted' AND aggregate_id=:grant_id
+                """
+                ),
+                {"grant_id": grant_id},
             )
             == 1
         )
